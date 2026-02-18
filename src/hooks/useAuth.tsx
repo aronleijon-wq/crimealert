@@ -39,7 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
-      if (!error && data) {
+      if (error) {
+        // Session expired or auth error — reset gracefully
+        setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
+        return;
+      }
+      if (data) {
         setSubscription({
           subscribed: data.subscribed || false,
           productId: data.product_id || null,
@@ -48,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (err) {
       console.error('Error checking subscription:', err);
+      setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
     }
   };
 
