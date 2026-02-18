@@ -2,6 +2,7 @@ import { Incident, incidentTypeConfig } from '@/data/mockIncidents';
 
 interface StatsBarProps {
   incidents: Incident[];
+  onSelectIncident?: (id: string) => void;
 }
 
 const getTimeAgo = (iso: string) => {
@@ -11,7 +12,7 @@ const getTimeAgo = (iso: string) => {
   return `${Math.round(diff / 1440)}d sedan`;
 };
 
-const StatsBar = ({ incidents }: StatsBarProps) => {
+const StatsBar = ({ incidents, onSelectIncident }: StatsBarProps) => {
   const latest = incidents.slice(0, 20);
   // Duplicate for seamless loop
   const items = [...latest, ...latest];
@@ -25,7 +26,8 @@ const StatsBar = ({ incidents }: StatsBarProps) => {
           return (
             <div
               key={`${inc.id}-${i}`}
-              className="inline-flex items-center gap-2 px-4 py-2 shrink-0"
+              onClick={() => onSelectIncident?.(inc.id)}
+              className="inline-flex items-center gap-2 px-4 py-2 shrink-0 cursor-pointer hover:bg-muted/50 transition-colors"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'animate-pulse-dot' : ''}`}
