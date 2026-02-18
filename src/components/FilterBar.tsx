@@ -2,6 +2,7 @@ import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
 import { Lock } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
@@ -18,6 +19,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
   const { isPremium } = useIsPremium();
   const { user } = useAuth();
   const isLoggedIn = !!user;
+  const navigate = useNavigate();
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card/50">
@@ -29,8 +31,16 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
         return (
           <button
             key={type}
-            onClick={() => !locked && onToggleFilter(type)}
-            disabled={locked}
+            onClick={() => {
+              if (locked) {
+                if (!isLoggedIn) {
+                  navigate('/account?mode=login');
+                }
+                return;
+              }
+              onToggleFilter(type);
+            }}
+            disabled={false}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-all border ${
               locked
                 ? 'border-transparent bg-transparent text-muted-foreground/30 cursor-not-allowed'
