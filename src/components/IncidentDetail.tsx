@@ -146,9 +146,15 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <Radio className="w-3 h-3" /> Status
           </span>
-          <span className={incident.status === 'active' ? 'text-cr-red font-semibold' : 'text-cr-green'}>
-            {incident.status === 'active' ? 'Pågående' : 'Avslutad'}
-          </span>
+          {isPremium ? (
+            <span className={incident.status === 'active' ? 'text-cr-red font-semibold' : 'text-cr-green'}>
+              {incident.status === 'active' ? 'Pågående' : 'Avslutad'}
+            </span>
+          ) : (
+            <span className="text-muted-foreground/40 flex items-center gap-1 text-[10px]">
+              <Lock className="w-3 h-3" /> Pro
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between py-1.5 border-t border-border">
