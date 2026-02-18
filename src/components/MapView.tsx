@@ -20,7 +20,7 @@ const createMarkerIcon = (incident: Incident) => {
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
         ${isActive ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;animation:pulse 2s ease-in-out infinite;"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(0,0,0,0.5);position:relative;z-index:2;box-shadow:0 0 ${isActive ? 10 : 4}px ${config.color};"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.7);position:relative;z-index:2;box-shadow:0 0 ${isActive ? 10 : 4}px ${config.color};"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
@@ -43,8 +43,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -78,19 +79,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
   }, [selectedId, incidents]);
 
   return (
-    <div ref={containerRef} className="w-full h-full" style={{ background: 'hsl(222, 47%, 6%)' }}>
+    <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 0.2; }
           50% { transform: scale(2); opacity: 0; }
         }
         .leaflet-control-zoom a {
-          background: hsl(222, 40%, 8%) !important;
-          color: hsl(210, 20%, 90%) !important;
-          border-color: hsl(222, 20%, 16%) !important;
+          background: hsl(0, 0%, 100%) !important;
+          color: hsl(222, 20%, 20%) !important;
+          border-color: hsl(220, 10%, 85%) !important;
         }
         .leaflet-control-zoom a:hover {
-          background: hsl(222, 30%, 14%) !important;
+          background: hsl(220, 10%, 95%) !important;
         }
       `}</style>
     </div>
