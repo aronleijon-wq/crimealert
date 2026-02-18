@@ -55,6 +55,15 @@ const Auth = () => {
               {isLogin ? 'Logga in för att hantera din prenumeration' : 'Skapa ett konto för att komma igång'}
             </p>
 
+            {!isLogin && (
+              <div className="mb-4 flex items-start gap-2 rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
+                <span className="text-amber-500 text-base mt-0.5">⚠️</span>
+                <p className="text-xs font-medium text-amber-400">
+                  OBS! Kolla din <span className="font-bold underline">skräppost/spam</span> efter registrering – verifieringsmailet hamnar ofta där.
+                </p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
