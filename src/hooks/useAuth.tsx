@@ -30,12 +30,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const checkSubscription = async () => {
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
-    if (!currentSession) {
-      setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
-      return;
-    }
     try {
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !currentSession?.access_token) {
+        setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
+        return;
+      }
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: { Authorization: `Bearer ${currentSession.access_token}` },
       });
