@@ -1,21 +1,35 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import Header from '@/components/Header';
 import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 import IncidentDetail from '@/components/IncidentDetail';
+import AdBanner from '@/components/AdBanner';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
-import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2 } from 'lucide-react';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap } from 'lucide-react';
+
+const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
 
 const Index = () => {
-  const [activeFilters, setActiveFilters] = useState<IncidentType[]>([
-    'police', 'fire', 'ambulance', 'traffic', 'other',
-  ]);
+  const { isPremium } = useIsPremium();
+  const [activeFilters, setActiveFilters] = useState<IncidentType[]>(
+    isPremium ? ['police', 'fire', 'ambulance', 'traffic', 'other'] : [...FREE_FILTERS]
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
+
+  // Update filters when premium status changes
+  useEffect(() => {
+    if (isPremium) {
+      setActiveFilters(['police', 'fire', 'ambulance', 'traffic', 'other']);
+    } else {
+      setActiveFilters((prev) => prev.filter((f) => FREE_FILTERS.includes(f)));
+    }
+  }, [isPremium]);
 
   const toggleFilter = useCallback((type: IncidentType) => {
     setActiveFilters((prev) =>
@@ -23,13 +37,19 @@ const Index = () => {
     );
   }, []);
 
-  // Use live data if available, otherwise fallback to mock
   const allIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   const isLive = liveIncidents.length > 0;
 
+  // Free users: only show last 24h
+  const timeFiltered = useMemo(() => {
+    if (isPremium) return allIncidents;
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return allIncidents.filter((i) => new Date(i.time).getTime() >= cutoff);
+  }, [allIncidents, isPremium]);
+
   const filtered = useMemo(
-    () => allIncidents.filter((i) => activeFilters.includes(i.type)),
-    [activeFilters, allIncidents]
+    () => timeFiltered.filter((i) => activeFilters.includes(i.type)),
+    [activeFilters, timeFiltered]
   );
 
   const activeCount = filtered.filter((i) => i.status === 'active').length;
@@ -40,6 +60,7 @@ const Index = () => {
       {!isFullscreen && (
         <>
           <Header />
+          <AdBanner />
           <StatsBar incidents={filtered} />
           <FilterBar
             activeFilters={activeFilters}
@@ -55,13 +76,19 @@ const Index = () => {
           <div className="w-80 border-r border-border bg-card overflow-y-auto flex-shrink-0 hidden md:block">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {isLive ? (
+                {isPremium ? (
                   <Wifi className="w-3 h-3 text-cr-green" />
+                ) : isLive ? (
+                  <Clock className="w-3 h-3 text-cr-orange" />
                 ) : (
                   <WifiOff className="w-3 h-3 text-muted-foreground" />
                 )}
                 <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-                  {isLive ? 'Live — Polisen.se' : 'Demo-data'}
+                  {isPremium
+                    ? 'Realtid — Polisen.se'
+                    : isLive
+                    ? '15 min fördröjning'
+                    : 'Demo-data'}
                 </span>
               </div>
               <button
@@ -115,13 +142,15 @@ const Index = () => {
           </button>
 
           <div className="absolute top-3 left-3 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md px-3 py-1.5 flex items-center gap-2">
-            {isLive ? (
+            {isPremium ? (
               <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" />
+            ) : isLive ? (
+              <div className="w-1.5 h-1.5 rounded-full bg-cr-orange animate-pulse-dot" />
             ) : (
               <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
             )}
             <span className="text-[10px] font-mono text-muted-foreground">
-              {isLive ? 'LIVE' : 'DEMO'} • {filtered.length} HÄNDELSER • <span className="text-cr-red">{activeCount} AKTIVA</span>
+              {isPremium ? 'REALTID' : isLive ? '15 MIN DELAY' : 'DEMO'} • {filtered.length} HÄNDELSER • <span className="text-cr-red">{activeCount} AKTIVA</span>
             </span>
           </div>
         </div>
