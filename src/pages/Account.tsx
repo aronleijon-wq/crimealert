@@ -7,8 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const PREMIUM_PRICE_ID = 'price_1T2HH5CTAG2ESipPB2WYPzf3';
+const PREMIUM_PRICE_MONTHLY = 'price_1T2HH5CTAG2ESipPB2WYPzf3';
+const PREMIUM_PRICE_YEARLY = 'price_1T2HkOCTAG2ESipPTtXJ8Xab';
 const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
+const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
 
 const Account = () => {
   const { theme, setTheme } = useTheme();
@@ -18,8 +20,8 @@ const Account = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const isPremium = subscription.subscribed && subscription.productId === PREMIUM_PRODUCT_ID;
-
+  const isPremium = subscription.subscribed && 
+    (subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
   const handleCheckout = async () => {
     if (!user) {
       navigate('/auth');
@@ -27,8 +29,9 @@ const Account = () => {
     }
     setCheckoutLoading(true);
     try {
+      const priceId = billingCycle === 'yearly' ? PREMIUM_PRICE_YEARLY : PREMIUM_PRICE_MONTHLY;
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: PREMIUM_PRICE_ID },
+        body: { priceId },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
