@@ -124,6 +124,7 @@ const Index = () => {
             incidents={filtered}
             selectedId={selectedId}
             onSelectIncident={(id) => setSelectedId(id)}
+            isPremium={isPremium}
           />
 
 

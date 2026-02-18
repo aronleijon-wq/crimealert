@@ -7,6 +7,7 @@ interface MapViewProps {
   incidents: Incident[];
   selectedId: string | null;
   onSelectIncident: (id: string) => void;
+  isPremium?: boolean;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -110,7 +111,7 @@ const getRecommendation = (risk: string, type: string): string => {
   return recs[risk]?.[type] || recs[risk]?.other || '';
 };
 
-const createPopupContent = (inc: Incident) => {
+const createPopupContent = (inc: Incident, isPremium: boolean) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
   const riskColor = inc.risk === 'high' ? '#ef4444' : inc.risk === 'medium' ? '#f97316' : '#22c55e';
@@ -135,8 +136,9 @@ const createPopupContent = (inc: Incident) => {
         </div>
       </div>
 
-      ${inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : ''}
+      ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
+      ${isPremium ? `
       <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
         <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">⚠ Riskbedömning</div>
         <p style="font-size:10px;color:#555;margin:0;line-height:1.6;">${riskDesc}</p>
@@ -146,6 +148,12 @@ const createPopupContent = (inc: Incident) => {
         <div style="font-size:9px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">ℹ Rekommendation</div>
         <p style="font-size:10px;color:#555;margin:0;line-height:1.6;">${getRecommendation(inc.risk, inc.type)}</p>
       </div>
+      ` : `
+      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:10px 12px;margin-bottom:10px;text-align:center;">
+        <div style="font-size:10px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
+        <div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
+      </div>
+      `}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:6px;">
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
@@ -176,7 +184,7 @@ const createPopupContent = (inc: Incident) => {
   `;
 };
 
-const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
@@ -228,7 +236,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
       markersRef.current!.addLayer(circle);
 
       const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc) });
-      marker.bindPopup(createPopupContent(inc), {
+      marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
         maxWidth: 280,
         closeButton: true,
@@ -237,7 +245,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
-  }, [incidents, onSelectIncident]);
+  }, [incidents, onSelectIncident, isPremium]);
 
   useEffect(() => {
     if (!mapRef.current || !selectedId) return;
