@@ -1,8 +1,8 @@
 import Header from '@/components/Header';
 import { Bell, MapPin, Clock, Lock } from 'lucide-react';
 
-const Alerts = () => (
-  <div className="h-screen flex flex-col bg-background">
+const Alerts = () =>
+<div className="h-screen flex flex-col bg-background">
     <Header />
     <div className="flex-1 overflow-y-auto p-6 grid-overlay">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -40,7 +40,7 @@ const Alerts = () => (
           </div>
 
           <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition glow-red">
-            Uppgradera till Premium — 79 kr/mån
+            Uppgradera till Premium — 19 kr/mån
           </button>
         </div>
 
@@ -48,22 +48,22 @@ const Alerts = () => (
         <div className="space-y-2">
           <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Senaste notiser (demo)</span>
           {[
-            { text: 'Brandlarm i Norrmalm', time: '12 min sedan', type: 'high' },
-            { text: 'Trafikolycka vid E4, Solna', time: '2h sedan', type: 'medium' },
-            { text: 'Ordningsstörning Gamla Stan', time: '3h sedan', type: 'medium' },
-          ].map((n, i) => (
-            <div key={i} className="flex items-center gap-3 bg-card border border-border rounded-lg p-3">
+        { text: 'Brandlarm i Norrmalm', time: '12 min sedan', type: 'high' },
+        { text: 'Trafikolycka vid E4, Solna', time: '2h sedan', type: 'medium' },
+        { text: 'Ordningsstörning Gamla Stan', time: '3h sedan', type: 'medium' }].
+        map((n, i) =>
+        <div key={i} className="flex items-center gap-3 bg-card border border-border rounded-lg p-3">
               <div className={`w-2 h-2 rounded-full ${n.type === 'high' ? 'bg-cr-red' : 'bg-cr-orange'}`} />
               <div className="flex-1">
                 <span className="text-xs text-foreground">{n.text}</span>
               </div>
               <span className="text-[10px] font-mono text-muted-foreground">{n.time}</span>
             </div>
-          ))}
+        )}
         </div>
       </div>
     </div>
-  </div>
-);
+  </div>;
+
 
 export default Alerts;
