@@ -1,33 +1,47 @@
-import { Incident } from '@/data/mockIncidents';
-import { AlertTriangle, Activity, TrendingUp, Shield } from 'lucide-react';
+import { Incident, incidentTypeConfig } from '@/data/mockIncidents';
 
 interface StatsBarProps {
   incidents: Incident[];
 }
 
-const StatsBar = ({ incidents }: StatsBarProps) => {
-  const active = incidents.filter((i) => i.status === 'active').length;
-  const highRisk = incidents.filter((i) => i.risk === 'high').length;
-  const resolved = incidents.filter((i) => i.status === 'resolved').length;
+const getTimeAgo = (iso: string) => {
+  const diff = (Date.now() - new Date(iso).getTime()) / 60000;
+  if (diff < 60) return `${Math.round(diff)} min sedan`;
+  if (diff < 1440) return `${Math.round(diff / 60)}h sedan`;
+  return `${Math.round(diff / 1440)}d sedan`;
+};
 
-  const stats = [
-    { label: 'Aktiva', value: active, icon: Activity, colorClass: 'text-cr-red' },
-    { label: 'Hög risk', value: highRisk, icon: AlertTriangle, colorClass: 'text-cr-orange' },
-    { label: 'Avslutade', value: resolved, icon: Shield, colorClass: 'text-cr-green' },
-    { label: 'Riskindex', value: '62', icon: TrendingUp, colorClass: 'text-cr-blue' },
-  ];
+const StatsBar = ({ incidents }: StatsBarProps) => {
+  const latest = incidents.slice(0, 20);
+  // Duplicate for seamless loop
+  const items = [...latest, ...latest];
 
   return (
-    <div className="grid grid-cols-4 gap-px bg-border border-b border-border">
-      {stats.map((s) => (
-        <div key={s.label} className="bg-card px-3 py-2 flex items-center gap-2">
-          <s.icon className={`w-3.5 h-3.5 ${s.colorClass}`} />
-          <div>
-            <span className={`text-base font-bold font-mono ${s.colorClass}`}>{s.value}</span>
-            <span className="text-[9px] text-muted-foreground ml-1.5 uppercase tracking-wider">{s.label}</span>
-          </div>
-        </div>
-      ))}
+    <div className="bg-card border-b border-border overflow-hidden relative">
+      <div className="flex animate-ticker whitespace-nowrap">
+        {items.map((inc, i) => {
+          const conf = incidentTypeConfig[inc.type];
+          const isActive = inc.status === 'active';
+          return (
+            <div
+              key={`${inc.id}-${i}`}
+              className="inline-flex items-center gap-2 px-4 py-2 shrink-0"
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'animate-pulse-dot' : ''}`}
+                style={{ background: conf.color }}
+              />
+              <span className="text-[10px] font-medium text-foreground truncate max-w-[180px]">
+                {inc.title.replace(/^\d+\s\w+\s[\d.]+,\s*/, '')}
+              </span>
+              <span className="text-[9px] text-muted-foreground font-mono">
+                {getTimeAgo(inc.time)}
+              </span>
+              <span className="text-[9px] text-muted-foreground/30 ml-2">|</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
