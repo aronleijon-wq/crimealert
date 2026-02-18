@@ -1,0 +1,4 @@
+project_id = "pqoiwiiydtikouzjrllx"
+
+[functions.police-events]
+verify_jwt = false
