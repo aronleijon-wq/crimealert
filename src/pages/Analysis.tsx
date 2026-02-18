@@ -9,9 +9,13 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
-  // "2026-02-18 22:03:10 +01:00" → "2026-02-18T22:03:10+01:00"
-  const normalized = t.replace(' ', 'T').replace('T+', '+').replace('T-', '-');
-  return new Date(normalized);
+  // Remove all spaces, then re-insert T between date and time
+  const parts = t.trim().split(/\s+/);
+  // parts: ["2026-02-18", "22:03:10", "+01:00"]
+  if (parts.length >= 3) {
+    return new Date(`${parts[0]}T${parts[1]}${parts[2]}`);
+  }
+  return new Date(t);
 };
 
 const StatCard = ({ label, value, sub, icon: Icon, colorClass }: { label: string; value: string | number; sub: string; icon: any; colorClass: string }) => (
