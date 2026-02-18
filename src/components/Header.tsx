@@ -47,10 +47,10 @@ const Header = () => {
       </nav>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 border border-primary/20">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" />
-          <span className="text-[10px] font-mono text-primary font-medium">LIVE</span>
-        </div>
+        
+
+
+
       </div>
     </header>);
 
