@@ -303,23 +303,24 @@ const Analysis = () => {
               </div>
             </div>
 
-            {loading && !incidents.length ?
+          {loading && !incidents.length ?
           <div className="flex items-center justify-center py-20">
                 <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground mr-2" />
                 <span className="text-sm text-muted-foreground">Hämtar data från Polisen.se...</span>
               </div> :
-          stats ?
+
           <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard label="Riskindex" value={stats.riskIndex} sub={`${stats.highRisk} högrisk`} icon={AlertTriangle} colorClass="text-cr-orange" />
-                  <StatCard label="Händelser" value={stats.total} sub="Polisen.se" icon={Shield} colorClass="text-cr-blue" />
-                  <StatCard label="Hög risk" value={stats.highRisk} sub={`${Math.round(stats.highRisk / stats.total * 100)}% av totalt`} icon={TrendingUp} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={`${String(stats.peakHour).padStart(2, '0')}:00`} sub={`${stats.hourlyData[stats.peakHour].antal} händelser denna timme`} icon={Clock} colorClass="text-cr-green" />
+                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
+                  <StatCard label="Händelser" value={stats?.total ?? 0} sub="Polisen.se" icon={Shield} colorClass="text-cr-blue" />
+                  <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av totalt` : 'Inga händelser ännu'} icon={TrendingUp} colorClass="text-cr-red" />
+                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser denna timme` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-card border border-border rounded-lg p-4">
                     <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per dag</h3>
+                    {stats?.trendData?.length ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <AreaChart data={stats.trendData}>
                         <defs>
@@ -335,34 +336,48 @@ const Analysis = () => {
                         <Area type="monotone" dataKey="incidenter" stroke="hsl(0, 100%, 62%)" fill="url(#redGrad)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
+                    ) : (
+                    <div className="h-[220px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
+                    </div>
+                    )}
                   </div>
 
                   <div className="bg-card border border-border rounded-lg p-4">
                     <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Fördelning per typ</h3>
+                    {stats?.typeData?.length ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie data={stats.typeData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" stroke="none">
                           {stats.typeData.map((entry) =>
                       <Cell key={entry.name} fill={entry.color} />
-                      )}
+                          )}
                         </Pie>
                         <Tooltip content={<ChartTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
+                    ) : (
+                    <div className="h-[220px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
+                    </div>
+                    )}
+                    {stats?.typeData?.length ? (
                     <div className="flex flex-wrap gap-3 mt-2 justify-center">
                       {stats.typeData.map((t) =>
                   <span key={t.name} className="flex items-center gap-1 text-[10px] text-muted-foreground">
                           <span className="w-2 h-2 rounded-full" style={{ background: t.color }} />
                           {t.name} ({t.value})
                         </span>
-                  )}
+                      )}
                     </div>
+                    ) : null}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-card border border-border rounded-lg p-4">
                     <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per timme</h3>
+                    {stats?.hourlyData?.some(h => h.antal > 0) ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={stats.hourlyData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -372,6 +387,11 @@ const Analysis = () => {
                         <Bar dataKey="antal" fill="hsl(210, 100%, 56%)" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
+                    ) : (
+                    <div className="h-[220px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
+                    </div>
+                    )}
                   </div>
 
                   <div className="bg-card border border-border rounded-lg p-4">
@@ -380,6 +400,7 @@ const Analysis = () => {
                       Säkerhetsindex per område
                     </h3>
                     <p className="text-[10px] text-muted-foreground mb-3">Baserat på händelser senaste 7 dagarna · 100 = säkrast</p>
+                    {stats?.areaComparison?.length ? (
                     <div className="space-y-3 mt-2">
                       {stats.areaComparison.map((a) =>
                   <div key={a.område}>
@@ -399,20 +420,22 @@ const Analysis = () => {
                           width: `${a.index}%`,
                           background: a.index <= 30 ? 'hsl(0, 100%, 62%)' : a.index <= 60 ? 'hsl(25, 100%, 63%)' : 'hsl(142, 70%, 45%)'
                         }} />
-
                           </div>
                         </div>
-                  )}
+                      )}
                     </div>
+                    ) : (
+                    <div className="h-[120px] flex items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
+                    </div>
+                    )}
                   </div>
                 </div>
 
                 <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
                   CrimeAlert • Data från Polisen.se • Inga personuppgifter visas • GDPR-kompatibel
                 </p>
-              </> :
-
-          <p className="text-sm text-muted-foreground text-center py-10">Ingen data tillgänglig.</p>
+              </>
           }
           </div>
         </div>
