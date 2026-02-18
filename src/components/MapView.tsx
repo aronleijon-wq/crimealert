@@ -139,6 +139,7 @@ const createPopupContent = (inc: Incident) => {
 const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,11 +172,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
   useEffect(() => {
     if (!markersRef.current) return;
     markersRef.current.clearLayers();
+    markerMapRef.current.clear();
 
     incidents.forEach((inc) => {
       const config = incidentTypeConfig[inc.type];
       
-      // Add 500m radius circle
       const circle = L.circle([inc.lat, inc.lng], {
         radius: 500,
         color: config.color,
@@ -194,6 +195,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
       });
       marker.on('click', () => onSelectIncident(inc.id));
       markersRef.current!.addLayer(marker);
+      markerMapRef.current.set(inc.id, marker);
     });
   }, [incidents, onSelectIncident]);
 
@@ -202,14 +204,8 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
     const inc = incidents.find((i) => i.id === selectedId);
     if (inc) {
       mapRef.current.flyTo([inc.lat, inc.lng], 14, { duration: 0.8 });
-      markersRef.current?.getLayers().forEach((layer: any) => {
-        if (layer.getLatLng) {
-          const ll = layer.getLatLng();
-          if (Math.abs(ll.lat - inc.lat) < 0.0001 && Math.abs(ll.lng - inc.lng) < 0.0001) {
-            layer.openPopup();
-          }
-        }
-      });
+      const marker = markerMapRef.current.get(inc.id);
+      if (marker) marker.openPopup();
     }
   }, [selectedId, incidents]);
 
