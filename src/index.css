@@ -6,6 +6,60 @@
 
 @layer base {
   :root {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 0 100% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 25 100% 63%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 220 14% 92%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 0 100% 62%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 0 100% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 0 100% 62%;
+
+    /* CrimeRadar custom tokens */
+    --cr-navy: 228 60% 7%;
+    --cr-red: 0 100% 62%;
+    --cr-orange: 25 100% 63%;
+    --cr-green: 142 70% 45%;
+    --cr-blue: 210 100% 56%;
+    --cr-surface: 220 14% 95%;
+    --cr-surface-hover: 220 14% 90%;
+    --cr-glow-red: 0 0 20px hsla(0, 100%, 62%, 0.2);
+    --cr-glow-orange: 0 0 20px hsla(25, 100%, 63%, 0.15);
+    --cr-glow-green: 0 0 20px hsla(142, 70%, 45%, 0.15);
+    --cr-text-dim: 215 15% 55%;
+  }
+
+  .dark {
     --background: 222 47% 6%;
     --foreground: 210 20% 90%;
 
@@ -34,8 +88,6 @@
     --input: 222 20% 16%;
     --ring: 0 100% 62%;
 
-    --radius: 0.5rem;
-
     --sidebar-background: 222 40% 6%;
     --sidebar-foreground: 210 20% 90%;
     --sidebar-primary: 0 100% 62%;
@@ -45,7 +97,6 @@
     --sidebar-border: 222 20% 16%;
     --sidebar-ring: 0 100% 62%;
 
-    /* CrimeRadar custom tokens */
     --cr-navy: 228 60% 7%;
     --cr-red: 0 100% 62%;
     --cr-orange: 25 100% 63%;

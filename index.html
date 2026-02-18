@@ -10,7 +10,8 @@
     <meta property="og:description" content="Situational awareness for the modern world." />
     <meta property="og:type" content="website" />
   </head>
-  <body class="dark">
+  <body>
+    <script>document.body.classList.add(localStorage.getItem('crimeradar-theme') || 'dark');</script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
