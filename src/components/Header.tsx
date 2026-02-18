@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Radio, BarChart3, Bell, User } from 'lucide-react';
+import { Radio, BarChart3, Bell, User } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const navItems = [
   { to: '/', label: 'Karta', icon: Radio },
@@ -14,9 +15,7 @@ const Header = () => {
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
       <Link to="/" className="flex items-center gap-2.5 group">
-        <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/30 flex items-center justify-center glow-red">
-          <Shield className="w-4 h-4 text-primary" />
-        </div>
+        <img src={logo} alt="CrimeRadar" className="w-8 h-8 rounded-md" />
         <div className="flex flex-col leading-none">
           <span className="font-bold text-sm tracking-wider text-foreground">
             CRIME<span className="text-primary">RADAR</span>
