@@ -1,11 +1,53 @@
 import Header from '@/components/Header';
-import { User, Zap, Building2, Check, X, Sun, Moon } from 'lucide-react';
+import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+const PREMIUM_PRICE_ID = 'price_1T2HH5CTAG2ESipPB2WYPzf3';
+const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
 
 const Account = () => {
   const { theme, setTheme } = useTheme();
+  const { user, subscription, signOut, checkSubscription } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const isPremium = subscription.subscribed && subscription.productId === PREMIUM_PRODUCT_ID;
+
+  const handleCheckout = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId: PREMIUM_PRICE_ID },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (err: any) {
+      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (err: any) {
+      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+    }
+  };
 
   const tiers = [
     {
@@ -14,8 +56,8 @@ const Account = () => {
       iconColor: 'text-muted-foreground',
       price: '0 kr',
       period: '',
-      border: 'border-border',
-      badge: null,
+      border: !isPremium ? 'border-primary/30' : 'border-border',
+      badge: !isPremium && user ? 'DIN PLAN' : null,
       features: [
         { text: 'Karta med 15 min fördröjning', included: true },
         { text: 'Begränsade filter', included: true },
@@ -27,8 +69,9 @@ const Account = () => {
         { text: 'Riskanalys', included: false },
         { text: 'Full historik', included: false },
       ],
-      cta: 'Nuvarande plan',
+      cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
       ctaStyle: 'bg-muted text-muted-foreground cursor-default',
+      action: undefined,
     },
     {
       name: 'Pro',
@@ -37,8 +80,8 @@ const Account = () => {
       price: billingCycle === 'monthly' ? '19 kr' : '119 kr',
       period: billingCycle === 'monthly' ? '/mån' : '/år',
       savings: billingCycle === 'yearly' ? 'Spara 109 kr' : null,
-      border: 'border-primary/30',
-      badge: 'POPULÄR',
+      border: isPremium ? 'border-primary/30' : 'border-border',
+      badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
       features: [
         { text: 'Realtidsdata – direkt', included: true },
         { text: 'Alla filter & risknivåer', included: true },
@@ -51,8 +94,11 @@ const Account = () => {
         { text: 'API-access', included: false },
         { text: 'White-label', included: false },
       ],
-      cta: 'Uppgradera till Pro',
-      ctaStyle: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      cta: isPremium ? 'Hantera prenumeration' : 'Uppgradera till Pro',
+      ctaStyle: isPremium
+        ? 'bg-muted text-foreground hover:bg-muted/80'
+        : 'bg-primary text-primary-foreground hover:bg-primary/90',
+      action: isPremium ? handleManageSubscription : handleCheckout,
     },
     {
       name: 'Företag',
@@ -73,6 +119,7 @@ const Account = () => {
       ],
       cta: 'Kontakta oss',
       ctaStyle: 'bg-muted text-foreground hover:bg-muted/80',
+      action: undefined,
     },
   ];
 
@@ -150,12 +197,14 @@ const Account = () => {
                 <div
                   key={tier.name}
                   className={`bg-card border ${tier.border} rounded-lg p-4 relative flex flex-col ${
-                    tier.badge === 'POPULÄR' ? 'glow-red' : ''
+                    tier.badge === 'DIN PLAN' || tier.badge === 'POPULÄR' ? 'glow-red' : ''
                   }`}
                 >
                   {tier.badge && (
                     <div className={`absolute -top-2 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      tier.badge === 'POPULÄR'
+                      tier.badge === 'DIN PLAN'
+                        ? 'bg-cr-green text-white'
+                        : tier.badge === 'POPULÄR'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-cr-blue/20 text-cr-blue'
                     }`}>
@@ -165,7 +214,7 @@ const Account = () => {
 
                   <div className="flex items-center gap-2 mb-3">
                     <Icon className={`w-4 h-4 ${tier.iconColor}`} />
-                    <span className={`text-xs font-bold ${tier.badge === 'POPULÄR' ? 'text-primary' : 'text-foreground'}`}>
+                    <span className={`text-xs font-bold ${tier.badge === 'POPULÄR' || tier.badge === 'DIN PLAN' ? 'text-primary' : 'text-foreground'}`}>
                       {tier.name}
                     </span>
                   </div>
@@ -191,24 +240,63 @@ const Account = () => {
                     ))}
                   </ul>
 
-                  <button className={`w-full px-4 py-2 rounded-md text-xs font-semibold transition ${tier.ctaStyle}`}>
-                    {tier.cta}
+                  <button
+                    onClick={tier.action}
+                    disabled={!tier.action || checkoutLoading}
+                    className={`w-full px-4 py-2 rounded-md text-xs font-semibold transition ${tier.ctaStyle} disabled:opacity-50`}
+                  >
+                    {checkoutLoading && tier.action === handleCheckout ? 'Laddar...' : tier.cta}
                   </button>
                 </div>
               );
             })}
           </div>
 
-          {/* Login CTA */}
-          <div className="bg-card border border-border rounded-lg p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2">
-              Logga in
-            </button>
-            <button className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition">
-              Skapa konto
-            </button>
-          </div>
+          {/* User section */}
+          {user ? (
+            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-foreground font-medium">{user.email}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {isPremium
+                    ? `Premium aktiv t.o.m. ${new Date(subscription.subscriptionEnd!).toLocaleDateString('sv-SE')}`
+                    : 'Gratisplan'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {isPremium && (
+                  <button
+                    onClick={handleManageSubscription}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition"
+                  >
+                    <CreditCard className="w-3 h-3" /> Hantera
+                  </button>
+                )}
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition"
+                >
+                  <LogOut className="w-3 h-3" /> Logga ut
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2"
+              >
+                Logga in
+              </button>
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition"
+              >
+                Skapa konto
+              </button>
+            </div>
+          )}
 
           {/* Comparison table */}
           <div className="bg-card border border-border rounded-lg overflow-hidden">
