@@ -1,16 +1,28 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Radio, BarChart3, Bell, User } from 'lucide-react';
+import { Radio, BarChart3, Bell, User, CreditCard, UserPlus } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import { useAuth } from '@/hooks/useAuth';
 
-const navItems = [
-{ to: '/', label: 'Karta', icon: Radio },
-{ to: '/analysis', label: 'Analys', icon: BarChart3 },
-{ to: '/alerts', label: 'Notiser', icon: Bell },
-{ to: '/account', label: 'Konto & Prisplan', icon: User }];
+const baseNavItems = [
+  { to: '/', label: 'Karta', icon: Radio },
+  { to: '/analysis', label: 'Analys', icon: BarChart3 },
+  { to: '/alerts', label: 'Notiser', icon: Bell },
+];
 
 
 const Header = () => {
+  const { user } = useAuth();
   const location = useLocation();
+
+  const navItems = [
+    ...baseNavItems,
+    ...(user
+      ? [{ to: '/account', label: 'Konto', icon: User }]
+      : [
+          { to: '/auth?mode=signup', label: 'Skapa konto', icon: UserPlus },
+          { to: '/account', label: 'Prisplan', icon: CreditCard },
+        ]),
+  ];
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
