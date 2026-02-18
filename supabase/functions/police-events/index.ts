@@ -378,6 +378,29 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'östra göinge': { lat: 56.2730, lng: 14.1560, type: 'kommun' },
   'överkalix': { lat: 66.3270, lng: 22.8420, type: 'kommun' },
   'övertorneå': { lat: 66.3900, lng: 23.6510, type: 'kommun' },
+
+  // ── Svenska län (counties) — explicit entries to avoid substring bugs ──
+  'stockholms län': { lat: 59.3293, lng: 18.0686, type: 'kommun' },
+  'västra götalands län': { lat: 57.7089, lng: 11.9746, type: 'kommun' },
+  'skåne län': { lat: 55.6050, lng: 13.0038, type: 'kommun' },
+  'uppsala län': { lat: 59.8586, lng: 17.6389, type: 'kommun' },
+  'östergötlands län': { lat: 58.4108, lng: 15.6214, type: 'kommun' },
+  'jönköpings län': { lat: 57.7826, lng: 14.1618, type: 'kommun' },
+  'kronobergs län': { lat: 56.8777, lng: 14.8091, type: 'kommun' },
+  'kalmar län': { lat: 56.6634, lng: 16.3566, type: 'kommun' },
+  'gotlands län': { lat: 57.6348, lng: 18.2948, type: 'kommun' },
+  'blekinge län': { lat: 56.1612, lng: 15.5869, type: 'kommun' },
+  'hallands län': { lat: 56.6745, lng: 12.8578, type: 'kommun' },
+  'värmlands län': { lat: 59.3793, lng: 13.5036, type: 'kommun' },
+  'örebro län': { lat: 59.2753, lng: 15.2134, type: 'kommun' },
+  'västmanlands län': { lat: 59.6099, lng: 16.5448, type: 'kommun' },
+  'dalarnas län': { lat: 60.4858, lng: 15.4364, type: 'kommun' },
+  'gävleborgs län': { lat: 60.6749, lng: 17.1413, type: 'kommun' },
+  'västernorrlands län': { lat: 62.3908, lng: 17.3069, type: 'kommun' },
+  'jämtlands län': { lat: 63.1792, lng: 14.6357, type: 'kommun' },
+  'västerbottens län': { lat: 63.8258, lng: 20.2630, type: 'kommun' },
+  'norrbottens län': { lat: 65.5848, lng: 22.1547, type: 'kommun' },
+  'södermanlands län': { lat: 59.3666, lng: 16.5077, type: 'kommun' },
 };
 
 // ─── Text normalization ───────────────────────────────────────────────────────
@@ -385,9 +408,8 @@ function normalizeLocationText(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/\s*kommun\s*/g, '')
-    .replace(/\s*stad\s*/g, '')
-    .replace(/\s*län\s*/g, '')
+    .replace(/\s*kommun$/g, '')
+    .replace(/\s*stad$/g, '')
     .replace(/^(i|vid|på|nära|utanför)\s+/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -395,18 +417,21 @@ function normalizeLocationText(text: string): string {
 
 // ─── Lookup from Swedish reference DB ─────────────────────────────────────────
 function lookupSwedishLocation(locationName: string): LocationEntry | null {
-  const normalized = normalizeLocationText(locationName);
+  const lower = locationName.toLowerCase().trim();
   
-  // Direct match
+  // 1. Try exact match with original text (important for "Kronobergs län" etc.)
+  if (SWEDISH_LOCATIONS[lower]) return SWEDISH_LOCATIONS[lower];
+  
+  // 2. Try normalized (strips "kommun", "stad", prepositions — but NOT "län")
+  const normalized = normalizeLocationText(locationName);
   if (SWEDISH_LOCATIONS[normalized]) return SWEDISH_LOCATIONS[normalized];
   
-  // Try to find within compound names (e.g. "Nacka kommun" → "nacka")
-  for (const [key, entry] of Object.entries(SWEDISH_LOCATIONS)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      return entry;
-    }
-  }
+  // 3. Try adding "s län" suffix for county names (e.g. "Kronoberg" → "kronobergs län")
+  const asLan = normalized + 's län';
+  if (SWEDISH_LOCATIONS[asLan]) return SWEDISH_LOCATIONS[asLan];
   
+  // 4. Only do exact word boundary matching — NO substring matching
+  // This prevents "berg" from matching "kronoberg"
   return null;
 }
 
@@ -544,25 +569,43 @@ serve(async (req) => {
         location_precision: 'exact', // Will be updated below
       };
 
-      // ── Step 1: Try to extract a street address from summary ──
-      const extractedAddress = extractAddressFromSummary(event.summary || '');
-      
-      if (extractedAddress) {
-        const geocodeQuery = `${extractedAddress}, ${locationName}, Sverige`;
-        const promise = geocodeWithNominatim(geocodeQuery).then(coords => {
-          if (coords) {
-            incident.lat = coords[0];
-            incident.lng = coords[1];
-            incident.location_precision = 'street';
-            console.log(`Street-level geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
-          }
-        });
-        geocodePromises.push(promise);
+      // ── Extract city name from title (e.g. "18 feb 20.08, Narkotikabrott, Umeå") ──
+      const titleParts = (event.name || '').split(',');
+      const cityFromTitle = titleParts.length >= 3 ? titleParts[titleParts.length - 1].trim() : null;
+
+      // ── Step 1: Try city from title in our local DB ──
+      let resolvedFromTitle = false;
+      if (cityFromTitle) {
+        const cityMatch = lookupSwedishLocation(cityFromTitle);
+        if (cityMatch) {
+          incident.lat = cityMatch.lat;
+          incident.lng = cityMatch.lng;
+          incident.location_precision = cityMatch.type === 'stadsdel' ? 'district' : 'area';
+          resolvedFromTitle = true;
+          console.log(`City from title: "${cityFromTitle}" → ${cityMatch.lat}, ${cityMatch.lng}`);
+        }
       }
 
-      // ── Step 2: Check if API coordinates are county centroids ──
-      if (rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
-        // Use our Swedish reference DB
+      // ── Step 2: Try to extract a street address from summary ──
+      if (!resolvedFromTitle) {
+        const extractedAddress = extractAddressFromSummary(event.summary || '');
+        
+        if (extractedAddress) {
+          const geocodeQuery = `${extractedAddress}, ${cityFromTitle || locationName}, Sverige`;
+          const promise = geocodeWithNominatim(geocodeQuery).then(coords => {
+            if (coords) {
+              incident.lat = coords[0];
+              incident.lng = coords[1];
+              incident.location_precision = 'street';
+              console.log(`Street-level geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
+            }
+          });
+          geocodePromises.push(promise);
+        }
+      }
+
+      // ── Step 3: Check if API coordinates are county centroids ──
+      if (!resolvedFromTitle && rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
         const localMatch = lookupSwedishLocation(locationName);
         if (localMatch) {
           incident.lat = localMatch.lat;
@@ -583,14 +626,23 @@ serve(async (req) => {
           });
           geocodePromises.push(promise);
         }
-      } else if (!rawLat || !rawLng) {
-        // ── Step 3: No GPS → use local DB first ──
+      } else if (!resolvedFromTitle && (!rawLat || !rawLng)) {
+        // ── Step 4: No GPS → use local DB first ──
         const localMatch = lookupSwedishLocation(locationName);
         if (localMatch) {
           incident.lat = localMatch.lat;
           incident.lng = localMatch.lng;
           incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
-          console.log(`Local DB (no GPS): "${locationName}" → ${localMatch.lat}, ${localMatch.lng}`);
+        } else if (cityFromTitle) {
+          // Try Nominatim with city from title
+          const promise = geocodeWithNominatim(`${cityFromTitle}, Sverige`).then(coords => {
+            if (coords) {
+              incident.lat = coords[0];
+              incident.lng = coords[1];
+              incident.location_precision = 'area';
+            }
+          });
+          geocodePromises.push(promise);
         } else {
           const promise = geocodeWithNominatim(`${locationName}, Sverige`).then(coords => {
             if (coords) {
