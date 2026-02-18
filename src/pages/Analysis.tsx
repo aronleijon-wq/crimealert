@@ -102,18 +102,34 @@ const Analysis = () => {
         return { dag: `${dayNames[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`, incidenter };
       });
 
-    // Risk distribution for areas
-    const areaRisk: Record<string, { high: number; total: number }> = {};
-    incidents.forEach(i => {
-      if (!i.area) return;
-      if (!areaRisk[i.area]) areaRisk[i.area] = { high: 0, total: 0 };
-      areaRisk[i.area].total++;
-      if (i.risk === 'high' || i.risk === 'medium') areaRisk[i.area].high++;
+    // Safety index per area (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentIncidents = incidents.filter(i => {
+      try { return new Date(i.time) >= sevenDaysAgo; } catch { return false; }
     });
+
+    const areaRisk: Record<string, { high: number; medium: number; low: number; total: number }> = {};
+    recentIncidents.forEach(i => {
+      if (!i.area) return;
+      if (!areaRisk[i.area]) areaRisk[i.area] = { high: 0, medium: 0, low: 0, total: 0 };
+      areaRisk[i.area].total++;
+      if (i.risk === 'high') areaRisk[i.area].high++;
+      else if (i.risk === 'medium') areaRisk[i.area].medium++;
+      else areaRisk[i.area].low++;
+    });
+
+    // Weighted safety index: 100 = safest, 0 = most dangerous
+    // Formula: high incidents weigh 5x, medium 2x, low 1x — normalized against max score
+    const maxWeight = Math.max(...Object.values(areaRisk).map(a => a.high * 5 + a.medium * 2 + a.low), 1);
     const areaComparison = Object.entries(areaRisk)
       .sort((a, b) => b[1].total - a[1].total)
       .slice(0, 8)
-      .map(([område, { high, total }]) => ({ område, index: Math.round((high / total) * 100) }));
+      .map(([område, { high, medium, low }]) => {
+        const dangerScore = high * 5 + medium * 2 + low;
+        const safetyIndex = Math.round(100 - (dangerScore / maxWeight) * 100);
+        return { område, index: safetyIndex, total: high + medium + low, high };
+      });
 
     return { riskIndex, typeData, hourlyData, peakHour, topAreas, trendData, areaComparison, highRisk };
   }, [incidents]);
@@ -208,25 +224,29 @@ const Analysis = () => {
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-4">
-                  <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">
-                    <MapPin className="w-3 h-3 inline mr-1" />
-                    Områdesriskindex
+                  <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
+                    <Shield className="w-3 h-3 inline mr-1" />
+                    Säkerhetsindex per område
                   </h3>
+                  <p className="text-[10px] text-muted-foreground mb-3">Baserat på händelser senaste 7 dagarna · 100 = säkrast</p>
                   <div className="space-y-3 mt-2">
                     {stats.areaComparison.map((a) => (
                       <div key={a.område}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs text-foreground truncate mr-2">{a.område}</span>
-                          <span className={`text-xs font-mono font-bold ${a.index >= 60 ? 'text-cr-red' : a.index >= 40 ? 'text-cr-orange' : 'text-cr-green'}`}>
-                            {a.index}/100
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-muted-foreground">{a.total} brott{a.high > 0 ? ` (${a.high} allvarliga)` : ''}</span>
+                            <span className={`text-xs font-mono font-bold ${a.index <= 30 ? 'text-cr-red' : a.index <= 60 ? 'text-cr-orange' : 'text-cr-green'}`}>
+                              {a.index}/100
+                            </span>
+                          </div>
                         </div>
                         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all"
                             style={{
                               width: `${a.index}%`,
-                              background: a.index >= 60 ? 'hsl(0, 100%, 62%)' : a.index >= 40 ? 'hsl(25, 100%, 63%)' : 'hsl(142, 70%, 45%)',
+                              background: a.index <= 30 ? 'hsl(0, 100%, 62%)' : a.index <= 60 ? 'hsl(25, 100%, 63%)' : 'hsl(142, 70%, 45%)',
                             }}
                           />
                         </div>
