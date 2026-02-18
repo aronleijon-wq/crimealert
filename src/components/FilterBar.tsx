@@ -1,6 +1,7 @@
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
 import { Lock } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
@@ -10,10 +11,13 @@ interface FilterBarProps {
 }
 
 const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
+const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic'];
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
   const { isPremium } = useIsPremium();
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card/50">
@@ -21,7 +25,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
       {types.map((type) => {
         const config = incidentTypeConfig[type];
         const active = activeFilters.includes(type);
-        const locked = !isPremium && !FREE_FILTERS.includes(type);
+        const locked = !isPremium && !(isLoggedIn ? LOGGED_IN_FILTERS : FREE_FILTERS).includes(type);
         return (
           <button
             key={type}
