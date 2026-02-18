@@ -1,5 +1,5 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
-import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap } from 'lucide-react';
+import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap, Tag, Crosshair, Calendar } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,21 +8,69 @@ interface IncidentDetailProps {
   onClose: () => void;
 }
 
+const timeAgo = (dateStr: string): string => {
+  try {
+    const parts = dateStr.trim().split(/\s+/);
+    const date = parts.length >= 3
+      ? new Date(`${parts[0]}T${parts[1]}${parts[2]}`)
+      : new Date(dateStr);
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 60) return 'Just nu';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min sedan`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} tim sedan`;
+    return `${Math.floor(diff / 86400)} dagar sedan`;
+  } catch {
+    return '';
+  }
+};
+
+const formatFullDate = (dateStr: string): string => {
+  try {
+    const parts = dateStr.trim().split(/\s+/);
+    const date = parts.length >= 3
+      ? new Date(`${parts[0]}T${parts[1]}${parts[2]}`)
+      : new Date(dateStr);
+    return date.toLocaleDateString('sv-SE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  } catch {
+    return '';
+  }
+};
+
 const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
   const typeConf = incidentTypeConfig[incident.type];
   const riskConf = riskConfig[incident.risk];
-  const time = new Date(incident.time);
   const { isPremium } = useIsPremium();
   const navigate = useNavigate();
 
+  const ago = timeAgo(incident.time);
+  const fullDate = formatFullDate(incident.time);
+
+  // Parse time for display
+  let timeDisplay = '';
+  try {
+    const parts = incident.time.trim().split(/\s+/);
+    const date = parts.length >= 3
+      ? new Date(`${parts[0]}T${parts[1]}${parts[2]}`)
+      : new Date(incident.time);
+    timeDisplay = date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    timeDisplay = '–';
+  }
+
   return (
     <div className="bg-card border border-border rounded-lg p-4 shadow-xl max-w-sm">
+      {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">{typeConf.icon}</span>
           <div>
             <h3 className="text-sm font-bold text-foreground">{incident.title}</h3>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{typeConf.label}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{typeConf.label}</span>
+              {ago && (
+                <span className="text-[10px] text-muted-foreground">· {ago}</span>
+              )}
+            </div>
           </div>
         </div>
         <button onClick={onClose} className="p-1 rounded hover:bg-muted text-muted-foreground">
@@ -30,6 +78,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
         </button>
       </div>
 
+      {/* Description */}
       {isPremium ? (
         <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{incident.description}</p>
       ) : (
@@ -48,19 +97,51 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
         </div>
       )}
 
+      {/* Info rows */}
       <div className="space-y-2 text-xs">
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <Clock className="w-3 h-3" /> Tidpunkt
           </span>
-          <span className="font-mono text-foreground">{time.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="text-right">
+            <span className="font-mono text-foreground">{timeDisplay}</span>
+            {isPremium && fullDate && (
+              <p className="text-[10px] text-muted-foreground">{fullDate}</p>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <MapPin className="w-3 h-3" /> Område
           </span>
-          <span className="text-foreground">{incident.area}</span>
+          <span className="text-foreground text-right max-w-[180px] truncate">{incident.area}</span>
         </div>
+
+        {/* Pro: Original police type */}
+        {isPremium && incident.originalType && (
+          <div className="flex items-center justify-between py-1.5 border-t border-border">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Tag className="w-3 h-3" /> Poliskategori
+            </span>
+            <span className="text-foreground text-right max-w-[180px] truncate">{incident.originalType}</span>
+          </div>
+        )}
+
+        {/* Pro: Location precision */}
+        {isPremium && incident.locationPrecision && (
+          <div className="flex items-center justify-between py-1.5 border-t border-border">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Crosshair className="w-3 h-3" /> Precision
+            </span>
+            <span className="text-foreground capitalize">
+              {incident.locationPrecision === 'street' ? 'Gatunivå' :
+               incident.locationPrecision === 'exact' ? 'Exakt' :
+               incident.locationPrecision === 'district' ? 'Stadsdel' : 'Ungefärligt'}
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <Radio className="w-3 h-3" /> Status
@@ -69,6 +150,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
             {incident.status === 'active' ? 'Pågående' : 'Avslutad'}
           </span>
         </div>
+
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <Shield className="w-3 h-3" /> Risknivå
@@ -81,11 +163,23 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
             </span>
           )}
         </div>
+
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <ExternalLink className="w-3 h-3" /> Källa
           </span>
-          <span className="text-cr-blue">{incident.source}</span>
+          {isPremium && incident.url ? (
+            <a
+              href={incident.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cr-blue hover:underline flex items-center gap-1"
+            >
+              {incident.source} <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          ) : (
+            <span className="text-cr-blue">{incident.source}</span>
+          )}
         </div>
       </div>
 
