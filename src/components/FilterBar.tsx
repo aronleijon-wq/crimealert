@@ -1,4 +1,6 @@
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
+import { Lock } from 'lucide-react';
+import { useIsPremium } from '@/hooks/useIsPremium';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
@@ -7,8 +9,11 @@ interface FilterBarProps {
   activeCount: number;
 }
 
+const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
+
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
+  const { isPremium } = useIsPremium();
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-card/50">
@@ -16,18 +21,24 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
       {types.map((type) => {
         const config = incidentTypeConfig[type];
         const active = activeFilters.includes(type);
+        const locked = !isPremium && !FREE_FILTERS.includes(type);
         return (
           <button
             key={type}
-            onClick={() => onToggleFilter(type)}
+            onClick={() => !locked && onToggleFilter(type)}
+            disabled={locked}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-all border ${
-              active
+              locked
+                ? 'border-transparent bg-transparent text-muted-foreground/30 cursor-not-allowed'
+                : active
                 ? 'border-border bg-muted text-foreground'
                 : 'border-transparent bg-transparent text-muted-foreground/50 hover:text-muted-foreground'
             }`}
+            title={locked ? 'Uppgradera till Pro för alla filter' : config.label}
           >
             <span className="text-xs">{config.icon}</span>
             <span>{config.label}</span>
+            {locked && <Lock className="w-2.5 h-2.5 ml-0.5" />}
           </button>
         );
       })}

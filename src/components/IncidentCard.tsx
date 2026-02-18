@@ -1,5 +1,6 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
-import { Clock, MapPin } from 'lucide-react';
+import { Clock, MapPin, Lock } from 'lucide-react';
+import { useIsPremium } from '@/hooks/useIsPremium';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -17,6 +18,7 @@ const timeAgo = (iso: string) => {
 const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
   const typeConf = incidentTypeConfig[incident.type];
   const riskConf = riskConfig[incident.risk];
+  const { isPremium } = useIsPremium();
 
   return (
     <button
@@ -36,13 +38,23 @@ const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
           {incident.status === 'active' && (
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" />
           )}
-          <span className={`text-[10px] font-mono font-semibold ${riskConf.colorClass}`}>
-            {riskConf.label}
-          </span>
+          {isPremium ? (
+            <span className={`text-[10px] font-mono font-semibold ${riskConf.colorClass}`}>
+              {riskConf.label}
+            </span>
+          ) : (
+            <span className="text-[10px] font-mono text-muted-foreground/40 flex items-center gap-0.5">
+              <Lock className="w-2.5 h-2.5" /> Risk
+            </span>
+          )}
         </div>
       </div>
 
       <h3 className="text-sm font-semibold text-foreground mb-1 leading-tight">{incident.title}</h3>
+
+      {isPremium && (
+        <p className="text-[10px] text-muted-foreground mb-1.5 line-clamp-2">{incident.description}</p>
+      )}
 
       <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-0.5">

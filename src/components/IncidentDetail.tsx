@@ -1,5 +1,7 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
-import { X, MapPin, Clock, Shield, Radio, ExternalLink } from 'lucide-react';
+import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap } from 'lucide-react';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { useNavigate } from 'react-router-dom';
 
 interface IncidentDetailProps {
   incident: Incident;
@@ -10,6 +12,8 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
   const typeConf = incidentTypeConfig[incident.type];
   const riskConf = riskConfig[incident.risk];
   const time = new Date(incident.time);
+  const { isPremium } = useIsPremium();
+  const navigate = useNavigate();
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 shadow-xl max-w-sm">
@@ -26,7 +30,23 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
         </button>
       </div>
 
-      <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{incident.description}</p>
+      {isPremium ? (
+        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{incident.description}</p>
+      ) : (
+        <div className="relative mb-3">
+          <p className="text-xs text-muted-foreground leading-relaxed blur-[6px] select-none" aria-hidden>
+            {incident.description}
+          </p>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={() => navigate('/account')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-md text-[11px] font-semibold text-primary hover:bg-primary/20 transition"
+            >
+              <Lock className="w-3 h-3" /> Uppgradera för detaljer
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2 text-xs">
         <div className="flex items-center justify-between py-1.5 border-t border-border">
@@ -53,7 +73,13 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <Shield className="w-3 h-3" /> Risknivå
           </span>
-          <span className={`font-semibold ${riskConf.colorClass}`}>{riskConf.label}</span>
+          {isPremium ? (
+            <span className={`font-semibold ${riskConf.colorClass}`}>{riskConf.label}</span>
+          ) : (
+            <span className="text-muted-foreground/40 flex items-center gap-1 text-[10px]">
+              <Lock className="w-3 h-3" /> Pro
+            </span>
+          )}
         </div>
         <div className="flex items-center justify-between py-1.5 border-t border-border">
           <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -64,7 +90,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
       </div>
 
       <p className="text-[9px] text-muted-foreground/60 mt-3 font-mono">
-        Data sammanställd från öppna källor med 10–15 min fördröjning.
+        {isPremium ? 'Realtidsdata.' : 'Data med 15 min fördröjning.'} Sammanställd från öppna källor.
       </p>
     </div>
   );
