@@ -238,8 +238,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc) });
       marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
-        maxWidth: 280,
+        maxWidth: 320,
         closeButton: true,
+        autoPan: true,
+        autoPanPadding: L.point(40, 40),
       });
       marker.on('click', () => onSelectIncident(inc.id));
       markersRef.current!.addLayer(marker);
@@ -251,9 +253,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
     if (!mapRef.current || !selectedId) return;
     const inc = incidents.find((i) => i.id === selectedId);
     if (inc) {
-      mapRef.current.flyTo([inc.lat, inc.lng], 14, { duration: 0.8 });
-      const marker = markerMapRef.current.get(inc.id);
-      if (marker) marker.openPopup();
+      // Offset the flyTo slightly upward so the popup appears centered
+      const map = mapRef.current;
+      const targetZoom = 14;
+      const targetPoint = map.project([inc.lat, inc.lng], targetZoom);
+      // Shift down by ~120px so popup content appears more centered
+      targetPoint.y -= 120;
+      const targetLatLng = map.unproject(targetPoint, targetZoom);
+      map.flyTo(targetLatLng, targetZoom, { duration: 0.8 });
+      
+      setTimeout(() => {
+        const marker = markerMapRef.current.get(inc.id);
+        if (marker) marker.openPopup();
+      }, 850);
     }
   }, [selectedId, incidents]);
 
@@ -273,9 +285,13 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
           background: hsl(220, 10%, 95%) !important;
         }
         .incident-popup .leaflet-popup-content-wrapper {
-          border-radius: 10px;
-          padding: 4px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+          border-radius: 12px;
+          padding: 6px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          max-width: 340px;
+        }
+        .incident-popup .leaflet-popup-content {
+          margin: 8px;
         }
         .incident-popup .leaflet-popup-tip {
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
