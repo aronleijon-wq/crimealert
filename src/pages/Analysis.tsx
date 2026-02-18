@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import AdBanner from '@/components/AdBanner';
 import PremiumGate from '@/components/PremiumGate';
@@ -6,6 +6,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
+
+/** Normalize "2026-02-18 22:03:10 +01:00" → valid Date */
+const parseTime = (t: string): Date => {
+  const normalized = t.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
+  return new Date(normalized);
+};
 
 const StatCard = ({ label, value, sub, icon: Icon, colorClass }: { label: string; value: string | number; sub: string; icon: any; colorClass: string }) => (
   <div className="bg-card border border-border rounded-lg p-4">
@@ -52,6 +58,22 @@ const Analysis = () => {
   const { incidents, loading, refetch } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  // Auto-refresh every 15 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+      setLastUpdated(new Date());
+    }, 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Track when data loads
+  useEffect(() => {
+    if (incidents.length > 0) setLastUpdated(new Date());
+  }, [incidents]);
+
   const stats = useMemo(() => {
     if (!incidents.length) return null;
 
@@ -67,7 +89,7 @@ const Analysis = () => {
 
     const hourlyCounts = Array.from({ length: 24 }, () => 0);
     incidents.forEach(i => {
-      try { const h = new Date(i.time).getHours(); if (!isNaN(h)) hourlyCounts[h]++; } catch {}
+      try { const h = parseTime(i.time).getHours(); if (!isNaN(h)) hourlyCounts[h]++; } catch {}
     });
     const hourlyData = hourlyCounts.map((antal, i) => ({ timme: String(i).padStart(2, '0'), antal }));
 
@@ -80,7 +102,7 @@ const Analysis = () => {
     const dayCounts: Record<string, number> = {};
     const dayNames = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'];
     incidents.forEach(i => {
-      try { const d = new Date(i.time); dayCounts[d.toISOString().slice(0, 10)] = (dayCounts[d.toISOString().slice(0, 10)] || 0) + 1; } catch {}
+      try { const d = parseTime(i.time); dayCounts[d.toISOString().slice(0, 10)] = (dayCounts[d.toISOString().slice(0, 10)] || 0) + 1; } catch {}
     });
     const trendData = Object.entries(dayCounts)
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -93,7 +115,7 @@ const Analysis = () => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentIncidents = incidents.filter(i => {
-      try { return new Date(i.time) >= sevenDaysAgo; } catch { return false; }
+      try { return parseTime(i.time) >= sevenDaysAgo; } catch { return false; }
     });
 
     const areaRisk: Record<string, { high: number; medium: number; low: number; total: number }> = {};
@@ -134,10 +156,13 @@ const Analysis = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-bold text-foreground">Analys</h1>
-                <p className="text-xs text-muted-foreground">Baserat på {incidents.length} händelser från Polisen.se</p>
+                <p className="text-xs text-muted-foreground">
+                  Baserat på {incidents.length} händelser från Polisen.se · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
-              <button onClick={refetch} disabled={loading} className="p-2 rounded-md hover:bg-muted text-muted-foreground transition disabled:opacity-50">
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <button onClick={() => { refetch(); setLastUpdated(new Date()); }} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground transition disabled:opacity-50 text-xs">
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline font-medium">Uppdatera</span>
               </button>
             </div>
 
