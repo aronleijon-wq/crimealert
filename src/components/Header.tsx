@@ -3,11 +3,11 @@ import { Radio, BarChart3, Bell, User } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 const navItems = [
-  { to: '/', label: 'Karta', icon: Radio },
-  { to: '/analysis', label: 'Analys', icon: BarChart3 },
-  { to: '/alerts', label: 'Notiser', icon: Bell },
-  { to: '/account', label: 'Konto', icon: User },
-];
+{ to: '/', label: 'Karta', icon: Radio },
+{ to: '/analysis', label: 'Analys', icon: BarChart3 },
+{ to: '/alerts', label: 'Notiser', icon: Bell },
+{ to: '/account', label: 'Konto', icon: User }];
+
 
 const Header = () => {
   const location = useLocation();
@@ -15,7 +15,7 @@ const Header = () => {
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
       <Link to="/" className="flex items-center gap-2.5 group">
-        <img src={logo} alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} />
+        <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/f5451b06-87bc-40d2-80c9-00f484178e3e.png" />
         <div className="flex flex-col leading-none">
           <span className="font-bold text-sm tracking-wider text-foreground">
             CRIME<span className="text-primary">RADAR</span>
@@ -34,15 +34,15 @@ const Header = () => {
               key={to}
               to={to}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                active
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
+              active ?
+              'bg-primary/10 text-primary border border-primary/20' :
+              'text-muted-foreground hover:text-foreground hover:bg-muted'}`
+              }>
+
               <Icon className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{label}</span>
-            </Link>
-          );
+            </Link>);
+
         })}
       </nav>
 
@@ -52,8 +52,8 @@ const Header = () => {
           <span className="text-[10px] font-mono text-primary font-medium">LIVE</span>
         </div>
       </div>
-    </header>
-  );
+    </header>);
+
 };
 
 export default Header;
