@@ -131,8 +131,11 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
           <div style="font-size:10px;color:#888;margin-top:2px;">${config.label} • ${timeAgo}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-          <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-          <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${risk.label}</span>
+          ${isPremium
+            ? `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
+               <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${risk.label}</span>`
+            : `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
+          }
         </div>
       </div>
 
@@ -170,7 +173,10 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
           <span style="color:#aaa;font-size:9px;">📡 Status</span><br/>
-          <span style="color:${statusColor};font-weight:600;">${statusLabel}</span>
+          ${isPremium
+            ? `<span style="color:${statusColor};font-weight:600;">${statusLabel}</span>`
+            : `<span style="color:#aaa;font-weight:500;">🔒 Pro</span>`
+          }
         </div>
       </div>
 
