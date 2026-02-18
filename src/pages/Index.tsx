@@ -51,11 +51,16 @@ const Index = () => {
   const allIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   const isLive = liveIncidents.length > 0;
 
-  // Free users: only show last 24h
+  // Free users: only show last 24h + 15 min delay on new incidents
   const timeFiltered = useMemo(() => {
+    const now = Date.now();
     if (isPremium) return allIncidents;
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    return allIncidents.filter((i) => new Date(i.time).getTime() >= cutoff);
+    const cutoff24h = now - 24 * 60 * 60 * 1000;
+    const delayCutoff = now - 15 * 60 * 1000; // 15 minutes ago
+    return allIncidents.filter((i) => {
+      const t = new Date(i.time).getTime();
+      return t >= cutoff24h && t <= delayCutoff;
+    });
   }, [allIncidents, isPremium]);
 
   const filtered = useMemo(
