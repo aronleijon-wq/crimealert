@@ -45,41 +45,92 @@ const formatTime = (time: string) => {
   }
 };
 
+const getRiskDescription = (risk: string, type: string): string => {
+  const riskTexts: Record<string, Record<string, string>> = {
+    high: {
+      police: 'Allvarlig polisinsats pågår. Undvik området om möjligt. Polisen rekommenderar att allmänheten håller avstånd.',
+      fire: 'Kraftig brand med risk för spridning. Räddningstjänsten arbetar på plats. Fara för rök och fallande delar.',
+      ambulance: 'Allvarlig medicinsk händelse. Akutsjukvård har begärt förstärkning. Området kan vara avspärrat.',
+      traffic: 'Allvarlig trafikolycka med personskador. Vägen kan vara helt avstängd. Sök alternativ väg.',
+      other: 'Allvarlig händelse som kräver omedelbar uppmärksamhet från flera blåljusenheter.',
+    },
+    medium: {
+      police: 'Polisen utreder en pågående händelse. Viss avspärrning kan förekomma i närområdet.',
+      fire: 'Räddningstjänsten hanterar en mindre brand eller brandlarm. Begränsad påverkan på omgivningen.',
+      ambulance: 'Sjukvårdspersonal finns på plats. Händelsen bedöms som under kontroll.',
+      traffic: 'Trafikhändelse med begränsad påverkan. Var uppmärksam vid passage genom området.',
+      other: 'Händelse under utredning. Läget bedöms som stabilt men kan förändras.',
+    },
+    low: {
+      police: 'Rutinärende. Polisen har kontroll över situationen. Ingen fara för allmänheten.',
+      fire: 'Mindre brandrelaterad händelse. Släckning genomförd eller pågår utan risk för spridning.',
+      ambulance: 'Sjukvårdsärende utan behov av avspärrning. Ingen påverkan på omgivningen.',
+      traffic: 'Mindre trafikstörning. Trafiken kan flyta långsammare men är inte stoppad.',
+      other: 'Lågprioriterad händelse utan direkt risk för allmänheten.',
+    },
+  };
+  return riskTexts[risk]?.[type] || riskTexts[risk]?.other || '';
+};
+
+const getTimeAgo = (time: string): string => {
+  try {
+    const diff = Date.now() - new Date(time).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} min sedan`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ${mins % 60}min sedan`;
+    return `${Math.floor(hours / 24)}d sedan`;
+  } catch { return ''; }
+};
+
 const createPopupContent = (inc: Incident) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
   const riskColor = inc.risk === 'high' ? '#ef4444' : inc.risk === 'medium' ? '#f97316' : '#22c55e';
-  const statusLabel = inc.status === 'active' ? 'Aktiv' : 'Avslutad';
-  const statusColor = inc.status === 'active' ? '#ef4444' : '#6b7280';
+  const riskBg = inc.risk === 'high' ? '#fef2f2' : inc.risk === 'medium' ? '#fff7ed' : '#f0fdf4';
+  const statusLabel = inc.status === 'active' ? 'Pågående' : 'Avslutad';
+  const statusColor = inc.status === 'active' ? '#ef4444' : '#22c55e';
+  const statusBg = inc.status === 'active' ? '#fef2f2' : '#f0fdf4';
+  const riskDesc = getRiskDescription(inc.risk, inc.type);
+  const timeAgo = getTimeAgo(inc.time);
 
   return `
-    <div style="font-family:system-ui;min-width:200px;max-width:260px;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-        <span style="font-size:16px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
-        <span style="font-size:12px;font-weight:700;color:#1a1a1a;">${config.label}</span>
+    <div style="font-family:system-ui;min-width:240px;max-width:300px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:20px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.3;">${inc.title}</div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">${config.label} • ${timeAgo}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+          <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
+          <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${risk.label}</span>
+        </div>
       </div>
-      <p style="font-size:12px;font-weight:600;color:#333;margin:0 0 6px;">${inc.title}</p>
-      ${inc.description ? `<p style="font-size:11px;color:#666;margin:0 0 8px;line-height:1.4;">${inc.description}</p>` : ''}
+
+      ${inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 8px;line-height:1.5;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : ''}
+
+      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">⚠ Bedömning</div>
+        <p style="font-size:10px;color:#555;margin:0;line-height:1.5;">${riskDesc}</p>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;">
-        <div style="background:#f5f5f5;padding:4px 6px;border-radius:4px;">
-          <span style="color:#999;">Tid</span><br/>
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">📍 Område</span><br/>
+          <span style="color:#333;font-weight:600;">${inc.area}</span>
+        </div>
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">🕐 Tidpunkt</span><br/>
           <span style="color:#333;font-weight:500;">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:#f5f5f5;padding:4px 6px;border-radius:4px;">
-          <span style="color:#999;">Område</span><br/>
-          <span style="color:#333;font-weight:500;">${inc.area}</span>
-        </div>
-        <div style="background:#f5f5f5;padding:4px 6px;border-radius:4px;">
-          <span style="color:#999;">Status</span><br/>
-          <span style="color:${statusColor};font-weight:600;">${statusLabel}</span>
-        </div>
-        <div style="background:#f5f5f5;padding:4px 6px;border-radius:4px;">
-          <span style="color:#999;">Risknivå</span><br/>
-          <span style="color:${riskColor};font-weight:600;">${risk.label}</span>
-        </div>
       </div>
-      <div style="margin-top:6px;font-size:9px;color:#aaa;">
-        ${inc.approximate ? '⊙ Approximerad position • ' : ''}Källa: ${inc.source || 'Okänd'} • Ingen exakt adress visas
+
+      ${inc.approximate ? `<div style="margin-top:6px;font-size:9px;color:#f97316;background:#fff7ed;padding:4px 8px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
+
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee;font-size:9px;color:#bbb;display:flex;justify-content:space-between;">
+        <span>Källa: ${inc.source || 'Okänd'}</span>
+        <span>CrimeRadar</span>
       </div>
     </div>
   `;
