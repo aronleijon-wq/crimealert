@@ -122,6 +122,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
     markersRef.current.clearLayers();
 
     incidents.forEach((inc) => {
+      const config = incidentTypeConfig[inc.type];
+      
+      // Add 500m radius circle
+      const circle = L.circle([inc.lat, inc.lng], {
+        radius: 500,
+        color: config.color,
+        fillColor: config.color,
+        fillOpacity: 0.08,
+        weight: 1,
+        opacity: 0.3,
+      });
+      markersRef.current!.addLayer(circle);
+
       const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc) });
       marker.bindPopup(createPopupContent(inc), {
         className: 'incident-popup',

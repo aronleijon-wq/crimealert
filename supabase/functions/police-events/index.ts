@@ -116,6 +116,28 @@ function geocodeFromKnown(locationName: string): [number, number] | null {
   return null;
 }
 
+// Extract street address or specific location from summary text
+function extractAddressFromSummary(summary: string, locationName: string): string | null {
+  if (!summary) return null;
+  
+  // Match Swedish street patterns: "på Sveavägen", "vid Kungsgatan 5", "i korsningen Storgatan/Nygatan"
+  const patterns = [
+    /(?:på|vid|i närheten av|nära|utanför|framför|bakom)\s+([A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken)(?:\s+\d+)?)/gi,
+    /(?:på|vid)\s+([A-ZÅÄÖ][a-zåäöé]+\s+[A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen|torget|platsen))/gi,
+    /(?:korsningen|hörnet)\s+([A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen)\s*\/\s*[A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen))/gi,
+    /(?:på|vid|i)\s+([A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen|torget|platsen|allén|stigen|leden)\s*\d*)/gi,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = pattern.exec(summary);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  
+  return null;
+}
+
 // Geocode using Nominatim (OpenStreetMap) as fallback
 async function geocodeWithNominatim(locationName: string): Promise<[number, number] | null> {
   try {
@@ -209,9 +231,23 @@ serve(async (req) => {
         approximate: false,
       };
 
-      // Check if the GPS coordinates are county-level centroids
-      if (rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
-        // Try to get better coordinates from the location name
+      // Try to extract a street address from summary for precise geocoding
+      const extractedAddress = extractAddressFromSummary(event.summary || '', locationName);
+      
+      if (extractedAddress) {
+        // We have a street address — geocode it for precise location
+        const geocodeQuery = `${extractedAddress}, ${locationName}`;
+        const promise = geocodeWithNominatim(geocodeQuery).then(coords => {
+          if (coords) {
+            incident.lat = coords[0];
+            incident.lng = coords[1];
+            incident.approximate = false;
+            console.log(`Precise geocode for "${geocodeQuery}"`);
+          }
+        });
+        geocodePromises.push(promise);
+      } else if (rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
+        // County-level centroid — try to improve
         const betterCoords = geocodeFromKnown(locationName);
         if (betterCoords) {
           incident.lat = betterCoords[0];
@@ -219,7 +255,6 @@ serve(async (req) => {
           incident.approximate = true;
           console.log(`Improved coordinates for "${locationName}" using known centroids`);
         } else {
-          // Queue for Nominatim geocoding
           const promise = geocodeWithNominatim(locationName).then(coords => {
             if (coords) {
               incident.lat = coords[0];
@@ -227,7 +262,7 @@ serve(async (req) => {
               incident.approximate = true;
               console.log(`Geocoded "${locationName}" via Nominatim`);
             } else {
-              incident.approximate = true; // Mark as approximate even with original coords
+              incident.approximate = true;
             }
           });
           geocodePromises.push(promise);
