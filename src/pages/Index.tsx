@@ -4,7 +4,7 @@ import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
-import IncidentDetail from '@/components/IncidentDetail';
+
 import AdBanner from '@/components/AdBanner';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -126,11 +126,6 @@ const Index = () => {
             onSelectIncident={(id) => setSelectedId(id)}
           />
 
-          {selectedIncident && (
-            <div className="absolute bottom-4 left-4 z-[1000]">
-              <IncidentDetail incident={selectedIncident} onClose={() => setSelectedId(null)} />
-            </div>
-          )}
 
           {/* Fullscreen toggle button */}
           <button
