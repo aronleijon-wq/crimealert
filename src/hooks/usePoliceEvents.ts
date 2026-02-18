@@ -38,6 +38,7 @@ export function usePoliceEvents() {
           status: (e.status || 'active') as 'active' | 'resolved',
           risk: (e.risk || 'low') as RiskLevel,
           source: e.source,
+          approximate: e.approximate || false,
         }));
         setIncidents(mapped);
       } else {
