@@ -1,8 +1,10 @@
 import Header from '@/components/Header';
-import { User, Zap, Building2, Check, X } from 'lucide-react';
+import { User, Zap, Building2, Check, X, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 
 const Account = () => {
+  const { theme, setTheme } = useTheme();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const tiers = [
@@ -78,6 +80,35 @@ const Account = () => {
       <Header />
       <div className="flex-1 overflow-y-auto p-6 grid-overlay">
         <div className="max-w-3xl mx-auto space-y-6">
+          {/* Theme toggle */}
+          <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {theme === 'dark' ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-cr-orange" />}
+              <div>
+                <span className="text-xs font-bold text-foreground">Utseende</span>
+                <p className="text-[10px] text-muted-foreground">{theme === 'dark' ? 'Mörkt läge' : 'Ljust läge'}</p>
+              </div>
+            </div>
+            <div className="flex gap-1 bg-muted rounded-md p-0.5">
+              <button
+                onClick={() => setTheme('light')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
+                  theme === 'light' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Sun className="w-3 h-3" /> Ljust
+              </button>
+              <button
+                onClick={() => setTheme('dark')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
+                  theme === 'dark' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Moon className="w-3 h-3" /> Mörkt
+              </button>
+            </div>
+          </div>
+
           <div>
             <h1 className="text-xl font-bold text-foreground">Medlemskap</h1>
             <p className="text-xs text-muted-foreground">Välj den plan som passar dig</p>
