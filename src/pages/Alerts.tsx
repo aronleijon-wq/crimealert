@@ -100,7 +100,15 @@ const Alerts = () => {
     ? incidents.filter((inc) => kommuner.some((k) => inc.area.toLowerCase().includes(k.toLowerCase())))
     : [];
 
-  const latest = incidents.slice(0, 8);
+  // Sort: watched kommun incidents first, then by time
+  const sorted = [...incidents].sort((a, b) => {
+    const aWatched = kommuner.some((k) => a.area.toLowerCase().includes(k.toLowerCase()));
+    const bWatched = kommuner.some((k) => b.area.toLowerCase().includes(k.toLowerCase()));
+    if (aWatched && !bWatched) return -1;
+    if (!aWatched && bWatched) return 1;
+    return new Date(b.time).getTime() - new Date(a.time).getTime();
+  });
+  const latest = sorted.slice(0, 12);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -262,14 +270,16 @@ const Alerts = () => {
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Senaste händelser</span>
             {latest.map((inc) => {
               const typeConf = incidentTypeConfig[inc.type];
+              const isWatched = kommuner.some((k) => inc.area.toLowerCase().includes(k.toLowerCase()));
               return (
-                <div key={inc.id} className="flex items-center gap-3 bg-card border border-border rounded-lg p-3">
+                <div key={inc.id} className={`flex items-center gap-3 rounded-lg p-3 ${isWatched ? 'bg-primary/5 border border-primary/20' : 'bg-card border border-border'}`}>
                   <div className={`w-2 h-2 rounded-full shrink-0 ${inc.risk === 'high' ? 'bg-cr-red' : inc.risk === 'medium' ? 'bg-cr-orange' : 'bg-cr-green'}`} />
                   <span className="text-sm">{typeConf.icon}</span>
                   <div className="flex-1 min-w-0">
                     <span className="text-xs text-foreground block truncate">{inc.title.replace(/^\d+\s\w+\s[\d.]+,\s*/, '')}</span>
                     <span className="text-[10px] text-muted-foreground">{inc.area}</span>
                   </div>
+                  {isWatched && <MapPin className="w-3 h-3 text-primary shrink-0" />}
                   <span className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">{getTimeAgo(inc.time)}</span>
                 </div>
               );
