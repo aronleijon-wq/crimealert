@@ -18,7 +18,7 @@ const Header = () => {
         <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/f5451b06-87bc-40d2-80c9-00f484178e3e.png" />
         <div className="flex flex-col leading-none">
           <span className="font-bold text-sm tracking-wider text-foreground">
-            CRIME<span className="text-primary">RADAR</span>
+            CRIME<span className="text-primary">​ALERT</span>
           </span>
           <span className="text-[9px] tracking-[0.2em] text-muted-foreground font-mono uppercase">
             Situational Awareness
