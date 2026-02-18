@@ -6,7 +6,7 @@ const navItems = [
 { to: '/', label: 'Karta', icon: Radio },
 { to: '/analysis', label: 'Analys', icon: BarChart3 },
 { to: '/alerts', label: 'Notiser', icon: Bell },
-{ to: '/account', label: 'Konto', icon: User }];
+{ to: '/account', label: 'Konto & Prisplan', icon: User }];
 
 
 const Header = () => {
