@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
 
@@ -7,9 +7,14 @@ export function usePoliceEvents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const lastFetch = useRef(0);
 
-  const fetchEvents = async () => {
-    setLoading(true);
+  const fetchEvents = useCallback(async (silent = false) => {
+    // Throttle: don't fetch more than once per 30s
+    if (Date.now() - lastFetch.current < 30_000) return;
+    lastFetch.current = Date.now();
+
+    if (!silent) setLoading(true);
     setError(null);
 
     try {
@@ -47,22 +52,34 @@ export function usePoliceEvents() {
     } catch (err: any) {
       console.error('Error fetching police events:', err);
       setError(err.message);
-      toast({
-        title: 'Kunde inte hämta data',
-        description: 'Använder demo-data. Försök igen senare.',
-        variant: 'destructive',
-      });
+      if (!silent) {
+        toast({
+          title: 'Kunde inte hämta data',
+          description: 'Använder demo-data. Försök igen senare.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchEvents();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchEvents, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    // Poll every 60 seconds for near-realtime updates
+    const interval = setInterval(() => fetchEvents(true), 60 * 1000);
 
-  return { incidents, loading, error, refetch: fetchEvents };
+    // Re-fetch when tab becomes visible again
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fetchEvents(true);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [fetchEvents]);
+
+  return { incidents, loading, error, refetch: () => fetchEvents(false) };
 }
