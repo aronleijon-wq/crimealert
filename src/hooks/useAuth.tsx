@@ -36,21 +36,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
         return;
       }
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+
+      // Use fetch directly to avoid FunctionsHttpError throwing on 401
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-subscription`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
       });
-      if (error) {
-        // Session expired or auth error — reset gracefully
+
+      if (!res.ok) {
         setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
         return;
       }
-      if (data) {
-        setSubscription({
-          subscribed: data.subscribed || false,
-          productId: data.product_id || null,
-          subscriptionEnd: data.subscription_end || null,
-        });
-      }
+
+      const data = await res.json();
+      setSubscription({
+        subscribed: data.subscribed || false,
+        productId: data.product_id || null,
+        subscriptionEnd: data.subscription_end || null,
+      });
     } catch (err) {
       console.error('Error checking subscription:', err);
       setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
