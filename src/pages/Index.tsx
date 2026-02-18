@@ -58,7 +58,10 @@ const Index = () => {
     const cutoff24h = now - 24 * 60 * 60 * 1000;
     const delayCutoff = now - 15 * 60 * 1000; // 15 minutes ago
     return allIncidents.filter((i) => {
-      const t = new Date(i.time).getTime();
+      // Handle "2026-02-18 22:03:10 +01:00" format by replacing space before timezone with T
+      const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
+      const t = new Date(normalizedTime).getTime();
+      if (isNaN(t)) return true; // If we can't parse, show the incident
       return t >= cutoff24h && t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
