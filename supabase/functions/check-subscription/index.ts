@@ -25,6 +25,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Free premium whitelist
+    const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com"];
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
@@ -37,6 +40,19 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { email: user.email });
+
+    // Check whitelist first
+    if (FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) {
+      logStep("User is on free premium whitelist");
+      return new Response(JSON.stringify({
+        subscribed: true,
+        product_id: "prod_U0Hqae7g588978",
+        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
