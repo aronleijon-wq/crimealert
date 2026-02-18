@@ -37,8 +37,8 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: [59.334, 18.063],
-      zoom: 12,
+      center: [62.0, 16.0],
+      zoom: 5,
       zoomControl: false,
       attributionControl: false,
     });
