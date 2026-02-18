@@ -15,14 +15,18 @@ const StatCard = ({ label, value, sub, icon: Icon, colorClass }: { label: string
   </div>
 );
 
-const chartTooltipStyle = {
-  contentStyle: {
-    background: 'hsl(var(--card))',
-    border: '1px solid hsl(var(--border))',
-    borderRadius: '6px',
-    fontSize: '11px',
-    color: 'hsl(var(--foreground))',
-  },
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-md px-3 py-2 shadow-lg text-xs">
+      <p className="text-foreground font-medium mb-1">{label}</p>
+      {payload.map((p: any, i: number) => (
+        <p key={i} style={{ color: p.color }} className="font-mono">
+          {p.name}: {p.value}
+        </p>
+      ))}
+    </div>
+  );
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -159,7 +163,7 @@ const Analysis = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="dag" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                       <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <Tooltip {...chartTooltipStyle} />
+                      <Tooltip content={<ChartTooltip />} />
                       <Area type="monotone" dataKey="incidenter" stroke="hsl(0, 100%, 62%)" fill="url(#redGrad)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -174,7 +178,7 @@ const Analysis = () => {
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip {...chartTooltipStyle} />
+                      <Tooltip content={<ChartTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex flex-wrap gap-3 mt-2 justify-center">
@@ -197,7 +201,7 @@ const Analysis = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
                       <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <Tooltip {...chartTooltipStyle} />
+                      <Tooltip content={<ChartTooltip />} />
                       <Bar dataKey="antal" fill="hsl(210, 100%, 56%)" radius={[2, 2, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
