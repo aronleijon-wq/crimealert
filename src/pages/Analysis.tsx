@@ -61,7 +61,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 type TimeRange = '24h' | '7d' | '30d' | '12m';
 const TIME_RANGE_OPTIONS: {value: TimeRange;label: string;}[] = [
-{ value: '24h', label: '24 timmar' },
+{ value: '24h', label: 'Idag' },
 { value: '7d', label: '7 dagar' },
 { value: '30d', label: '30 dagar' },
 { value: '12m', label: '12 månader' }];
@@ -171,8 +171,8 @@ const Analysis = () => {
     let cutoff: Date;
     switch (timeRange) {
       case '24h':
-        cutoff = new Date(now);
-        cutoff.setHours(cutoff.getHours() - 24);
+        // Reset at midnight — show only today's incidents
+        cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         break;
       case '7d':
         cutoff = new Date(now);
