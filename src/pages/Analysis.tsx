@@ -74,21 +74,30 @@ const Analysis = () => {
     if (incidents.length > 0) setLastUpdated(new Date());
   }, [incidents]);
 
-  const stats = useMemo(() => {
-    if (!incidents.length) return null;
+  // Filter to today's incidents only (resets at midnight)
+  const todayIncidents = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return incidents.filter(i => {
+      try { return parseTime(i.time) >= today; } catch { return false; }
+    });
+  }, [incidents]);
 
-    const highRisk = incidents.filter(i => i.risk === 'high').length;
-    const mediumRisk = incidents.filter(i => i.risk === 'medium').length;
-    const riskIndex = Math.round((highRisk * 3 + mediumRisk * 1.5) / incidents.length * 33);
+  const stats = useMemo(() => {
+    if (!todayIncidents.length) return null;
+
+    const highRisk = todayIncidents.filter(i => i.risk === 'high').length;
+    const mediumRisk = todayIncidents.filter(i => i.risk === 'medium').length;
+    const riskIndex = Math.round((highRisk * 3 + mediumRisk * 1.5) / todayIncidents.length * 33);
 
     const typeCounts: Record<string, number> = {};
-    incidents.forEach(i => { typeCounts[i.type] = (typeCounts[i.type] || 0) + 1; });
+    todayIncidents.forEach(i => { typeCounts[i.type] = (typeCounts[i.type] || 0) + 1; });
     const typeData = Object.entries(typeCounts)
       .map(([name, value]) => ({ name: TYPE_LABELS[name] || name, value, color: TYPE_COLORS[name] || TYPE_COLORS.other }))
       .sort((a, b) => b.value - a.value);
 
     const hourlyCounts = Array.from({ length: 24 }, () => 0);
-    incidents.forEach(i => {
+    todayIncidents.forEach(i => {
       try { const h = parseTime(i.time).getHours(); if (!isNaN(h)) hourlyCounts[h]++; } catch {}
     });
     const hourlyData = hourlyCounts.map((antal, i) => ({ timme: String(i).padStart(2, '0'), antal }));
@@ -97,8 +106,9 @@ const Analysis = () => {
     hourlyCounts.forEach((c, i) => { if (c > hourlyCounts[peakHour]) peakHour = i; });
 
     const areaCounts: Record<string, number> = {};
-    incidents.forEach(i => { if (i.area) areaCounts[i.area] = (areaCounts[i.area] || 0) + 1; });
+    todayIncidents.forEach(i => { if (i.area) areaCounts[i.area] = (areaCounts[i.area] || 0) + 1; });
 
+    // Trend data uses ALL incidents (last 7 days) for the chart
     const dayCounts: Record<string, number> = {};
     const dayNames = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'];
     incidents.forEach(i => {
@@ -112,6 +122,7 @@ const Analysis = () => {
         return { dag: `${dayNames[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`, incidenter };
       });
 
+    // Safety index uses last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentIncidents = incidents.filter(i => {
@@ -138,8 +149,8 @@ const Analysis = () => {
         return { område, index: safetyIndex, total: high + medium + low, high };
       });
 
-    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk };
-  }, [incidents]);
+    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, totalToday: todayIncidents.length };
+  }, [todayIncidents, incidents]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -157,7 +168,7 @@ const Analysis = () => {
               <div>
                 <h1 className="text-xl font-bold text-foreground">Analys</h1>
                 <p className="text-xs text-muted-foreground">
-                  Baserat på {incidents.length} händelser från Polisen.se · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                  Senaste 24 timmarna · {todayIncidents.length} händelser idag · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               <button onClick={() => { refetch(); setLastUpdated(new Date()); }} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground transition disabled:opacity-50 text-xs">
@@ -174,10 +185,10 @@ const Analysis = () => {
             ) : stats ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard label="Riskindex" value={stats.riskIndex} sub={`${stats.highRisk} högrisk-händelser`} icon={AlertTriangle} colorClass="text-cr-orange" />
-                  <StatCard label="Totalt händelser" value={incidents.length} sub="Från Polisen.se" icon={Shield} colorClass="text-cr-blue" />
-                  <StatCard label="Hög risk" value={stats.highRisk} sub={`${Math.round((stats.highRisk / incidents.length) * 100)}% av alla`} icon={TrendingUp} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={`${String(stats.peakHour).padStart(2, '0')}:00`} sub={`${stats.hourlyData[stats.peakHour].antal} händelser`} icon={Clock} colorClass="text-cr-green" />
+                  <StatCard label="Riskindex" value={stats.riskIndex} sub={`${stats.highRisk} högrisk idag`} icon={AlertTriangle} colorClass="text-cr-orange" />
+                  <StatCard label="Händelser idag" value={stats.totalToday} sub="Senaste 24 timmarna · Polisen.se" icon={Shield} colorClass="text-cr-blue" />
+                  <StatCard label="Hög risk" value={stats.highRisk} sub={`${Math.round((stats.highRisk / stats.totalToday) * 100)}% av dagens`} icon={TrendingUp} colorClass="text-cr-red" />
+                  <StatCard label="Mest aktiv tid" value={`${String(stats.peakHour).padStart(2, '0')}:00`} sub={`${stats.hourlyData[stats.peakHour].antal} händelser denna timme`} icon={Clock} colorClass="text-cr-green" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
