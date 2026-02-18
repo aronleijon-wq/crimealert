@@ -31,15 +31,9 @@ const Index = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
 
-  // Update filters when premium/login status changes
+  // Update filters when premium/login status changes — activate all allowed filters
   useEffect(() => {
-    if (isPremium) {
-      setActiveFilters(['police', 'fire', 'ambulance', 'traffic', 'other']);
-    } else if (isLoggedIn) {
-      setActiveFilters((prev) => prev.filter((f) => LOGGED_IN_FILTERS.includes(f)));
-    } else {
-      setActiveFilters((prev) => prev.filter((f) => FREE_FILTERS.includes(f)));
-    }
+    setActiveFilters(getDefaultFilters());
   }, [isPremium, isLoggedIn]);
 
   const toggleFilter = useCallback((type: IncidentType) => {
