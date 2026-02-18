@@ -1,9 +1,9 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import Header from '@/components/Header';
 import AdBanner from '@/components/AdBanner';
 import PremiumGate from '@/components/PremiumGate';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 
@@ -67,12 +67,89 @@ const TIME_RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: '12m', label: '12 månader' },
 ];
 
+const MunicipalitySelector = ({ areas, selected, onSelect }: { areas: string[]; selected: string | null; onSelect: (v: string | null) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = areas.filter(a => a.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-xs font-medium transition border border-border"
+      >
+        <MapPin className="w-3 h-3 text-muted-foreground" />
+        <span className="max-w-[120px] truncate">{selected ?? 'Hela Sverige'}</span>
+        {selected ? (
+          <X className="w-3 h-3 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); onSelect(null); setOpen(false); }} />
+        ) : (
+          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+        )}
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 right-0 z-50 w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-border">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Sök kommun eller län..."
+                className="w-full pl-7 pr-3 py-1.5 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            <button
+              onClick={() => { onSelect(null); setOpen(false); setSearch(''); }}
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition ${!selected ? 'text-primary font-semibold' : 'text-foreground'}`}
+            >
+              🇸🇪 Hela Sverige
+            </button>
+            {filtered.map(a => (
+              <button
+                key={a}
+                onClick={() => { onSelect(a); setOpen(false); setSearch(''); }}
+                className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition ${selected === a ? 'text-primary font-semibold' : 'text-foreground'}`}
+              >
+                {a}
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">Inga resultat</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Analysis = () => {
   const { incidents, loading, refetch } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+
+  // Extract unique areas from all incidents
+  const availableAreas = useMemo(() => {
+    const areas = new Set<string>();
+    incidents.forEach(i => { if (i.area) areas.add(i.area); });
+    return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
+  }, [incidents]);
 
   // Auto-refresh every 15 minutes
   useEffect(() => {
@@ -111,9 +188,13 @@ const Analysis = () => {
         break;
     }
     return incidents.filter(i => {
-      try { return parseTime(i.time) >= cutoff; } catch { return false; }
+      try {
+        const inTimeRange = parseTime(i.time) >= cutoff;
+        const inArea = !selectedArea || i.area === selectedArea;
+        return inTimeRange && inArea;
+      } catch { return false; }
     });
-  }, [incidents, timeRange]);
+  }, [incidents, timeRange, selectedArea]);
 
   const stats = useMemo(() => {
     if (!filteredIncidents.length) return null;
@@ -191,12 +272,15 @@ const Analysis = () => {
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h1 className="text-xl font-bold text-foreground">Analys</h1>
+                <h1 className="text-xl font-bold text-foreground">
+                  Analys {selectedArea && <span className="text-primary">· {selectedArea}</span>}
+                </h1>
                 <p className="text-xs text-muted-foreground">
-                  {filteredIncidents.length} händelser · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                  {filteredIncidents.length} händelser{selectedArea ? ` i ${selectedArea}` : ''} · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <MunicipalitySelector areas={availableAreas} selected={selectedArea} onSelect={setSelectedArea} />
                 <div className="flex bg-muted rounded-lg p-0.5">
                   {TIME_RANGE_OPTIONS.map(opt => (
                     <button
