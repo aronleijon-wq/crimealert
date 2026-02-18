@@ -23,15 +23,22 @@ const TYPE_ICONS: Record<string, string> = {
 const createMarkerIcon = (incident: Incident) => {
   const config = incidentTypeConfig[incident.type];
   const isActive = incident.status === 'active';
+  const isApprox = incident.approximate;
   const size = isActive ? 16 : 12;
   const pulseSize = size + 18;
+
+  // Approximate positions get a dashed ring instead of solid dot
+  const innerStyle = isApprox
+    ? `width:${size}px;height:${size}px;border-radius:50%;background:${config.color}80;border:2px dashed ${config.color};position:relative;z-index:2;`
+    : `width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;`;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-        ${isActive ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;animation:pulse 2s ease-in-out infinite;"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
+        ${isActive && !isApprox ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;animation:pulse 2s ease-in-out infinite;"></div>` : ''}
+        ${isApprox ? `<div style="position:absolute;width:${pulseSize + 6}px;height:${pulseSize + 6}px;border-radius:50%;border:1px dashed ${config.color}60;"></div>` : ''}
+        <div style="${innerStyle}"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
@@ -81,7 +88,9 @@ const createPopupContent = (inc: Incident) => {
           <span style="color:${riskColor};font-weight:600;">${risk.label}</span>
         </div>
       </div>
-      <div style="margin-top:6px;font-size:9px;color:#aaa;">Källa: ${inc.source || 'Okänd'} • Ingen exakt adress visas</div>
+      <div style="margin-top:6px;font-size:9px;color:#aaa;">
+        ${inc.approximate ? '⊙ Approximerad position • ' : ''}Källa: ${inc.source || 'Okänd'} • Ingen exakt adress visas
+      </div>
     </div>
   `;
 };

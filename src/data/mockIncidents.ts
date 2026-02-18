@@ -14,6 +14,7 @@ export interface Incident {
   status: IncidentStatus;
   risk: RiskLevel;
   source: string;
+  approximate?: boolean;
 }
 
 const now = new Date();
