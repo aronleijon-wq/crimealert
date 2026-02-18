@@ -7,6 +7,8 @@ export function usePoliceEvents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const lastFetch = useRef(0);
 
   const fetchEvents = useCallback(async (silent = false) => {
@@ -53,7 +55,7 @@ export function usePoliceEvents() {
       console.error('Error fetching police events:', err);
       setError(err.message);
       if (!silent) {
-        toast({
+        toastRef.current({
           title: 'Kunde inte hämta data',
           description: 'Använder demo-data. Försök igen senare.',
           variant: 'destructive',
@@ -62,14 +64,12 @@ export function usePoliceEvents() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchEvents();
-    // Poll every 60 seconds for near-realtime updates
     const interval = setInterval(() => fetchEvents(true), 60 * 1000);
 
-    // Re-fetch when tab becomes visible again
     const onVisibility = () => {
       if (document.visibilityState === 'visible') fetchEvents(true);
     };
