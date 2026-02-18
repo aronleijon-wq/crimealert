@@ -9,7 +9,8 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
-  const normalized = t.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
+  // "2026-02-18 22:03:10 +01:00" → "2026-02-18T22:03:10+01:00"
+  const normalized = t.replace(' ', 'T').replace('T+', '+').replace('T-', '-');
   return new Date(normalized);
 };
 
