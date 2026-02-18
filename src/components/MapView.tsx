@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 
 interface MapViewProps {
@@ -97,7 +94,7 @@ const createPopupContent = (inc: Incident) => {
 
 const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
-  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,72 +114,29 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
 
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    const cluster = L.markerClusterGroup({
-      maxClusterRadius: 30,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      disableClusteringAtZoom: 10,
-      iconCreateFunction: (clusterObj) => {
-        const children = clusterObj.getAllChildMarkers();
-        const count = children.length;
-        const size = count > 20 ? 44 : count > 10 ? 38 : 32;
-
-        // Count types to find dominant color
-        const typeCounts: Record<string, number> = {};
-        children.forEach((m: any) => {
-          const type = m.options?.incidentType || 'other';
-          typeCounts[type] = (typeCounts[type] || 0) + 1;
-        });
-        const dominant = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'other';
-        const colors: Record<string, string> = {
-          police: 'hsl(210, 100%, 56%)',
-          fire: 'hsl(0, 100%, 62%)',
-          ambulance: 'hsl(142, 70%, 45%)',
-          traffic: 'hsl(25, 100%, 63%)',
-          other: 'hsl(0, 0%, 90%)',
-        };
-        const bg = colors[dominant] || colors.other;
-        const textColor = dominant === 'other' ? '#333' : 'white';
-
-        return L.divIcon({
-          html: `<div style="
-            width:${size}px;height:${size}px;border-radius:50%;
-            background:${bg};border:3px solid rgba(255,255,255,0.9);
-            display:flex;align-items:center;justify-content:center;
-            color:${textColor};font-weight:700;font-size:12px;font-family:monospace;
-            box-shadow:0 2px 10px ${bg}60;
-          ">${count}</div>`,
-          className: 'custom-cluster-icon',
-          iconSize: L.point(size, size),
-        });
-      },
-    });
-
-    map.addLayer(cluster);
     mapRef.current = map;
-    clusterRef.current = cluster;
+    markersRef.current = L.layerGroup().addTo(map);
 
     return () => {
       map.remove();
       mapRef.current = null;
-      clusterRef.current = null;
+      markersRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (!clusterRef.current) return;
-    clusterRef.current.clearLayers();
+    if (!markersRef.current) return;
+    markersRef.current.clearLayers();
 
     incidents.forEach((inc) => {
-      const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc), incidentType: inc.type } as any);
+      const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc) });
       marker.bindPopup(createPopupContent(inc), {
         className: 'incident-popup',
         maxWidth: 280,
         closeButton: true,
       });
       marker.on('click', () => onSelectIncident(inc.id));
-      clusterRef.current!.addLayer(marker);
+      markersRef.current!.addLayer(marker);
     });
   }, [incidents, onSelectIncident]);
 
@@ -191,8 +145,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident }: MapViewProps) => {
     const inc = incidents.find((i) => i.id === selectedId);
     if (inc) {
       mapRef.current.flyTo([inc.lat, inc.lng], 14, { duration: 0.8 });
-      // Open the popup for the selected incident
-      clusterRef.current?.getLayers().forEach((layer: any) => {
+      markersRef.current?.getLayers().forEach((layer: any) => {
         if (layer.getLatLng) {
           const ll = layer.getLatLng();
           if (Math.abs(ll.lat - inc.lat) < 0.0001 && Math.abs(ll.lng - inc.lng) < 0.0001) {
