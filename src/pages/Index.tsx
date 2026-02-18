@@ -9,27 +9,38 @@ import AdBanner from '@/components/AdBanner';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap } from 'lucide-react';
 
 const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
+const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic'];
 
 const Index = () => {
   const { isPremium } = useIsPremium();
-  const [activeFilters, setActiveFilters] = useState<IncidentType[]>(
-    isPremium ? ['police', 'fire', 'ambulance', 'traffic', 'other'] : [...FREE_FILTERS]
-  );
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
+
+  const getDefaultFilters = (): IncidentType[] => {
+    if (isPremium) return ['police', 'fire', 'ambulance', 'traffic', 'other'];
+    if (isLoggedIn) return [...LOGGED_IN_FILTERS];
+    return [...FREE_FILTERS];
+  };
+
+  const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
 
-  // Update filters when premium status changes
+  // Update filters when premium/login status changes
   useEffect(() => {
     if (isPremium) {
       setActiveFilters(['police', 'fire', 'ambulance', 'traffic', 'other']);
+    } else if (isLoggedIn) {
+      setActiveFilters((prev) => prev.filter((f) => LOGGED_IN_FILTERS.includes(f)));
     } else {
       setActiveFilters((prev) => prev.filter((f) => FREE_FILTERS.includes(f)));
     }
-  }, [isPremium]);
+  }, [isPremium, isLoggedIn]);
 
   const toggleFilter = useCallback((type: IncidentType) => {
     setActiveFilters((prev) =>
