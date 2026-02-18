@@ -15,6 +15,9 @@ export interface Incident {
   risk: RiskLevel;
   source: string;
   approximate?: boolean;
+  url?: string;
+  originalType?: string;
+  locationPrecision?: string;
 }
 
 const now = new Date();

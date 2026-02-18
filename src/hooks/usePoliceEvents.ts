@@ -46,6 +46,9 @@ export function usePoliceEvents() {
           risk: (e.risk || 'low') as RiskLevel,
           source: e.source,
           approximate: e.location_precision !== 'exact' && e.location_precision !== 'street',
+          url: e.url || undefined,
+          originalType: e.originalType || undefined,
+          locationPrecision: e.location_precision || undefined,
         }));
         setIncidents(mapped);
       } else {
