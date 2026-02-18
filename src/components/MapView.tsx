@@ -178,7 +178,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
 
       <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee;font-size:9px;color:#bbb;display:flex;justify-content:space-between;">
         <span>Källa: ${inc.source || 'Okänd'}</span>
-        <span>CrimeRadar</span>
+        <span>CrimeAlert</span>
       </div>
     </div>
   `;
