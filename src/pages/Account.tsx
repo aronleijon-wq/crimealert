@@ -293,7 +293,7 @@ const Account = () => {
                 Logga in
               </button>
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/auth?mode=signup')}
                 className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition"
               >
                 Skapa konto
