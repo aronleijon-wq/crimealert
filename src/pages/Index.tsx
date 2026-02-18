@@ -80,7 +80,7 @@ const Index = () => {
         <>
           <Header />
           <AdBanner />
-          <StatsBar incidents={filtered} />
+          <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           <FilterBar
             activeFilters={activeFilters}
             onToggleFilter={toggleFilter}
