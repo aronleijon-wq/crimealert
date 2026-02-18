@@ -103,7 +103,7 @@ export const incidentTypeConfig: Record<IncidentType, { label: string; color: st
   fire: { label: 'Brand', color: 'hsl(0, 100%, 62%)', icon: '🔴' },
   ambulance: { label: 'Ambulans', color: 'hsl(142, 70%, 45%)', icon: '🟢' },
   traffic: { label: 'Trafikolycka', color: 'hsl(25, 100%, 63%)', icon: '🟠' },
-  other: { label: 'Övrigt', color: 'hsl(215, 15%, 55%)', icon: '⚪' },
+  other: { label: 'Övrigt', color: 'hsl(0, 0%, 90%)', icon: '⚪' },
 };
 
 export const riskConfig: Record<RiskLevel, { label: string; colorClass: string }> = {
