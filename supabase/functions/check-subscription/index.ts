@@ -94,9 +94,10 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
+    const isAuthError = msg.includes("Authentication") || msg.includes("authorization") || msg.includes("not authenticated");
+    return new Response(JSON.stringify({ error: msg, subscribed: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : 500,
     });
   }
 });
