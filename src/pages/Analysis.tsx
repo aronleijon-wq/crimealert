@@ -61,12 +61,11 @@ const TYPE_LABELS: Record<string, string> = {
   other: 'Övrigt'
 };
 
-type TimeRange = '24h' | '7d' | '30d' | '12m';
+type TimeRange = '24h' | '7d' | '30d';
 const TIME_RANGE_OPTIONS: {value: TimeRange;label: string;}[] = [
 { value: '24h', label: 'Idag' },
 { value: '7d', label: '7 dagar' },
-{ value: '30d', label: '30 dagar' },
-{ value: '12m', label: '12 månader' }];
+{ value: '30d', label: '30 dagar' }];
 
 
 const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];selected: string | null;onSelect: (v: string | null) => void;}) => {
@@ -184,9 +183,9 @@ const Analysis = () => {
         cutoff = new Date(now);
         cutoff.setDate(cutoff.getDate() - 30);
         break;
-      case '12m':
+      case '30d':
         cutoff = new Date(now);
-        cutoff.setFullYear(cutoff.getFullYear() - 1);
+        cutoff.setDate(cutoff.getDate() - 30);
         break;
     }
     return incidents.filter((i) => {
@@ -324,7 +323,7 @@ const Analysis = () => {
                   />
                   <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : timeRange === '30d' ? 'snitt 30 dagar' : 'snitt 12 mån'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
+                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : 'snitt 30 dagar'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
