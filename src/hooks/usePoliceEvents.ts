@@ -7,6 +7,8 @@ export function usePoliceEvents() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [totalEverSeen, setTotalEverSeen] = useState(0);
+  const seenIdsRef = useRef<Set<string>>(new Set());
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
@@ -52,6 +54,9 @@ export function usePoliceEvents() {
           locationPrecision: e.location_precision || undefined,
         }));
         setIncidents(mapped);
+        // Track cumulative unique incidents (only increases)
+        mapped.forEach(inc => seenIdsRef.current.add(inc.id));
+        setTotalEverSeen(seenIdsRef.current.size);
         setDataVersion(v => v + 1);
       } else {
         throw new Error(data?.error || 'Failed to fetch events');
@@ -86,5 +91,5 @@ export function usePoliceEvents() {
     };
   }, [fetchEvents]);
 
-  return { incidents, loading, error, refetch: () => fetchEvents(false, true), dataVersion };
+  return { incidents, loading, error, refetch: () => fetchEvents(false, true), dataVersion, totalEverSeen };
 }
