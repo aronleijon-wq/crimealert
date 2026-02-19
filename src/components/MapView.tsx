@@ -111,6 +111,66 @@ const getRecommendation = (risk: string, type: string): string => {
   return recs[risk]?.[type] || recs[risk]?.other || '';
 };
 
+// Extract structured details from police description
+const extractDetails = (desc: string, title: string, originalType?: string): { label: string; value: string; icon: string }[] => {
+  const details: { label: string; value: string; icon: string }[] = [];
+  const text = `${title} ${desc}`.toLowerCase();
+
+  // Original crime type from Polisen.se
+  if (originalType && originalType.length > 0) {
+    details.push({ label: 'Brottstyp', value: originalType, icon: '📋' });
+  }
+
+  // Persons mentioned
+  const personPatterns = [
+    { pattern: /(\d+)\s*(?:person|man|kvinna|misstänk|grip|skadad|omkommen)/i, label: 'Personer' },
+    { pattern: /(?:en|1)\s+(?:gripen|anhållen|misstänkt)/i, label: 'Gripen' },
+    { pattern: /(?:två|tre|fyra|fem|\d+)\s+(?:gripna|anhållna|misstänkta)/i, label: 'Gripna' },
+  ];
+  for (const { pattern, label } of personPatterns) {
+    const match = desc.match(pattern);
+    if (match) {
+      details.push({ label, value: match[0].charAt(0).toUpperCase() + match[0].slice(1), icon: '👤' });
+      break;
+    }
+  }
+
+  // Vehicles
+  const vehiclePatterns = /(?:personbil|lastbil|mc|motorcykel|moped|buss|cykel|fordon|bil|truck|husbil|fyrhjuling|elscooter|elsparkcykel)/i;
+  const vehicleMatch = desc.match(vehiclePatterns);
+  if (vehicleMatch) {
+    details.push({ label: 'Fordon', value: vehicleMatch[0].charAt(0).toUpperCase() + vehicleMatch[0].slice(1), icon: '🚗' });
+  }
+
+  // Weapons/tools
+  const weaponPatterns = /(?:kniv|skjutvapen|pistol|gevär|yxa|machete|tillhygge|vapen|skott|ammunition)/i;
+  const weaponMatch = desc.match(weaponPatterns);
+  if (weaponMatch) {
+    details.push({ label: 'Vapen/verktyg', value: weaponMatch[0].charAt(0).toUpperCase() + weaponMatch[0].slice(1), icon: '⚔️' });
+  }
+
+  // Road/location from description
+  const roadPatterns = /(?:E\d+|(?:riksväg|länsväg)\s*\d+|[A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen|torget|platsen|allén|bron|leden)(?:\s+\d+)?)/;
+  const roadMatch = desc.match(roadPatterns);
+  if (roadMatch) {
+    details.push({ label: 'Plats', value: roadMatch[0], icon: '📍' });
+  }
+
+  // Alcohol/drugs
+  if (/(?:rattfyller|alkohol|berus|narkotika|drog|påverkad|blåste)/i.test(text)) {
+    details.push({ label: 'Påverkan', value: 'Misstänkt påverkan', icon: '🚫' });
+  }
+
+  // Animals (vilt)
+  const animalPatterns = /(?:älg|rådjur|vildsvin|hjort|ren|varg|björn|lo|vilt)/i;
+  const animalMatch = desc.match(animalPatterns);
+  if (animalMatch) {
+    details.push({ label: 'Djur', value: animalMatch[0].charAt(0).toUpperCase() + animalMatch[0].slice(1), icon: '🦌' });
+  }
+
+  return details;
+};
+
 const createPopupContent = (inc: Incident, isPremium: boolean) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
@@ -121,6 +181,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
   const statusBg = inc.status === 'active' ? '#fef2f2' : '#f0fdf4';
   const riskDesc = getRiskDescription(inc.risk, inc.type);
   const timeAgo = getTimeAgo(inc.time);
+  const extractedDetails = extractDetails(inc.description, inc.title, inc.originalType);
 
   return `
     <div style="font-family:system-ui;min-width:260px;max-width:320px;">
@@ -139,7 +200,18 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
       </div>
 
-      ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : ''}
+
+      ${extractedDetails.length > 0 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+        ${extractedDetails.map(d => `
+          <span style="font-size:9px;padding:3px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:3px;border:1px solid #e2e8f0;">
+            <span>${d.icon}</span>
+            <span style="font-weight:600;">${d.label}:</span> ${d.value}
+          </span>
+        `).join('')}
+      </div>
+      ` : ''}
 
       ${isPremium ? `
       <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
@@ -179,6 +251,8 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
           }
         </div>
       </div>
+
+      ${inc.url ? `<a href="https://polisen.se${inc.url}" target="_blank" rel="noopener" style="display:block;text-align:center;font-size:10px;color:#3b82f6;text-decoration:none;padding:6px;background:#f0f4ff;border-radius:5px;margin-bottom:6px;border:1px solid #dbeafe;">🔗 Läs mer på Polisen.se</a>` : ''}
 
       ${inc.approximate ? `<div style="margin-top:6px;font-size:9px;color:#f97316;background:#fff7ed;padding:4px 8px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
 
