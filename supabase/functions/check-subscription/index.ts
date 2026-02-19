@@ -4,11 +4,12 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const logStep = (step: string, details?: any) => {
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
 serve(async (req) => {
@@ -19,7 +20,7 @@ serve(async (req) => {
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
+    { auth: { persistSession: false } },
   );
 
   try {
@@ -28,7 +29,9 @@ serve(async (req) => {
     // Free premium whitelist
     const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com"];
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const stripeKey = Deno.env.get(
+      "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",
+    );
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
@@ -50,14 +53,17 @@ serve(async (req) => {
     // Check whitelist first
     if (FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) {
       logStep("User is on free premium whitelist");
-      return new Response(JSON.stringify({
-        subscribed: true,
-        product_id: "prod_U0Hqae7g588978",
-        subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      return new Response(
+        JSON.stringify({
+          subscribed: true,
+          product_id: "prod_U0Hqae7g588978",
+          subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        },
+      );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -89,18 +95,22 @@ serve(async (req) => {
       logStep("Active subscription found", { productId, subscriptionEnd });
     }
 
-    return new Response(JSON.stringify({
-      subscribed: hasActiveSub,
-      product_id: productId,
-      subscription_end: subscriptionEnd,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        subscribed: hasActiveSub,
+        product_id: productId,
+        subscription_end: subscriptionEnd,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      },
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: msg });
-    const isAuthError = msg.includes("Authentication") || msg.includes("authorization") || msg.includes("not authenticated");
+    const isAuthError =
+      msg.includes("Authentication") || msg.includes("authorization") || msg.includes("not authenticated");
     return new Response(JSON.stringify({ error: msg, subscribed: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: isAuthError ? 401 : 500,
