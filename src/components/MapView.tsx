@@ -253,7 +253,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
       </div>
 
-      ${inc.url ? `<a href="https://polisen.se${inc.url}" target="_blank" rel="noopener" style="display:block;text-align:center;font-size:10px;color:#3b82f6;text-decoration:none;padding:6px;background:#f0f4ff;border-radius:5px;margin-bottom:6px;border:1px solid #dbeafe;">🔗 Läs mer på Polisen.se</a>` : ''}
+      ${''}
 
       ${inc.approximate ? `<div style="margin-top:6px;font-size:9px;color:#f97316;background:#fff7ed;padding:4px 8px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
 
