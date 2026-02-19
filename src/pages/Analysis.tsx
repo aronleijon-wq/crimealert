@@ -160,10 +160,11 @@ const Analysis = () => {
     return () => clearInterval(interval);
   }, [refetch]);
 
-  // Track when data loads
+  // Track when data loads or changes
+  const incidentsKey = useMemo(() => incidents.map(i => i.id).join(','), [incidents]);
   useEffect(() => {
     if (incidents.length > 0) setLastUpdated(new Date());
-  }, [incidents]);
+  }, [incidentsKey]);
 
   // Filter incidents based on selected time range
   const filteredIncidents = useMemo(() => {
