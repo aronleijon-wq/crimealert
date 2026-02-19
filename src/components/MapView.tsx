@@ -20,7 +20,8 @@ const TYPE_ICONS: Record<string, string> = {
 
 const createMarkerIcon = (incident: Incident) => {
   const config = incidentTypeConfig[incident.type];
-  const isActive = incident.status === 'active';
+  const ageMs = Date.now() - new Date(incident.time).getTime();
+  const isActive = incident.status === 'active' && ageMs < 60 * 60 * 1000;
   const size = isActive ? 14 : 10;
   const pulseSize = size + 16;
 
