@@ -314,7 +314,15 @@ const Analysis = () => {
           <>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <StatCard label="Händelser totalt" value={totalEverSeen} sub="Kumulativt alla perioder" icon={Shield} colorClass="text-cr-blue" />
-                  <StatCard label="I perioden" value={filteredIncidents.length} sub={`${TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label ?? timeRange}${selectedArea ? ` · ${selectedArea}` : ''}`} icon={TrendingUp} colorClass="text-foreground" />
+                  <StatCard
+                    label={timeRange === '24h' ? 'Idag' : 'I perioden'}
+                    value={filteredIncidents.length}
+                    sub={timeRange === '24h'
+                      ? `Sedan kl 00:00 · ${new Date().toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}${selectedArea ? ` · ${selectedArea}` : ''}`
+                      : `${TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label ?? timeRange}${selectedArea ? ` · ${selectedArea}` : ''}`}
+                    icon={TrendingUp}
+                    colorClass="text-foreground"
+                  />
                   <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
                   <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser denna timme` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
