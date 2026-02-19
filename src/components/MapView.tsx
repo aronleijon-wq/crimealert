@@ -189,7 +189,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         <span style="font-size:22px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.3;">${inc.title}</div>
-          <div style="font-size:10px;color:#888;margin-top:2px;">${config.label} • ${timeAgo}</div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">${config.label} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
           ${isPremium
