@@ -24,13 +24,15 @@ const createMarkerIcon = (incident: Incident) => {
   const isActive = incident.status === 'active' && ageMs < 60 * 60 * 1000;
   const size = isActive ? 14 : 10;
   const pulseSize = size + 16;
+  const color = isActive ? config.color : '#9ca3af';
+  const opacity = isActive ? 1 : 0.6;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
-      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;opacity:${opacity};">
         ${isActive ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;animation:pulse 2s ease-in-out infinite;"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,${isActive ? '0.9' : '0.5'});position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
@@ -305,14 +307,17 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
 
     incidents.forEach((inc) => {
       const config = incidentTypeConfig[inc.type];
+      const ageMs = Date.now() - new Date(inc.time).getTime();
+      const isActive = inc.status === 'active' && ageMs < 60 * 60 * 1000;
+      const circleColor = isActive ? config.color : '#9ca3af';
       
       const circle = L.circle([inc.lat, inc.lng], {
         radius: 500,
-        color: config.color,
-        fillColor: config.color,
-        fillOpacity: 0.08,
+        color: circleColor,
+        fillColor: circleColor,
+        fillOpacity: isActive ? 0.08 : 0.04,
         weight: 1,
-        opacity: 0.3,
+        opacity: isActive ? 0.3 : 0.15,
       });
       markersRef.current!.addLayer(circle);
 
