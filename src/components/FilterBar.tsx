@@ -44,33 +44,33 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
             }}
             disabled={false}
             className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-all border group ${
-              locked
-                ? 'border-transparent bg-transparent text-muted-foreground/30 cursor-not-allowed'
-                : active
-                ? 'border-border bg-muted text-foreground'
-                : 'border-transparent bg-transparent text-muted-foreground/50 hover:text-muted-foreground'
-            }`}
-            title={needsLogin ? 'Skapa gratis konto för att använda detta filter' : needsPro ? 'Uppgradera till Pro' : config.label}
-          >
+            locked ?
+            'border-transparent bg-transparent text-muted-foreground/30 cursor-not-allowed' :
+            active ?
+            'border-border bg-muted text-foreground' :
+            'border-transparent bg-transparent text-muted-foreground/50 hover:text-muted-foreground'}`
+            }
+            title={needsLogin ? 'Skapa gratis konto för att använda detta filter' : needsPro ? 'Uppgradera till Pro' : config.label}>
+
             <span className="text-xs">{config.icon}</span>
             <span>{config.label}</span>
-            {needsLogin && (
-              <span className="ml-0.5 text-[9px] font-semibold text-primary/70 uppercase tracking-wide">Gratis</span>
-            )}
+            {needsLogin &&
+            <span className="ml-0.5 text-[9px] font-semibold text-primary/70 uppercase tracking-wide">Gratis</span>
+            }
             {needsPro && <Lock className="w-2.5 h-2.5 ml-0.5" />}
-          </button>
-        );
+          </button>);
+
       })}
-      <div className="ml-auto flex items-center gap-3">
-        <span className="text-[10px] font-mono text-muted-foreground">
-          <span className="text-foreground">{incidentCount}</span> händelser
-        </span>
-        <span className="text-[10px] font-mono text-cr-red">
-          <span className="font-semibold">{activeCount}</span> aktiva
-        </span>
-      </div>
-    </div>
-  );
+      
+
+
+
+
+
+
+
+    </div>);
+
 };
 
 export default FilterBar;
