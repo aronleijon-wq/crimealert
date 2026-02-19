@@ -1,16 +1,105 @@
 import Header from '@/components/Header';
-import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard } from 'lucide-react';
+import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send } from 'lucide-react';
 import { useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, 'Namn krävs').max(100),
+  email: z.string().trim().email('Ogiltig e-postadress').max(255),
+  message: z.string().trim().min(1, 'Meddelande krävs').max(1000, 'Max 1000 tecken'),
+});
 
 const PREMIUM_PRICE_MONTHLY = 'price_1T2HH5CTAG2ESipPB2WYPzf3';
 const PREMIUM_PRICE_YEARLY = 'price_1T2HkOCTAG2ESipPTtXJ8Xab';
 const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
+
+const ContactForm = () => {
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = contactSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach(i => { fieldErrors[String(i.path[0])] = i.message; });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+    setSending(true);
+    // Simulate sending (no backend endpoint yet)
+    setTimeout(() => {
+      setSending(false);
+      setSent(true);
+      toast({ title: 'Meddelande skickat', description: 'Vi återkommer så snart vi kan.' });
+      setForm({ name: '', email: '', message: '' });
+      setTimeout(() => setSent(false), 3000);
+    }, 800);
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Send className="w-4 h-4 text-primary" />
+        <span className="text-xs font-bold text-foreground">Kontakta oss</span>
+      </div>
+      <p className="text-[10px] text-muted-foreground mb-4">Har du frågor, feedback eller vill veta mer om Företagsplanen? Skriv till oss!</p>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <input
+            type="text"
+            placeholder="Ditt namn"
+            value={form.name}
+            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+          />
+          {errors.name && <p className="text-[10px] text-cr-red mt-0.5">{errors.name}</p>}
+        </div>
+        <div>
+          <input
+            type="email"
+            placeholder="Din e-post"
+            value={form.email}
+            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+          />
+          {errors.email && <p className="text-[10px] text-cr-red mt-0.5">{errors.email}</p>}
+        </div>
+        <div>
+          <textarea
+            placeholder="Ditt meddelande..."
+            rows={3}
+            value={form.message}
+            onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+          />
+          <div className="flex justify-between">
+            {errors.message && <p className="text-[10px] text-cr-red mt-0.5">{errors.message}</p>}
+            <p className="text-[10px] text-muted-foreground mt-0.5 ml-auto">{form.message.length}/1000</p>
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={sending}
+          className="flex items-center justify-center gap-1.5 w-full px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+        >
+          <Send className="w-3 h-3" />
+          {sending ? 'Skickar...' : sent ? 'Skickat ✓' : 'Skicka meddelande'}
+        </button>
+      </form>
+    </div>
+  );
+};
 
 const Account = () => {
   const { theme, setTheme } = useTheme();
@@ -319,6 +408,9 @@ const Account = () => {
               ))}
             </div>
           </div>
+
+          {/* Contact form */}
+          <ContactForm />
 
           <p className="text-[10px] text-muted-foreground/50 font-mono text-center">
             CrimeRadar följer GDPR. Inga personuppgifter visas. Data från öppna källor.
