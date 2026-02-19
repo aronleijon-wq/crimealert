@@ -7,13 +7,15 @@ import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X,
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 
-/** Normalize "2026-02-18 22:03:10 +01:00" → valid Date */
+/** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
-  // Remove all spaces, then re-insert T between date and time
   const parts = t.trim().split(/\s+/);
-  // parts: ["2026-02-18", "22:03:10", "+01:00"]
+  // parts: ["2026-02-18", "22:03:10", "+01:00"] or ["2026-02-19", "7:45:12", "+01:00"]
   if (parts.length >= 3) {
-    return new Date(`${parts[0]}T${parts[1]}${parts[2]}`);
+    // Ensure time components are zero-padded (7:45:12 → 07:45:12)
+    const timeParts = parts[1].split(':');
+    const paddedTime = timeParts.map(p => p.padStart(2, '0')).join(':');
+    return new Date(`${parts[0]}T${paddedTime}${parts[2]}`);
   }
   return new Date(t);
 };
