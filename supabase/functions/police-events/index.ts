@@ -827,7 +827,7 @@ serve(async (req) => {
     const incidents = [];
     const geocodePromises: Promise<void>[] = [];
     
-    for (const event of events.slice(0, 50)) {
+    for (const event of events) {
       const rawLat = event.location?.gps ? parseFloat(event.location.gps.split(',')[0]) : null;
       const rawLng = event.location?.gps ? parseFloat(event.location.gps.split(',')[1]) : null;
       const locationName = event.location?.name || '';
