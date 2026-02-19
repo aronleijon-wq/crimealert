@@ -312,8 +312,7 @@ const Analysis = () => {
               </div> :
 
           <>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <StatCard label="Händelser totalt" value={totalEverSeen} sub="Kumulativt alla perioder" icon={Shield} colorClass="text-cr-blue" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <StatCard
                     label={timeRange === '24h' ? 'Idag' : 'I perioden'}
                     value={filteredIncidents.length}
