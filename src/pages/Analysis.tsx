@@ -137,7 +137,7 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 };
 
 const Analysis = () => {
-  const { incidents, loading, refetch } = usePoliceEvents();
+  const { incidents, loading, refetch, dataVersion } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -161,10 +161,9 @@ const Analysis = () => {
   }, [refetch]);
 
   // Track when data loads or changes
-  const incidentsKey = useMemo(() => incidents.map(i => i.id).join(','), [incidents]);
   useEffect(() => {
     if (incidents.length > 0) setLastUpdated(new Date());
-  }, [incidentsKey]);
+  }, [dataVersion]);
 
   // Filter incidents based on selected time range
   const filteredIncidents = useMemo(() => {
@@ -195,7 +194,7 @@ const Analysis = () => {
         return inTimeRange && inArea;
       } catch {return false;}
     });
-  }, [incidents, timeRange, selectedArea]);
+  }, [incidents, timeRange, selectedArea, dataVersion]);
 
   const stats = useMemo(() => {
     if (!filteredIncidents.length) return null;
@@ -257,7 +256,7 @@ const Analysis = () => {
     });
 
     return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length };
-  }, [filteredIncidents]);
+  }, [filteredIncidents, dataVersion]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -400,7 +399,7 @@ const Analysis = () => {
                       <Shield className="w-3 h-3 inline mr-1" />
                       Säkerhetsindex per område
                     </h3>
-                    <p className="text-[10px] text-muted-foreground mb-3">Baserat på händelser senaste 7 dagarna · 100 = säkrast</p>
+                    <p className="text-[10px] text-muted-foreground mb-3">Baserat på {TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label?.toLowerCase() ?? 'vald period'} · 100 = säkrast</p>
                     {stats?.areaComparison?.length ? (
                     <div className="space-y-3 mt-2">
                       {stats.areaComparison.map((a) =>
