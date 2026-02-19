@@ -11,9 +11,9 @@ export function usePoliceEvents() {
   toastRef.current = toast;
   const lastFetch = useRef(0);
 
-  const fetchEvents = useCallback(async (silent = false) => {
-    // Throttle: don't fetch more than once per 30s
-    if (Date.now() - lastFetch.current < 30_000) return;
+  const fetchEvents = useCallback(async (silent = false, force = false) => {
+    // Throttle: don't fetch more than once per 30s (unless forced)
+    if (!force && Date.now() - lastFetch.current < 30_000) return;
     lastFetch.current = Date.now();
 
     if (!silent) setLoading(true);
@@ -84,5 +84,5 @@ export function usePoliceEvents() {
     };
   }, [fetchEvents]);
 
-  return { incidents, loading, error, refetch: () => fetchEvents(false) };
+  return { incidents, loading, error, refetch: () => fetchEvents(false, true) };
 }
