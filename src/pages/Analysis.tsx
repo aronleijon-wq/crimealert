@@ -324,7 +324,7 @@ const Analysis = () => {
                   />
                   <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser denna timme` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
+                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : timeRange === '30d' ? 'snitt 30 dagar' : 'snitt 12 mån'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
