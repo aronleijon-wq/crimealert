@@ -200,9 +200,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
       </div>
 
-      ${inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : ''}
+      ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
-      ${extractedDetails.length > 0 ? `
+      ${isPremium && extractedDetails.length > 0 ? `
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
         ${extractedDetails.map(d => `
           <span style="font-size:9px;padding:3px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:3px;border:1px solid #e2e8f0;">
