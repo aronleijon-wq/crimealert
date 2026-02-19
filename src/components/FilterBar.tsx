@@ -28,6 +28,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
         const config = incidentTypeConfig[type];
         const active = activeFilters.includes(type);
         const locked = !isPremium && !(isLoggedIn ? LOGGED_IN_FILTERS : FREE_FILTERS).includes(type);
+        const needsLogin = !isLoggedIn && LOGGED_IN_FILTERS.includes(type) && !FREE_FILTERS.includes(type);
+        const needsPro = locked && !needsLogin;
         return (
           <button
             key={type}
@@ -41,18 +43,21 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
               onToggleFilter(type);
             }}
             disabled={false}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-all border ${
+            className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium transition-all border group ${
               locked
                 ? 'border-transparent bg-transparent text-muted-foreground/30 cursor-not-allowed'
                 : active
                 ? 'border-border bg-muted text-foreground'
                 : 'border-transparent bg-transparent text-muted-foreground/50 hover:text-muted-foreground'
             }`}
-            title={locked ? 'Uppgradera till Pro för alla filter' : config.label}
+            title={needsLogin ? 'Skapa gratis konto för att använda detta filter' : needsPro ? 'Uppgradera till Pro' : config.label}
           >
             <span className="text-xs">{config.icon}</span>
             <span>{config.label}</span>
-            {locked && <Lock className="w-2.5 h-2.5 ml-0.5" />}
+            {needsLogin && (
+              <span className="ml-0.5 text-[9px] font-semibold text-primary/70 uppercase tracking-wide">Gratis</span>
+            )}
+            {needsPro && <Lock className="w-2.5 h-2.5 ml-0.5" />}
           </button>
         );
       })}
