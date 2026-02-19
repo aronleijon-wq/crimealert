@@ -15,7 +15,7 @@ const contactSchema = z.object({
 });
 
 const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
-const PREMIUM_PRICE_YEARLY = 'price_1T2HkOCTAG2ESipPTtXJ8Xab';
+const PREMIUM_PRICE_YEARLY = 'price_1T2cciC5T1wZbLBJfPgzHr4v';
 const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
 
