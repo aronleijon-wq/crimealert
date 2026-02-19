@@ -6,6 +6,7 @@ import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 
 import AdBanner from '@/components/AdBanner';
+import PopupAd from '@/components/PopupAd';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -164,6 +165,7 @@ const Index = () => {
           </div>
         </div>
       </div>
+      {!isPremium && <PopupAd />}
     </div>
   );
 };
