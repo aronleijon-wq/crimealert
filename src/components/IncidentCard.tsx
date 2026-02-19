@@ -8,11 +8,21 @@ interface IncidentCardProps {
   onClick: () => void;
 }
 
-const timeAgo = (iso: string) => {
-  const diff = (Date.now() - new Date(iso).getTime()) / 60000;
-  if (diff < 60) return `${Math.round(diff)} min sedan`;
-  if (diff < 1440) return `${Math.round(diff / 60)}h sedan`;
-  return `${Math.round(diff / 1440)}d sedan`;
+const timeAgo = (dateStr: string) => {
+  try {
+    const parts = dateStr.trim().split(/\s+/);
+    const date = parts.length >= 3
+      ? new Date(`${parts[0]}T${parts[1]}${parts[2]}`)
+      : new Date(dateStr);
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (isNaN(diff)) return '';
+    if (diff < 60) return 'Just nu';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min sedan`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} tim sedan`;
+    return `${Math.floor(diff / 86400)}d sedan`;
+  } catch {
+    return '';
+  }
 };
 
 const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
