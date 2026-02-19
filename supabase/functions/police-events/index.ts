@@ -841,7 +841,12 @@ serve(async (req) => {
         lng: rawLng,
         area: locationName || 'Okänt område',
         time: event.datetime,
-        status: 'active',
+        status: (() => {
+          try {
+            const eventTime = new Date(event.datetime).getTime();
+            return (Date.now() - eventTime) > 60 * 60 * 1000 ? 'resolved' : 'active';
+          } catch { return 'active'; }
+        })(),
         risk: assessRisk(event.type),
         source: 'Polisen.se',
         originalType: event.type,
