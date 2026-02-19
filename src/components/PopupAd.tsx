@@ -7,7 +7,7 @@ const PopupAd = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(true);
-    }, 2 * 60 * 1000);
+    }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
