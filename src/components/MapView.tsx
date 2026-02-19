@@ -303,13 +303,38 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
+    // Group incidents by coordinates to detect overlaps
+    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    const coordGroups = new Map<string, number>();
+    const coordIndex = new Map<string, number>();
+    
+    // Count incidents per location
+    incidents.forEach((inc) => {
+      const key = coordKey(inc.lat, inc.lng);
+      coordGroups.set(key, (coordGroups.get(key) || 0) + 1);
+    });
+
     incidents.forEach((inc) => {
       const config = incidentTypeConfig[inc.type];
+      const key = coordKey(inc.lat, inc.lng);
+      const totalAtLocation = coordGroups.get(key) || 1;
+      const indexAtLocation = coordIndex.get(key) || 0;
+      coordIndex.set(key, indexAtLocation + 1);
+
+      // Spread out overlapping markers in a circle pattern (~0.01° ≈ 1km offset)
+      let adjustedLat = inc.lat;
+      let adjustedLng = inc.lng;
+      if (totalAtLocation > 1) {
+        const angle = (2 * Math.PI * indexAtLocation) / totalAtLocation;
+        const radius = 0.008 + (totalAtLocation > 6 ? 0.004 : 0);
+        adjustedLat += Math.cos(angle) * radius;
+        adjustedLng += Math.sin(angle) * radius;
+      }
       
       // Only show radius circle for recent incidents (under 1 hour)
       const ageMs = Date.now() - new Date(inc.time).getTime();
       if (ageMs < 60 * 60 * 1000) {
-        const circle = L.circle([inc.lat, inc.lng], {
+        const circle = L.circle([adjustedLat, adjustedLng], {
           radius: 500,
           color: config.color,
           fillColor: config.color,
@@ -320,7 +345,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
         markersRef.current!.addLayer(circle);
       }
 
-      const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc) });
+      const marker = L.marker([adjustedLat, adjustedLng], { icon: createMarkerIcon(inc) });
       marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
         maxWidth: 320,
