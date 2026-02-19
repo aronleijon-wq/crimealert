@@ -22,14 +22,14 @@ const createMarkerIcon = (incident: Incident) => {
   const config = incidentTypeConfig[incident.type];
   const isActive = incident.status === 'active';
   const size = isActive ? 14 : 10;
-  const pulseSize = size + 16;
+  const pulseSize = isActive ? size + 16 : size + 6;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
         ${isActive ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;animation:pulse 2s ease-in-out infinite;"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${isActive ? config.color : config.color + '99'};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;${isActive ? `box-shadow:0 1px 6px ${config.color}80;` : ''}"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
