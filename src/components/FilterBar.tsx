@@ -36,7 +36,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
             onClick={() => {
               if (locked) {
                 if (!isLoggedIn) {
-                  navigate('/account?mode=login');
+                  navigate('/auth?mode=signup');
                 }
                 return;
               }
