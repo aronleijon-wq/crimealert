@@ -53,7 +53,7 @@ const Auth = () => {
               {isLogin ? 'Logga in' : 'Skapa konto'}
             </h1>
             <p className="text-xs text-muted-foreground mb-5">
-              {isLogin ? 'Logga in för att hantera din prenumeration' : 'Skapa ett konto för att komma igång'}
+              {isLogin ? 'Logga in på ditt konto' : 'Skapa ett konto för att komma igång'}
             </p>
 
             {!isLogin && (
