@@ -139,7 +139,7 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 };
 
 const Analysis = () => {
-  const { incidents, loading, refetch, dataVersion } = usePoliceEvents();
+  const { incidents, loading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -314,7 +314,7 @@ const Analysis = () => {
           <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
-                  <StatCard label="Händelser" value={stats?.total ?? 0} sub="Polisen.se" icon={Shield} colorClass="text-cr-blue" />
+                  <StatCard label="Händelser" value={totalEverSeen} sub="Kumulativt · Polisen.se" icon={Shield} colorClass="text-cr-blue" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av totalt` : 'Inga händelser ännu'} icon={TrendingUp} colorClass="text-cr-red" />
                   <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser denna timme` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
