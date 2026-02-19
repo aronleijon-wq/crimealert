@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      geocode_cache: {
+        Row: {
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          precision: string
+          query: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          precision?: string
+          query: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          precision?: string
+          query?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string

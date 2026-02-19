@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ─── Swedish Reference Database ───────────────────────────────────────────────
 // All 290 municipalities + major city districts with verified centroids.
@@ -733,8 +738,27 @@ function extractAddressFromSummary(summary: string): string | null {
   return null;
 }
 
-// Geocode with Nominatim — STRICTLY Sweden only
+// Geocode with cache + Nominatim fallback — STRICTLY Sweden only
 async function geocodeWithNominatim(query: string): Promise<[number, number] | null> {
+  const normalizedQuery = query.toLowerCase().trim();
+
+  // 1. Check cache first
+  try {
+    const { data: cached } = await supabase
+      .from('geocode_cache')
+      .select('lat, lng')
+      .eq('query', normalizedQuery)
+      .maybeSingle();
+
+    if (cached) {
+      console.log(`Cache hit: "${query}" → ${cached.lat}, ${cached.lng}`);
+      return [cached.lat, cached.lng];
+    }
+  } catch (e) {
+    console.warn('Cache lookup failed:', e);
+  }
+
+  // 2. Nominatim lookup
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=se&accept-language=sv`;
     
@@ -750,6 +774,16 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
       const lng = parseFloat(results[0].lon);
       // Final safety: verify it's within Sweden's bounding box
       if (lat >= 55.3 && lat <= 69.1 && lng >= 10.9 && lng <= 24.2) {
+        // 3. Store in cache (fire and forget)
+        supabase.from('geocode_cache').upsert({
+          query: normalizedQuery,
+          lat,
+          lng,
+          precision: 'nominatim',
+        }, { onConflict: 'query' }).then(() => {
+          console.log(`Cached: "${normalizedQuery}" → ${lat}, ${lng}`);
+        });
+
         return [lat, lng];
       }
       console.warn(`Nominatim result outside Sweden bounds: ${lat}, ${lng} for "${query}"`);
