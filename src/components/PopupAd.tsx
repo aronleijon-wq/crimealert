@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Newspaper } from 'lucide-react';
+import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const PopupAd = () => {
   const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -15,43 +17,61 @@ const PopupAd = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="relative bg-gradient-to-br from-card to-muted/50 border border-border/50 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] max-w-sm w-[85vw] overflow-hidden">
-        {/* Close X button */}
-        <button
-          onClick={() => setVisible(false)}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110"
-          aria-label="Stäng"
-        >
-          <X className="w-4 h-4" />
-        </button>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+      <div className="relative bg-white rounded-lg shadow-2xl max-w-md w-[90vw] overflow-hidden">
+        {/* Header: ANNONS + X */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-neutral-500">
+            ANNONS
+          </span>
+          <button
+            onClick={() => setVisible(false)}
+            className="p-1 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition"
+            aria-label="Stäng"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-        {/* Top accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
+        {/* Ad image area */}
+        <div className="mx-5 rounded-lg overflow-hidden bg-gradient-to-r from-sky-100 to-sky-200 flex items-center justify-center py-6">
+          <span className="text-4xl">📰</span>
+        </div>
 
-        <div className="p-6 pt-5 text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-1">
-            <Newspaper className="w-6 h-6 text-primary" />
-          </div>
-
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">Annons</p>
-            <h2 className="text-lg font-bold text-foreground">SveaPress</h2>
-          </div>
-
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Senaste nyheterna från Sverige och världen – snabbt, pålitligt och gratis.
+        {/* Content */}
+        <div className="px-5 pt-4 pb-2 text-center">
+          <h2 className="text-xl font-bold text-neutral-900 mb-1">
+            SveaPress 📰
+          </h2>
+          <p className="text-sm text-neutral-500 mb-4">
+            Sveriges nyhetssajt – snabbt, pålitligt och gratis
           </p>
+        </div>
 
+        {/* CTA Button */}
+        <div className="px-5 pb-3">
           <a
             href="https://sveapress.lovable.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground font-semibold py-2.5 px-5 rounded-lg hover:bg-primary/90 transition-all duration-200 text-sm"
+            className="block w-full text-center py-3 bg-[hsl(var(--primary))] text-white font-semibold rounded-lg hover:opacity-90 transition text-sm"
           >
-            Besök SveaPress
-            <span className="text-primary-foreground/70">→</span>
+            Gå till SveaPress
           </a>
+        </div>
+
+        {/* Footer: upgrade link */}
+        <div className="px-5 pb-4 pt-1 text-center">
+          <span className="text-xs text-neutral-400">Trött på reklam? </span>
+          <button
+            onClick={() => {
+              setVisible(false);
+              navigate('/account');
+            }}
+            className="text-xs text-neutral-500 underline hover:text-neutral-700 transition"
+          >
+            Uppgradera till Premium
+          </button>
         </div>
       </div>
     </div>
