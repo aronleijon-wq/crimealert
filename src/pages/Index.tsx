@@ -49,14 +49,14 @@ const Index = () => {
   const timeFiltered = useMemo(() => {
     const now = Date.now();
     if (isPremium) return allIncidents;
-    const cutoff7d = now - 7 * 24 * 60 * 60 * 1000;
+    const cutoff3d = now - 3 * 24 * 60 * 60 * 1000;
     const delayCutoff = now - 15 * 60 * 1000; // 15 minutes ago
     return allIncidents.filter((i) => {
       // Handle "2026-02-18 22:03:10 +01:00" format by replacing space before timezone with T
       const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
       const t = new Date(normalizedTime).getTime();
       if (isNaN(t)) return true; // If we can't parse, show the incident
-      return t >= cutoff7d && t <= delayCutoff;
+      return t >= cutoff3d && t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
 
