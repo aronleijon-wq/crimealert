@@ -6,6 +6,7 @@ export function usePoliceEvents() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
@@ -51,6 +52,7 @@ export function usePoliceEvents() {
           locationPrecision: e.location_precision || undefined,
         }));
         setIncidents(mapped);
+        setDataVersion(v => v + 1);
       } else {
         throw new Error(data?.error || 'Failed to fetch events');
       }
@@ -84,5 +86,5 @@ export function usePoliceEvents() {
     };
   }, [fetchEvents]);
 
-  return { incidents, loading, error, refetch: () => fetchEvents(false, true) };
+  return { incidents, loading, error, refetch: () => fetchEvents(false, true), dataVersion };
 }
