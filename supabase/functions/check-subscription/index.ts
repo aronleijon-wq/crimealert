@@ -32,7 +32,10 @@ serve(async (req) => {
     const stripeKey = Deno.env.get(
       "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",
     );
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey)
+      throw new Error(
+        "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 not set",
+      );
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
