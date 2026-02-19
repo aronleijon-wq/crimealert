@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import sveapressBanner from '@/assets/sveapress-banner.png';
 
 const PopupAd = () => {
   const [visible, setVisible] = useState(false);
@@ -33,9 +34,15 @@ const PopupAd = () => {
           </button>
         </div>
 
-        {/* Ad image area */}
-        <div className="mx-5 rounded-lg overflow-hidden bg-gradient-to-r from-sky-100 to-sky-200 flex items-center justify-center py-6">
-          <span className="text-4xl">📰</span>
+        {/* Banner image */}
+        <div className="mx-5 rounded-lg overflow-hidden">
+          <a href="https://sveapress.lovable.app" target="_blank" rel="noopener noreferrer">
+            <img
+              src={sveapressBanner}
+              alt="Svea Press – Alla perspektiv. Ingen agenda."
+              className="w-full h-auto"
+            />
+          </a>
         </div>
 
         {/* Content */}
