@@ -383,8 +383,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
     <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
       <style>{`
         @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.2; }
-          50% { transform: scale(2); opacity: 0; }
+          0% { transform: scale(1); opacity: 0.35; }
+          50% { transform: scale(2.8); opacity: 0; }
+          100% { transform: scale(1); opacity: 0.35; }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
