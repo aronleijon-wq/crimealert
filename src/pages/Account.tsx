@@ -14,7 +14,7 @@ const contactSchema = z.object({
   message: z.string().trim().min(1, 'Meddelande krävs').max(1000, 'Max 1000 tecken'),
 });
 
-const PREMIUM_PRICE_MONTHLY = 'price_1T2HH5CTAG2ESipPB2WYPzf3';
+const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
 const PREMIUM_PRICE_YEARLY = 'price_1T2HkOCTAG2ESipPTtXJ8Xab';
 const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
