@@ -10,12 +10,14 @@ interface IncidentCardProps {
 
 const timeAgo = (dateStr: string) => {
   try {
-    const parts = dateStr.trim().split(/\s+/);
-    const date = parts.length >= 3
-      ? new Date(`${parts[0]}T${parts[1]}${parts[2]}`)
-      : new Date(dateStr);
+    // Handle format "2026-02-20 8:05:52 +01:00" from police API
+    const normalized = dateStr.trim().replace(
+      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2}:\d{2})\s*([+-]\d{2}:\d{2})$/,
+      '$1T$2$3'
+    );
+    const date = new Date(normalized);
     const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (isNaN(diff)) return '';
+    if (isNaN(diff) || diff < 0) return '';
     if (diff < 60) return 'Just nu';
     if (diff < 3600) return `${Math.floor(diff / 60)} min sedan`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} tim sedan`;
