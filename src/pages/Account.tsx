@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import ReviewSection from '@/components/ReviewSection';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, 'Namn krävs').max(100),
@@ -405,6 +406,9 @@ const Account = () => {
 
           {/* Contact form */}
           <ContactForm />
+
+          {/* Reviews */}
+          <ReviewSection />
 
           <p className="text-[10px] text-muted-foreground/50 font-mono text-center">
             CrimeRadar följer GDPR. Inga personuppgifter visas. Data från öppna källor.
