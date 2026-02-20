@@ -53,6 +53,8 @@ export function usePoliceEvents() {
           originalType: e.originalType || undefined,
           locationPrecision: e.location_precision || undefined,
         }));
+        // Sort by timestamp descending (newest first)
+        mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         setIncidents(mapped);
         // Track cumulative unique incidents (only increases)
         mapped.forEach(inc => seenIdsRef.current.add(inc.id));
