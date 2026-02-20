@@ -29,7 +29,7 @@ const createMarkerIcon = (incident: Incident) => {
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-        ${isRecent ? `<div style="position:absolute;width:${pulseSize}px;height:${pulseSize}px;border-radius:50%;background:${config.color};opacity:0.2;-webkit-animation:pulse 2s ease-in-out infinite;animation:pulse 2s ease-in-out infinite;-webkit-transform:translateZ(0);transform:translateZ(0);will-change:transform,opacity;"></div>` : ''}
+        ${isRecent ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${config.color};"></div>` : ''}
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
       </div>
     `,
@@ -382,15 +382,23 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
   return (
     <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
       <style>{`
-        @-webkit-keyframes pulse {
-          0% { -webkit-transform: scale(1) translateZ(0); transform: scale(1) translateZ(0); opacity: 0.35; }
-          50% { -webkit-transform: scale(2.8) translateZ(0); transform: scale(2.8) translateZ(0); opacity: 0; }
-          100% { -webkit-transform: scale(1) translateZ(0); transform: scale(1) translateZ(0); opacity: 0.35; }
+        .custom-marker {
+          overflow: visible !important;
+          background: none !important;
+          border: none !important;
         }
-        @keyframes pulse {
-          0% { -webkit-transform: scale(1) translateZ(0); transform: scale(1) translateZ(0); opacity: 0.35; }
-          50% { -webkit-transform: scale(2.8) translateZ(0); transform: scale(2.8) translateZ(0); opacity: 0; }
-          100% { -webkit-transform: scale(1) translateZ(0); transform: scale(1) translateZ(0); opacity: 0.35; }
+        .marker-pulse {
+          opacity: 0.3;
+          -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
+          animation: marker-pulse-anim 2s ease-in-out infinite;
+        }
+        @-webkit-keyframes marker-pulse-anim {
+          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
+          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
+        }
+        @keyframes marker-pulse-anim {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0; transform: scale(2.8); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
