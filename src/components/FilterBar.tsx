@@ -1,5 +1,5 @@
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, SlidersHorizontal } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +31,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount }
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card/80 backdrop-blur-sm overflow-x-auto scrollbar-none">
+      <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mr-1" />
       {types.map((type) => {
         const config = incidentTypeConfig[type];
         const active = activeFilters.includes(type);
