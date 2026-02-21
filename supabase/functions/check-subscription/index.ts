@@ -27,7 +27,7 @@ serve(async (req) => {
     logStep("Function started");
 
     // Free premium whitelist
-    const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com"];
+    const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com"];
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -76,21 +76,26 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
+    // Check active, trialing, and past_due subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      limit: 10,
     });
 
-    const hasActiveSub = subscriptions.data.length > 0;
+    // Find the best subscription (prefer active > trialing > past_due)
+    const priorityOrder = ['active', 'trialing', 'past_due'];
+    const validSub = subscriptions.data
+      .filter(s => priorityOrder.includes(s.status))
+      .sort((a, b) => priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status))[0];
+
+    const hasActiveSub = !!validSub;
     let productId = null;
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      productId = subscription.items.data[0].price.product;
-      logStep("Active subscription found", { productId, subscriptionEnd });
+      subscriptionEnd = new Date(validSub.current_period_end * 1000).toISOString();
+      productId = validSub.items.data[0].price.product;
+      logStep("Active subscription found", { status: validSub.status, productId, subscriptionEnd });
     }
 
     return new Response(
