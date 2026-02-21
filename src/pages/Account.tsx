@@ -1,9 +1,9 @@
 import Header from '@/components/Header';
 import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -107,8 +107,42 @@ const Account = () => {
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // After successful checkout, poll checkSubscription until it activates
+  useEffect(() => {
+    if (searchParams.get('success') === 'true' && user) {
+      toast({ title: 'Betalning genomförd!', description: 'Aktiverar ditt Pro-medlemskap...' });
+      // Remove query param
+      setSearchParams({}, { replace: true });
+
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        await checkSubscription();
+        // checkSubscription updates subscription state; we check on next render
+        if (attempts >= 15) {
+          clearInterval(poll);
+          pollingRef.current = null;
+        }
+      }, 2000);
+      pollingRef.current = poll;
+
+      return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+    }
+  }, [searchParams, user]);
+
+  // Stop polling once subscription is confirmed
+  useEffect(() => {
+    if (subscription.subscribed && pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+      toast({ title: 'Pro aktiverat! 🎉', description: 'Du har nu tillgång till alla Pro-funktioner.' });
+    }
+  }, [subscription.subscribed]);
 
   const isPremium = subscription.subscribed && 
     (subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
