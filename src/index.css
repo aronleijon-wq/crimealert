@@ -180,7 +180,14 @@
   }
 
   .animate-pulse-slow {
+    -webkit-animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-pulse-dot {
+    -webkit-animation: pulse-dot-anim 2s ease-in-out infinite;
+    animation: pulse-dot-anim 2s ease-in-out infinite;
+    will-change: opacity;
   }
 
   .grid-overlay {
@@ -189,6 +196,15 @@
       linear-gradient(90deg, hsla(210, 20%, 90%, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
   }
+}
+
+@-webkit-keyframes pulse-dot-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes pulse-dot-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 @keyframes ticker {
