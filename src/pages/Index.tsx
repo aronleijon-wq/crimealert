@@ -62,7 +62,14 @@ const Index = () => {
   }, [allIncidents, isPremium]);
 
   const filtered = useMemo(
-    () => timeFiltered.filter((i) => activeFilters.includes(i.type)),
+    () =>
+      timeFiltered
+        .filter((i) => activeFilters.includes(i.type))
+        .sort((a, b) => {
+          const tA = new Date(a.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+          const tB = new Date(b.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+          return tB - tA;
+        }),
     [activeFilters, timeFiltered]
   );
 
