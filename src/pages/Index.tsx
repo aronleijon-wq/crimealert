@@ -91,10 +91,10 @@ const Index = () => {
           />
         </>
       )}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
         {!isFullscreen && (
-          <div className="w-80 border-r border-border bg-card overflow-y-auto flex-shrink-0 hidden md:block">
+          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ? (
