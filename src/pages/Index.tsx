@@ -11,7 +11,8 @@ import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
-import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap } from 'lucide-react';
+import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
 const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic'];
@@ -19,7 +20,9 @@ const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traff
 const Index = () => {
   const { isPremium } = useIsPremium();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const isLoggedIn = !!user;
+  const [mobileListOpen, setMobileListOpen] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
     if (isPremium) return ['police', 'fire', 'ambulance', 'traffic', 'other'];
@@ -93,8 +96,17 @@ const Index = () => {
       )}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
-        {!isFullscreen && (
-          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none">
+        {!isFullscreen && (!isMobile || mobileListOpen) && (
+          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
+            {isMobile && (
+              <button
+                onClick={() => setMobileListOpen(false)}
+                className="absolute top-2 right-2 z-10 p-1 rounded hover:bg-muted text-muted-foreground"
+                title="Stäng listan"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ? (
@@ -148,6 +160,16 @@ const Index = () => {
             isPremium={isPremium}
           />
 
+          {/* Mobile: show list button */}
+          {isMobile && !mobileListOpen && !isFullscreen && (
+            <button
+              onClick={() => setMobileListOpen(true)}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-muted transition text-foreground shadow-lg"
+            >
+              <List className="w-4 h-4" />
+              <span className="text-xs font-medium">{filtered.length} händelser</span>
+            </button>
+          )}
 
           {/* Fullscreen toggle button */}
           <button
