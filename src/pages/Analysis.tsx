@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import CommunityReports from '@/components/CommunityReports';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
@@ -586,6 +587,9 @@ const Analysis = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Community Reports */}
+                <CommunityReports />
 
                 <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
                   CrimeAlert • Data från Polisen.se • Inga personuppgifter visas • GDPR-kompatibel

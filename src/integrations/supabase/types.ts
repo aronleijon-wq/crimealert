@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_reports: {
+        Row: {
+          area: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          lat: number | null
+          lng: number | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          area?: string | null
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          area?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       geocode_cache: {
         Row: {
           created_at: string
