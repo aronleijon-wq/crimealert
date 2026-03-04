@@ -2,8 +2,8 @@ import { useMemo, useEffect, useState, useRef } from 'react';
 import Header from '@/components/Header';
 import AdBanner from '@/components/AdBanner';
 import PremiumGate from '@/components/PremiumGate';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
+import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 
@@ -256,7 +256,82 @@ const Analysis = () => {
       return { område, index: safetyIndex, total: high + medium + low, high };
     });
 
-    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length };
+    // Time profiles: hourly breakdown per type
+    const typeHourly: Record<string, number[]> = {};
+    filteredIncidents.forEach((i) => {
+      try {
+        const h = parseTime(i.time).getHours();
+        if (!isNaN(h)) {
+          if (!typeHourly[i.type]) typeHourly[i.type] = Array.from({ length: 24 }, () => 0);
+          typeHourly[i.type][h]++;
+        }
+      } catch {}
+    });
+    const timeProfileData = Array.from({ length: 24 }, (_, h) => {
+      const row: any = { timme: String(h).padStart(2, '0') + ':00' };
+      Object.keys(typeHourly).forEach((type) => {
+        row[TYPE_LABELS[type] || type] = typeHourly[type][h];
+      });
+      return row;
+    });
+    const timeProfileTypes = Object.keys(typeHourly).map((t) => ({
+      key: TYPE_LABELS[t] || t,
+      color: TYPE_COLORS[t] || TYPE_COLORS.other,
+    }));
+
+    // Seasonal warnings
+    const seasonalWarnings: { icon: string; title: string; message: string; severity: 'info' | 'warning' | 'danger' }[] = [];
+    const now2 = new Date();
+    const month = now2.getMonth();
+    const policeCount = typeCounts['police'] || 0;
+    const trafficCount = typeCounts['traffic'] || 0;
+    const areaLabel = selectedArea || 'ditt område';
+
+    if (month >= 9 && month <= 10 && policeCount > 3) {
+      seasonalWarnings.push({
+        icon: '🏠', title: 'Höstlovssäsong – ökad inbrottsrisk',
+        message: `Vi ser ${policeCount} polishändelser i ${areaLabel}. Statistiskt ökar bostadsinbrott inför och under höstlovet – tänk på att tända lampor och lås ordentligt.`,
+        severity: 'warning',
+      });
+    }
+    if (month === 11 || month === 0) {
+      seasonalWarnings.push({
+        icon: '🎄', title: 'Julperiod – stölder ökar',
+        message: `Under december–januari ökar butiksstölder och paketbedrägerier i ${areaLabel}. Var extra vaksam med leveranser.`,
+        severity: 'info',
+      });
+    }
+    if (month >= 5 && month <= 7) {
+      seasonalWarnings.push({
+        icon: '☀️', title: 'Sommar – fler inbrott i tomma hem',
+        message: `Under semesterperioden ökar bostadsinbrott i ${areaLabel}. Använd tidur för belysning och be grannar hålla koll.`,
+        severity: 'warning',
+      });
+    }
+    const nightIncidents = [0,1,2,3,4].reduce((sum, h2) => sum + hourlyCounts[h2], 0);
+    if (nightIncidents > filteredIncidents.length * 0.3 && filteredIncidents.length > 5) {
+      seasonalWarnings.push({
+        icon: '🌙', title: 'Nattlig aktivitet ovanligt hög',
+        message: `${Math.round(nightIncidents / filteredIncidents.length * 100)}% av händelserna i ${areaLabel} sker mellan kl. 00–05. Var extra försiktig under nattetid.`,
+        severity: 'danger',
+      });
+    }
+    if ((month >= 9 || month <= 2) && trafficCount > 3) {
+      seasonalWarnings.push({
+        icon: '🚗', title: 'Mörkerperiod – fler trafikolyckor',
+        message: `${trafficCount} trafikhändelser i ${areaLabel}. Under mörka månader ökar risken – kör försiktigt och använd reflexer.`,
+        severity: 'info',
+      });
+    }
+    if (highRisk > 2 && highRisk / filteredIncidents.length > 0.2) {
+      seasonalWarnings.push({
+        icon: '⚠️', title: 'Ovanligt många allvarliga händelser',
+        message: `${highRisk} högrisk-händelser av totalt ${filteredIncidents.length} i ${areaLabel}. Var uppmärksam och följ polisens uppmaningar.`,
+        severity: 'danger',
+      });
+    }
+
+    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length, timeProfileData, timeProfileTypes, seasonalWarnings };
   }, [filteredIncidents, dataVersion]);
 
   return (
@@ -439,6 +514,77 @@ const Analysis = () => {
                     </div>
                     )}
                   </div>
+                </div>
+
+                {/* Predictive Analysis Section */}
+                <div className="bg-card border border-border rounded-lg p-4 md:p-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <h2 className="text-sm font-bold text-foreground">Prediktiv Analys – Trendspaning</h2>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-5">Baserat på mönster i aktuell data{selectedArea ? ` för ${selectedArea}` : ''}</p>
+
+                  {/* Time Profiles Chart */}
+                  <div className="mb-6">
+                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
+                      Tidsprofil – Brottstyp per timme
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground mb-3">Visar när på dygnet olika händelsetyper är vanligast</p>
+                    {stats?.timeProfileData && stats.timeProfileTypes.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={260}>
+                        <BarChart data={stats.timeProfileData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
+                          <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                          <Tooltip content={<ChartTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: 10 }} />
+                          {stats.timeProfileTypes.map((t) => (
+                            <Bar key={t.key} dataKey={t.key} stackId="a" fill={t.color} radius={[0, 0, 0, 0]} />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-[200px] flex items-center justify-center">
+                        <p className="text-xs text-muted-foreground">Ingen data ännu</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Seasonal Warnings */}
+                  {stats?.seasonalWarnings && stats.seasonalWarnings.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Lightbulb className="w-3.5 h-3.5 text-cr-orange" />
+                        <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Säsongsvarningar & insikter</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {stats.seasonalWarnings.map((w, i) => (
+                          <div
+                            key={i}
+                            className={`rounded-lg border p-3 ${
+                              w.severity === 'danger'
+                                ? 'border-cr-red/30 bg-cr-red/5'
+                                : w.severity === 'warning'
+                                ? 'border-cr-orange/30 bg-cr-orange/5'
+                                : 'border-primary/20 bg-primary/5'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-lg">{w.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs font-semibold mb-0.5 ${
+                                  w.severity === 'danger' ? 'text-cr-red' : w.severity === 'warning' ? 'text-cr-orange' : 'text-primary'
+                                }`}>
+                                  {w.title}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">{w.message}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
