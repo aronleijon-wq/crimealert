@@ -9,6 +9,7 @@ import AdBanner from '@/components/AdBanner';
 import PopupAd from '@/components/PopupAd';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
+import { useCommunityReports } from '@/hooks/useCommunityReports';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X } from 'lucide-react';
@@ -34,6 +35,7 @@ const Index = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
+  const { reports: communityReports } = useCommunityReports();
 
   // Update filters when premium/login status changes — activate all allowed filters
   useEffect(() => {
@@ -46,7 +48,8 @@ const Index = () => {
     );
   }, []);
 
-  const allIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
+  const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
+  const allIncidents = [...policeIncidents, ...communityReports];
   const isLive = liveIncidents.length > 0;
 
   // Free users: only show last 24h + 15 min delay on new incidents
