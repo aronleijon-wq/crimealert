@@ -46,6 +46,21 @@ export default function CommunityReports() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [area, setArea] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  const getMyLocation = () => {
+    if (!navigator.geolocation) { setGeoError('Geolokalisering stöds inte'); return; }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setLat(pos.coords.latitude); setLng(pos.coords.longitude); setGeoLoading(false); },
+      () => { setGeoError('Kunde inte hämta position'); setGeoLoading(false); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -70,10 +85,13 @@ export default function CommunityReports() {
       title: title.trim().slice(0, 200),
       description: description.trim().slice(0, 1000),
       area: area.trim().slice(0, 200) || null,
+      lat,
+      lng,
       status: 'open',
     });
     if (!error) {
       setCategory(''); setTitle(''); setDescription(''); setArea('');
+      setLat(null); setLng(null);
       setShowForm(false);
       fetchReports();
     }
@@ -157,6 +175,28 @@ export default function CommunityReports() {
                   />
                 </div>
                 <div>
+                  <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Plats</label>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <button
+                      type="button"
+                      onClick={getMyLocation}
+                      disabled={geoLoading}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-[11px] font-medium border transition ${
+                        lat !== null
+                          ? 'border-cr-green bg-cr-green/10 text-cr-green'
+                          : 'border-border text-muted-foreground hover:border-primary/30'
+                      }`}
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      {geoLoading ? 'Hämtar...' : lat !== null ? `📍 ${lat.toFixed(4)}, ${lng!.toFixed(4)}` : 'Använd min position'}
+                    </button>
+                    {lat !== null && (
+                      <button type="button" onClick={() => { setLat(null); setLng(null); }} className="text-[10px] text-muted-foreground hover:text-foreground">✕</button>
+                    )}
+                  </div>
+                  {geoError && <p className="text-[10px] text-destructive mt-1">{geoError}</p>}
+                </div>
+                <div>
                   <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Område (valfritt)</label>
                   <input
                     value={area}
@@ -177,7 +217,7 @@ export default function CommunityReports() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setShowForm(false); setCategory(''); setTitle(''); setDescription(''); setArea(''); }}
+                    onClick={() => { setShowForm(false); setCategory(''); setTitle(''); setDescription(''); setArea(''); setLat(null); setLng(null); }}
                     className="px-3 py-2 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition"
                   >
                     Avbryt
