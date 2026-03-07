@@ -23,10 +23,6 @@ const TYPE_COLORS: Record<IncidentType, string> = {
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, onSearchLocation }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
-  const { isPremium } = useIsPremium();
-  const { user } = useAuth();
-  const isLoggedIn = !!user;
-  const navigate = useNavigate();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
