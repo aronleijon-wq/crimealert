@@ -108,10 +108,14 @@ const Auth = () => {
         <div className="w-full max-w-sm">
           <div className="bg-card border border-border rounded-lg p-6">
             <h1 className="text-lg font-bold text-foreground mb-1">
-              {isLogin ? 'Logga in' : 'Skapa konto'}
+              {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Skapa konto'}
             </h1>
             <p className="text-xs text-muted-foreground mb-5">
-              {isLogin ? 'Logga in på ditt konto' : 'Skapa ett konto för att komma igång'}
+              {forgotPassword
+                ? 'Ange din e-post så skickar vi en återställningslänk'
+                : isLogin
+                  ? 'Logga in på ditt konto'
+                  : 'Skapa ett konto för att komma igång'}
             </p>
 
             {!isLogin && (
