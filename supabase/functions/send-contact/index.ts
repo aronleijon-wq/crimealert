@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     const { error } = await supabaseAdmin
       .from("contact_messages")
-      .insert({ name, email, message });
+      .insert({ name: trimName, email: trimEmail, message: trimMessage });
 
     if (error) {
       console.error("Insert error:", error);
