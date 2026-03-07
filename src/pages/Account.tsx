@@ -294,9 +294,55 @@ const Account = () => {
     },
   ];
 
+  const proFeatures = [
+    { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
+    { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
+    { icon: MessageSquare, text: 'CrimeAlert AI-chatt' },
+    { icon: Clock, text: 'Full historik (30+ dagar)' },
+    { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
+    { icon: EyeOff, text: 'Ingen reklam' },
+    { icon: FileText, text: 'Export PDF/CSV' },
+  ];
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
+
+      {/* Welcome Pro dialog */}
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Zap className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">Välkommen till Pro! 🎉</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tack för att du uppgraderat. Här är allt du nu har tillgång till:
+            </p>
+          </div>
+
+          <ul className="space-y-2.5 mb-5">
+            {proFeatures.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <li key={i} className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-xs text-foreground font-medium">{f.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <button
+            onClick={() => setShowWelcome(false)}
+            className="w-full py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition"
+          >
+            Börja utforska
+          </button>
+        </DialogContent>
+      </Dialog>
       <div className="flex-1 overflow-y-auto p-6 grid-overlay">
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Theme toggle */}
