@@ -106,6 +106,9 @@ const Index = () => {
             onToggleFilter={toggleFilter}
             incidentCount={filtered.length}
             activeCount={activeCount}
+            onSearchLocation={(lat, lng, zoom, name) => {
+              setFlyToLocation({ lat, lng, zoom });
+            }}
           />
         </>
       )}
