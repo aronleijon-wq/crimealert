@@ -24,6 +24,8 @@ const CATEGORIES = [
 
 const CATEGORY_MAP: Record<string, typeof CATEGORIES[0]> = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));
 
+const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '').trim();
+
 const timeAgo = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -82,9 +84,9 @@ export default function CommunityReports() {
     const { error } = await supabase.from('community_reports').insert({
       user_id: user.id,
       category,
-      title: title.trim().slice(0, 200),
-      description: description.trim().slice(0, 1000),
-      area: area.trim().slice(0, 200) || null,
+      title: stripHtml(title).slice(0, 200),
+      description: stripHtml(description).slice(0, 1000),
+      area: stripHtml(area).slice(0, 200) || null,
       lat,
       lng,
       status: 'open',

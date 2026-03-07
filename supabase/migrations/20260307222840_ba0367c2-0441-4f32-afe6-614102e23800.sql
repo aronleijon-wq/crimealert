@@ -1,0 +1,1 @@
+DELETE FROM community_reports WHERE id IN ('650103a6-1ba4-40f7-b0a0-58720d73e420', 'b0229110-8c0c-467f-95e5-d92a271158b0', 'ceecceb1-ad63-4726-94cf-9ba6c377c26d');
