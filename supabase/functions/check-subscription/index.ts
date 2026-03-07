@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: user.email, limit: 10 });
 
     if (customers.data.length === 0) {
       logStep("No customer found");
@@ -97,26 +97,47 @@ serve(async (req) => {
       });
     }
 
-    const customerId = customers.data[0].id;
-    // Check active, trialing, and past_due subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      limit: 10,
-    });
-
-    // Find the best subscription (prefer active > trialing > past_due)
+    // Check all matching customers to avoid false negatives when duplicate customers exist
     const priorityOrder = ['active', 'trialing', 'past_due'];
-    const validSub = subscriptions.data
-      .filter(s => priorityOrder.includes(s.status))
-      .sort((a, b) => priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status))[0];
+    let validSub: Stripe.Subscription | null = null;
+
+    for (const customer of customers.data) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        limit: 20,
+      });
+
+      const customerBest = subscriptions.data
+        .filter((s) => priorityOrder.includes(s.status))
+        .sort((a, b) => priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status))[0];
+
+      if (!customerBest) continue;
+
+      if (!validSub || priorityOrder.indexOf(customerBest.status) < priorityOrder.indexOf(validSub.status)) {
+        validSub = customerBest;
+      }
+    }
 
     const hasActiveSub = !!validSub;
-    let productId = null;
-    let subscriptionEnd = null;
+    let productId: string | null = null;
+    let subscriptionEnd: string | null = null;
 
-    if (hasActiveSub) {
-      subscriptionEnd = new Date(validSub.current_period_end * 1000).toISOString();
-      productId = validSub.items.data[0].price.product;
+    if (hasActiveSub && validSub) {
+      const periodEndSec = Number(validSub.current_period_end);
+      if (Number.isFinite(periodEndSec) && periodEndSec > 0) {
+        const parsedEnd = new Date(periodEndSec * 1000);
+        if (!Number.isNaN(parsedEnd.getTime())) {
+          subscriptionEnd = parsedEnd.toISOString();
+        } else {
+          logStep("Invalid current_period_end date", { value: validSub.current_period_end });
+        }
+      } else {
+        logStep("Missing or invalid current_period_end", { value: validSub.current_period_end });
+      }
+
+      const priceProduct = validSub.items?.data?.[0]?.price?.product;
+      productId = typeof priceProduct === 'string' ? priceProduct : (priceProduct?.id ?? null);
+
       logStep("Active subscription found", { status: validSub.status, productId, subscriptionEnd });
     }
 
