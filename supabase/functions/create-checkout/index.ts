@@ -28,21 +28,47 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const isTransientAuthError = (err: any) => {
+      const message = String(err?.message || err?.msg || "").toLowerCase();
+      const status = err?.status;
+      return (
+        status === 503 ||
+        status === 504 ||
+        message.includes("timeout") ||
+        message.includes("upstream connect error") ||
+        message.includes("failed to fetch") ||
+        message.includes("unexpected token '<'")
+      );
+    };
+
     const token = authHeader.replace("Bearer ", "");
-    
-    // Retry getUser up to 2 times on transient failures
+
     let user: any = null;
     let userError: any = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
+
+    for (let attempt = 0; attempt < 4; attempt++) {
       const result = await supabaseClient.auth.getUser(token);
       user = result.data?.user;
       userError = result.error;
       if (!userError) break;
-      logStep(`Auth attempt ${attempt + 1} failed`, { message: userError?.message || JSON.stringify(userError) });
-      if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
+
+      logStep(`Auth attempt ${attempt + 1} failed`, {
+        message: userError?.message || JSON.stringify(userError),
+        status: userError?.status,
+      });
+
+      if (!isTransientAuthError(userError) || attempt === 3) break;
+      await sleep(700 * (attempt + 1));
     }
-    if (userError || !user?.email) throw new Error("User not authenticated");
-    
+
+    if (userError || !user?.email) {
+      if (isTransientAuthError(userError)) {
+        throw new Error("TRANSIENT_AUTH_ERROR");
+      }
+      throw new Error("User not authenticated");
+    }
+
     const email = user.email;
     logStep("User authenticated", { email });
 
@@ -75,9 +101,11 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
+
+    const isTransient = msg.includes("TRANSIENT_AUTH_ERROR");
+    return new Response(JSON.stringify({ error: isTransient ? "Temporary authentication backend timeout" : msg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isTransient ? 503 : 500,
     });
   }
 });
