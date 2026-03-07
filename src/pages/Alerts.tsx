@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import { Bell, MapPin, Clock, Lock, Plus, X, Search } from 'lucide-react';
+import { Bell, MapPin, Clock, Plus, X, Search } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
