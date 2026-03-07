@@ -176,6 +176,7 @@ const Index = () => {
             selectedId={selectedId}
             onSelectIncident={(id) => setSelectedId(id)}
             isPremium={isPremium}
+            flyToLocation={flyToLocation}
           />
 
           {/* Mobile: show list button */}
