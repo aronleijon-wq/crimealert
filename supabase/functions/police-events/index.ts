@@ -1059,31 +1059,14 @@ serve(async (req) => {
     }
 
     const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
-
-    // Filter out non-severe events older than 3 days
-    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-    const severeKeywords = ['mord', 'skottlossning', 'rån', 'våldtäkt', 'sprängning', 'explosion', 'knivlag', 'brand', 'dödligt våld', 'grov misshandel'];
-    const isSevere = (originalType: string) => {
-      const lower = (originalType || '').toLowerCase();
-      return severeKeywords.some(kw => lower.includes(kw));
-    };
-    const filteredIncidents = validIncidents.filter((i: any) => {
-      try {
-        const ageMs = Date.now() - new Date(i.time).getTime();
-        if (ageMs <= THREE_DAYS_MS) return true; // Always show events within 3 days
-        return isSevere(i.originalType); // Only keep severe events beyond 3 days
-      } catch { return true; }
-    });
-
-    console.log(`Filtered ${validIncidents.length - filteredIncidents.length} old non-severe events`);
     
-    const precisionCounts = filteredIncidents.reduce((acc: Record<string, number>, i: any) => {
+    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
       acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
       return acc;
     }, {});
-    console.log(`Returning ${filteredIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
+    console.log(`Returning ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: filteredIncidents }), {
+    return new Response(JSON.stringify({ success: true, data: validIncidents }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
