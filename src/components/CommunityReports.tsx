@@ -24,6 +24,8 @@ const CATEGORIES = [
 
 const CATEGORY_MAP: Record<string, typeof CATEGORIES[0]> = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));
 
+const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '').trim();
+
 const timeAgo = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
