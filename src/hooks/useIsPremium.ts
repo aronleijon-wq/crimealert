@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 
-const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
-const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
+const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
+const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 
 export function useIsPremium() {
   const { user, subscription } = useAuth();
