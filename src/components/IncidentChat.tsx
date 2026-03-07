@@ -274,30 +274,43 @@ const IncidentChat = ({ incidents }: IncidentChatProps) => {
 
       {/* Input */}
       <div className="px-3 py-2.5 border-t border-border bg-muted/20">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ställ en fråga..."
-            disabled={isLoading}
-            className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-30 hover:bg-primary/90 transition"
+        {isPremium ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(input);
+            }}
+            className="flex items-center gap-2"
           >
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </form>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ställ en fråga..."
+              disabled={isLoading}
+              className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="p-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-30 hover:bg-primary/90 transition"
+            >
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="w-3.5 h-3.5 shrink-0" />
+            <span>AI-chatten är exklusiv för Pro-medlemmar.</span>
+            <button
+              onClick={() => { setOpen(false); navigate('/account'); }}
+              className="ml-auto text-primary font-medium hover:underline whitespace-nowrap"
+            >
+              Uppgradera
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
