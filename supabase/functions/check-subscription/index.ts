@@ -76,7 +76,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           subscribed: true,
-          product_id: "prod_U0Hqae7g588978",
+          product_id: "prod_U0dsMg8IZZKY7c",
           subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         }),
         {
