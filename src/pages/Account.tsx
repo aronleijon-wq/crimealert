@@ -17,8 +17,8 @@ const contactSchema = z.object({
 
 const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
 const PREMIUM_PRICE_YEARLY = 'price_1T2cciC5T1wZbLBJfPgzHr4v';
-const PREMIUM_PRODUCT_ID = 'prod_U0Hqae7g588978';
-const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0ILfpJlo9MMlW';
+const PREMIUM_PRODUCT_ID = 'prod_U0dsMg8IZZKY7c';
+const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 
 const ContactForm = () => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
