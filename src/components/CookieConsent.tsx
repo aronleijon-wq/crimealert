@@ -9,12 +9,9 @@ const CookieConsent = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!consent) {
-      // Small delay so it doesn't flash on load
-      const timer = setTimeout(() => setVisible(true), 1000);
-      return () => clearTimeout(timer);
-    }
+    // Always show on every page load/reload
+    const timer = setTimeout(() => setVisible(true), 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const accept = () => {
