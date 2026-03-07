@@ -123,48 +123,94 @@ const Auth = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="email"
-                  placeholder="E-postadress"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="password"
-                  placeholder="Lösenord"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50"
-              >
-                {loading ? 'Vänta...' : isLogin ? 'Logga in' : 'Skapa konto'}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
+            {forgotPassword ? (
+              <form onSubmit={handleForgotPassword} className="space-y-3">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    placeholder="E-postadress"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                >
+                  {loading ? 'Vänta...' : 'Skicka återställningslänk'}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setForgotPassword(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition"
+                  >
+                    Tillbaka till inloggning
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      placeholder="E-postadress"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="password"
+                      placeholder="Lösenord"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  {isLogin && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => setForgotPassword(true)}
+                        className="text-xs text-primary hover:text-primary/80 transition"
+                      >
+                        Glömt lösenord?
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Vänta...' : isLogin ? 'Logga in' : 'Skapa konto'}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
 
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-xs text-muted-foreground hover:text-foreground transition"
-              >
-                {isLogin ? 'Har du inget konto? Skapa ett' : 'Har du redan ett konto? Logga in'}
-              </button>
-            </div>
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition"
+                  >
+                    {isLogin ? 'Har du inget konto? Skapa ett' : 'Har du redan ett konto? Logga in'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
