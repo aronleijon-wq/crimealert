@@ -6,7 +6,7 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 export function useIsPremium() {
   const { user, subscription } = useAuth();
   const isPremium = subscription.subscribed && 
-    (subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
+    (subscription.productId === PREMIUM_PRODUCT_ID_MONTHLY || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
   const isLoggedIn = !!user;
   return { isPremium, isLoggedIn };
 }
