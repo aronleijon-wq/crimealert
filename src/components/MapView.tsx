@@ -8,6 +8,7 @@ interface MapViewProps {
   selectedId: string | null;
   onSelectIncident: (id: string) => void;
   isPremium?: boolean;
+  flyToLocation?: { lat: number; lng: number; zoom: number } | null;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -265,7 +266,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
   `;
 };
 
-const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
@@ -382,6 +383,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       }, 850);
     }
   }, [selectedId, incidents]);
+
+  // Fly to searched location
+  useEffect(() => {
+    if (!mapRef.current || !flyToLocation) return;
+    mapRef.current.flyTo([flyToLocation.lat, flyToLocation.lng], flyToLocation.zoom, { duration: 1.2 });
+  }, [flyToLocation]);
 
   return (
     <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>

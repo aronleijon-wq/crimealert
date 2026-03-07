@@ -31,6 +31,7 @@ const Index = () => {
 
   const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
   const { reports: communityReports } = useCommunityReports();
@@ -105,6 +106,9 @@ const Index = () => {
             onToggleFilter={toggleFilter}
             incidentCount={filtered.length}
             activeCount={activeCount}
+            onSearchLocation={(lat, lng, zoom, name) => {
+              setFlyToLocation({ lat, lng, zoom });
+            }}
           />
         </>
       )}
@@ -172,6 +176,7 @@ const Index = () => {
             selectedId={selectedId}
             onSelectIncident={(id) => setSelectedId(id)}
             isPremium={isPremium}
+            flyToLocation={flyToLocation}
           />
 
           {/* Mobile: show list button */}
