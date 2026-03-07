@@ -24,16 +24,26 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error("User not authenticated");
     
-    const email = claimsData.claims.email as string;
-    if (!email) throw new Error("User email not available");
+    // Retry getUser up to 2 times on transient failures
+    let user: any = null;
+    let userError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = await supabaseClient.auth.getUser(token);
+      user = result.data?.user;
+      userError = result.error;
+      if (!userError) break;
+      logStep(`Auth attempt ${attempt + 1} failed`, { message: userError?.message || JSON.stringify(userError) });
+      if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
+    }
+    if (userError || !user?.email) throw new Error("User not authenticated");
+    
+    const email = user.email;
     logStep("User authenticated", { email });
 
     const { priceId } = await req.json();
