@@ -236,31 +236,14 @@ const Alerts = () => {
               </div>
               <h2 className="text-sm font-bold text-foreground mb-1">Bevaka ditt område</h2>
               <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto">
-                Uppgradera till Pro för att bevaka kommuner och få notiser vid händelser i ditt område.
+                Logga in för att bevaka kommuner och få notiser vid händelser i ditt område.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="bg-muted/50 rounded-lg p-3 text-left">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Gratis</span>
-                  <ul className="text-xs text-foreground mt-2 space-y-1">
-                    <li className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-muted-foreground" /> Senaste händelser</li>
-                    <li className="flex items-center gap-1.5"><Lock className="w-3 h-3 text-muted-foreground" /> Ingen bevakning</li>
-                  </ul>
-                </div>
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-left">
-                  <span className="text-[10px] font-mono text-primary uppercase tracking-wider">Pro</span>
-                  <ul className="text-xs text-foreground mt-2 space-y-1">
-                    <li className="flex items-center gap-1.5"><MapPin className="w-3 h-3 text-primary" /> Bevaka kommuner</li>
-                    <li className="flex items-center gap-1.5"><Bell className="w-3 h-3 text-primary" /> Notiser i realtid</li>
-                  </ul>
-                </div>
-              </div>
-
               <button
-                onClick={() => navigate('/account')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition glow-red"
+                onClick={() => navigate('/auth?mode=login')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition"
               >
-                Uppgradera till Pro — 19 kr/mån
+                Logga in
               </button>
             </div>
           )}
