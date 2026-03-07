@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
+import CookieConsent from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Analysis from "./pages/Analysis";
 import Alerts from "./pages/Alerts";
 import Account from "./pages/Account";
 import Auth from "./pages/Auth";
+import Cookies from "./pages/Cookies";
+import Sekretesspolicy from "./pages/Sekretesspolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,8 +31,11 @@ const App = () => (
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/cookies" element={<Cookies />} />
+          <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
