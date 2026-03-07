@@ -103,12 +103,24 @@ const ReviewSection = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchReviews = async () => {
-    const { data } = await supabase
-      .from('reviews')
+    // Read from public view (no user_id exposed)
+    const { data: publicData } = await supabase
+      .from('reviews_public')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(20);
-    setReviews((data as Review[]) || []);
+    
+    // If logged in, also fetch own reviews to enable delete
+    let ownIds: string[] = [];
+    if (user) {
+      const { data: ownData } = await supabase
+        .from('reviews')
+        .select('id')
+        .eq('user_id', user.id);
+      ownIds = (ownData ?? []).map((r: any) => r.id);
+    }
+    
+    setReviews((publicData as Review[])?.map(r => ({ ...r, isOwn: ownIds.includes(r.id) })) || []);
     setLoading(false);
   };
 

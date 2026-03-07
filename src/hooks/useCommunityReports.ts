@@ -17,7 +17,7 @@ export function useCommunityReports() {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from('community_reports')
+      .from('community_reports_public')
       .select('*')
       .not('lat', 'is', null)
       .not('lng', 'is', null)
