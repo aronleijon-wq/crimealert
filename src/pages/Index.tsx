@@ -105,7 +105,7 @@ const Index = () => {
             incidentCount={filtered.length}
             activeCount={activeCount}
             onSearchLocation={(lat, lng, zoom, name) => {
-              setFlyToLocation({ lat, lng, zoom });
+              setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
             }}
           />
         </>
