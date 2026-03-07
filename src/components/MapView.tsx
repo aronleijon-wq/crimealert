@@ -384,6 +384,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     }
   }, [selectedId, incidents]);
 
+  // Fly to searched location
+  useEffect(() => {
+    if (!mapRef.current || !flyToLocation) return;
+    mapRef.current.flyTo([flyToLocation.lat, flyToLocation.lng], flyToLocation.zoom, { duration: 1.2 });
+  }, [flyToLocation]);
+
   return (
     <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
       <style>{`
