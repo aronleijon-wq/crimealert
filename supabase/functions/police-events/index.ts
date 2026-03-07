@@ -933,7 +933,7 @@ serve(async (req) => {
         status: (() => {
           try {
             const eventTime = new Date(event.datetime).getTime();
-            return (Date.now() - eventTime) > 2 * 60 * 60 * 1000 ? 'resolved' : 'active';
+            return (Date.now() - eventTime) > 3 * 60 * 60 * 1000 ? 'resolved' : 'active';
           } catch { return 'active'; }
         })(),
         risk: assessRisk(event.type),

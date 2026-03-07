@@ -21,7 +21,7 @@ const TYPE_ICONS: Record<string, string> = {
 const createMarkerIcon = (incident: Incident) => {
   const config = incidentTypeConfig[incident.type];
   const ageMs = Date.now() - new Date(incident.time).getTime();
-  const isRecent = ageMs < 2 * 60 * 60 * 1000; // under 2 hours
+  const isRecent = ageMs < 3 * 60 * 60 * 1000; // under 3 hours
   const size = isRecent ? 14 : 10;
   const pulseSize = size + 16;
 
@@ -333,7 +333,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       
       // Only show radius circle for recent incidents (under 2 hours)
       const ageMs = Date.now() - new Date(inc.time).getTime();
-      if (ageMs < 2 * 60 * 60 * 1000) {
+      if (ageMs < 3 * 60 * 60 * 1000) {
         const circle = L.circle([adjustedLat, adjustedLng], {
           radius: 500,
           color: config.color,
