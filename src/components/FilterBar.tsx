@@ -1,10 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { Lock, User, SlidersHorizontal, Search, X, MapPin } from 'lucide-react';
-import { useIsPremium } from '@/hooks/useIsPremium';
-import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { SlidersHorizontal, Search, X, MapPin } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
 
 interface FilterBarProps {
