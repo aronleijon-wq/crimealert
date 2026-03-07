@@ -134,8 +134,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
         )}
 
         {/* Dropdown results */}
-        {searchOpen && results.length > 0 && (
-          <div className="fixed mt-1 w-52 bg-card border border-border rounded-lg shadow-xl z-[9999] max-h-64 overflow-y-auto" style={{ top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+        {searchOpen && results.length > 0 && createPortal(
+          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
             {results.map((m, i) => (
               <button
                 key={m.name}
@@ -150,13 +150,15 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                 <span className="font-medium">{m.name}</span>
               </button>
             ))}
-          </div>
+          </div>,
+          document.body
         )}
 
-        {searchOpen && query.trim() && results.length === 0 && (
-          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl z-[9999] p-3" style={{ top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+        {searchOpen && query.trim() && results.length === 0 && createPortal(
+          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl p-3" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
             <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 
