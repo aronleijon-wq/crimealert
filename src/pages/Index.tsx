@@ -195,7 +195,7 @@ const Index = () => {
           </div>
         </div>
       </div>
-      {!isPremium && <PopupAd />}
+      
     </div>
   );
 };
