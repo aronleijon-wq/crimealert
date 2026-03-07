@@ -301,43 +301,20 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
     };
   }, []);
 
-  useEffect(() => {
-    if (!markersRef.current) return;
+  const rebuildMarkers = () => {
+    if (!markersRef.current || !mapRef.current) return;
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    // Group incidents by coordinates to detect overlaps
-    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    const coordGroups = new Map<string, number>();
-    const coordIndex = new Map<string, number>();
-    
-    // Count incidents per location
-    incidents.forEach((inc) => {
-      const key = coordKey(inc.lat, inc.lng);
-      coordGroups.set(key, (coordGroups.get(key) || 0) + 1);
-    });
+    const zoom = mapRef.current.getZoom();
 
     incidents.forEach((inc) => {
       const config = incidentTypeConfig[inc.type];
-      const key = coordKey(inc.lat, inc.lng);
-      const totalAtLocation = coordGroups.get(key) || 1;
-      const indexAtLocation = coordIndex.get(key) || 0;
-      coordIndex.set(key, indexAtLocation + 1);
 
-      // Spread out overlapping markers in a circle pattern (~0.01° ≈ 1km offset)
-      let adjustedLat = inc.lat;
-      let adjustedLng = inc.lng;
-      if (totalAtLocation > 1) {
-        const angle = (2 * Math.PI * indexAtLocation) / totalAtLocation;
-        const radius = 0.008 + (totalAtLocation > 6 ? 0.004 : 0);
-        adjustedLat += Math.cos(angle) * radius;
-        adjustedLng += Math.sin(angle) * radius;
-      }
-      
       // Only show radius circle for recent incidents (under 2 hours)
       const ageMs = Date.now() - new Date(inc.time).getTime();
       if (ageMs < 2 * 60 * 60 * 1000) {
-        const circle = L.circle([adjustedLat, adjustedLng], {
+        const circle = L.circle([inc.lat, inc.lng], {
           radius: 500,
           color: config.color,
           fillColor: config.color,
@@ -348,7 +325,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
         markersRef.current!.addLayer(circle);
       }
 
-      const marker = L.marker([adjustedLat, adjustedLng], { icon: createMarkerIcon(inc) });
+      const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc, zoom) });
       marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
         maxWidth: 320,
@@ -360,6 +337,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
+  };
+
+  useEffect(() => {
+    rebuildMarkers();
+  }, [incidents, onSelectIncident, isPremium]);
+
+  // Update marker sizes when zoom changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const onZoom = () => rebuildMarkers();
+    map.on('zoomend', onZoom);
+    return () => { map.off('zoomend', onZoom); };
   }, [incidents, onSelectIncident, isPremium]);
 
   useEffect(() => {
