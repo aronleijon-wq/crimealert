@@ -58,12 +58,16 @@ serve(async (req) => {
       if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
     }
     
-    if (userError) {
-      const msg = userError?.message || userError?.msg || JSON.stringify(userError) || "Unknown auth error";
-      throw new Error(`Authentication error: ${msg}`);
+    if (userError || !userData?.user?.email) {
+      logStep("Auth failed, returning unsubscribed gracefully", {
+        message: userError?.message || "No user/email",
+      });
+      return new Response(JSON.stringify({ subscribed: false }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
-    const user = userData?.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
     // Check whitelist first
