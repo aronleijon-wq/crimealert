@@ -206,24 +206,8 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
-@-webkit-keyframes marker-pulse-anim {
-  0% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(2.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
-}
-@keyframes marker-pulse-anim {
-  0% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(2.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
-}
 
-.marker-pulse {
-  -webkit-animation: marker-pulse-anim 2s ease-out infinite;
-  animation: marker-pulse-anim 2s ease-out infinite;
-  will-change: transform, opacity;
-}
-
-
+@keyframes ticker {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
