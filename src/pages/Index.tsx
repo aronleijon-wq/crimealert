@@ -50,17 +50,30 @@ const Index = () => {
   const allIncidents = [...policeIncidents, ...communityReports];
   const isLive = liveIncidents.length > 0;
 
-  // Free users: only show last 24h + 15 min delay on new incidents
+  // Grova brott som alltid visas på kartan oavsett ålder
+  const SEVERE_CRIME_KEYWORDS = [
+    'mord', 'dråp', 'skottlossning', 'skjutning', 'rån',
+    'våldtäkt', 'mordförsök', 'knivdåd', 'grov misshandel',
+    'sprängning', 'explosion', 'bombhot', 'kidnappning',
+    'dödligt våld', 'vapenbrott', 'terror',
+  ];
+
+  const isSevereCrime = (title: string) =>
+    SEVERE_CRIME_KEYWORDS.some((kw) => title.toLowerCase().includes(kw));
+
+  // Free users: 15 min delay on new incidents
+  // Map: hide incidents older than 3 days UNLESS severe crime
   const timeFiltered = useMemo(() => {
     const now = Date.now();
-    if (isPremium) return allIncidents;
     const cutoff3d = now - 3 * 24 * 60 * 60 * 1000;
-    const delayCutoff = now - 15 * 60 * 1000; // 15 minutes ago
+    const delayCutoff = isPremium ? Infinity : now - 15 * 60 * 1000;
     return allIncidents.filter((i) => {
-      // Handle "2026-02-18 22:03:10 +01:00" format by replacing space before timezone with T
       const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
       const t = new Date(normalizedTime).getTime();
-      if (isNaN(t)) return true; // If we can't parse, show the incident
+      if (isNaN(t)) return true;
+      // Always show severe crimes regardless of age
+      if (isSevereCrime(i.title)) return t <= delayCutoff;
+      // Non-severe: must be within 3 days
       return t >= cutoff3d && t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
