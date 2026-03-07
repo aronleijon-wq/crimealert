@@ -25,12 +25,16 @@ const createMarkerIcon = (incident: Incident) => {
   const size = isRecent ? 14 : 10;
   const pulseSize = size + 16;
 
+  const isOther = incident.type === 'other';
+  const pulseScale = isOther ? 2.2 : 1;
+  const extraGlow = isOther ? `filter:drop-shadow(0 0 8px ${config.color}) drop-shadow(0 0 16px ${config.color});` : '';
+
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-        ${isRecent ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${config.color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
+        ${isRecent ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${config.color};${extraGlow}"></div>` : ''}
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 1px 8px ${config.color};${extraGlow}"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
