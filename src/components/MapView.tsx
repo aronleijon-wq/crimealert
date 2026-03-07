@@ -359,7 +359,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         autoPanPadding: L.point(40, 40),
       });
       marker.on('click', () => onSelectIncident(inc.id));
-      marker.on('popupclose', () => onSelectIncident(''));
+      marker.on('popupclose', () => { prevSelectedRef.current = null; onSelectIncident(''); });
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
