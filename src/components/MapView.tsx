@@ -18,15 +18,12 @@ const TYPE_ICONS: Record<string, string> = {
   other: '⚠️',
 };
 
-const createMarkerIcon = (incident: Incident, zoom: number) => {
+const createMarkerIcon = (incident: Incident) => {
   const config = incidentTypeConfig[incident.type];
   const ageMs = Date.now() - new Date(incident.time).getTime();
   const isRecent = ageMs < 2 * 60 * 60 * 1000; // under 2 hours
-
-  // Scale marker and pulse with zoom level
-  const zoomScale = Math.max(0.6, Math.min(2.5, zoom / 10));
-  const size = Math.round((isRecent ? 14 : 10) * zoomScale);
-  const pulseSize = Math.round((size + 16) * zoomScale);
+  const size = isRecent ? 14 : 10;
+  const pulseSize = size + 16;
 
   return L.divIcon({
     className: 'custom-marker',
@@ -301,20 +298,43 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
     };
   }, []);
 
-  const rebuildMarkers = () => {
-    if (!markersRef.current || !mapRef.current) return;
+  useEffect(() => {
+    if (!markersRef.current) return;
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    const zoom = mapRef.current.getZoom();
+    // Group incidents by coordinates to detect overlaps
+    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    const coordGroups = new Map<string, number>();
+    const coordIndex = new Map<string, number>();
+    
+    // Count incidents per location
+    incidents.forEach((inc) => {
+      const key = coordKey(inc.lat, inc.lng);
+      coordGroups.set(key, (coordGroups.get(key) || 0) + 1);
+    });
 
     incidents.forEach((inc) => {
       const config = incidentTypeConfig[inc.type];
+      const key = coordKey(inc.lat, inc.lng);
+      const totalAtLocation = coordGroups.get(key) || 1;
+      const indexAtLocation = coordIndex.get(key) || 0;
+      coordIndex.set(key, indexAtLocation + 1);
 
+      // Spread out overlapping markers in a circle pattern (~0.01° ≈ 1km offset)
+      let adjustedLat = inc.lat;
+      let adjustedLng = inc.lng;
+      if (totalAtLocation > 1) {
+        const angle = (2 * Math.PI * indexAtLocation) / totalAtLocation;
+        const radius = 0.008 + (totalAtLocation > 6 ? 0.004 : 0);
+        adjustedLat += Math.cos(angle) * radius;
+        adjustedLng += Math.sin(angle) * radius;
+      }
+      
       // Only show radius circle for recent incidents (under 2 hours)
       const ageMs = Date.now() - new Date(inc.time).getTime();
       if (ageMs < 2 * 60 * 60 * 1000) {
-        const circle = L.circle([inc.lat, inc.lng], {
+        const circle = L.circle([adjustedLat, adjustedLng], {
           radius: 500,
           color: config.color,
           fillColor: config.color,
@@ -325,7 +345,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
         markersRef.current!.addLayer(circle);
       }
 
-      const marker = L.marker([inc.lat, inc.lng], { icon: createMarkerIcon(inc, zoom) });
+      const marker = L.marker([adjustedLat, adjustedLng], { icon: createMarkerIcon(inc) });
       marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
         maxWidth: 320,
@@ -337,19 +357,6 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
-  };
-
-  useEffect(() => {
-    rebuildMarkers();
-  }, [incidents, onSelectIncident, isPremium]);
-
-  // Update marker sizes when zoom changes
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const map = mapRef.current;
-    const onZoom = () => rebuildMarkers();
-    map.on('zoomend', onZoom);
-    return () => { map.off('zoomend', onZoom); };
   }, [incidents, onSelectIncident, isPremium]);
 
   useEffect(() => {
