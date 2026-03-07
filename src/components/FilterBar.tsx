@@ -153,7 +153,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
         )}
 
         {searchOpen && query.trim() && results.length === 0 && (
-          <div className="absolute top-full left-0 mt-1 w-52 bg-card border border-border rounded-lg shadow-lg z-[2000] p-3">
+          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl z-[9999] p-3" style={{ top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
             <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
           </div>
         )}
