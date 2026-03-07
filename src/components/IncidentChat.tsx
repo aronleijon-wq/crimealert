@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageSquare, Send, X, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, Loader2, Sparkles, Lock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Incident } from '@/data/mockIncidents';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { useNavigate } from 'react-router-dom';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
