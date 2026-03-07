@@ -6,11 +6,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Review {
   id: string;
-  user_id: string;
   rating: number;
   message: string;
   display_name: string;
   created_at: string;
+  isOwn?: boolean;
 }
 
 const StarRating = ({ rating, onRate, interactive = false, size = 'sm' }: { rating: number; onRate?: (r: number) => void; interactive?: boolean; size?: 'sm' | 'md' }) => (
