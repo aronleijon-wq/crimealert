@@ -97,7 +97,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn('Global signOut failed, falling back to local signOut:', error.message);
+      await supabase.auth.signOut({ scope: 'local' });
+    }
   };
 
   return (
