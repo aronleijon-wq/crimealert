@@ -1,5 +1,6 @@
 import Header from '@/components/Header';
-import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send } from 'lucide-react';
+import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
