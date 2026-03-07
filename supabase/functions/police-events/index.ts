@@ -725,65 +725,76 @@ function extractAddressFromSummary(summary: string): string | null {
   if (!summary) return null;
   
   // ── Swedish street/road suffixes ──
-  const streetSuffixes = '(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken|gärdet|ängen|berget|höjden|dalen|ringen|slingan|promenaden|kajen|hamnen|stranden|udden|kullen|åsen|sluttningen|tvärgatan|esplanaden|boulevarden)';
+  const streetSuffixes = '(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken|gärdet|ängen|berget|höjden|dalen|ringen|slingan|promenaden|kajen|hamnen|stranden|udden|kullen|åsen|sluttningen|tvärgatan|esplanaden|boulevarden|gata|väg|stig|plan|torg|led)';
 
-  const patterns: Array<{ re: RegExp; group: number }> = [
-    // 1. Classic street names: "på Storgatan 5", "vid Nobelvägen"
-    { re: new RegExp(`(?:på|vid|i närheten av|nära|utanför|framför|bakom|längs|mot|över)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}(?:\\s+\\d+[-–]?\\d*)?)`, 'gi'), group: 1 },
-    
-    // 2. Compound street: "Kung Oscars väg", "Carl Johans gata"
-    { re: new RegExp(`(?:på|vid|i)\\s+((?:[A-ZÅÄÖ][a-zåäöé]+\\s+){1,2}[A-ZÅÄÖ]?[a-zåäöé]*${streetSuffixes}(?:\\s+\\d+)?)`, 'gi'), group: 1 },
-    
-    // 3. Intersections: "korsningen Storgatan/Kungsgatan"
-    { re: new RegExp(`(?:korsningen|hörnet|korsning)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s*/\\s*[A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1 },
-    
-    // 4. E-roads / riksvägar: "på E4", "riksväg 40 vid Birsta", "E10 i Kiruna"
-    { re: /(?:på|längs|vid)\s+((?:E|Rv|riksväg|länsväg)\s*\d+)/gi, group: 1 },
-    
-    // 5. Named places after "i/på/vid" + capitalized word (area/district names):
-    //    "i Hallstavik", "på Björkskatan", "i Kinnbäck", "vid Birsta", "i Århult"
-    //    Must be at least 3 chars to avoid false positives
-    { re: /(?:i|på|vid)\s+([A-ZÅÄÖ][a-zåäöé]{2,}(?:\s+[A-ZÅÄÖ][a-zåäöé]{2,})?)/g, group: 1 },
+  // Common false positives
+  const skipWords = new Set([
+    'polisen', 'polisens', 'sjukhus', 'sjukhuset', 'ambulans', 'ambulansen',
+    'räddningstjänsten', 'brandkåren', 'föraren', 'chauffören',
+    'den', 'det', 'ett', 'en', 'personen', 'fordonet', 'bilen', 'mannen', 'kvinnan',
+    'platsen', 'området', 'centrum', 'bostad', 'boende', 'lägenhet', 'lägenheten',
+    'flerfamiljshus', 'fritidshus', 'personbil', 'personbilar', 'bilar',
+    'samband', 'trafiken', 'resultat', 'anledning',
+    'man', 'kvinna', 'person', 'misstänkt', 'gripen', 'greps',
+    'anmälan', 'ärende', 'händelse', 'fall', 'insats',
+    'närheten', 'riktning', 'höjd', 'dag', 'natt', 'kväll', 'morgon',
+    'norr', 'söder', 'öster', 'väster', 'dörren', 'huset', 'byggnaden',
+    'skolan', 'butiken', 'affären', 'restaurangen', 'baren',
+    'helgen', 'veckan', 'fredagen', 'lördagen', 'söndagen',
+    'måndagen', 'tisdagen', 'onsdagen', 'torsdagen',
+    'januari', 'februari', 'mars', 'april', 'maj', 'juni',
+    'juli', 'augusti', 'september', 'oktober', 'november', 'december',
+  ]);
+
+  const isSkipWord = (w: string) => skipWords.has(w.toLowerCase());
+
+  const patterns: Array<{ re: RegExp; group: number; priority: number }> = [
+    // 1. Intersections: "korsningen Storgatan/Kungsgatan", "i korsningen X och Y"
+    { re: new RegExp(`(?:korsningen|hörnet|korsning)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s*(?:/|och)\\s*[A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 1 },
+
+    // 2. Street with number: "Storgatan 15", "Nobelvägen 3B"
+    { re: new RegExp(`([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s+\\d+\\s*[A-Za-z]?)`, 'gi'), group: 1, priority: 2 },
+
+    // 3. Preposition + street name: "på Storgatan", "vid Nobelvägen 5"
+    { re: new RegExp(`(?:på|vid|i\\s+närheten\\s+av|nära|utanför|framför|bakom|längs|mot|över|intill|bredvid|mittemot)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}(?:\\s+\\d+[-–]?\\d*\\s*[A-Za-z]?)?)`, 'gi'), group: 1, priority: 3 },
+
+    // 4. Compound street: "Kung Oscars väg 12", "Carl Johans gata"
+    { re: new RegExp(`(?:på|vid|i)\\s+((?:[A-ZÅÄÖ][a-zåäöé]+\\s+){1,3}${streetSuffixes}(?:\\s+\\d+)?)`, 'gi'), group: 1, priority: 4 },
+
+    // 5. "mellan X och Y" (between two streets/places)
+    { re: new RegExp(`mellan\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})\\s+och\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 5 },
+
+    // 6. E-roads / riksvägar: "på E4", "riksväg 40", "E10 vid Birsta"
+    { re: /(?:på|längs|vid|mot)?\s*((?:E|Rv|riksväg|länsväg)\s*\d+)/gi, group: 1, priority: 6 },
+
+    // 7. Trafikplats / rondell / bro: "vid trafikplats Nacksta", "i Hjulstabron"
+    { re: /(?:trafikplats|rondellen?|cirkulationsplats)\s+([A-ZÅÄÖ][a-zåäöé]{2,})/gi, group: 1, priority: 7 },
+
+    // 8. "i/på/vid" + specific place name (capitalized, min 3 chars)
+    { re: /(?:i|på|vid)\s+([A-ZÅÄÖ][a-zåäöé]{2,}(?:\s+[A-ZÅÄÖ][a-zåäöé]{2,})?)/g, group: 1, priority: 8 },
   ];
 
-  const extracted: string[] = [];
+  const candidates: { text: string; priority: number }[] = [];
   
-  for (const { re, group } of patterns) {
+  for (const { re, group, priority } of patterns) {
     let match: RegExpExecArray | null;
-    // Reset regex state
     re.lastIndex = 0;
     while ((match = re.exec(summary)) !== null) {
       const candidate = match[group]?.trim();
       if (!candidate) continue;
-      
-      // Skip common false positives (generic words, not locations)
-      const skipWords = new Set([
-        'polisen', 'polisens', 'sjukhus', 'ambulans', 'räddningstjänsten',
-        'den', 'det', 'ett', 'personen', 'fordonet', 'bilen', 'föraren',
-        'platsen', 'området', 'centrum', 'bostad', 'boende', 'lägenhet',
-        'flerfamiljshus', 'fritidshus', 'personbil', 'personbilar', 'bilar',
-        'samband', 'samband med', 'trafiken', 'resultat',
-        'man', 'kvinna', 'person', 'misstänkt', 'gripen', 'greps',
-        'anmälan', 'ärende', 'händelse', 'fall',
-        'närheten', 'riktning', 'höjd', 'dag', 'natt', 'kväll',
-      ]);
-      
-      if (skipWords.has(candidate.toLowerCase())) continue;
-      // Skip if it's just a number or too short
+      if (isSkipWord(candidate)) continue;
       if (candidate.length < 3 || /^\d+$/.test(candidate)) continue;
-      
-      extracted.push(candidate);
+      // Skip candidates that are just months or weekdays
+      if (/^(måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag)/i.test(candidate)) continue;
+      candidates.push({ text: candidate, priority });
     }
   }
-  
-  // Return the best match: prefer street-suffix matches, then E-roads, then place names
-  if (extracted.length > 0) {
-    // Prefer matches with street suffixes
-    const streetMatch = extracted.find(e => new RegExp(streetSuffixes, 'i').test(e));
-    return streetMatch || extracted[0];
-  }
-  
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // Sort by priority (lower = better), return best
+  candidates.sort((a, b) => a.priority - b.priority);
+  return candidates[0].text;
 }
 
 // Geocode with cache + Nominatim fallback — STRICTLY Sweden only
@@ -947,84 +958,92 @@ serve(async (req) => {
       const titleParts = (event.name || '').split(',');
       const cityFromTitle = titleParts.length >= 3 ? titleParts[titleParts.length - 1].trim() : null;
 
-      // ── Step 1: Try city from title in our local DB ──
-      let resolvedFromTitle = false;
-      if (cityFromTitle) {
-        const cityMatch = lookupSwedishLocation(cityFromTitle);
-        if (cityMatch) {
-          incident.lat = cityMatch.lat;
-          incident.lng = cityMatch.lng;
-          incident.location_precision = cityMatch.type === 'stadsdel' ? 'district' : 'area';
-          resolvedFromTitle = true;
-          console.log(`City from title: "${cityFromTitle}" → ${cityMatch.lat}, ${cityMatch.lng}`);
-        }
-      }
+      // ── Determine if API GPS is a county centroid (imprecise) ──
+      const apiGpsIsCountyCentroid = rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName);
+      const hasValidApiGps = rawLat && rawLng && !apiGpsIsCountyCentroid;
 
-      // ── Step 2: ALWAYS try to extract a street/place from summary for precision upgrade ──
+      // ── Step 1: ALWAYS try to extract street/address from summary (highest precision) ──
       const extractedAddress = extractAddressFromSummary(event.summary || '');
       
       if (extractedAddress) {
-        const geocodeQuery = `${extractedAddress}, ${cityFromTitle || locationName}, Sverige`;
-        const promise = geocodeWithNominatim(geocodeQuery).then(coords => {
+        // Build geocode query: address + city context
+        const cityContext = cityFromTitle || locationName.replace(/\s*län\s*/i, '');
+        const geocodeQuery = `${extractedAddress}, ${cityContext}, Sverige`;
+        
+        // Also try a simpler query as fallback
+        const simpleQuery = `${extractedAddress}, Sverige`;
+        
+        const promise = geocodeWithNominatim(geocodeQuery).then(async coords => {
           if (coords) {
             incident.lat = coords[0];
             incident.lng = coords[1];
             incident.location_precision = 'street';
-            console.log(`Street-level geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
+            console.log(`Street geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
+          } else {
+            // Try simpler query
+            const fallback = await geocodeWithNominatim(simpleQuery);
+            if (fallback) {
+              incident.lat = fallback[0];
+              incident.lng = fallback[1];
+              incident.location_precision = 'street';
+              console.log(`Street geocode (simple): "${simpleQuery}" → ${fallback[0]}, ${fallback[1]}`);
+            }
           }
         });
         geocodePromises.push(promise);
       }
 
-      // ── Step 3: Check if API coordinates are county centroids ──
-      if (!resolvedFromTitle && rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
-        const localMatch = lookupSwedishLocation(locationName);
-        if (localMatch) {
-          incident.lat = localMatch.lat;
-          incident.lng = localMatch.lng;
-          incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
-          console.log(`Local DB match: "${locationName}" → ${localMatch.lat}, ${localMatch.lng} (${localMatch.type})`);
-        } else {
-          // Fallback to Nominatim with strict SE filter
-          const promise = geocodeWithNominatim(`${locationName}, Sverige`).then(coords => {
+      // ── Step 2: If API GPS is valid (not county centroid), keep it as baseline ──
+      if (hasValidApiGps) {
+        // API coords are decent — use as-is if no street-level upgrade arrives
+        incident.location_precision = 'api';
+      }
+      // ── Step 3: If API GPS is county centroid or missing, resolve from city/location name ──
+      else {
+        // Try city from title first
+        let resolved = false;
+        if (cityFromTitle) {
+          const cityMatch = lookupSwedishLocation(cityFromTitle);
+          if (cityMatch) {
+            incident.lat = cityMatch.lat;
+            incident.lng = cityMatch.lng;
+            incident.location_precision = cityMatch.type === 'stadsdel' ? 'district' : 'area';
+            resolved = true;
+            console.log(`City from title: "${cityFromTitle}" → ${cityMatch.lat}, ${cityMatch.lng}`);
+          }
+        }
+        
+        if (!resolved) {
+          // Try location name from API
+          const localMatch = lookupSwedishLocation(locationName);
+          if (localMatch) {
+            incident.lat = localMatch.lat;
+            incident.lng = localMatch.lng;
+            incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
+            resolved = true;
+            console.log(`Local DB: "${locationName}" → ${localMatch.lat}, ${localMatch.lng}`);
+          }
+        }
+        
+        if (!resolved) {
+          // Fallback: Nominatim with city or location name
+          const fallbackQuery = `${cityFromTitle || locationName}, Sverige`;
+          const promise = geocodeWithNominatim(fallbackQuery).then(coords => {
             if (coords) {
               incident.lat = coords[0];
               incident.lng = coords[1];
               incident.location_precision = 'area';
-              console.log(`Nominatim SE-only: "${locationName}" → ${coords[0]}, ${coords[1]}`);
-            } else {
-              incident.location_precision = 'area';
+              console.log(`Nominatim fallback: "${fallbackQuery}" → ${coords[0]}, ${coords[1]}`);
             }
           });
           geocodePromises.push(promise);
         }
-      } else if (!resolvedFromTitle && (!rawLat || !rawLng)) {
-        // ── Step 4: No GPS → use local DB first ──
-        const localMatch = lookupSwedishLocation(locationName);
-        if (localMatch) {
-          incident.lat = localMatch.lat;
-          incident.lng = localMatch.lng;
-          incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
-        } else if (cityFromTitle) {
-          // Try Nominatim with city from title
-          const promise = geocodeWithNominatim(`${cityFromTitle}, Sverige`).then(coords => {
-            if (coords) {
-              incident.lat = coords[0];
-              incident.lng = coords[1];
-              incident.location_precision = 'area';
-            }
-          });
-          geocodePromises.push(promise);
-        } else {
-          const promise = geocodeWithNominatim(`${locationName}, Sverige`).then(coords => {
-            if (coords) {
-              incident.lat = coords[0];
-              incident.lng = coords[1];
-              incident.location_precision = 'area';
-            }
-          });
-          geocodePromises.push(promise);
-        }
+      }
+
+      // ── Step 4: Try to extract additional location context from title ──
+      // e.g. "07 mars 14.21, Rattfylleri, Karlskrona" — extract "Karlskrona" for area
+      if (cityFromTitle && !incident.area?.includes(cityFromTitle)) {
+        incident.area = cityFromTitle;
       }
       
       incidents.push(incident);
