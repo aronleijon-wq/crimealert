@@ -958,84 +958,92 @@ serve(async (req) => {
       const titleParts = (event.name || '').split(',');
       const cityFromTitle = titleParts.length >= 3 ? titleParts[titleParts.length - 1].trim() : null;
 
-      // ── Step 1: Try city from title in our local DB ──
-      let resolvedFromTitle = false;
-      if (cityFromTitle) {
-        const cityMatch = lookupSwedishLocation(cityFromTitle);
-        if (cityMatch) {
-          incident.lat = cityMatch.lat;
-          incident.lng = cityMatch.lng;
-          incident.location_precision = cityMatch.type === 'stadsdel' ? 'district' : 'area';
-          resolvedFromTitle = true;
-          console.log(`City from title: "${cityFromTitle}" → ${cityMatch.lat}, ${cityMatch.lng}`);
-        }
-      }
+      // ── Determine if API GPS is a county centroid (imprecise) ──
+      const apiGpsIsCountyCentroid = rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName);
+      const hasValidApiGps = rawLat && rawLng && !apiGpsIsCountyCentroid;
 
-      // ── Step 2: ALWAYS try to extract a street/place from summary for precision upgrade ──
+      // ── Step 1: ALWAYS try to extract street/address from summary (highest precision) ──
       const extractedAddress = extractAddressFromSummary(event.summary || '');
       
       if (extractedAddress) {
-        const geocodeQuery = `${extractedAddress}, ${cityFromTitle || locationName}, Sverige`;
-        const promise = geocodeWithNominatim(geocodeQuery).then(coords => {
+        // Build geocode query: address + city context
+        const cityContext = cityFromTitle || locationName.replace(/\s*län\s*/i, '');
+        const geocodeQuery = `${extractedAddress}, ${cityContext}, Sverige`;
+        
+        // Also try a simpler query as fallback
+        const simpleQuery = `${extractedAddress}, Sverige`;
+        
+        const promise = geocodeWithNominatim(geocodeQuery).then(async coords => {
           if (coords) {
             incident.lat = coords[0];
             incident.lng = coords[1];
             incident.location_precision = 'street';
-            console.log(`Street-level geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
+            console.log(`Street geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
+          } else {
+            // Try simpler query
+            const fallback = await geocodeWithNominatim(simpleQuery);
+            if (fallback) {
+              incident.lat = fallback[0];
+              incident.lng = fallback[1];
+              incident.location_precision = 'street';
+              console.log(`Street geocode (simple): "${simpleQuery}" → ${fallback[0]}, ${fallback[1]}`);
+            }
           }
         });
         geocodePromises.push(promise);
       }
 
-      // ── Step 3: Check if API coordinates are county centroids ──
-      if (!resolvedFromTitle && rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName)) {
-        const localMatch = lookupSwedishLocation(locationName);
-        if (localMatch) {
-          incident.lat = localMatch.lat;
-          incident.lng = localMatch.lng;
-          incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
-          console.log(`Local DB match: "${locationName}" → ${localMatch.lat}, ${localMatch.lng} (${localMatch.type})`);
-        } else {
-          // Fallback to Nominatim with strict SE filter
-          const promise = geocodeWithNominatim(`${locationName}, Sverige`).then(coords => {
+      // ── Step 2: If API GPS is valid (not county centroid), keep it as baseline ──
+      if (hasValidApiGps) {
+        // API coords are decent — use as-is if no street-level upgrade arrives
+        incident.location_precision = 'api';
+      }
+      // ── Step 3: If API GPS is county centroid or missing, resolve from city/location name ──
+      else {
+        // Try city from title first
+        let resolved = false;
+        if (cityFromTitle) {
+          const cityMatch = lookupSwedishLocation(cityFromTitle);
+          if (cityMatch) {
+            incident.lat = cityMatch.lat;
+            incident.lng = cityMatch.lng;
+            incident.location_precision = cityMatch.type === 'stadsdel' ? 'district' : 'area';
+            resolved = true;
+            console.log(`City from title: "${cityFromTitle}" → ${cityMatch.lat}, ${cityMatch.lng}`);
+          }
+        }
+        
+        if (!resolved) {
+          // Try location name from API
+          const localMatch = lookupSwedishLocation(locationName);
+          if (localMatch) {
+            incident.lat = localMatch.lat;
+            incident.lng = localMatch.lng;
+            incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
+            resolved = true;
+            console.log(`Local DB: "${locationName}" → ${localMatch.lat}, ${localMatch.lng}`);
+          }
+        }
+        
+        if (!resolved) {
+          // Fallback: Nominatim with city or location name
+          const fallbackQuery = `${cityFromTitle || locationName}, Sverige`;
+          const promise = geocodeWithNominatim(fallbackQuery).then(coords => {
             if (coords) {
               incident.lat = coords[0];
               incident.lng = coords[1];
               incident.location_precision = 'area';
-              console.log(`Nominatim SE-only: "${locationName}" → ${coords[0]}, ${coords[1]}`);
-            } else {
-              incident.location_precision = 'area';
+              console.log(`Nominatim fallback: "${fallbackQuery}" → ${coords[0]}, ${coords[1]}`);
             }
           });
           geocodePromises.push(promise);
         }
-      } else if (!resolvedFromTitle && (!rawLat || !rawLng)) {
-        // ── Step 4: No GPS → use local DB first ──
-        const localMatch = lookupSwedishLocation(locationName);
-        if (localMatch) {
-          incident.lat = localMatch.lat;
-          incident.lng = localMatch.lng;
-          incident.location_precision = localMatch.type === 'stadsdel' ? 'district' : 'area';
-        } else if (cityFromTitle) {
-          // Try Nominatim with city from title
-          const promise = geocodeWithNominatim(`${cityFromTitle}, Sverige`).then(coords => {
-            if (coords) {
-              incident.lat = coords[0];
-              incident.lng = coords[1];
-              incident.location_precision = 'area';
-            }
-          });
-          geocodePromises.push(promise);
-        } else {
-          const promise = geocodeWithNominatim(`${locationName}, Sverige`).then(coords => {
-            if (coords) {
-              incident.lat = coords[0];
-              incident.lng = coords[1];
-              incident.location_precision = 'area';
-            }
-          });
-          geocodePromises.push(promise);
-        }
+      }
+
+      // ── Step 4: Try to extract additional location context from title ──
+      // e.g. "07 mars 14.21, Rattfylleri, Karlskrona" — extract "Karlskrona" for area
+      if (cityFromTitle && !incident.area?.includes(cityFromTitle)) {
+        incident.area = cityFromTitle;
       }
       
       incidents.push(incident);
