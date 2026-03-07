@@ -725,65 +725,76 @@ function extractAddressFromSummary(summary: string): string | null {
   if (!summary) return null;
   
   // ── Swedish street/road suffixes ──
-  const streetSuffixes = '(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken|gärdet|ängen|berget|höjden|dalen|ringen|slingan|promenaden|kajen|hamnen|stranden|udden|kullen|åsen|sluttningen|tvärgatan|esplanaden|boulevarden)';
+  const streetSuffixes = '(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken|gärdet|ängen|berget|höjden|dalen|ringen|slingan|promenaden|kajen|hamnen|stranden|udden|kullen|åsen|sluttningen|tvärgatan|esplanaden|boulevarden|gata|väg|stig|plan|torg|led)';
 
-  const patterns: Array<{ re: RegExp; group: number }> = [
-    // 1. Classic street names: "på Storgatan 5", "vid Nobelvägen"
-    { re: new RegExp(`(?:på|vid|i närheten av|nära|utanför|framför|bakom|längs|mot|över)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}(?:\\s+\\d+[-–]?\\d*)?)`, 'gi'), group: 1 },
-    
-    // 2. Compound street: "Kung Oscars väg", "Carl Johans gata"
-    { re: new RegExp(`(?:på|vid|i)\\s+((?:[A-ZÅÄÖ][a-zåäöé]+\\s+){1,2}[A-ZÅÄÖ]?[a-zåäöé]*${streetSuffixes}(?:\\s+\\d+)?)`, 'gi'), group: 1 },
-    
-    // 3. Intersections: "korsningen Storgatan/Kungsgatan"
-    { re: new RegExp(`(?:korsningen|hörnet|korsning)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s*/\\s*[A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1 },
-    
-    // 4. E-roads / riksvägar: "på E4", "riksväg 40 vid Birsta", "E10 i Kiruna"
-    { re: /(?:på|längs|vid)\s+((?:E|Rv|riksväg|länsväg)\s*\d+)/gi, group: 1 },
-    
-    // 5. Named places after "i/på/vid" + capitalized word (area/district names):
-    //    "i Hallstavik", "på Björkskatan", "i Kinnbäck", "vid Birsta", "i Århult"
-    //    Must be at least 3 chars to avoid false positives
-    { re: /(?:i|på|vid)\s+([A-ZÅÄÖ][a-zåäöé]{2,}(?:\s+[A-ZÅÄÖ][a-zåäöé]{2,})?)/g, group: 1 },
+  // Common false positives
+  const skipWords = new Set([
+    'polisen', 'polisens', 'sjukhus', 'sjukhuset', 'ambulans', 'ambulansen',
+    'räddningstjänsten', 'brandkåren', 'föraren', 'chauffören',
+    'den', 'det', 'ett', 'en', 'personen', 'fordonet', 'bilen', 'mannen', 'kvinnan',
+    'platsen', 'området', 'centrum', 'bostad', 'boende', 'lägenhet', 'lägenheten',
+    'flerfamiljshus', 'fritidshus', 'personbil', 'personbilar', 'bilar',
+    'samband', 'trafiken', 'resultat', 'anledning',
+    'man', 'kvinna', 'person', 'misstänkt', 'gripen', 'greps',
+    'anmälan', 'ärende', 'händelse', 'fall', 'insats',
+    'närheten', 'riktning', 'höjd', 'dag', 'natt', 'kväll', 'morgon',
+    'norr', 'söder', 'öster', 'väster', 'dörren', 'huset', 'byggnaden',
+    'skolan', 'butiken', 'affären', 'restaurangen', 'baren',
+    'helgen', 'veckan', 'fredagen', 'lördagen', 'söndagen',
+    'måndagen', 'tisdagen', 'onsdagen', 'torsdagen',
+    'januari', 'februari', 'mars', 'april', 'maj', 'juni',
+    'juli', 'augusti', 'september', 'oktober', 'november', 'december',
+  ]);
+
+  const isSkipWord = (w: string) => skipWords.has(w.toLowerCase());
+
+  const patterns: Array<{ re: RegExp; group: number; priority: number }> = [
+    // 1. Intersections: "korsningen Storgatan/Kungsgatan", "i korsningen X och Y"
+    { re: new RegExp(`(?:korsningen|hörnet|korsning)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s*(?:/|och)\\s*[A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 1 },
+
+    // 2. Street with number: "Storgatan 15", "Nobelvägen 3B"
+    { re: new RegExp(`([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s+\\d+\\s*[A-Za-z]?)`, 'gi'), group: 1, priority: 2 },
+
+    // 3. Preposition + street name: "på Storgatan", "vid Nobelvägen 5"
+    { re: new RegExp(`(?:på|vid|i\\s+närheten\\s+av|nära|utanför|framför|bakom|längs|mot|över|intill|bredvid|mittemot)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}(?:\\s+\\d+[-–]?\\d*\\s*[A-Za-z]?)?)`, 'gi'), group: 1, priority: 3 },
+
+    // 4. Compound street: "Kung Oscars väg 12", "Carl Johans gata"
+    { re: new RegExp(`(?:på|vid|i)\\s+((?:[A-ZÅÄÖ][a-zåäöé]+\\s+){1,3}${streetSuffixes}(?:\\s+\\d+)?)`, 'gi'), group: 1, priority: 4 },
+
+    // 5. "mellan X och Y" (between two streets/places)
+    { re: new RegExp(`mellan\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})\\s+och\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 5 },
+
+    // 6. E-roads / riksvägar: "på E4", "riksväg 40", "E10 vid Birsta"
+    { re: /(?:på|längs|vid|mot)?\s*((?:E|Rv|riksväg|länsväg)\s*\d+)/gi, group: 1, priority: 6 },
+
+    // 7. Trafikplats / rondell / bro: "vid trafikplats Nacksta", "i Hjulstabron"
+    { re: /(?:trafikplats|rondellen?|cirkulationsplats)\s+([A-ZÅÄÖ][a-zåäöé]{2,})/gi, group: 1, priority: 7 },
+
+    // 8. "i/på/vid" + specific place name (capitalized, min 3 chars)
+    { re: /(?:i|på|vid)\s+([A-ZÅÄÖ][a-zåäöé]{2,}(?:\s+[A-ZÅÄÖ][a-zåäöé]{2,})?)/g, group: 1, priority: 8 },
   ];
 
-  const extracted: string[] = [];
+  const candidates: { text: string; priority: number }[] = [];
   
-  for (const { re, group } of patterns) {
+  for (const { re, group, priority } of patterns) {
     let match: RegExpExecArray | null;
-    // Reset regex state
     re.lastIndex = 0;
     while ((match = re.exec(summary)) !== null) {
       const candidate = match[group]?.trim();
       if (!candidate) continue;
-      
-      // Skip common false positives (generic words, not locations)
-      const skipWords = new Set([
-        'polisen', 'polisens', 'sjukhus', 'ambulans', 'räddningstjänsten',
-        'den', 'det', 'ett', 'personen', 'fordonet', 'bilen', 'föraren',
-        'platsen', 'området', 'centrum', 'bostad', 'boende', 'lägenhet',
-        'flerfamiljshus', 'fritidshus', 'personbil', 'personbilar', 'bilar',
-        'samband', 'samband med', 'trafiken', 'resultat',
-        'man', 'kvinna', 'person', 'misstänkt', 'gripen', 'greps',
-        'anmälan', 'ärende', 'händelse', 'fall',
-        'närheten', 'riktning', 'höjd', 'dag', 'natt', 'kväll',
-      ]);
-      
-      if (skipWords.has(candidate.toLowerCase())) continue;
-      // Skip if it's just a number or too short
+      if (isSkipWord(candidate)) continue;
       if (candidate.length < 3 || /^\d+$/.test(candidate)) continue;
-      
-      extracted.push(candidate);
+      // Skip candidates that are just months or weekdays
+      if (/^(måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag)/i.test(candidate)) continue;
+      candidates.push({ text: candidate, priority });
     }
   }
-  
-  // Return the best match: prefer street-suffix matches, then E-roads, then place names
-  if (extracted.length > 0) {
-    // Prefer matches with street suffixes
-    const streetMatch = extracted.find(e => new RegExp(streetSuffixes, 'i').test(e));
-    return streetMatch || extracted[0];
-  }
-  
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // Sort by priority (lower = better), return best
+  candidates.sort((a, b) => a.priority - b.priority);
+  return candidates[0].text;
 }
 
 // Geocode with cache + Nominatim fallback — STRICTLY Sweden only
