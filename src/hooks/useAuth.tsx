@@ -136,6 +136,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+
+  if (!context) {
+    console.warn('useAuth called outside AuthProvider; falling back to safe unauthenticated state.');
+    return {
+      user: null,
+      session: null,
+      loading: false,
+      subscription: {
+        subscribed: false,
+        productId: null,
+        subscriptionEnd: null,
+      },
+      checkSubscription: async () => {},
+      signOut: async () => {},
+    };
+  }
+
   return context;
 };
