@@ -1064,7 +1064,7 @@ serve(async (req) => {
     }, {});
     console.log(`Returning ${filteredIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: validIncidents }), {
+    return new Response(JSON.stringify({ success: true, data: filteredIncidents }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
