@@ -14,8 +14,29 @@ Deno.serve(async (req) => {
   try {
     const { name, email, message } = await req.json();
 
-    if (!name || !email || !message) {
+    // Server-side validation
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof message !== 'string') {
+      return new Response(JSON.stringify({ error: "Invalid field types" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const trimName = name.trim().slice(0, 100);
+    const trimEmail = email.trim().slice(0, 255);
+    const trimMessage = message.trim().slice(0, 1000);
+
+    if (!trimName || !trimEmail || !trimMessage) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimEmail)) {
+      return new Response(JSON.stringify({ error: "Invalid email" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
