@@ -14,8 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
-const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic'];
+const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
 
 const Index = () => {
   const { isPremium } = useIsPremium();
@@ -25,9 +24,7 @@ const Index = () => {
   const [mobileListOpen, setMobileListOpen] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
-    if (isPremium) return ['police', 'fire', 'ambulance', 'traffic', 'other'];
-    if (isLoggedIn) return [...LOGGED_IN_FILTERS];
-    return [...FREE_FILTERS];
+    return [...ALL_FILTERS];
   };
 
   const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
