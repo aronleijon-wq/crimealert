@@ -97,10 +97,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.warn('Global signOut failed, falling back to local signOut:', error.message);
-      await supabase.auth.signOut({ scope: 'local' });
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const isTransientBackendError = (err: any) => {
+      const message = String(err?.message || '').toLowerCase();
+      const status = err?.status ?? err?.code;
+      return (
+        status === 503 ||
+        status === 504 ||
+        message.includes('timeout') ||
+        message.includes('upstream connect error') ||
+        message.includes('failed to fetch')
+      );
+    };
+
+    let lastError: any = null;
+
+    for (let i = 0; i < 3; i++) {
+      const { error } = await supabase.auth.signOut();
+      if (!error) return;
+      lastError = error;
+      if (!isTransientBackendError(error) || i === 2) break;
+      await sleep(600 * (i + 1));
+    }
+
+    console.warn('Global signOut failed, falling back to local signOut:', lastError?.message || lastError);
+    const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+    if (localError) {
+      console.error('Local signOut also failed:', localError.message);
     }
   };
 

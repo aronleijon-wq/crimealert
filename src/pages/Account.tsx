@@ -146,6 +146,39 @@ const Account = () => {
 
   const isPremium = subscription.subscribed && 
     (subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const isTransientFunctionError = (err: any) => {
+    const message = String(err?.message || '').toLowerCase();
+    return (
+      message.includes('non-2xx') ||
+      message.includes('503') ||
+      message.includes('504') ||
+      message.includes('timeout') ||
+      message.includes('upstream connect error') ||
+      message.includes('failed to fetch')
+    );
+  };
+
+  const createCheckoutSession = async (priceId: string, attempts = 4) => {
+    let lastError: any = null;
+
+    for (let i = 0; i < attempts; i++) {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId },
+      });
+
+      if (!error && data?.url) return data.url as string;
+
+      lastError = error ?? new Error('Missing checkout URL');
+      if (!isTransientFunctionError(lastError) || i === attempts - 1) break;
+      await sleep(700 * (i + 1));
+    }
+
+    throw lastError;
+  };
+
   const handleCheckout = async () => {
     if (!user) {
       navigate('/auth');
@@ -154,13 +187,17 @@ const Account = () => {
     setCheckoutLoading(true);
     try {
       const priceId = billingCycle === 'yearly' ? PREMIUM_PRICE_YEARLY : PREMIUM_PRICE_MONTHLY;
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
-      });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      const url = await createCheckoutSession(priceId);
+      window.location.href = url;
     } catch (err: any) {
-      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+      const transient = isTransientFunctionError(err);
+      toast({
+        title: 'Fel',
+        description: transient
+          ? 'Tillfälligt backendfel vid checkout. Försök igen om en minut.'
+          : err?.message || 'Kunde inte starta checkout just nu.',
+        variant: 'destructive',
+      });
     } finally {
       setCheckoutLoading(false);
     }
