@@ -18,12 +18,15 @@ const TYPE_ICONS: Record<string, string> = {
   other: '⚠️',
 };
 
-const createMarkerIcon = (incident: Incident) => {
+const createMarkerIcon = (incident: Incident, zoom: number) => {
   const config = incidentTypeConfig[incident.type];
   const ageMs = Date.now() - new Date(incident.time).getTime();
   const isRecent = ageMs < 2 * 60 * 60 * 1000; // under 2 hours
-  const size = isRecent ? 14 : 10;
-  const pulseSize = size + 16;
+
+  // Scale marker and pulse with zoom level
+  const zoomScale = Math.max(0.6, Math.min(2.5, zoom / 10));
+  const size = Math.round((isRecent ? 14 : 10) * zoomScale);
+  const pulseSize = Math.round((size + 16) * zoomScale);
 
   return L.divIcon({
     className: 'custom-marker',
