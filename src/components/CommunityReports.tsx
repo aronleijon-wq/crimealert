@@ -5,13 +5,13 @@ import { MessageSquarePlus, AlertCircle, Lightbulb, Eye, MapPin, Send, Trash2, C
 
 type Report = {
   id: string;
-  user_id: string;
   category: string;
   title: string;
   description: string;
   area: string | null;
   status: string;
   created_at: string;
+  isOwn?: boolean;
 };
 
 const CATEGORIES = [
