@@ -174,7 +174,7 @@ const Index = () => {
           <MapView
             incidents={filtered}
             selectedId={selectedId}
-            onSelectIncident={(id) => setSelectedId(id)}
+            onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
             flyToLocation={flyToLocation}
           />
