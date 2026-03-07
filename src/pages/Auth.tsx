@@ -14,30 +14,63 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const isTransientBackendError = (err: any) => {
+    const message = String(err?.message || '').toLowerCase();
+    const status = err?.status ?? err?.code;
+    return (
+      status === 503 ||
+      status === 504 ||
+      message.includes('timeout') ||
+      message.includes('upstream connect error') ||
+      message.includes('failed to fetch')
+    );
+  };
+
+  const withRetry = async (action: () => Promise<{ error: any }>, attempts = 3) => {
+    let lastError: any = null;
+    for (let i = 0; i < attempts; i++) {
+      const { error } = await action();
+      if (!error) return;
+      lastError = error;
+      if (!isTransientBackendError(error) || i === attempts - 1) break;
+      await sleep(700 * (i + 1));
+    }
+    throw lastError;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await withRetry(() => supabase.auth.signInWithPassword({ email, password }));
         toast({ title: 'Inloggad!' });
         navigate('/account');
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
+        await withRetry(() =>
+          supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: window.location.origin },
+          })
+        );
         toast({
           title: 'Konto skapat!',
           description: 'Kolla din e-post för att verifiera kontot.',
         });
       }
     } catch (err: any) {
-      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+      const transient = isTransientBackendError(err);
+      toast({
+        title: 'Fel',
+        description: transient
+          ? 'Tillfälligt serverfel vid inloggning. Försök igen om en minut.'
+          : err.message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
