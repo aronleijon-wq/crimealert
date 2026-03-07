@@ -149,7 +149,10 @@ const Account = () => {
     if (subscription.subscribed && pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
-      toast({ title: 'Pro aktiverat! 🎉', description: 'Du har nu tillgång till alla Pro-funktioner.' });
+      if (wasPolling) {
+        setShowWelcome(true);
+        setWasPolling(false);
+      }
     }
   }, [subscription.subscribed]);
 
