@@ -130,7 +130,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
         {/* Dropdown results */}
         {searchOpen && results.length > 0 && createPortal(
-          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+          <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
             {results.map((m, i) => (
               <button
                 key={m.name}
