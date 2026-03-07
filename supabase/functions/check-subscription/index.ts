@@ -42,9 +42,27 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
+    
+    // Retry getUser up to 2 times on transient failures
+    let userData: any = null;
+    let userError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = await supabaseClient.auth.getUser(token);
+      userData = result.data;
+      userError = result.error;
+      if (!userError) break;
+      logStep(`Auth attempt ${attempt + 1} failed`, { 
+        message: userError?.message || JSON.stringify(userError),
+        status: userError?.status 
+      });
+      if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
+    }
+    
+    if (userError) {
+      const msg = userError?.message || userError?.msg || JSON.stringify(userError) || "Unknown auth error";
+      throw new Error(`Authentication error: ${msg}`);
+    }
+    const user = userData?.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { email: user.email });
 
