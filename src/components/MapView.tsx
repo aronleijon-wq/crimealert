@@ -8,6 +8,7 @@ interface MapViewProps {
   selectedId: string | null;
   onSelectIncident: (id: string) => void;
   isPremium?: boolean;
+  flyToLocation?: { lat: number; lng: number; zoom: number } | null;
 }
 
 const TYPE_ICONS: Record<string, string> = {
