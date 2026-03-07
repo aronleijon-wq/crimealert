@@ -118,6 +118,8 @@ const Account = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [wasPolling, setWasPolling] = useState(false);
 
   // After successful checkout, poll checkSubscription until it activates
   useEffect(() => {
