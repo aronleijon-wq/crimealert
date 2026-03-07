@@ -5,13 +5,13 @@ import { MessageSquarePlus, AlertCircle, Lightbulb, Eye, MapPin, Send, Trash2, C
 
 type Report = {
   id: string;
-  user_id: string;
   category: string;
   title: string;
   description: string;
   area: string | null;
   status: string;
   created_at: string;
+  isOwn?: boolean;
 };
 
 const CATEGORIES = [
@@ -66,14 +66,25 @@ export default function CommunityReports() {
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('community_reports')
+    const { data: publicData } = await supabase
+      .from('community_reports_public')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(20);
-    setReports((data as Report[]) ?? []);
+    
+    // If logged in, fetch own report IDs for delete access
+    let ownIds: string[] = [];
+    if (user) {
+      const { data: ownData } = await supabase
+        .from('community_reports')
+        .select('id')
+        .eq('user_id', user.id);
+      ownIds = (ownData ?? []).map((r: any) => r.id);
+    }
+    
+    setReports((publicData as Report[])?.map(r => ({ ...r, isOwn: ownIds.includes(r.id) })) ?? []);
     setLoading(false);
-  }, []);
+  }, [user]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
 
@@ -263,7 +274,7 @@ export default function CommunityReports() {
                         <span>{timeAgo(r.created_at)}</span>
                       </div>
                     </div>
-                    {user?.id === r.user_id && (
+                    {r.isOwn && (
                       <button
                         onClick={() => handleDelete(r.id)}
                         className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition"
