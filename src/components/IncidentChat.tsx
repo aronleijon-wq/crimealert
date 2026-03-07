@@ -116,6 +116,8 @@ interface IncidentChatProps {
 }
 
 const IncidentChat = ({ incidents }: IncidentChatProps) => {
+  const { isPremium } = useIsPremium();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
