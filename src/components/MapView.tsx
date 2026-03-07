@@ -173,6 +173,12 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   return details;
 };
 
+const sanitizeHTML = (str: string): string => {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+};
+
 const createPopupContent = (inc: Incident, isPremium: boolean) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
@@ -185,31 +191,39 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
   const timeAgo = getTimeAgo(inc.time);
   const extractedDetails = extractDetails(inc.description, inc.title, inc.originalType);
 
+  // Sanitize all dynamic incident data
+  const safeTitle = sanitizeHTML(inc.title);
+  const safeDescription = sanitizeHTML(inc.description);
+  const safeArea = sanitizeHTML(inc.area);
+  const safeSource = sanitizeHTML(inc.source || 'Okänd');
+  const safeConfigLabel = sanitizeHTML(config.label);
+  const safeRiskLabel = sanitizeHTML(risk.label);
+
   return `
     <div style="font-family:system-ui;min-width:260px;max-width:320px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <span style="font-size:22px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.3;">${inc.title}</div>
-          <div style="font-size:10px;color:#888;margin-top:2px;">${config.label} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.3;">${safeTitle}</div>
+          <div style="font-size:10px;color:#888;margin-top:2px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
           ${isPremium
             ? `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-               <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${risk.label}</span>`
+               <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
             : `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
           }
         </div>
       </div>
 
-      ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${inc.description}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${safeDescription}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
       ${isPremium && extractedDetails.length > 0 ? `
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
         ${extractedDetails.map(d => `
           <span style="font-size:9px;padding:3px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:3px;border:1px solid #e2e8f0;">
-            <span>${d.icon}</span>
-            <span style="font-weight:600;">${d.label}:</span> ${d.value}
+            <span>${sanitizeHTML(d.icon)}</span>
+            <span style="font-weight:600;">${sanitizeHTML(d.label)}:</span> ${sanitizeHTML(d.value)}
           </span>
         `).join('')}
       </div>
@@ -235,7 +249,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:6px;">
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
           <span style="color:#aaa;font-size:9px;">📍 Område</span><br/>
-          <span style="color:#333;font-weight:600;">${inc.area}</span>
+          <span style="color:#333;font-weight:600;">${safeArea}</span>
         </div>
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
           <span style="color:#aaa;font-size:9px;">🕐 Tidpunkt</span><br/>
@@ -243,7 +257,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
           <span style="color:#aaa;font-size:9px;">📋 Typ</span><br/>
-          <span style="color:#333;font-weight:500;">${config.label}</span>
+          <span style="color:#333;font-weight:500;">${safeConfigLabel}</span>
         </div>
         <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
           <span style="color:#aaa;font-size:9px;">📡 Status</span><br/>
@@ -259,7 +273,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
       ${inc.approximate ? `<div style="margin-top:6px;font-size:9px;color:#f97316;background:#fff7ed;padding:4px 8px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
 
       <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee;font-size:9px;color:#bbb;display:flex;justify-content:space-between;">
-        <span>Källa: ${inc.source || 'Okänd'}</span>
+        <span>Källa: ${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
     </div>
