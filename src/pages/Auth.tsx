@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
+
+// Rate limiting for auth attempts
+const AUTH_RATE_LIMIT = { maxAttempts: 5, windowMs: 5 * 60 * 1000 };
+const authAttempts: { timestamps: number[] } = { timestamps: [] };
+
+const isRateLimited = () => {
+  const now = Date.now();
+  authAttempts.timestamps = authAttempts.timestamps.filter(t => now - t < AUTH_RATE_LIMIT.windowMs);
+  return authAttempts.timestamps.length >= AUTH_RATE_LIMIT.maxAttempts;
+};
+
+const recordAttempt = () => {
+  authAttempts.timestamps.push(Date.now());
+};
+
+// Input sanitization
+const sanitizeInput = (str: string) => str.replace(/<[^>]*>/g, '').trim();
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
