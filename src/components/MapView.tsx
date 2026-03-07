@@ -266,7 +266,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
   `;
 };
 
-const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
