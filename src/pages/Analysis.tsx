@@ -338,7 +338,7 @@ const Analysis = () => {
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
-      <AdBanner />
+      
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
