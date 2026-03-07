@@ -4,6 +4,7 @@ import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
+import IncidentChat from '@/components/IncidentChat';
 
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -214,6 +215,7 @@ const Index = () => {
         </div>
       </div>
       
+      <IncidentChat incidents={filtered} />
     </div>
   );
 };
