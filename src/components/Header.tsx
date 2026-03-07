@@ -4,10 +4,10 @@ import logo from '@/assets/logo.png';
 import { useAuth } from '@/hooks/useAuth';
 
 const baseNavItems = [
-  { to: '/', label: 'Karta', icon: Radio },
-  { to: '/analysis', label: 'Analys', icon: BarChart3 },
-  { to: '/alerts', label: 'Notiser', icon: Bell },
-];
+{ to: '/', label: 'Karta', icon: Radio },
+{ to: '/analysis', label: 'Analys', icon: BarChart3 },
+{ to: '/alerts', label: 'Notiser', icon: Bell }];
+
 
 
 const Header = () => {
@@ -15,14 +15,14 @@ const Header = () => {
   const location = useLocation();
 
   const navItems = [
-    ...baseNavItems,
-    ...(user
-      ? [{ to: '/account', label: 'Konto', icon: User }]
-      : [
-          { to: '/auth?mode=signup', label: 'Skapa konto', icon: UserPlus },
-          { to: '/account', label: 'Prisplan', icon: CreditCard },
-        ]),
-  ];
+  ...baseNavItems,
+  ...(user ?
+  [{ to: '/account', label: 'Konto', icon: User }] :
+  [
+  { to: '/auth?mode=signup', label: 'Skapa konto', icon: UserPlus },
+  { to: '/account', label: 'Prisplan', icon: CreditCard }])];
+
+
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
@@ -33,7 +33,7 @@ const Header = () => {
             CRIME<span className="text-primary">​ALERT</span>
           </span>
           <span className="text-[9px] tracking-[0.2em] text-muted-foreground font-mono uppercase">
-            Situational Awareness
+            ​CrimeAlert- säkerhetskarta för allmänheten    
           </span>
         </div>
       </Link>
