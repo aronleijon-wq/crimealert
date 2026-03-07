@@ -130,7 +130,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      community_reports_public: {
+        Row: {
+          area: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          lat: number | null
+          lng: number | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          area?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          area?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      reviews_public: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          message: string | null
+          rating: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          message?: string | null
+          rating?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          message?: string | null
+          rating?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
