@@ -359,20 +359,21 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         autoPanPadding: L.point(40, 40),
       });
       marker.on('click', () => onSelectIncident(inc.id));
+      marker.on('popupclose', () => { prevSelectedRef.current = null; onSelectIncident(''); });
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
   }, [incidents, onSelectIncident, isPremium]);
 
+  const prevSelectedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!mapRef.current || !selectedId) return;
+    if (!mapRef.current || !selectedId || selectedId === prevSelectedRef.current) return;
+    prevSelectedRef.current = selectedId;
     const inc = incidents.find((i) => i.id === selectedId);
     if (inc) {
-      // Offset the flyTo slightly upward so the popup appears centered
       const map = mapRef.current;
       const targetZoom = 14;
       const targetPoint = map.project([inc.lat, inc.lng], targetZoom);
-      // Shift down by ~120px so popup content appears more centered
       targetPoint.y -= 120;
       const targetLatLng = map.unproject(targetPoint, targetZoom);
       map.flyTo(targetLatLng, targetZoom, { duration: 0.8 });
