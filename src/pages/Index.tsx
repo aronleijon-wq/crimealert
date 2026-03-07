@@ -85,7 +85,7 @@ const Index = () => {
       {!isFullscreen && (
         <>
           <Header />
-          <AdBanner />
+          
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           <FilterBar
             activeFilters={activeFilters}
