@@ -105,7 +105,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               ref={inputRef}
               type="text"
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value.replace(/<[^>]*>/g, '').slice(0, 50))}
               onKeyDown={handleKeyDown}
               placeholder="Sök kommun..."
               className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/50 outline-none w-28 sm:w-36"

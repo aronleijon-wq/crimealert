@@ -138,11 +138,13 @@ const ReviewSection = () => {
       return;
     }
     setSubmitting(true);
+    const cleanMessage = message.trim().replace(/<[^>]*>/g, '').slice(0, 500);
+    const cleanDisplayName = (displayName.trim().replace(/<[^>]*>/g, '') || 'Anonym').slice(0, 50);
     const { error } = await supabase.from('reviews').insert({
       user_id: user.id,
       rating,
-      message: message.trim(),
-      display_name: displayName.trim() || 'Anonym',
+      message: cleanMessage,
+      display_name: cleanDisplayName,
     });
     if (error) {
       toast({ title: 'Fel', description: error.message, variant: 'destructive' });
