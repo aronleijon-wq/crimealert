@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState, useRef } from 'react';
 import Header from '@/components/Header';
-import AdBanner from '@/components/AdBanner';
+
 import PremiumGate from '@/components/PremiumGate';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
 import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb } from 'lucide-react';
@@ -338,7 +338,7 @@ const Analysis = () => {
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
-      <AdBanner />
+      
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
