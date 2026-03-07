@@ -27,7 +27,7 @@ const ContactForm = () => {
   const [sent, setSent] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = contactSchema.safeParse(form);
     if (!result.success) {
@@ -38,14 +38,20 @@ const ContactForm = () => {
     }
     setErrors({});
     setSending(true);
-    // Simulate sending (no backend endpoint yet)
-    setTimeout(() => {
-      setSending(false);
+    try {
+      const { error } = await supabase.functions.invoke('send-contact', {
+        body: result.data,
+      });
+      if (error) throw error;
       setSent(true);
       toast({ title: 'Meddelande skickat', description: 'Vi återkommer så snart vi kan.' });
       setForm({ name: '', email: '', message: '' });
       setTimeout(() => setSent(false), 3000);
-    }, 800);
+    } catch (err: any) {
+      toast({ title: 'Fel', description: err?.message || 'Kunde inte skicka meddelandet.', variant: 'destructive' });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

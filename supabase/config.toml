@@ -11,3 +11,5 @@ project_id = "pqoiwiiydtikouzjrllx"
     verify_jwt = false
   [functions.police-events]
     verify_jwt = false
+  [functions.send-contact]
+    verify_jwt = false
