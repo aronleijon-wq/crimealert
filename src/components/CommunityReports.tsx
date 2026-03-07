@@ -263,7 +263,7 @@ export default function CommunityReports() {
                         <span>{timeAgo(r.created_at)}</span>
                       </div>
                     </div>
-                    {user?.id === r.user_id && (
+                    {r.isOwn && (
                       <button
                         onClick={() => handleDelete(r.id)}
                         className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition"
