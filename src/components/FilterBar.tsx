@@ -29,6 +29,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -57,7 +58,10 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   useEffect(() => {
     if (!searchOpen) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        (!portalRef.current || !portalRef.current.contains(e.target as Node))
+      ) {
         setSearchOpen(false);
         setQuery('');
       }
@@ -126,7 +130,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
         {/* Dropdown results */}
         {searchOpen && results.length > 0 && createPortal(
-          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+          <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
             {results.map((m, i) => (
               <button
                 key={m.name}
