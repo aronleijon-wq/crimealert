@@ -216,17 +216,19 @@ const IncidentChat = ({ incidents }: IncidentChatProps) => {
                 Hej! Jag är <strong>CrimeAlert AI</strong>. Jag kan hjälpa dig att förstå säkerhetsläget baserat på {incidents.length} aktuella händelser. Vad vill du veta?
               </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 ml-9">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-[10px] px-2.5 py-1.5 rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground transition whitespace-nowrap"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+            {isPremium ? (
+              <div className="flex flex-wrap gap-1.5 ml-9">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="text-[10px] px-2.5 py-1.5 rounded-full border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground transition whitespace-nowrap"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
 
