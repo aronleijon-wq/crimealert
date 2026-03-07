@@ -125,8 +125,8 @@ const Account = () => {
   useEffect(() => {
     if (searchParams.get('success') === 'true' && user) {
       toast({ title: 'Betalning genomförd!', description: 'Aktiverar ditt Pro-medlemskap...' });
-      // Remove query param
       setSearchParams({}, { replace: true });
+      setWasPolling(true);
 
       let attempts = 0;
       const poll = setInterval(async () => {
