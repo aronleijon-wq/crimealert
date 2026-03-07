@@ -424,7 +424,9 @@ const Account = () => {
                 <p className="text-xs text-foreground font-medium">{user.email}</p>
                 <p className="text-[10px] text-muted-foreground">
                   {isPremium
-                    ? `Premium aktiv t.o.m. ${new Date(subscription.subscriptionEnd!).toLocaleDateString('sv-SE')}`
+                    ? subscription.subscriptionEnd
+                      ? `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}`
+                      : 'Pro aktiv'
                     : 'Gratisplan'}
                 </p>
               </div>
