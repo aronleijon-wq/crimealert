@@ -278,7 +278,7 @@ const ReviewSection = () => {
               <ReviewCard
                 key={r.id}
                 review={r}
-                canDelete={user?.id === r.user_id}
+                canDelete={!!r.isOwn}
                 onDelete={() => handleDelete(r.id)}
               />
             ))}
