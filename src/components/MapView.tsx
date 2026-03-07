@@ -333,7 +333,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false }:
       
       // Only show radius circle for recent incidents (under 2 hours)
       const ageMs = Date.now() - new Date(inc.time).getTime();
-      if (ageMs < 2 * 60 * 60 * 1000) {
+      if (ageMs < 3 * 60 * 60 * 1000) {
         const circle = L.circle([adjustedLat, adjustedLng], {
           radius: 500,
           color: config.color,
