@@ -58,7 +58,10 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   useEffect(() => {
     if (!searchOpen) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        (!portalRef.current || !portalRef.current.contains(e.target as Node))
+      ) {
         setSearchOpen(false);
         setQuery('');
       }
