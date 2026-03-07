@@ -12,8 +12,6 @@ interface FilterBarProps {
   onSearchLocation?: (lat: number, lng: number, zoom: number, name: string) => void;
 }
 
-const FREE_FILTERS: IncidentType[] = ['police', 'traffic'];
-const LOGGED_IN_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic'];
 
 const TYPE_COLORS: Record<IncidentType, string> = {
   police: 'hsl(var(--cr-blue))',
