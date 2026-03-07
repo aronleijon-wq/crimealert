@@ -121,7 +121,7 @@ const Alerts = () => {
           </div>
 
           {/* Pro kommun notification section */}
-          {isPremium ? (
+          {isLoggedIn ? (
             <div className="bg-card border border-border rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
