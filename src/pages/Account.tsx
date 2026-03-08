@@ -418,7 +418,7 @@ const Account = () => {
                 <p className="text-[10px] text-muted-foreground">
                   {isPremium ?
                 subscription.subscriptionEnd ?
-                `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')} (${subscriptionDaysLeft} dagar kvar)` :
+                `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}${subscriptionDaysLeft !== null ? ` (${subscriptionDaysLeft} dagar kvar)` : ''}` :
                 'Pro aktiv' :
                 'Gratisplan'}
                 </p>
