@@ -21,8 +21,6 @@ const TYPE_ICONS: Record<string, string> = {
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 
-
-
 const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
@@ -56,7 +54,7 @@ const createMarkerIcon = (incident: Incident) => {
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(180,180,180,0.7);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
