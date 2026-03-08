@@ -87,7 +87,9 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    logStep("Searching for Stripe customer", { email: user.email });
     const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+    logStep("Stripe customers found", { count: customers.data.length });
 
     if (customers.data.length === 0) {
       logStep("No customer found");
@@ -104,17 +106,21 @@ serve(async (req) => {
     let validSub: Stripe.Subscription | null = null;
 
     for (const customer of customers.data) {
+      logStep("Checking customer", { customerId: customer.id });
       const subscriptions = await stripe.subscriptions.list({
         customer: customer.id,
         status: 'all',
-        limit: 50,
+        limit: 20,
       });
+      logStep("Subscriptions for customer", { customerId: customer.id, count: subscriptions.data.length, statuses: subscriptions.data.map(s => s.status) });
 
       const customerBest = subscriptions.data
         .filter((s) => eligibleStatuses.includes(s.status))
         .filter((s) => {
           const periodEndSec = Number(s.current_period_end);
-          return Number.isFinite(periodEndSec) && periodEndSec > nowSec;
+          const valid = Number.isFinite(periodEndSec) && periodEndSec > nowSec;
+          if (!valid) logStep("Subscription filtered out", { id: s.id, status: s.status, periodEnd: s.current_period_end, nowSec });
+          return valid;
         })
         .sort((a, b) => {
           const byStatus = priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status);
@@ -122,7 +128,7 @@ serve(async (req) => {
           return Number(b.current_period_end) - Number(a.current_period_end);
         })[0];
 
-      if (!customerBest) continue;
+      if (!customerBest) { logStep("No valid sub for this customer"); continue; }
 
       if (!validSub || priorityOrder.indexOf(customerBest.status) < priorityOrder.indexOf(validSub.status)) {
         validSub = customerBest;
