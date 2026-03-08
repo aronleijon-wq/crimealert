@@ -437,7 +437,13 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         .marker-pulse {
           opacity: 0.3;
+          -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
+          will-change: opacity, transform;
+        }
+        @-webkit-keyframes marker-pulse-anim {
+          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
+          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
         }
         @keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.3; transform: scale(1); }
@@ -445,7 +451,13 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         .marker-pulse-community {
           opacity: 0.35;
+          -webkit-animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
           animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
+          will-change: opacity, transform;
+        }
+        @-webkit-keyframes marker-pulse-community-anim {
+          0%, 100% { opacity: 0.35; -webkit-transform: rotate(45deg) scale(1); transform: rotate(45deg) scale(1); }
+          50% { opacity: 0; -webkit-transform: rotate(45deg) scale(2.5); transform: rotate(45deg) scale(2.5); }
         }
         @keyframes marker-pulse-community-anim {
           0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(1); }
