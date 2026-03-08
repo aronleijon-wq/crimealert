@@ -187,24 +187,23 @@ const ReviewSection = () => {
       <div className="p-3 space-y-3">
         {/* Rating summary */}
         {avgRating !== null && (
-          <div className="flex items-center gap-5 pb-4 border-b border-border">
+          <div className="flex items-center gap-4 pb-3 border-b border-border/50">
             <div className="text-center">
-              <div className="text-3xl font-bold font-mono-data text-foreground">{avgRating.toFixed(1)}</div>
-              <StarRating rating={Math.round(avgRating)} size="md" />
-              <div className="text-[10px] text-muted-foreground mt-1">{reviews.length} st</div>
+              <div className="text-xl font-bold font-mono text-foreground">{avgRating.toFixed(1)}</div>
+              <StarRating rating={Math.round(avgRating)} />
+              <div className="text-[9px] text-muted-foreground/60 mt-0.5">{reviews.length} st</div>
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-0.5">
               {ratingDist.map(({ star, count, pct }) => (
-                <div key={star} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-3 text-right">{star}</span>
-                  <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div key={star} className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-muted-foreground/60 w-2 text-right">{star}</span>
+                  <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-yellow-400 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground w-4">{count}</span>
+                  <span className="text-[9px] text-muted-foreground/40 w-3">{count}</span>
                 </div>
               ))}
             </div>
