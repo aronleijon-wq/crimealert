@@ -124,7 +124,7 @@ const getRiskDescription = (risk: string, type: string): string => {
   return riskTexts[risk]?.[type] || riskTexts[risk]?.other || '';
 };
 
-
+const getRecommendation = (risk: string, type: string): string => {
   const recs: Record<string, Record<string, string>> = {
     high: {
       police: 'Undvik området helt. Följ polisens anvisningar. Kontakta 112 vid akut fara.',
