@@ -400,13 +400,7 @@ const Account = () => {
 
           {/* Cancellation note */}
           <p className="text-center text-[11px] text-muted-foreground">
-            Ingen bindningstid – avbryt ditt abonnemang när som helst via{' '}
-            <button
-              onClick={handleManageSubscription}
-              className="text-primary hover:underline font-medium"
-            >
-              kontohanteringen
-            </button>.
+            Avbryt ditt abonnemang när som helst
           </p>
 
           {/* User section */}
