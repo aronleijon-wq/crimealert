@@ -132,15 +132,24 @@ serve(async (req) => {
       const customerBest = subscriptions.data
         .filter((s) => eligibleStatuses.includes(s.status))
         .filter((s) => {
-          const periodEndSec = Number(s.current_period_end);
-          const valid = Number.isFinite(periodEndSec) && periodEndSec > nowSec;
-          if (!valid) logStep("Subscription filtered out", { id: s.id, status: s.status, periodEnd: s.current_period_end, nowSec });
+          const periodEndSec = getSubPeriodEndSec(s);
+          const valid = isSubscriptionValidNow(s);
+          if (!valid) {
+            logStep("Subscription filtered out", {
+              id: s.id,
+              status: s.status,
+              periodEnd: periodEndSec,
+              nowSec,
+            });
+          }
           return valid;
         })
         .sort((a, b) => {
           const byStatus = priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status);
           if (byStatus !== 0) return byStatus;
-          return Number(b.current_period_end) - Number(a.current_period_end);
+          const aEnd = getSubPeriodEndSec(a) ?? 0;
+          const bEnd = getSubPeriodEndSec(b) ?? 0;
+          return bEnd - aEnd;
         })[0];
 
       if (!customerBest) { logStep("No valid sub for this customer"); continue; }
