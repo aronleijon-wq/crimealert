@@ -88,7 +88,11 @@ const Account = () => {
   const isPremium = subscription.subscribed && (
   subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
   const subscriptionDaysLeft = subscription.subscriptionEnd ?
-  Math.max(0, Math.ceil((new Date(subscription.subscriptionEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) :
+  (() => {
+    const msUntilEnd = new Date(subscription.subscriptionEnd).getTime() - Date.now();
+    if (Number.isNaN(msUntilEnd)) return null;
+    return Math.max(0, Math.ceil(msUntilEnd / (1000 * 60 * 60 * 24)));
+  })() :
   null;
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
