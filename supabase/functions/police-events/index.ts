@@ -1118,7 +1118,26 @@ serve(async (req) => {
       ]);
     }
 
-    const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+
+    // ── Server-side premium enforcement ──
+    if (!isPremium) {
+      const delayCutoff = Date.now() - DELAY_MS;
+      validIncidents = validIncidents
+        .filter((i: any) => {
+          // Apply 15-minute delay for free users
+          try {
+            const t = new Date(i.time).getTime();
+            return !isNaN(t) && t <= delayCutoff;
+          } catch { return false; }
+        })
+        .map((i: any) => ({
+          ...i,
+          // Strip detailed description for free users
+          description: i.description ? i.description.substring(0, 60) + '…' : '',
+        }));
+      console.log(`Premium filter applied: ${validIncidents.length} incidents after 15min delay + description truncation`);
+    }
     
     const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
       acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
@@ -1126,7 +1145,7 @@ serve(async (req) => {
     }, {});
     console.log(`Returning ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: validIncidents }), {
+    return new Response(JSON.stringify({ success: true, data: validIncidents, premium: isPremium }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
