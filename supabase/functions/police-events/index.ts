@@ -952,6 +952,10 @@ serve(async (req) => {
   }
 
   try {
+    // Server-side premium check
+    const isPremium = await checkPremiumStatus(req);
+    console.log(`User premium status: ${isPremium}`);
+
     const url = new URL(req.url);
     const location = url.searchParams.get('location') || '';
     
