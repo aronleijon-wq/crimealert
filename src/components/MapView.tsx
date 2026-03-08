@@ -457,12 +457,14 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
+          0% { opacity: 0.6; width: 100%; height: 100%; top: 0; left: 0; }
+          70% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
+          100% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
         }
         @keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
+          0% { opacity: 0.6; width: 100%; height: 100%; top: 0; left: 0; }
+          70% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
+          100% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
         }
         .marker-pulse-community {
           position: absolute;
