@@ -400,7 +400,7 @@ const Account = () => {
 
           {/* Reassurance line */}
           <p className="text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
-            Ingen bindningstid · Avsluta när du vill · Pengarna tillbaka inom 14 dagar
+            Ingen bindningstid · Avsluta när du vill · Löper ut efter betald period
           </p>
 
           {/* User section */}
