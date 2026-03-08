@@ -377,8 +377,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     incidents.forEach((inc) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
-      const config = incidentTypeConfig[inc.type];
-      const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
+      const color = getMapMarkerColor(inc);
       const key = coordKey(inc.lat, inc.lng);
       const totalAtLocation = coordGroups.get(key) || 1;
       const indexAtLocation = coordIndex.get(key) || 0;
