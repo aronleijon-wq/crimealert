@@ -489,7 +489,7 @@ const Analysis = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
                         <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                         <Bar dataKey="antal" fill="hsl(210, 100%, 56%)" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
