@@ -20,19 +20,13 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
-const LOW_CONTRAST_MARKER_FALLBACK = 'hsl(var(--cr-orange))';
 
-const getMapMarkerColor = (incident: Incident) => {
-  const isCommunityReport = incident.source === 'Medborgarrapport';
-  if (isCommunityReport) return COMMUNITY_REPORT_COLOR;
 
-  const config = incidentTypeConfig[incident.type];
-  return incident.type === 'other' ? LOW_CONTRAST_MARKER_FALLBACK : config.color;
-};
 
 const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
-  const color = getMapMarkerColor(incident);
+  const config = incidentTypeConfig[incident.type];
+  const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   // Safari can fail parsing some datetime formats, so rely on normalized status for pulse.
   const shouldPulse = isCommunityReport || incident.status === 'active';
 
@@ -62,7 +56,7 @@ const createMarkerIcon = (incident: Incident) => {
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(180,180,180,0.7);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],
@@ -377,7 +371,8 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     incidents.forEach((inc) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
-      const color = getMapMarkerColor(inc);
+      const config = incidentTypeConfig[inc.type];
+      const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
       const key = coordKey(inc.lat, inc.lng);
       const totalAtLocation = coordGroups.get(key) || 1;
       const indexAtLocation = coordIndex.get(key) || 0;
