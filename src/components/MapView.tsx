@@ -454,7 +454,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           border-radius: 50%;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-          animation-delay: calc(-1 * (${Date.now() % 2000}ms));
+          animation-delay: -${Date.now() % 2000}ms;
           will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-anim {
