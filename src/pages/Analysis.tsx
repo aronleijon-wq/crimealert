@@ -459,7 +459,7 @@ const Analysis = () => {
                       <Cell key={entry.name} fill={entry.color} />
                           )}
                         </Pie>
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
                     ) : (
