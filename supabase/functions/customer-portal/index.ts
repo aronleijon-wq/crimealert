@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -7,31 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PORTAL_CONFIG_ID = "bpc_1T2dGPC5T1wZbLBJmDrlVaQv";
 const PORTAL_LOGIN_URL = "https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00";
-
-const rankByStatus = (status: Stripe.Subscription.Status): number => {
-  switch (status) {
-    case "active":
-      return 0;
-    case "trialing":
-      return 1;
-    case "past_due":
-      return 2;
-    case "unpaid":
-      return 3;
-    case "incomplete":
-      return 4;
-    case "incomplete_expired":
-      return 5;
-    case "paused":
-      return 6;
-    case "canceled":
-      return 7;
-    default:
-      return 99;
-  }
-};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -39,9 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -55,80 +27,11 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
 
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 100 });
-
-    if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    if (!userData.user?.email) {
+      throw new Error("User not authenticated or email not available");
     }
 
-    const scoredCustomers: Array<{
-      customerId: string;
-      metadataMatch: boolean;
-      hasSubscriptions: boolean;
-      bestStatusRank: number;
-      latestSubscriptionCreated: number;
-      customerCreated: number;
-    }> = [];
-
-    for (const customer of customers.data) {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: "all",
-        limit: 50,
-      });
-
-      const hasSubscriptions = subscriptions.data.length > 0;
-      const bestStatusRank = hasSubscriptions
-        ? Math.min(...subscriptions.data.map((s) => rankByStatus(s.status)))
-        : 99;
-      const latestSubscriptionCreated = hasSubscriptions
-        ? Math.max(...subscriptions.data.map((s) => s.created))
-        : 0;
-
-      scoredCustomers.push({
-        customerId: customer.id,
-        metadataMatch: customer.metadata?.user_id === user.id,
-        hasSubscriptions,
-        bestStatusRank,
-        latestSubscriptionCreated,
-        customerCreated: customer.created,
-      });
-    }
-
-    scoredCustomers.sort((a, b) => {
-      if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
-      if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
-      if (a.bestStatusRank !== b.bestStatusRank) return a.bestStatusRank - b.bestStatusRank;
-      if (a.latestSubscriptionCreated !== b.latestSubscriptionCreated) {
-        return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
-      }
-      return b.customerCreated - a.customerCreated;
-    });
-
-    const chosenCustomerId = scoredCustomers[0]?.customerId;
-
-    if (!chosenCustomerId) {
-      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const origin = req.headers.get("origin") || "http://localhost:3000";
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: chosenCustomerId,
-      configuration: PORTAL_CONFIG_ID,
-      return_url: `${origin}/account`,
-    });
-
-    return new Response(JSON.stringify({ url: portalSession.url }), {
+    return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
