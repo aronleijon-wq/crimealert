@@ -1066,9 +1066,9 @@ serve(async (req) => {
           if (cityCheck) {
             const dLat = Math.abs(rawLat! - cityCheck.lat);
             const dLng = Math.abs(rawLng! - cityCheck.lng);
-            // ~1 degree lat ≈ 111km, check if >100km away
+            // ~1 degree lat ≈ 111km, check if >50km away
             const approxDistKm = Math.sqrt(dLat * dLat + (dLng * 0.55) * (dLng * 0.55)) * 111;
-            if (approxDistKm > 100) {
+            if (approxDistKm > 50) {
               console.log(`API GPS sanity fail: "${cityFromTitle}" expected ~${cityCheck.lat},${cityCheck.lng} but API gave ${rawLat},${rawLng} (${Math.round(approxDistKm)}km off) → overriding`);
               incident.lat = cityCheck.lat;
               incident.lng = cityCheck.lng;
