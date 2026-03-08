@@ -82,9 +82,14 @@ const pickBestCustomerId = async (
   }
 
   scoredCustomers.sort((a, b) => {
-    if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
-    if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
+    // Most important: choose customer with the best (most active) subscription state
     if (a.bestStatusRank !== b.bestStatusRank) return a.bestStatusRank - b.bestStatusRank;
+    if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
+
+    // Secondary: prefer user_id metadata matches
+    if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
+
+    // Then newest subscription activity, then newest customer record
     if (a.latestSubscriptionCreated !== b.latestSubscriptionCreated) {
       return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
     }
