@@ -384,7 +384,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         const pseudoRand1 = ((seed * 9301 + 49297) % 233280) / 233280;
         const pseudoRand2 = ((seed * 7919 + 10267) % 176003) / 176003;
         const angle = pseudoRand1 * 2 * Math.PI;
-        const radius = 0.0003 + pseudoRand2 * 0.0006;
+        const radius = 0.001 + pseudoRand2 * 0.002;
         adjustedLat += Math.cos(angle) * radius;
         adjustedLng += Math.sin(angle) * radius;
       }
