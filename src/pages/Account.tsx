@@ -7,104 +7,33 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { z } from 'zod';
 import ReviewSection from '@/components/ReviewSection';
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, 'Namn krävs').max(100),
-  email: z.string().trim().email('Ogiltig e-postadress').max(255),
-  message: z.string().trim().min(1, 'Meddelande krävs').max(1000, 'Max 1000 tecken'),
-});
+
+
 
 const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
 const PREMIUM_PRICE_YEARLY = 'price_1T2cciC5T1wZbLBJfPgzHr4v';
 const PREMIUM_PRODUCT_ID = 'prod_U0dsMg8IZZKY7c';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 
-const ContactForm = () => {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = contactSchema.safeParse(form);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.issues.forEach(i => { fieldErrors[String(i.path[0])] = i.message; });
-      setErrors(fieldErrors);
-      return;
-    }
-    setErrors({});
-    setSending(true);
-    try {
-      const { error } = await supabase.functions.invoke('send-contact', {
-        body: result.data,
-      });
-      if (error) throw error;
-      setSent(true);
-      toast({ title: 'Meddelande skickat', description: 'Vi återkommer så snart vi kan.' });
-      setForm({ name: '', email: '', message: '' });
-      setTimeout(() => setSent(false), 3000);
-    } catch (err: any) {
-      toast({ title: 'Fel', description: err?.message || 'Kunde inte skicka meddelandet.', variant: 'destructive' });
-    } finally {
-      setSending(false);
-    }
-  };
-
+const ContactSection = () => {
   return (
     <div className="bg-card border border-border rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <Send className="w-4 h-4 text-primary" />
         <span className="text-xs font-bold text-foreground">Kontakta oss</span>
       </div>
-      <p className="text-[10px] text-muted-foreground mb-4">Har du frågor, feedback eller vill veta mer om Företagsplanen? Skriv till oss!</p>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <input
-            type="text"
-            placeholder="Ditt namn"
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-          />
-          {errors.name && <p className="text-[10px] text-cr-red mt-0.5">{errors.name}</p>}
-        </div>
-        <div>
-          <input
-            type="email"
-            placeholder="Din e-post"
-            value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-          />
-          {errors.email && <p className="text-[10px] text-cr-red mt-0.5">{errors.email}</p>}
-        </div>
-        <div>
-          <textarea
-            placeholder="Ditt meddelande..."
-            rows={3}
-            value={form.message}
-            onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-            className="w-full px-3 py-2 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
-          />
-          <div className="flex justify-between">
-            {errors.message && <p className="text-[10px] text-cr-red mt-0.5">{errors.message}</p>}
-            <p className="text-[10px] text-muted-foreground mt-0.5 ml-auto">{form.message.length}/1000</p>
-          </div>
-        </div>
-        <button
-          type="submit"
-          disabled={sending}
-          className="flex items-center justify-center gap-1.5 w-full px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
-        >
-          <Send className="w-3 h-3" />
-          {sending ? 'Skickar...' : sent ? 'Skickat ✓' : 'Skicka meddelande'}
-        </button>
-      </form>
+      <p className="text-[10px] text-muted-foreground mb-3">
+        Har du frågor, feedback eller vill veta mer om Företagsplanen? Maila oss direkt!
+      </p>
+      <a
+        href="mailto:stefanlasse67@gmail.com?subject=CrimeAlert%20-%20Kontakt"
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors"
+      >
+        <Send className="w-3.5 h-3.5" />
+        stefanlasse67@gmail.com
+      </a>
     </div>
   );
 };
@@ -537,7 +466,7 @@ const Account = () => {
           </div>
 
           {/* Contact form */}
-          <ContactForm />
+          <ContactSection />
 
           {/* Reviews */}
           <ReviewSection />
