@@ -269,7 +269,7 @@ const ReviewSection = () => {
             <p className="text-[10px] text-muted-foreground/50">Inga omdömen ännu. Bli först!</p>
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5">
             {reviews.map((r) => (
               <ReviewCard
                 key={r.id}
