@@ -34,6 +34,7 @@ const ContactSection = () => {
         <Send className="w-3.5 h-3.5" />
         stefanlasse67@gmail.com
       </a>
+    </div>
   );
 };
 
