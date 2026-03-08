@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,51 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
+const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
+const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com"];
+const DELAY_MS = 15 * 60 * 1000; // 15 minutes
+
+// Check if user has premium subscription (server-side)
+async function checkPremiumStatus(req: Request): Promise<boolean> {
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return false;
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Skip anon key — it's not a user token
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    if (token === anonKey) return false;
+
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.email) return false;
+
+    const email = data.user.email.toLowerCase();
+    if (FREE_PREMIUM_EMAILS.includes(email)) return true;
+
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) return false;
+
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
+    const customers = await stripe.customers.list({ email, limit: 5 });
+    
+    for (const customer of customers.data) {
+      const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
+      for (const sub of subs.data) {
+        const productId = typeof sub.items?.data?.[0]?.price?.product === 'string'
+          ? sub.items.data[0].price.product
+          : sub.items?.data?.[0]?.price?.product?.id;
+        if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Premium check failed, defaulting to free:', e);
+  }
+  return false;
+}
 
 // ─── Swedish Reference Database ───────────────────────────────────────────────
 // All 290 municipalities + major city districts with verified centroids.
