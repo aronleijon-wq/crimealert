@@ -379,14 +379,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       // Show radius circle for recent incidents (under 3 hours) or community reports
       const ageMs = Date.now() - new Date(inc.time).getTime();
       if (isCommunityReport || ageMs < 3 * 60 * 60 * 1000) {
-        const circle = L.circle([adjustedLat, adjustedLng], {
-          radius: 500,
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.08,
-          weight: 1,
-          opacity: 0.3,
-        });
+        const circleOptions = isCommunityReport
+          ? { radius: 600, color: COMMUNITY_REPORT_COLOR, fillColor: COMMUNITY_REPORT_COLOR, fillOpacity: 0.12, weight: 2, opacity: 0.5, dashArray: '6 4' }
+          : { radius: 500, color, fillColor: color, fillOpacity: 0.08, weight: 1, opacity: 0.3 };
+        const circle = L.circle([adjustedLat, adjustedLng], circleOptions);
         markersRef.current!.addLayer(circle);
       }
 
