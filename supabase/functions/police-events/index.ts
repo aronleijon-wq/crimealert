@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,51 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
+const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
+const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com"];
+const DELAY_MS = 15 * 60 * 1000; // 15 minutes
+
+// Check if user has premium subscription (server-side)
+async function checkPremiumStatus(req: Request): Promise<boolean> {
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return false;
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Skip anon key — it's not a user token
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    if (token === anonKey) return false;
+
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.email) return false;
+
+    const email = data.user.email.toLowerCase();
+    if (FREE_PREMIUM_EMAILS.includes(email)) return true;
+
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) return false;
+
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
+    const customers = await stripe.customers.list({ email, limit: 5 });
+    
+    for (const customer of customers.data) {
+      const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
+      for (const sub of subs.data) {
+        const productId = typeof sub.items?.data?.[0]?.price?.product === 'string'
+          ? sub.items.data[0].price.product
+          : sub.items?.data?.[0]?.price?.product?.id;
+        if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
+          return true;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Premium check failed, defaulting to free:', e);
+  }
+  return false;
+}
 
 // ─── Swedish Reference Database ───────────────────────────────────────────────
 // All 290 municipalities + major city districts with verified centroids.
@@ -796,6 +842,8 @@ function extractAddressFromSummary(summary: string): string | null {
   candidates.sort((a, b) => a.priority - b.priority);
   return candidates[0].text;
 }
+// Global rate limiter for Nominatim (1 request per second)
+let lastNominatimRequest = 0;
 
 // Geocode with cache + Nominatim fallback — STRICTLY Sweden only
 async function geocodeWithNominatim(query: string): Promise<[number, number] | null> {
@@ -817,8 +865,16 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
     console.warn('Cache lookup failed:', e);
   }
 
-  // 2. Nominatim lookup
+  // 2. Nominatim lookup with rate limiting (1 req/sec)
   try {
+    // Enforce minimum 1 second between Nominatim requests
+    const now = Date.now();
+    const elapsed = now - lastNominatimRequest;
+    if (elapsed < 1000) {
+      await new Promise(r => setTimeout(r, 1000 - elapsed));
+    }
+    lastNominatimRequest = Date.now();
+
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=se&accept-language=sv`;
     
     const response = await fetch(url, {
@@ -896,6 +952,10 @@ serve(async (req) => {
   }
 
   try {
+    // Server-side premium check
+    const isPremium = await checkPremiumStatus(req);
+    console.log(`User premium status: ${isPremium}`);
+
     const url = new URL(req.url);
     const location = url.searchParams.get('location') || '';
     
@@ -1058,7 +1118,26 @@ serve(async (req) => {
       ]);
     }
 
-    const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+
+    // ── Server-side premium enforcement ──
+    if (!isPremium) {
+      const delayCutoff = Date.now() - DELAY_MS;
+      validIncidents = validIncidents
+        .filter((i: any) => {
+          // Apply 15-minute delay for free users
+          try {
+            const t = new Date(i.time).getTime();
+            return !isNaN(t) && t <= delayCutoff;
+          } catch { return false; }
+        })
+        .map((i: any) => ({
+          ...i,
+          // Strip detailed description for free users
+          description: i.description ? i.description.substring(0, 60) + '…' : '',
+        }));
+      console.log(`Premium filter applied: ${validIncidents.length} incidents after 15min delay + description truncation`);
+    }
     
     const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
       acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
@@ -1066,7 +1145,7 @@ serve(async (req) => {
     }, {});
     console.log(`Returning ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: validIncidents }), {
+    return new Response(JSON.stringify({ success: true, data: validIncidents, premium: isPremium }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
