@@ -103,6 +103,21 @@ serve(async (req) => {
     const eligibleStatuses: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
     const priorityOrder: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
     const nowSec = Math.floor(Date.now() / 1000);
+
+    const getSubPeriodEndSec = (sub: Stripe.Subscription): number | null => {
+      const rawPeriodEnd = (sub as any).current_period_end ?? (sub as any).cancel_at ?? (sub as any).trial_end;
+      const periodEndSec = Number(rawPeriodEnd);
+      return Number.isFinite(periodEndSec) && periodEndSec > 0 ? periodEndSec : null;
+    };
+
+    const isSubscriptionValidNow = (sub: Stripe.Subscription): boolean => {
+      const periodEndSec = getSubPeriodEndSec(sub);
+      if (periodEndSec !== null) return periodEndSec > nowSec;
+
+      // Fallback: some Stripe list responses may omit period end fields; trust active-like statuses.
+      return sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due';
+    };
+
     let validSub: Stripe.Subscription | null = null;
 
     for (const customer of customers.data) {
@@ -117,15 +132,24 @@ serve(async (req) => {
       const customerBest = subscriptions.data
         .filter((s) => eligibleStatuses.includes(s.status))
         .filter((s) => {
-          const periodEndSec = Number(s.current_period_end);
-          const valid = Number.isFinite(periodEndSec) && periodEndSec > nowSec;
-          if (!valid) logStep("Subscription filtered out", { id: s.id, status: s.status, periodEnd: s.current_period_end, nowSec });
+          const periodEndSec = getSubPeriodEndSec(s);
+          const valid = isSubscriptionValidNow(s);
+          if (!valid) {
+            logStep("Subscription filtered out", {
+              id: s.id,
+              status: s.status,
+              periodEnd: periodEndSec,
+              nowSec,
+            });
+          }
           return valid;
         })
         .sort((a, b) => {
           const byStatus = priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status);
           if (byStatus !== 0) return byStatus;
-          return Number(b.current_period_end) - Number(a.current_period_end);
+          const aEnd = getSubPeriodEndSec(a) ?? 0;
+          const bEnd = getSubPeriodEndSec(b) ?? 0;
+          return bEnd - aEnd;
         })[0];
 
       if (!customerBest) { logStep("No valid sub for this customer"); continue; }
@@ -140,16 +164,16 @@ serve(async (req) => {
     let subscriptionEnd: string | null = null;
 
     if (hasActiveSub && validSub) {
-      const periodEndSec = Number(validSub.current_period_end);
-      if (Number.isFinite(periodEndSec) && periodEndSec > 0) {
+      const periodEndSec = getSubPeriodEndSec(validSub);
+      if (periodEndSec !== null) {
         const parsedEnd = new Date(periodEndSec * 1000);
         if (!Number.isNaN(parsedEnd.getTime())) {
           subscriptionEnd = parsedEnd.toISOString();
         } else {
-          logStep("Invalid current_period_end date", { value: validSub.current_period_end });
+          logStep("Invalid derived subscription end date", { value: periodEndSec });
         }
       } else {
-        logStep("Missing or invalid current_period_end", { value: validSub.current_period_end });
+        logStep("No period_end/cancel_at/trial_end available on valid subscription", { id: validSub.id, status: validSub.status });
       }
 
       const priceProduct = validSub.items?.data?.[0]?.price?.product;
