@@ -219,7 +219,7 @@ const Index = () => {
         </div>
       </div>
       
-      {/* <IncidentChat incidents={filtered} /> */}
+      
     </div>
   );
 };
