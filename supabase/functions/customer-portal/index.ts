@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 const PORTAL_CONFIG_ID = "bpc_1T2dGPC5T1wZbLBJmDrlVaQv";
-const PORTAL_LOGIN_URL = "https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00";
 
 const rankByStatus = (status: Stripe.Subscription.Status): number => {
   switch (status) {
@@ -33,6 +32,68 @@ const rankByStatus = (status: Stripe.Subscription.Status): number => {
   }
 };
 
+const pickBestCustomerId = async (
+  stripe: Stripe,
+  userId: string,
+  email: string,
+): Promise<string> => {
+  const customers = await stripe.customers.list({ email, limit: 100 });
+
+  if (customers.data.length === 0) {
+    const created = await stripe.customers.create({
+      email,
+      metadata: { user_id: userId },
+    });
+    return created.id;
+  }
+
+  const scoredCustomers: Array<{
+    customerId: string;
+    metadataMatch: boolean;
+    hasSubscriptions: boolean;
+    bestStatusRank: number;
+    latestSubscriptionCreated: number;
+    customerCreated: number;
+  }> = [];
+
+  for (const customer of customers.data) {
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customer.id,
+      status: "all",
+      limit: 50,
+    });
+
+    const hasSubscriptions = subscriptions.data.length > 0;
+    const bestStatusRank = hasSubscriptions
+      ? Math.min(...subscriptions.data.map((s) => rankByStatus(s.status)))
+      : 99;
+    const latestSubscriptionCreated = hasSubscriptions
+      ? Math.max(...subscriptions.data.map((s) => s.created))
+      : 0;
+
+    scoredCustomers.push({
+      customerId: customer.id,
+      metadataMatch: customer.metadata?.user_id === userId,
+      hasSubscriptions,
+      bestStatusRank,
+      latestSubscriptionCreated,
+      customerCreated: customer.created,
+    });
+  }
+
+  scoredCustomers.sort((a, b) => {
+    if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
+    if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
+    if (a.bestStatusRank !== b.bestStatusRank) return a.bestStatusRank - b.bestStatusRank;
+    if (a.latestSubscriptionCreated !== b.latestSubscriptionCreated) {
+      return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
+    }
+    return b.customerCreated - a.customerCreated;
+  });
+
+  return scoredCustomers[0].customerId;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -45,7 +106,7 @@ serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
+      { auth: { persistSession: false } },
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -59,71 +120,11 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 100 });
-
-    if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const scoredCustomers: Array<{
-      customerId: string;
-      metadataMatch: boolean;
-      hasSubscriptions: boolean;
-      bestStatusRank: number;
-      latestSubscriptionCreated: number;
-      customerCreated: number;
-    }> = [];
-
-    for (const customer of customers.data) {
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: "all",
-        limit: 50,
-      });
-
-      const hasSubscriptions = subscriptions.data.length > 0;
-      const bestStatusRank = hasSubscriptions
-        ? Math.min(...subscriptions.data.map((s) => rankByStatus(s.status)))
-        : 99;
-      const latestSubscriptionCreated = hasSubscriptions
-        ? Math.max(...subscriptions.data.map((s) => s.created))
-        : 0;
-
-      scoredCustomers.push({
-        customerId: customer.id,
-        metadataMatch: customer.metadata?.user_id === user.id,
-        hasSubscriptions,
-        bestStatusRank,
-        latestSubscriptionCreated,
-        customerCreated: customer.created,
-      });
-    }
-
-    scoredCustomers.sort((a, b) => {
-      if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
-      if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
-      if (a.bestStatusRank !== b.bestStatusRank) return a.bestStatusRank - b.bestStatusRank;
-      if (a.latestSubscriptionCreated !== b.latestSubscriptionCreated) {
-        return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
-      }
-      return b.customerCreated - a.customerCreated;
-    });
-
-    const chosenCustomerId = scoredCustomers[0]?.customerId;
-
-    if (!chosenCustomerId) {
-      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    const customerId = await pickBestCustomerId(stripe, user.id, user.email);
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: chosenCustomerId,
+      customer: customerId,
       configuration: PORTAL_CONFIG_ID,
       return_url: `${origin}/account`,
     });
