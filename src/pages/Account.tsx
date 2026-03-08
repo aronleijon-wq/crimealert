@@ -190,6 +190,7 @@ const Account = () => {
         { text: 'Ingen reklam', included: true },
         { text: 'Detaljerade brottsbeskrivningar', included: true },
         { text: 'Export PDF/CSV', included: true },
+        { text: 'Prioriterad kundsupport', included: true },
         { text: 'API-access', included: false },
         { text: 'White-label', included: false },
       ],
