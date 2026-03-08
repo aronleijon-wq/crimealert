@@ -68,11 +68,15 @@ const Index = () => {
   const timeFiltered = useMemo(() => {
     const now = Date.now();
     const cutoff3d = now - 3 * 24 * 60 * 60 * 1000;
+    const cutoff24h = now - 24 * 60 * 60 * 1000;
     const delayCutoff = isPremium ? Infinity : now - 15 * 60 * 1000;
     return allIncidents.filter((i) => {
+      const isCommunity = i.source === 'Medborgarrapport';
       const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
       const t = new Date(normalizedTime).getTime();
       if (isNaN(t)) return true;
+      // Community reports: visible for 24 hours
+      if (isCommunity) return t >= cutoff24h;
       // Always show severe crimes regardless of age
       if (isSevereCrime(i.title)) return t <= delayCutoff;
       // Non-severe: must be within 3 days

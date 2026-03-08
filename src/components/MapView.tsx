@@ -27,8 +27,26 @@ const createMarkerIcon = (incident: Incident) => {
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   const ageMs = Date.now() - new Date(incident.time).getTime();
   const isRecent = ageMs < 3 * 60 * 60 * 1000; // under 3 hours
-  // Community reports always get the large pulsing style
   const shouldPulse = isCommunityReport || isRecent;
+
+  if (isCommunityReport) {
+    // Diamond shape for community reports — always large & pulsing
+    const size = 18;
+    const pulseSize = size + 20;
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
+          <div class="marker-pulse-community" style="position:absolute;inset:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
+          <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
+          <span style="position:absolute;z-index:3;font-size:10px;line-height:1;pointer-events:none;">👁️</span>
+        </div>
+      `,
+      iconSize: [pulseSize, pulseSize],
+      iconAnchor: [pulseSize / 2, pulseSize / 2],
+    });
+  }
+
   const size = shouldPulse ? 14 : 10;
   const pulseSize = size + 16;
 
@@ -361,14 +379,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       // Show radius circle for recent incidents (under 3 hours) or community reports
       const ageMs = Date.now() - new Date(inc.time).getTime();
       if (isCommunityReport || ageMs < 3 * 60 * 60 * 1000) {
-        const circle = L.circle([adjustedLat, adjustedLng], {
-          radius: 500,
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.08,
-          weight: 1,
-          opacity: 0.3,
-        });
+        const circleOptions = isCommunityReport
+          ? { radius: 600, color: COMMUNITY_REPORT_COLOR, fillColor: COMMUNITY_REPORT_COLOR, fillOpacity: 0.12, weight: 2, opacity: 0.5, dashArray: '6 4' }
+          : { radius: 500, color, fillColor: color, fillOpacity: 0.08, weight: 1, opacity: 0.3 };
+        const circle = L.circle([adjustedLat, adjustedLng], circleOptions);
         markersRef.current!.addLayer(circle);
       }
 
@@ -423,16 +437,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         .marker-pulse {
           opacity: 0.3;
-          -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-        }
-        @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
-          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
         }
         @keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 0; transform: scale(2.8); }
+        }
+        .marker-pulse-community {
+          opacity: 0.35;
+          animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
+        }
+        @keyframes marker-pulse-community-anim {
+          0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(1); }
+          50% { opacity: 0; transform: rotate(45deg) scale(2.5); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
