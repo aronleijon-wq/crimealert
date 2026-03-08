@@ -31,7 +31,7 @@ const Index = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom: number; _ts?: number } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
+  const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents(isPremium ? 30_000 : 60_000);
   const { reports: communityReports } = useCommunityReports();
 
   // Update filters when premium/login status changes — activate all allowed filters

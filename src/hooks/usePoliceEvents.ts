@@ -94,7 +94,7 @@ export function usePoliceEvents(pollIntervalMs = 60_000) {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [fetchEvents]);
+  }, [fetchEvents, pollIntervalMs]);
 
   return { incidents, loading, error, refetch: () => fetchEvents(false, true), dataVersion, totalEverSeen };
 }
