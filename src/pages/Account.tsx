@@ -398,6 +398,11 @@ const Account = () => {
             })}
           </div>
 
+          {/* Reassurance line */}
+          <p className="text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
+            Ingen bindningstid · Avsluta när du vill · Pengarna tillbaka inom 14 dagar
+          </p>
+
           {/* User section */}
           {user ? (
             <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
