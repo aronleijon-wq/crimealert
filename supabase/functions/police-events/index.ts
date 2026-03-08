@@ -1172,6 +1172,44 @@ serve(async (req) => {
       ]);
     }
 
+    // ── Scrape detail pages for full descriptions with updates ──
+    // Only scrape events from the last 3 days to keep response time reasonable
+    const now = Date.now();
+    const scrape3dCutoff = now - 3 * 24 * 60 * 60 * 1000;
+    const scrapeTargets = incidents.filter((i: any) => {
+      try {
+        const t = new Date(i.time).getTime();
+        return !isNaN(t) && t >= scrape3dCutoff && i.url;
+      } catch { return false; }
+    });
+
+    // Scrape in batches of 10 to avoid overwhelming polisen.se
+    const BATCH_SIZE = 10;
+    const scrapeResults = new Map<string, string>();
+    
+    for (let b = 0; b < scrapeTargets.length; b += BATCH_SIZE) {
+      const batch = scrapeTargets.slice(b, b + BATCH_SIZE);
+      const batchPromises = batch.map(async (inc: any) => {
+        const detail = await scrapeEventDetail(inc.url);
+        if (detail && detail.length > (inc.description || '').length) {
+          scrapeResults.set(inc.id, detail);
+        }
+      });
+      await Promise.race([
+        Promise.all(batchPromises),
+        new Promise(resolve => setTimeout(resolve, 4000)),
+      ]);
+    }
+
+    // Apply scraped descriptions
+    for (const inc of incidents) {
+      const scraped = scrapeResults.get(inc.id);
+      if (scraped) {
+        inc.description = scraped;
+      }
+    }
+    console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
+
     let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
 
     // ── Server-side premium enforcement ──
