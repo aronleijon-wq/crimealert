@@ -558,7 +558,7 @@ const Analysis = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
                           <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                          <Tooltip content={<ChartTooltip />} />
+                          <RechartsTooltip content={<ChartTooltip />} />
                           <Legend wrapperStyle={{ fontSize: 10 }} />
                           {stats.timeProfileTypes.map((t) => (
                             <Bar key={t.key} dataKey={t.key} stackId="a" fill={t.color} radius={[0, 0, 0, 0]} />
