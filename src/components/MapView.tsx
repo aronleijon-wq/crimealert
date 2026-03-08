@@ -62,51 +62,39 @@ const createMarkerIcon = (incident: Incident) => {
   });
 };
 
-const formatTime = (time: string) => {
+const parseSwedishDate = (dateStr: string): Date | null => {
   try {
-    const d = new Date(time);
-    return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return time;
-  }
+    if (!dateStr) return null;
+    let s = dateStr.trim();
+    s = s.replace(
+      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
+      (_, d, h, m, sec, tz) => {
+        const hh = h.padStart(2, '0');
+        const tzClean = tz ? tz.replace(/\s/g, '') : '';
+        return `${d}T${hh}:${m}:${sec}${tzClean}`;
+      }
+    );
+    const date = new Date(s);
+    return isNaN(date.getTime()) ? null : date;
+  } catch { return null; }
 };
 
-const getRiskDescription = (risk: string, type: string): string => {
-  const riskTexts: Record<string, Record<string, string>> = {
-    high: {
-      police: 'Allvarlig polisinsats pågår. Undvik området om möjligt. Polisen rekommenderar att allmänheten håller avstånd. Flera patruller och eventuellt insatsstyrka kan vara på plats.',
-      fire: 'Kraftig brand med risk för spridning. Räddningstjänsten arbetar på plats med flera enheter. Fara för rök, giftiga gaser och fallande delar. Evakuering kan pågå i närområdet.',
-      ambulance: 'Allvarlig medicinsk händelse. Akutsjukvård har begärt förstärkning och eventuellt luftburen ambulans. Området kan vara avspärrat för att underlätta insatsen.',
-      traffic: 'Allvarlig trafikolycka med personskador. Vägen kan vara helt avstängd under utredning. Räddningstjänst och ambulans finns på plats. Sök alternativ väg och räkna med längre restid.',
-      other: 'Allvarlig händelse som kräver omedelbar uppmärksamhet från flera blåljusenheter. Läget bedöms som instabilt.',
-    },
-    medium: {
-      police: 'Polisen utreder en pågående händelse. Viss avspärrning kan förekomma i närområdet. Patrull finns på plats för att säkra området.',
-      fire: 'Räddningstjänsten hanterar en mindre brand eller brandlarm. Begränsad påverkan på omgivningen men rök kan förekomma.',
-      ambulance: 'Sjukvårdspersonal finns på plats och situationen bedöms som under kontroll. Viss trafikpåverkan kan förekomma.',
-      traffic: 'Trafikhändelse med begränsad påverkan på framkomligheten. Var uppmärksam vid passage genom området. En fil kan vara avstängd.',
-      other: 'Händelse under utredning. Läget bedöms som stabilt men kan förändras. Blåljuspersonal finns på plats.',
-    },
-    low: {
-      police: 'Rutinärende. Polisen har kontroll över situationen. Ingen fara för allmänheten. Kan gälla anmälningsupptagning eller planerad insats.',
-      fire: 'Mindre brandrelaterad händelse. Släckning genomförd eller pågår utan risk för spridning. Kan gälla automatlarm utan konstaterad brand.',
-      ambulance: 'Sjukvårdsärende utan behov av avspärrning. Ingen påverkan på omgivningen eller trafik.',
-      traffic: 'Mindre trafikstörning. Trafiken kan flyta långsammare men är inte stoppad. Kan gälla punktering, motorstopp eller liknande.',
-      other: 'Lågprioriterad händelse utan direkt risk för allmänheten. Bevakning sker men ingen aktiv insats pågår.',
-    },
-  };
-  return riskTexts[risk]?.[type] || riskTexts[risk]?.other || '';
+const formatTime = (time: string) => {
+  const d = parseSwedishDate(time);
+  if (!d) return time;
+  return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const getTimeAgo = (time: string): string => {
-  try {
-    const diff = Date.now() - new Date(time).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins} min sedan`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ${mins % 60}min sedan`;
-    return `${Math.floor(hours / 24)}d sedan`;
-  } catch { return ''; }
+  const d = parseSwedishDate(time);
+  if (!d) return '';
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 0 || mins < 1) return 'Just nu';
+  if (mins < 60) return `${mins} min sedan`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ${mins % 60}min sedan`;
+  return `${Math.floor(hours / 24)}d sedan`;
 };
 
 const getRecommendation = (risk: string, type: string): string => {
