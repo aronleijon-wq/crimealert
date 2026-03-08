@@ -438,7 +438,7 @@ const Analysis = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="dag" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                         <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                         <Area type="monotone" dataKey="incidenter" stroke="hsl(0, 100%, 62%)" fill="url(#redGrad)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
