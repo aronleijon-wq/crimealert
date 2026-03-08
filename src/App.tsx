@@ -13,6 +13,7 @@ import Account from "./pages/Account";
 import Auth from "./pages/Auth";
 import Cookies from "./pages/Cookies";
 import Sekretesspolicy from "./pages/Sekretesspolicy";
+import Villkor from "./pages/Villkor";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />
+          <Route path="/villkor" element={<Villkor />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

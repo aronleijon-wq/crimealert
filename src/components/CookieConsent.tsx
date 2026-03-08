@@ -31,7 +31,13 @@ const CookieConsent = () => {
       <div className="max-w-lg mx-auto bg-card border border-border rounded-xl shadow-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Cookie className="w-5 h-5 text-primary shrink-0 mt-0.5 sm:mt-0" />
         <p className="text-xs text-muted-foreground flex-1 leading-relaxed">
-          Vi använder cookies för att förbättra din upplevelse och visa relevanta annonser.{' '}
+          Vi använder cookies för att förbättra din upplevelse och visa relevanta annonser. Genom att acceptera godkänner du även våra{' '}
+          <button
+            onClick={() => { navigate('/villkor'); dismiss(); }}
+            className="text-primary hover:underline font-medium"
+          >
+            användarvillkor
+          </button>.{' '}
           <button
             onClick={() => { navigate('/cookies'); dismiss(); }}
             className="text-primary hover:underline font-medium"
