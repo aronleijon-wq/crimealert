@@ -37,7 +37,7 @@ const createMarkerIcon = (incident: Incident) => {
       className: 'custom-marker',
       html: `
         <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-          <div class="marker-pulse-community" style="position:absolute;inset:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
+          <div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
           <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
           <span style="position:absolute;z-index:3;font-size:10px;line-height:1;pointer-events:none;">👁️</span>
         </div>
@@ -54,7 +54,7 @@ const createMarkerIcon = (incident: Incident) => {
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-        ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${color};"></div>` : ''}
+        ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
@@ -436,32 +436,34 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           border: none !important;
         }
         .marker-pulse {
-          opacity: 0.3;
+          position: absolute;
+          border-radius: 50%;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-          will-change: opacity, transform;
+          will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
-          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         @keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0; transform: scale(2.8); }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         .marker-pulse-community {
-          opacity: 0.35;
+          position: absolute;
+          border-radius: 4px;
           -webkit-animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
           animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
-          will-change: opacity, transform;
+          will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; -webkit-transform: rotate(45deg) scale(1); transform: rotate(45deg) scale(1); }
-          50% { opacity: 0; -webkit-transform: rotate(45deg) scale(2.5); transform: rotate(45deg) scale(2.5); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
         }
         @keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(1); }
-          50% { opacity: 0; transform: rotate(45deg) scale(2.5); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; transform: rotate(45deg); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
