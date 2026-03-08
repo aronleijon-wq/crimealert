@@ -3,7 +3,7 @@ import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-export function usePoliceEvents() {
+export function usePoliceEvents(pollIntervalMs = 60_000) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
