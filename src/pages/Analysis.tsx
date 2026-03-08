@@ -413,7 +413,7 @@ const Analysis = () => {
                     icon={TrendingUp}
                     colorClass="text-foreground"
                   />
-                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
+                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" tooltip="Riskindex beräknas utifrån andelen hög- och medelriskhändelser i valt område och tidsperiod. Skala 0–100 där högre värde innebär fler allvarliga händelser." />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
                   <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : 'snitt 30 dagar'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
