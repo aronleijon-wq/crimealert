@@ -25,9 +25,8 @@ const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const ageMs = Date.now() - new Date(incident.time).getTime();
-  const isRecent = ageMs < 3 * 60 * 60 * 1000; // under 3 hours
-  const shouldPulse = isCommunityReport || isRecent;
+  // Safari can fail parsing some datetime formats, so rely on normalized status for pulse.
+  const shouldPulse = isCommunityReport || incident.status === 'active';
 
   if (isCommunityReport) {
     // Diamond shape for community reports — always large & pulsing
