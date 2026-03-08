@@ -441,16 +441,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         .marker-pulse {
           opacity: 0.3;
-          -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-        }
-        @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
-          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
         }
         @keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 0; transform: scale(2.8); }
+        }
+        .marker-pulse-community {
+          opacity: 0.35;
+          animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
+        }
+        @keyframes marker-pulse-community-anim {
+          0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(1); }
+          50% { opacity: 0; transform: rotate(45deg) scale(2.5); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
