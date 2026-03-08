@@ -5,11 +5,28 @@ interface StatsBarProps {
   onSelectIncident?: (id: string) => void;
 }
 
-const getTimeAgo = (iso: string) => {
-  const diff = (Date.now() - new Date(iso).getTime()) / 60000;
-  if (diff < 60) return `${Math.round(diff)} min sedan`;
-  if (diff < 1440) return `${Math.round(diff / 60)}h sedan`;
-  return `${Math.round(diff / 1440)}d sedan`;
+const getTimeAgo = (dateStr: string) => {
+  try {
+    if (!dateStr) return '';
+    let s = dateStr.trim();
+    s = s.replace(
+      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
+      (_, d, h, m, sec, tz) => {
+        const hh = h.padStart(2, '0');
+        const tzClean = tz ? tz.replace(/\s/g, '') : '';
+        return `${d}T${hh}:${m}:${sec}${tzClean}`;
+      }
+    );
+    const date = new Date(s);
+    if (isNaN(date.getTime())) return '';
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 0 || diff < 60) return 'Just nu';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min sedan`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h sedan`;
+    return `${Math.floor(diff / 86400)}d sedan`;
+  } catch {
+    return '';
+  }
 };
 
 const StatsBar = ({ incidents, onSelectIncident }: StatsBarProps) => {
