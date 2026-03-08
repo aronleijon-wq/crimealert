@@ -32,12 +32,21 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) throw new Error("No Stripe customer found");
+    const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+
+    let customerId = customers.data[0]?.id;
+    if (!customerId) {
+      const createdCustomer = await stripe.customers.create({
+        email: user.email,
+        metadata: { user_id: user.id },
+      });
+      customerId = createdCustomer.id;
+    }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customers.data[0].id,
+      customer: customerId,
+      configuration: "bpc_1T2dGPC5T1wZbLBJmDrlVaQv",
       return_url: `${origin}/account`,
     });
 
