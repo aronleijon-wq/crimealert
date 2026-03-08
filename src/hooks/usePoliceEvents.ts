@@ -83,7 +83,7 @@ export function usePoliceEvents(pollIntervalMs = 60_000) {
 
   useEffect(() => {
     fetchEvents();
-    const interval = setInterval(() => fetchEvents(true), 60 * 1000);
+    const interval = setInterval(() => fetchEvents(true), pollIntervalMs);
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') fetchEvents(true);
