@@ -542,6 +542,15 @@ const Account = () => {
           {/* Reviews */}
           <ReviewSection />
 
+          {/* Legal links */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground/60">
+            <button onClick={() => navigate('/cookies')} className="hover:text-primary transition">Cookies</button>
+            <span>·</span>
+            <button onClick={() => navigate('/sekretesspolicy')} className="hover:text-primary transition">Sekretesspolicy</button>
+            <span>·</span>
+            <button onClick={() => navigate('/villkor')} className="hover:text-primary transition">Användarvillkor</button>
+          </div>
+
           <p className="text-[10px] text-muted-foreground/50 font-mono text-center">
             CrimeRadar följer GDPR. Inga personuppgifter visas. Data från öppna källor.
           </p>
