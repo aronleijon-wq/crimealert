@@ -21,31 +21,15 @@ const parseTime = (t: string): Date => {
   return new Date(t);
 };
 
-const StatCard = ({ label, value, sub, icon: Icon, colorClass, tooltip }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;tooltip?: string;}) => {
-  const [showTooltip, setShowTooltip] = useState(false);
-  return (
-    <div className="bg-card border border-border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
-        <div className="relative">
-          <Icon
-            className={`w-4 h-4 ${colorClass} ${tooltip ? 'cursor-pointer' : ''}`}
-            onClick={() => tooltip && setShowTooltip(!showTooltip)}
-            onMouseEnter={() => tooltip && setShowTooltip(true)}
-            onMouseLeave={() => tooltip && setShowTooltip(false)}
-          />
-          {tooltip && showTooltip && (
-            <div className="absolute right-0 top-6 z-50 w-56 rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md animate-fade-in">
-              {tooltip}
-            </div>
-          )}
-        </div>
-      </div>
-      <div className={`text-2xl font-bold font-mono ${colorClass}`}>{value}</div>
-      <span className="text-[10px] text-muted-foreground">{sub}</span>
+const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;}) =>
+<div className="bg-card border border-border rounded-lg p-4">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
+      <Icon className={`w-4 h-4 ${colorClass}`} />
     </div>
-  );
-};
+    <div className={`text-2xl font-bold font-mono ${colorClass}`}>{value}</div>
+    <span className="text-[10px] text-muted-foreground">{sub}</span>
+  </div>;
 
 
 const ChartTooltip = ({ active, payload, label }: any) => {
@@ -413,7 +397,7 @@ const Analysis = () => {
                     icon={TrendingUp}
                     colorClass="text-foreground"
                   />
-                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" tooltip="Riskindex beräknas utifrån andelen hög- och medelriskhändelser i valt område och tidsperiod. Skala 0–100 där högre värde innebär fler allvarliga händelser." />
+                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
                   <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : 'snitt 30 dagar'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>

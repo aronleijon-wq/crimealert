@@ -144,22 +144,8 @@ const Account = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('Ingen portal-URL mottagen');
-      }
-    } catch (err: any) {
-      toast({
-        title: 'Fel',
-        description: err?.message || 'Kunde inte öppna kundportalen.',
-        variant: 'destructive',
-      });
-    }
+  const handleManageSubscription = () => {
+    window.location.href = 'https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00';
   };
 
   const tiers = [
@@ -198,13 +184,13 @@ const Account = () => {
       badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
       features: [
         { text: 'Realtidsdata – direkt', included: true },
+        { text: 'AI-chatt om säkerhetsläget', included: true },
         { text: 'Riskanalys & statistik', included: true },
         { text: 'Full historik (30+ dagar)', included: true },
         { text: 'Heatmaps & riskanalys', included: true },
         { text: 'Ingen reklam', included: true },
         { text: 'Detaljerade brottsbeskrivningar', included: true },
         { text: 'Export PDF/CSV', included: true },
-        { text: 'Prioriterad kundsupport', included: true },
         { text: 'API-access', included: false },
         { text: 'White-label', included: false },
       ],
@@ -411,11 +397,6 @@ const Account = () => {
               );
             })}
           </div>
-
-          {/* Cancellation note */}
-          <p className="text-center text-[11px] text-muted-foreground">
-            Avbryt ditt abonnemang när som helst
-          </p>
 
           {/* User section */}
           {user ? (

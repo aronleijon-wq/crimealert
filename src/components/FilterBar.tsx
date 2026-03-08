@@ -16,7 +16,7 @@ interface FilterBarProps {
 const TYPE_COLORS: Record<IncidentType, string> = {
   police: 'hsl(var(--cr-blue))',
   fire: 'hsl(var(--cr-red))',
-  ambulance: 'hsl(var(--cr-green))',
+  ambulance: 'hsl(var(--cr-orange))',
   traffic: 'hsl(var(--cr-orange))',
   other: 'hsl(var(--muted-foreground))',
 };

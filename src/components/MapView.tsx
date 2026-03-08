@@ -357,10 +357,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markerMapRef.current.clear();
 
     // Group incidents by coordinates to detect overlaps
-    const coordKey = (lat: number, lng: number) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
+    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
     const coordGroups = new Map<string, number>();
     const coordIndex = new Map<string, number>();
-
+    
     // Count incidents per location
     incidents.forEach((inc) => {
       const key = coordKey(inc.lat, inc.lng);
@@ -376,15 +376,16 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const indexAtLocation = coordIndex.get(key) || 0;
       coordIndex.set(key, indexAtLocation + 1);
 
-      // Spread out overlapping markers with small jitter
+      // Spread out overlapping markers with seeded random jitter to avoid geometric patterns
       let adjustedLat = inc.lat;
       let adjustedLng = inc.lng;
       if (totalAtLocation > 1) {
+        // Use incident id as seed for consistent but random-looking offset
         const seed = inc.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
         const pseudoRand1 = ((seed * 9301 + 49297) % 233280) / 233280;
         const pseudoRand2 = ((seed * 7919 + 10267) % 176003) / 176003;
         const angle = pseudoRand1 * 2 * Math.PI;
-        const radius = 0.001 + pseudoRand2 * 0.002;
+        const radius = 0.003 + pseudoRand2 * 0.006;
         adjustedLat += Math.cos(angle) * radius;
         adjustedLng += Math.sin(angle) * radius;
       }
@@ -453,36 +454,30 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           border-radius: 50%;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-          animation-delay: -${Date.now() % 2000}ms;
           will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0% { opacity: 0.6; width: 100%; height: 100%; top: 0; left: 0; }
-          70% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
-          100% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         @keyframes marker-pulse-anim {
-          0% { opacity: 0.6; width: 100%; height: 100%; top: 0; left: 0; }
-          70% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
-          100% { opacity: 0; width: 320%; height: 320%; top: -110%; left: -110%; }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         .marker-pulse-community {
           position: absolute;
           border-radius: 4px;
-          -webkit-animation: marker-pulse-community-anim 2s ease-in-out infinite;
-          animation: marker-pulse-community-anim 2s ease-in-out infinite;
-          animation-delay: -${Date.now() % 2000}ms;
+          -webkit-animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
+          animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-community-anim {
-          0% { opacity: 0.5; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
-          70% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
-          100% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
         }
         @keyframes marker-pulse-community-anim {
-          0% { opacity: 0.5; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
-          70% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; transform: rotate(45deg); }
-          100% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; transform: rotate(45deg); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; transform: rotate(45deg); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;

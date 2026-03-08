@@ -31,7 +31,7 @@ const Index = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom: number; _ts?: number } | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents(isPremium ? 30_000 : 60_000);
+  const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
   const { reports: communityReports } = useCommunityReports();
 
   // Update filters when premium/login status changes — activate all allowed filters
@@ -122,9 +122,9 @@ const Index = () => {
         {!isFullscreen && (!isMobile || mobileListOpen) && (
           <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
             {isMobile && (
-                <button
+              <button
                 onClick={() => setMobileListOpen(false)}
-                className="absolute top-2 right-10 z-10 p-1 rounded hover:bg-muted text-muted-foreground"
+                className="absolute top-2 right-2 z-10 p-1 rounded hover:bg-muted text-muted-foreground"
                 title="Stäng listan"
               >
                 <X className="w-4 h-4" />
