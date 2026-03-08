@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReviewSection from '@/components/ReviewSection';
-import ReviewSection from '@/components/ReviewSection';
+
 
 
 
