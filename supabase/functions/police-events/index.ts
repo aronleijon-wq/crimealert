@@ -842,8 +842,43 @@ function extractAddressFromSummary(summary: string): string | null {
   candidates.sort((a, b) => a.priority - b.priority);
   return candidates[0].text;
 }
-// Global rate limiter for Nominatim (1 request per second)
-let lastNominatimRequest = 0;
+// DB-based rate limiting for Nominatim (works across edge function isolates)
+const NOMINATIM_RATE_LIMIT_KEY = '__nominatim_last_request__';
+
+async function acquireNominatimSlot(): Promise<boolean> {
+  // Use geocode_cache with a special key to store last request timestamp
+  // This ensures cross-isolate rate limiting via the database
+  try {
+    const { data: row } = await supabase
+      .from('geocode_cache')
+      .select('lat')
+      .eq('query', NOMINATIM_RATE_LIMIT_KEY)
+      .maybeSingle();
+
+    const lastTs = row ? row.lat : 0; // abuse lat field to store timestamp
+    const now = Date.now();
+    if (now - lastTs < 1100) {
+      // Another isolate made a request less than ~1s ago — wait
+      const wait = 1100 - (now - lastTs);
+      await new Promise(r => setTimeout(r, wait));
+    }
+
+    // Update the timestamp (upsert)
+    await supabase.from('geocode_cache').upsert({
+      query: NOMINATIM_RATE_LIMIT_KEY,
+      lat: Date.now(),
+      lng: 0,
+      precision: 'rate_limit',
+    }, { onConflict: 'query' });
+
+    return true;
+  } catch (e) {
+    console.warn('Rate limit check failed, proceeding cautiously:', e);
+    // If DB check fails, add a safety delay
+    await new Promise(r => setTimeout(r, 1200));
+    return true;
+  }
+}
 
 // Geocode with cache + Nominatim fallback — STRICTLY Sweden only
 async function geocodeWithNominatim(query: string): Promise<[number, number] | null> {
@@ -865,15 +900,9 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
     console.warn('Cache lookup failed:', e);
   }
 
-  // 2. Nominatim lookup with rate limiting (1 req/sec)
+  // 2. Nominatim lookup with DB-based rate limiting (cross-isolate safe)
   try {
-    // Enforce minimum 1 second between Nominatim requests
-    const now = Date.now();
-    const elapsed = now - lastNominatimRequest;
-    if (elapsed < 1000) {
-      await new Promise(r => setTimeout(r, 1000 - elapsed));
-    }
-    lastNominatimRequest = Date.now();
+    await acquireNominatimSlot();
 
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=se&accept-language=sv`;
     
