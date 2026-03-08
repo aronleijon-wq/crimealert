@@ -184,7 +184,6 @@ const Account = () => {
       badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
       features: [
         { text: 'Realtidsdata – direkt', included: true },
-        { text: 'AI-chatt om säkerhetsläget', included: true },
         { text: 'Riskanalys & statistik', included: true },
         { text: 'Full historik (30+ dagar)', included: true },
         { text: 'Heatmaps & riskanalys', included: true },
