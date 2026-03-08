@@ -863,8 +863,16 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
     console.warn('Cache lookup failed:', e);
   }
 
-  // 2. Nominatim lookup
+  // 2. Nominatim lookup with rate limiting (1 req/sec)
   try {
+    // Enforce minimum 1 second between Nominatim requests
+    const now = Date.now();
+    const elapsed = now - lastNominatimRequest;
+    if (elapsed < 1000) {
+      await new Promise(r => setTimeout(r, 1000 - elapsed));
+    }
+    lastNominatimRequest = Date.now();
+
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=se&accept-language=sv`;
     
     const response = await fetch(url, {
