@@ -22,11 +22,31 @@ const parseTime = (t: string): Date => {
   return new Date(t);
 };
 
+const STAT_TOOLTIPS: Record<string, string> = {
+  'Idag': 'Totalt antal polishändelser rapporterade sedan midnatt idag.',
+  'I perioden': 'Totalt antal polishändelser under vald tidsperiod.',
+  'Riskindex': 'Beräknas utifrån andelen hög- och medelriskhändelser. Skala 0–100 där högre värde = fler allvarliga händelser.',
+  'Hög risk': 'Antal händelser klassade som högrisk (t.ex. grov misshandel, skjutning, rån).',
+  'Mest aktiv tid': 'Den timme på dygnet med flest rapporterade händelser under vald period.',
+};
+
 const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;}) =>
 <div className="bg-card border border-border rounded-lg p-4">
     <div className="flex items-center justify-between mb-2">
       <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
-      <Icon className={`w-4 h-4 ${colorClass}`} />
+      <div className="flex items-center gap-1.5">
+        {STAT_TOOLTIPS[label] && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-xs">
+              {STAT_TOOLTIPS[label]}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        <Icon className={`w-4 h-4 ${colorClass}`} />
+      </div>
     </div>
     <div className={`text-2xl font-bold font-mono ${colorClass}`}>{value}</div>
     <span className="text-[10px] text-muted-foreground">{sub}</span>
