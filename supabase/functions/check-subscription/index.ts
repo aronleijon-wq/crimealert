@@ -97,19 +97,30 @@ serve(async (req) => {
       });
     }
 
-    // Check all matching customers to avoid false negatives when duplicate customers exist
-    const priorityOrder = ['active', 'trialing', 'past_due'];
+    // Keep premium access until paid period truly ends, even if subscription is canceled
+    const eligibleStatuses: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
+    const priorityOrder: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
+    const nowSec = Math.floor(Date.now() / 1000);
     let validSub: Stripe.Subscription | null = null;
 
     for (const customer of customers.data) {
       const subscriptions = await stripe.subscriptions.list({
         customer: customer.id,
-        limit: 20,
+        status: 'all',
+        limit: 50,
       });
 
       const customerBest = subscriptions.data
-        .filter((s) => priorityOrder.includes(s.status))
-        .sort((a, b) => priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status))[0];
+        .filter((s) => eligibleStatuses.includes(s.status))
+        .filter((s) => {
+          const periodEndSec = Number(s.current_period_end);
+          return Number.isFinite(periodEndSec) && periodEndSec > nowSec;
+        })
+        .sort((a, b) => {
+          const byStatus = priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status);
+          if (byStatus !== 0) return byStatus;
+          return Number(b.current_period_end) - Number(a.current_period_end);
+        })[0];
 
       if (!customerBest) continue;
 
@@ -138,7 +149,7 @@ serve(async (req) => {
       const priceProduct = validSub.items?.data?.[0]?.price?.product;
       productId = typeof priceProduct === 'string' ? priceProduct : (priceProduct?.id ?? null);
 
-      logStep("Active subscription found", { status: validSub.status, productId, subscriptionEnd });
+      logStep("Active subscription window found", { status: validSub.status, productId, subscriptionEnd });
     }
 
     return new Response(
