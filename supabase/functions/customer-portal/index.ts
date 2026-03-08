@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const PORTAL_CONFIG_ID = "bpc_1T2dGPC5T1wZbLBJmDrlVaQv";
+const PORTAL_LOGIN_URL = "https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00";
 
 const rankByStatus = (status: Stripe.Subscription.Status): number => {
   switch (status) {
@@ -61,7 +62,10 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 100 });
 
     if (customers.data.length === 0) {
-      throw new Error("Ingen Stripe-kund hittades för den här e-postadressen");
+      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     const scoredCustomers: Array<{
@@ -70,6 +74,7 @@ serve(async (req) => {
       hasSubscriptions: boolean;
       bestStatusRank: number;
       latestSubscriptionCreated: number;
+      customerCreated: number;
     }> = [];
 
     for (const customer of customers.data) {
@@ -93,6 +98,7 @@ serve(async (req) => {
         hasSubscriptions,
         bestStatusRank,
         latestSubscriptionCreated,
+        customerCreated: customer.created,
       });
     }
 
@@ -100,18 +106,24 @@ serve(async (req) => {
       if (a.metadataMatch !== b.metadataMatch) return a.metadataMatch ? -1 : 1;
       if (a.hasSubscriptions !== b.hasSubscriptions) return a.hasSubscriptions ? -1 : 1;
       if (a.bestStatusRank !== b.bestStatusRank) return a.bestStatusRank - b.bestStatusRank;
-      return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
+      if (a.latestSubscriptionCreated !== b.latestSubscriptionCreated) {
+        return b.latestSubscriptionCreated - a.latestSubscriptionCreated;
+      }
+      return b.customerCreated - a.customerCreated;
     });
 
-    const chosen = scoredCustomers[0];
+    const chosenCustomerId = scoredCustomers[0]?.customerId;
 
-    if (!chosen?.hasSubscriptions) {
-      throw new Error("Ingen prenumeration hittades för kontot. Kontakta support så kopplar vi rätt kundprofil.");
+    if (!chosenCustomerId) {
+      return new Response(JSON.stringify({ url: PORTAL_LOGIN_URL }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: chosen.customerId,
+      customer: chosenCustomerId,
       configuration: PORTAL_CONFIG_ID,
       return_url: `${origin}/account`,
     });
