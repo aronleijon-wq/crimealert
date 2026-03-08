@@ -357,10 +357,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markerMapRef.current.clear();
 
     // Group incidents by coordinates to detect overlaps
-    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    const coordKey = (lat: number, lng: number) => `${lat.toFixed(5)},${lng.toFixed(5)}`;
     const coordGroups = new Map<string, number>();
     const coordIndex = new Map<string, number>();
-    
+
     // Count incidents per location
     incidents.forEach((inc) => {
       const key = coordKey(inc.lat, inc.lng);
@@ -376,16 +376,15 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const indexAtLocation = coordIndex.get(key) || 0;
       coordIndex.set(key, indexAtLocation + 1);
 
-      // Spread out overlapping markers with seeded random jitter to avoid geometric patterns
+      // Spread out overlapping markers with small jitter
       let adjustedLat = inc.lat;
       let adjustedLng = inc.lng;
       if (totalAtLocation > 1) {
-        // Use incident id as seed for consistent but random-looking offset
         const seed = inc.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
         const pseudoRand1 = ((seed * 9301 + 49297) % 233280) / 233280;
         const pseudoRand2 = ((seed * 7919 + 10267) % 176003) / 176003;
         const angle = pseudoRand1 * 2 * Math.PI;
-        const radius = 0.003 + pseudoRand2 * 0.006;
+        const radius = 0.0003 + pseudoRand2 * 0.0006;
         adjustedLat += Math.cos(angle) * radius;
         adjustedLng += Math.sin(angle) * radius;
       }
