@@ -29,13 +29,13 @@ const ContactSection = () => {
       </p>
       <a
         href="mailto:alvejon.staff@gmail.com?subject=CrimeAlert%20-%20Kontakt"
-        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors"
-      >
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors">
+        
         <Send className="w-3.5 h-3.5" />
         alvejon.staff@gmail.com
       </a>
-    </div>
-  );
+    </div>);
+
 };
 
 const Account = () => {
@@ -69,7 +69,7 @@ const Account = () => {
       }, 2000);
       pollingRef.current = poll;
 
-      return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+      return () => {if (pollingRef.current) clearInterval(pollingRef.current);};
     }
   }, [searchParams, user]);
 
@@ -85,8 +85,8 @@ const Account = () => {
     }
   }, [subscription.subscribed]);
 
-  const isPremium = subscription.subscribed && 
-    (subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
+  const isPremium = subscription.subscribed && (
+  subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -98,8 +98,8 @@ const Account = () => {
       message.includes('504') ||
       message.includes('timeout') ||
       message.includes('upstream connect error') ||
-      message.includes('failed to fetch')
-    );
+      message.includes('failed to fetch'));
+
   };
 
   const createCheckoutSession = async (priceId: string, attempts = 4) => {
@@ -107,7 +107,7 @@ const Account = () => {
 
     for (let i = 0; i < attempts; i++) {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
+        body: { priceId }
       });
 
       if (!error && data?.url) return data.url as string;
@@ -134,10 +134,10 @@ const Account = () => {
       const transient = isTransientFunctionError(err);
       toast({
         title: 'Fel',
-        description: transient
-          ? 'Tillfälligt backendfel vid checkout. Försök igen om en minut.'
-          : err?.message || 'Kunde inte starta checkout just nu.',
-        variant: 'destructive',
+        description: transient ?
+        'Tillfälligt backendfel vid checkout. Försök igen om en minut.' :
+        err?.message || 'Kunde inte starta checkout just nu.',
+        variant: 'destructive'
       });
     } finally {
       setCheckoutLoading(false);
@@ -149,89 +149,89 @@ const Account = () => {
   };
 
   const tiers = [
-    {
-      name: 'Gratis',
-      icon: User,
-      iconColor: 'text-muted-foreground',
-      price: '0 kr',
-      period: '',
-      border: !isPremium ? 'border-primary/30' : 'border-border',
-      badge: !isPremium && user ? 'DIN PLAN' : null,
-      features: [
-        { text: 'Karta med 15 min fördröjning', included: true },
-        { text: 'Alla filter & kategorier', included: true },
-        { text: 'Kommunbevakning & notiser', included: true },
-        { text: 'Senaste 24h historik', included: true },
-        { text: 'Grundläggande heatmaps', included: true },
-        { text: 'Reklam i app/webb', included: true },
-        { text: 'Realtidsdata', included: false },
-        { text: 'Riskanalys & statistik', included: false },
-        { text: 'AI-chatt', included: false },
-        { text: 'Full historik', included: false },
-      ],
-      cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
-      ctaStyle: 'bg-muted text-muted-foreground cursor-default',
-      action: undefined,
-    },
-    {
-      name: 'Pro',
-      icon: Zap,
-      iconColor: 'text-primary',
-      price: billingCycle === 'monthly' ? '19 kr' : '119 kr',
-      period: billingCycle === 'monthly' ? '/mån' : '/år',
-      savings: billingCycle === 'yearly' ? 'Spara 109 kr' : null,
-      border: isPremium ? 'border-primary/30' : 'border-border',
-      badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
-      features: [
-        { text: 'Realtidsdata – direkt', included: true },
-        { text: 'AI-chatt om säkerhetsläget', included: true },
-        { text: 'Riskanalys & statistik', included: true },
-        { text: 'Full historik (30+ dagar)', included: true },
-        { text: 'Heatmaps & riskanalys', included: true },
-        { text: 'Ingen reklam', included: true },
-        { text: 'Detaljerade brottsbeskrivningar', included: true },
-        { text: 'Export PDF/CSV', included: true },
-        { text: 'API-access', included: false },
-        { text: 'White-label', included: false },
-      ],
-      cta: isPremium ? 'Hantera prenumeration' : 'Uppgradera till Pro',
-      ctaStyle: isPremium
-        ? 'bg-muted text-foreground hover:bg-muted/80'
-        : 'bg-primary text-primary-foreground hover:bg-primary/90',
-      action: isPremium ? handleManageSubscription : handleCheckout,
-    },
-    {
-      name: 'Företag',
-      icon: Building2,
-      iconColor: 'text-cr-blue',
-      price: 'Offert',
-      period: '',
-      border: 'border-border',
-      badge: 'B2B',
-      features: [
-        { text: 'Allt i Pro', included: true },
-        { text: 'API-access', included: true },
-        { text: 'Riskrapporter & statistik', included: true },
-        { text: 'Flera områden/städer', included: true },
-        { text: 'White-label vid behov', included: true },
-        { text: 'Dedikerad support', included: true },
-        { text: 'Avancerade notiser', included: true },
-      ],
-      cta: 'Kontakta oss',
-      ctaStyle: 'bg-muted text-foreground hover:bg-muted/80',
-      action: undefined,
-    },
-  ];
+  {
+    name: 'Gratis',
+    icon: User,
+    iconColor: 'text-muted-foreground',
+    price: '0 kr',
+    period: '',
+    border: !isPremium ? 'border-primary/30' : 'border-border',
+    badge: !isPremium && user ? 'DIN PLAN' : null,
+    features: [
+    { text: 'Karta med 15 min fördröjning', included: true },
+    { text: 'Alla filter & kategorier', included: true },
+    { text: 'Kommunbevakning & notiser', included: true },
+    { text: 'Senaste 24h historik', included: true },
+    { text: 'Grundläggande heatmaps', included: true },
+    { text: 'Reklam i app/webb', included: true },
+    { text: 'Realtidsdata', included: false },
+    { text: 'Riskanalys & statistik', included: false },
+    { text: 'AI-chatt', included: false },
+    { text: 'Full historik', included: false }],
+
+    cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
+    ctaStyle: 'bg-muted text-muted-foreground cursor-default',
+    action: undefined
+  },
+  {
+    name: 'Pro',
+    icon: Zap,
+    iconColor: 'text-primary',
+    price: billingCycle === 'monthly' ? '19 kr' : '119 kr',
+    period: billingCycle === 'monthly' ? '/mån' : '/år',
+    savings: billingCycle === 'yearly' ? 'Spara 109 kr' : null,
+    border: isPremium ? 'border-primary/30' : 'border-border',
+    badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
+    features: [
+    { text: 'Realtidsdata – direkt', included: true },
+    { text: 'AI-chatt om säkerhetsläget', included: true },
+    { text: 'Riskanalys & statistik', included: true },
+    { text: 'Full historik (30+ dagar)', included: true },
+    { text: 'Heatmaps & riskanalys', included: true },
+    { text: 'Ingen reklam', included: true },
+    { text: 'Detaljerade brottsbeskrivningar', included: true },
+    { text: 'Export PDF/CSV', included: true },
+    { text: 'API-access', included: false },
+    { text: 'White-label', included: false }],
+
+    cta: isPremium ? 'Hantera prenumeration' : 'Uppgradera till Pro',
+    ctaStyle: isPremium ?
+    'bg-muted text-foreground hover:bg-muted/80' :
+    'bg-primary text-primary-foreground hover:bg-primary/90',
+    action: isPremium ? handleManageSubscription : handleCheckout
+  },
+  {
+    name: 'Företag',
+    icon: Building2,
+    iconColor: 'text-cr-blue',
+    price: 'Offert',
+    period: '',
+    border: 'border-border',
+    badge: 'B2B',
+    features: [
+    { text: 'Allt i Pro', included: true },
+    { text: 'API-access', included: true },
+    { text: 'Riskrapporter & statistik', included: true },
+    { text: 'Flera områden/städer', included: true },
+    { text: 'White-label vid behov', included: true },
+    { text: 'Dedikerad support', included: true },
+    { text: 'Avancerade notiser', included: true }],
+
+    cta: 'Kontakta oss',
+    ctaStyle: 'bg-muted text-foreground hover:bg-muted/80',
+    action: undefined
+  }];
+
 
   const proFeatures = [
-    { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
-    { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
-    { icon: MessageSquare, text: 'CrimeAlert AI-chatt' },
-    { icon: Clock, text: 'Full historik (30+ dagar)' },
-    { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
-    { icon: EyeOff, text: 'Ingen reklam' },
-    { icon: FileText, text: 'Export PDF/CSV' },
-  ];
+  { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
+  { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
+  { icon: MessageSquare, text: 'CrimeAlert AI-chatt' },
+  { icon: Clock, text: 'Full historik (30+ dagar)' },
+  { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
+  { icon: EyeOff, text: 'Ingen reklam' },
+  { icon: FileText, text: 'Export PDF/CSV' }];
+
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -259,15 +259,15 @@ const Account = () => {
                     <Icon className="w-3.5 h-3.5 text-primary" />
                   </div>
                   <span className="text-xs text-foreground font-medium">{f.text}</span>
-                </li>
-              );
+                </li>);
+
             })}
           </ul>
 
           <button
             onClick={() => setShowWelcome(false)}
-            className="w-full py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition"
-          >
+            className="w-full py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition">
+            
             Börja utforska
           </button>
         </DialogContent>
@@ -287,17 +287,17 @@ const Account = () => {
               <button
                 onClick={() => setTheme('light')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
-                  theme === 'light' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
+                theme === 'light' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`
+                }>
+                
                 <Sun className="w-3 h-3" /> Ljust
               </button>
               <button
                 onClick={() => setTheme('dark')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
-                  theme === 'dark' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
+                theme === 'dark' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`
+                }>
+                
                 <Moon className="w-3 h-3" /> Mörkt
               </button>
             </div>
@@ -313,21 +313,21 @@ const Account = () => {
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-                billingCycle === 'monthly'
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
+              billingCycle === 'monthly' ?
+              'bg-primary/10 text-primary border border-primary/20' :
+              'text-muted-foreground hover:text-foreground'}`
+              }>
+              
               Månad
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-                billingCycle === 'yearly'
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
+              billingCycle === 'yearly' ?
+              'bg-primary/10 text-primary border border-primary/20' :
+              'text-muted-foreground hover:text-foreground'}`
+              }>
+              
               År
               <span className="ml-1.5 text-[9px] bg-cr-green/20 text-cr-green px-1.5 py-0.5 rounded-full font-bold">
                 -48%
@@ -343,20 +343,20 @@ const Account = () => {
                 <div
                   key={tier.name}
                   className={`bg-card border ${tier.border} rounded-lg p-4 relative flex flex-col ${
-                    tier.badge === 'DIN PLAN' || tier.badge === 'POPULÄR' ? 'glow-red' : ''
-                  }`}
-                >
-                  {tier.badge && (
-                    <div className={`absolute -top-2 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      tier.badge === 'DIN PLAN'
-                        ? 'bg-cr-green text-white'
-                        : tier.badge === 'POPULÄR'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-cr-blue/20 text-cr-blue'
-                    }`}>
+                  tier.badge === 'DIN PLAN' || tier.badge === 'POPULÄR' ? 'glow-red' : ''}`
+                  }>
+                  
+                  {tier.badge &&
+                  <div className={`absolute -top-2 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                  tier.badge === 'DIN PLAN' ?
+                  'bg-cr-green text-white' :
+                  tier.badge === 'POPULÄR' ?
+                  'bg-primary text-primary-foreground' :
+                  'bg-cr-blue/20 text-cr-blue'}`
+                  }>
                       {tier.badge}
                     </div>
-                  )}
+                  }
 
                   <div className="flex items-center gap-2 mb-3">
                     <Icon className={`w-4 h-4 ${tier.iconColor}`} />
@@ -368,88 +368,88 @@ const Account = () => {
                   <div className="mb-3">
                     <span className="text-lg font-bold font-mono text-foreground">{tier.price}</span>
                     {tier.period && <span className="text-xs text-muted-foreground">{tier.period}</span>}
-                    {tier.savings && (
-                      <div className="text-[10px] text-cr-green font-medium mt-0.5">{tier.savings}</div>
-                    )}
+                    {tier.savings &&
+                    <div className="text-[10px] text-cr-green font-medium mt-0.5">{tier.savings}</div>
+                    }
                   </div>
 
                   <ul className="text-[11px] text-muted-foreground space-y-1.5 flex-1 mb-4">
-                    {tier.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        {f.included ? (
-                          <Check className="w-3 h-3 text-cr-green shrink-0 mt-0.5" />
-                        ) : (
-                          <X className="w-3 h-3 text-muted-foreground/30 shrink-0 mt-0.5" />
-                        )}
+                    {tier.features.map((f, i) =>
+                    <li key={i} className="flex items-start gap-1.5">
+                        {f.included ?
+                      <Check className="w-3 h-3 text-cr-green shrink-0 mt-0.5" /> :
+
+                      <X className="w-3 h-3 text-muted-foreground/30 shrink-0 mt-0.5" />
+                      }
                         <span className={f.included ? '' : 'text-muted-foreground/30'}>{f.text}</span>
                       </li>
-                    ))}
+                    )}
                   </ul>
 
                   <button
                     onClick={tier.action}
                     disabled={!tier.action || checkoutLoading}
-                    className={`w-full px-4 py-2 rounded-md text-xs font-semibold transition ${tier.ctaStyle} disabled:opacity-50`}
-                  >
+                    className={`w-full px-4 py-2 rounded-md text-xs font-semibold transition ${tier.ctaStyle} disabled:opacity-50`}>
+                    
                     {checkoutLoading && tier.action === handleCheckout ? 'Laddar...' : tier.cta}
                   </button>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
 
           {/* Reassurance line */}
           <p className="text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
-            Ingen bindningstid · Avsluta när du vill · Löper ut efter betald period
+            Avsluta när du vill · Löper ut efter betald period
           </p>
 
           {/* User section */}
-          {user ? (
-            <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+          {user ?
+          <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs text-foreground font-medium">{user.email}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isPremium
-                    ? subscription.subscriptionEnd
-                      ? `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}`
-                      : 'Pro aktiv'
-                    : 'Gratisplan'}
+                  {isPremium ?
+                subscription.subscriptionEnd ?
+                `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}` :
+                'Pro aktiv' :
+                'Gratisplan'}
                 </p>
               </div>
               <div className="flex gap-2">
-                {isPremium && (
-                  <button
-                    onClick={handleManageSubscription}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition"
-                  >
+                {isPremium &&
+              <button
+                onClick={handleManageSubscription}
+                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
+                
                     <CreditCard className="w-3 h-3" /> Hantera
                   </button>
-                )}
+              }
                 <button
-                  onClick={signOut}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition"
-                >
+                onClick={signOut}
+                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
+                
                   <LogOut className="w-3 h-3" /> Logga ut
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="bg-card border border-border rounded-lg p-4 text-center">
+            </div> :
+
+          <div className="bg-card border border-border rounded-lg p-4 text-center">
               <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
               <button
-                onClick={() => navigate('/auth')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2"
-              >
+              onClick={() => navigate('/auth')}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2">
+              
                 Logga in
               </button>
               <button
-                onClick={() => navigate('/auth?mode=signup')}
-                className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition"
-              >
+              onClick={() => navigate('/auth?mode=signup')}
+              className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition">
+              
                 Skapa konto
               </button>
             </div>
-          )}
+          }
 
           {/* Comparison table */}
           <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -458,15 +458,15 @@ const Account = () => {
             </div>
             <div className="divide-y divide-border text-[11px]">
               {[
-                ['Gratis', '15 min delay på händelser & push'],
-                ['Pro', 'Realtid – direkt utan fördröjning'],
-                ['Företag', 'Realtid + avancerade notiser & API'],
-              ].map(([plan, desc]) => (
-                <div key={plan} className="flex items-center px-4 py-2.5">
+              ['Gratis', '15 min delay på händelser & push'],
+              ['Pro', 'Realtid – direkt utan fördröjning'],
+              ['Företag', 'Realtid + avancerade notiser & API']].
+              map(([plan, desc]) =>
+              <div key={plan} className="flex items-center px-4 py-2.5">
                   <span className="font-medium text-foreground w-20">{plan}</span>
                   <span className="text-muted-foreground">{desc}</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -490,8 +490,8 @@ const Account = () => {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Account;
