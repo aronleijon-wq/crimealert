@@ -842,6 +842,8 @@ function extractAddressFromSummary(summary: string): string | null {
   candidates.sort((a, b) => a.priority - b.priority);
   return candidates[0].text;
 }
+// Global rate limiter for Nominatim (1 request per second)
+let lastNominatimRequest = 0;
 
 // Geocode with cache + Nominatim fallback — STRICTLY Sweden only
 async function geocodeWithNominatim(query: string): Promise<[number, number] | null> {
