@@ -22,7 +22,7 @@ const parseTime = (t: string): Date => {
 };
 
 const StatCard = ({ label, value, sub, icon: Icon, colorClass, tooltip }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;tooltip?: string;}) => {
-  const [showTooltip, setShowTooltip] = React.useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   return (
     <div className="bg-card border border-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
