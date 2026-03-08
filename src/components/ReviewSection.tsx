@@ -174,17 +174,17 @@ const ReviewSection = () => {
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <span className="text-xs font-bold text-foreground">Omdömen</span>
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-bold text-foreground">Omdömen</span>
         </div>
         {reviews.length > 0 && (
-          <span className="text-[10px] text-muted-foreground">{reviews.length} omdömen</span>
+          <span className="text-[9px] text-muted-foreground">{reviews.length} st</span>
         )}
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-3">
         {/* Rating summary */}
         {avgRating !== null && (
           <div className="flex items-center gap-5 pb-4 border-b border-border">
