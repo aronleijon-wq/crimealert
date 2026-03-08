@@ -2,8 +2,9 @@ import { useMemo, useEffect, useState, useRef } from 'react';
 import Header from '@/components/Header';
 
 import PremiumGate from '@/components/PremiumGate';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
+import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
@@ -21,11 +22,31 @@ const parseTime = (t: string): Date => {
   return new Date(t);
 };
 
+const STAT_TOOLTIPS: Record<string, string> = {
+  'Idag': 'Totalt antal polishändelser rapporterade sedan midnatt idag.',
+  'I perioden': 'Totalt antal polishändelser under vald tidsperiod.',
+  'Riskindex': 'Beräknas utifrån andelen hög- och medelriskhändelser. Skala 0–100 där högre värde = fler allvarliga händelser.',
+  'Hög risk': 'Antal händelser klassade som högrisk (t.ex. grov misshandel, skjutning, rån).',
+  'Mest aktiv tid': 'Den timme på dygnet med flest rapporterade händelser under vald period.',
+};
+
 const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;}) =>
 <div className="bg-card border border-border rounded-lg p-4">
     <div className="flex items-center justify-between mb-2">
       <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
-      <Icon className={`w-4 h-4 ${colorClass}`} />
+      <div className="flex items-center gap-1.5">
+        {STAT_TOOLTIPS[label] && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-xs">
+              {STAT_TOOLTIPS[label]}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        <Icon className={`w-4 h-4 ${colorClass}`} />
+      </div>
     </div>
     <div className={`text-2xl font-bold font-mono ${colorClass}`}>{value}</div>
     <span className="text-[10px] text-muted-foreground">{sub}</span>
@@ -417,7 +438,7 @@ const Analysis = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="dag" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                         <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                         <Area type="monotone" dataKey="incidenter" stroke="hsl(0, 100%, 62%)" fill="url(#redGrad)" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -438,7 +459,7 @@ const Analysis = () => {
                       <Cell key={entry.name} fill={entry.color} />
                           )}
                         </Pie>
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                       </PieChart>
                     </ResponsiveContainer>
                     ) : (
@@ -468,7 +489,7 @@ const Analysis = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
                         <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <Tooltip content={<ChartTooltip />} />
+                        <RechartsTooltip content={<ChartTooltip />} />
                         <Bar dataKey="antal" fill="hsl(210, 100%, 56%)" radius={[2, 2, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -537,7 +558,7 @@ const Analysis = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
                           <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                          <Tooltip content={<ChartTooltip />} />
+                          <RechartsTooltip content={<ChartTooltip />} />
                           <Legend wrapperStyle={{ fontSize: 10 }} />
                           {stats.timeProfileTypes.map((t) => (
                             <Bar key={t.key} dataKey={t.key} stackId="a" fill={t.color} radius={[0, 0, 0, 0]} />
