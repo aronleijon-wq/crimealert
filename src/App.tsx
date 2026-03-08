@@ -13,6 +13,7 @@ import Account from "./pages/Account";
 import Auth from "./pages/Auth";
 import Cookies from "./pages/Cookies";
 import Sekretesspolicy from "./pages/Sekretesspolicy";
+import Villkor from "./pages/Villkor";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
