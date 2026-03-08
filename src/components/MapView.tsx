@@ -30,7 +30,8 @@ const createMarkerIcon = (incident: Incident) => {
 
 const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
-  const color = getMapMarkerColor(incident);
+  const config = incidentTypeConfig[incident.type];
+  const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   // Safari can fail parsing some datetime formats, so rely on normalized status for pulse.
   const shouldPulse = isCommunityReport || incident.status === 'active';
 
