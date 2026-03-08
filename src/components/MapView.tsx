@@ -336,7 +336,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     });
 
     incidents.forEach((inc) => {
+      const isCommunityReport = inc.source === 'Medborgarrapport';
       const config = incidentTypeConfig[inc.type];
+      const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
       const key = coordKey(inc.lat, inc.lng);
       const totalAtLocation = coordGroups.get(key) || 1;
       const indexAtLocation = coordIndex.get(key) || 0;
@@ -356,13 +358,13 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         adjustedLng += Math.sin(angle) * radius;
       }
       
-      // Only show radius circle for recent incidents (under 2 hours)
+      // Show radius circle for recent incidents (under 3 hours) or community reports
       const ageMs = Date.now() - new Date(inc.time).getTime();
-      if (ageMs < 3 * 60 * 60 * 1000) {
+      if (isCommunityReport || ageMs < 3 * 60 * 60 * 1000) {
         const circle = L.circle([adjustedLat, adjustedLng], {
           radius: 500,
-          color: config.color,
-          fillColor: config.color,
+          color: color,
+          fillColor: color,
           fillOpacity: 0.08,
           weight: 1,
           opacity: 0.3,
