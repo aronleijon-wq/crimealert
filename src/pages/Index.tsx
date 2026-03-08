@@ -121,15 +121,6 @@ const Index = () => {
         {/* Incident sidebar */}
         {!isFullscreen && (!isMobile || mobileListOpen) && (
           <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
-            {isMobile && (
-              <button
-                onClick={() => setMobileListOpen(false)}
-                className="absolute top-2 right-2 z-10 p-1 rounded hover:bg-muted text-muted-foreground"
-                title="Stäng listan"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ? (
