@@ -34,15 +34,6 @@ const ContactSection = () => {
         <Send className="w-3.5 h-3.5" />
         stefanlasse67@gmail.com
       </a>
-    </div>
-          disabled={sending}
-          className="flex items-center justify-center gap-1.5 w-full px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
-        >
-          <Send className="w-3 h-3" />
-          {sending ? 'Skickar...' : sent ? 'Skickat ✓' : 'Skicka meddelande'}
-        </button>
-      </form>
-    </div>
   );
 };
 
