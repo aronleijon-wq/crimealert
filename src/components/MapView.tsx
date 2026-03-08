@@ -20,15 +20,13 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
-const LOW_CONTRAST_MARKER_FALLBACK = 'hsl(var(--cr-orange))';
 
-const getMapMarkerColor = (incident: Incident) => {
+const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
-  if (isCommunityReport) return COMMUNITY_REPORT_COLOR;
-
   const config = incidentTypeConfig[incident.type];
-  return incident.type === 'other' ? LOW_CONTRAST_MARKER_FALLBACK : config.color;
-};
+  const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
+  // Safari can fail parsing some datetime formats, so rely on normalized status for pulse.
+  const shouldPulse = isCommunityReport || incident.status === 'active';
 
 const createMarkerIcon = (incident: Incident) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
