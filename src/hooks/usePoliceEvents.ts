@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePoliceEvents() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -23,13 +24,15 @@ export function usePoliceEvents() {
     setError(null);
 
     try {
+      // Get current session token for server-side premium check
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      };
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/police-events`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-        }
+        { headers }
       );
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
