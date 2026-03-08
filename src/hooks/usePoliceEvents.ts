@@ -3,7 +3,7 @@ import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-export function usePoliceEvents() {
+export function usePoliceEvents(pollIntervalMs = 60_000) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export function usePoliceEvents() {
 
   useEffect(() => {
     fetchEvents();
-    const interval = setInterval(() => fetchEvents(true), 60 * 1000);
+    const interval = setInterval(() => fetchEvents(true), pollIntervalMs);
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') fetchEvents(true);
@@ -94,7 +94,7 @@ export function usePoliceEvents() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [fetchEvents]);
+  }, [fetchEvents, pollIntervalMs]);
 
   return { incidents, loading, error, refetch: () => fetchEvents(false, true), dataVersion, totalEverSeen };
 }
