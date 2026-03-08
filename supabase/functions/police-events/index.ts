@@ -928,6 +928,41 @@ function isLikelyCountyCentroid(lat: number, lng: number, locationName: string):
   return false;
 }
 
+// ── Scrape detail page for full description with updates ──
+async function scrapeEventDetail(eventUrl: string): Promise<string | null> {
+  try {
+    const fullUrl = eventUrl.startsWith('http') ? eventUrl : `https://polisen.se${eventUrl}`;
+    const resp = await fetch(fullUrl, {
+      headers: { 'Accept': 'text/html', 'User-Agent': 'CrimeAlert/1.0' },
+    });
+    if (!resp.ok) return null;
+    const html = await resp.text();
+
+    // Extract content from <div class="text-body editorial-html">...</div>
+    const match = html.match(/<div\s+class="text-body\s+editorial-html"[^>]*>([\s\S]*?)<\/div>/i);
+    if (!match) return null;
+
+    // Strip HTML tags and clean up whitespace
+    let text = match[1]
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    return text || null;
+  } catch (e) {
+    console.warn(`Failed to scrape detail page: ${eventUrl}`, e);
+    return null;
+  }
+}
+
 function classifyEvent(type: string): string {
   const lower = type.toLowerCase();
   if (lower.includes('brand') || lower.includes('rökutveckling')) return 'fire';
@@ -1136,6 +1171,44 @@ serve(async (req) => {
         new Promise(resolve => setTimeout(resolve, 5000)),
       ]);
     }
+
+    // ── Scrape detail pages for full descriptions with updates ──
+    // Only scrape events from the last 3 days to keep response time reasonable
+    const now = Date.now();
+    const scrape3dCutoff = now - 3 * 24 * 60 * 60 * 1000;
+    const scrapeTargets = incidents.filter((i: any) => {
+      try {
+        const t = new Date(i.time).getTime();
+        return !isNaN(t) && t >= scrape3dCutoff && i.url;
+      } catch { return false; }
+    });
+
+    // Scrape in batches of 10 to avoid overwhelming polisen.se
+    const BATCH_SIZE = 10;
+    const scrapeResults = new Map<string, string>();
+    
+    for (let b = 0; b < scrapeTargets.length; b += BATCH_SIZE) {
+      const batch = scrapeTargets.slice(b, b + BATCH_SIZE);
+      const batchPromises = batch.map(async (inc: any) => {
+        const detail = await scrapeEventDetail(inc.url);
+        if (detail && detail.length > (inc.description || '').length) {
+          scrapeResults.set(inc.id, detail);
+        }
+      });
+      await Promise.race([
+        Promise.all(batchPromises),
+        new Promise(resolve => setTimeout(resolve, 4000)),
+      ]);
+    }
+
+    // Apply scraped descriptions
+    for (const inc of incidents) {
+      const scraped = scrapeResults.get(inc.id);
+      if (scraped) {
+        inc.description = scraped;
+      }
+    }
+    console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
 
     let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
 
