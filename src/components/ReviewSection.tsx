@@ -258,15 +258,15 @@ const ReviewSection = () => {
 
         {/* Reviews list */}
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className="animate-pulse bg-muted/30 rounded-xl h-20" />
+              <div key={i} className="animate-pulse bg-muted/20 rounded-lg h-14" />
             ))}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-8">
-            <MessageSquare className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Inga omdömen ännu. Bli först!</p>
+          <div className="text-center py-5">
+            <MessageSquare className="w-6 h-6 text-muted-foreground/15 mx-auto mb-1.5" />
+            <p className="text-[10px] text-muted-foreground/50">Inga omdömen ännu. Bli först!</p>
           </div>
         ) : (
           <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
