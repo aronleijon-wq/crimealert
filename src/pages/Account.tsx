@@ -10,11 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import ReviewSection from '@/components/ReviewSection';
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, 'Namn krävs').max(100),
-  email: z.string().trim().email('Ogiltig e-postadress').max(255),
-  message: z.string().trim().min(1, 'Meddelande krävs').max(1000, 'Max 1000 tecken'),
-});
+
 
 const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
 const PREMIUM_PRICE_YEARLY = 'price_1T2cciC5T1wZbLBJfPgzHr4v';
