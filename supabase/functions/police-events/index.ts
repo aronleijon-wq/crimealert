@@ -942,7 +942,7 @@ async function scrapeEventDetail(eventUrl: string): Promise<string | null> {
     const match = html.match(/<div\s+class="text-body\s+editorial-html"[^>]*>([\s\S]*?)<\/div>/i);
     if (!match) return null;
 
-    // Strip HTML tags and clean up whitespace
+    // Strip HTML tags and decode entities
     let text = match[1]
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
@@ -953,6 +953,18 @@ async function scrapeEventDetail(eventUrl: string): Promise<string | null> {
       .replace(/&gt;/gi, '>')
       .replace(/&quot;/gi, '"')
       .replace(/&#39;/gi, "'")
+      .replace(/&auml;/gi, 'ä')
+      .replace(/&ouml;/gi, 'ö')
+      .replace(/&aring;/gi, 'å')
+      .replace(/&Auml;/gi, 'Ä')
+      .replace(/&Ouml;/gi, 'Ö')
+      .replace(/&Aring;/gi, 'Å')
+      .replace(/&eacute;/gi, 'é')
+      .replace(/&uuml;/gi, 'ü')
+      .replace(/&#\d+;/g, (m) => {
+        const code = parseInt(m.replace(/&#|;/g, ''));
+        return String.fromCharCode(code);
+      })
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
