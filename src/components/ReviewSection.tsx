@@ -212,42 +212,39 @@ const ReviewSection = () => {
 
         {/* Submit form */}
         {user ? (
-          <form onSubmit={handleSubmit} className="space-y-3 pb-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className={`shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(displayName || user.email || 'U')} flex items-center justify-center`}>
-                <span className="text-[10px] font-bold text-primary-foreground">
-                  {displayName ? getInitials(displayName) : <UserCircle className="w-4 h-4" />}
+          <form onSubmit={handleSubmit} className="space-y-2 pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <div className={`shrink-0 w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(displayName || user.email || 'U')} flex items-center justify-center`}>
+                <span className="text-[8px] font-bold text-primary-foreground">
+                  {displayName ? getInitials(displayName) : <UserCircle className="w-3 h-3" />}
                 </span>
               </div>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Ditt namn (valfritt)"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  maxLength={50}
-                  className="w-full px-3 py-1.5 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition"
-                />
+              <input
+                type="text"
+                placeholder="Ditt namn (valfritt)"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={50}
+                className="flex-1 px-2.5 py-1 bg-muted/30 border border-border/50 rounded-md text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
+              />
+              <div className="flex items-center gap-1">
+                <StarRating rating={rating} onRate={setRating} interactive />
               </div>
-            </div>
-            <div className="flex items-center gap-2 px-1">
-              <span className="text-[10px] text-muted-foreground">Betyg:</span>
-              <StarRating rating={rating} onRate={setRating} interactive size="md" />
             </div>
             <textarea
               placeholder="Berätta om din upplevelse..."
-              rows={3}
+              rows={2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={500}
-              className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none transition"
+              className="w-full px-2.5 py-1.5 bg-muted/30 border border-border/50 rounded-md text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none transition"
             />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">{message.length}/500</span>
+              <span className="text-[9px] text-muted-foreground/40">{message.length}/500</span>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-[10px] font-semibold hover:bg-primary/90 transition disabled:opacity-50"
               >
                 {submitting ? 'Skickar...' : 'Publicera omdöme'}
               </button>
