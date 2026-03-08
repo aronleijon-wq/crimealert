@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, MessageSquare, Trash2, Quote, UserCircle } from 'lucide-react';
+import { Star, MessageSquare, Trash2, UserCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -63,22 +63,20 @@ const timeAgoShort = (dateStr: string) => {
 };
 
 const ReviewCard = ({ review, canDelete, onDelete }: { review: Review; canDelete: boolean; onDelete: () => void }) => (
-  <div className="group relative bg-muted/30 hover:bg-muted/50 border border-border/50 rounded-xl p-4 transition-all duration-200">
-    <Quote className="absolute top-3 right-3 w-5 h-5 text-muted-foreground/10" />
-    
-    <div className="flex items-start gap-3">
-      <div className={`shrink-0 w-9 h-9 rounded-full bg-gradient-to-br ${getAvatarColor(review.display_name)} flex items-center justify-center`}>
-        <span className="text-[11px] font-bold text-primary-foreground">{getInitials(review.display_name)}</span>
+  <div className="group relative bg-muted/20 hover:bg-muted/40 border border-border/30 rounded-lg p-3 transition-all duration-200">
+    <div className="flex items-start gap-2.5">
+      <div className={`shrink-0 w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarColor(review.display_name)} flex items-center justify-center`}>
+        <span className="text-[9px] font-bold text-primary-foreground">{getInitials(review.display_name)}</span>
       </div>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-foreground truncate">{review.display_name}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-foreground truncate">{review.display_name}</span>
             <StarRating rating={review.rating} />
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-muted-foreground">{timeAgoShort(review.created_at)}</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] text-muted-foreground/60">{timeAgoShort(review.created_at)}</span>
             {canDelete && (
               <button onClick={onDelete} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all">
                 <Trash2 className="w-3 h-3" />
@@ -86,7 +84,7 @@ const ReviewCard = ({ review, canDelete, onDelete }: { review: Review; canDelete
             )}
           </div>
         </div>
-        <p className="text-[12px] text-muted-foreground mt-1.5 leading-relaxed">{review.message}</p>
+        <p className="text-[11px] text-muted-foreground/80 mt-1 leading-relaxed">{review.message}</p>
       </div>
     </div>
   </div>
@@ -176,37 +174,36 @@ const ReviewSection = () => {
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <span className="text-xs font-bold text-foreground">Omdömen</span>
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-bold text-foreground">Omdömen</span>
         </div>
         {reviews.length > 0 && (
-          <span className="text-[10px] text-muted-foreground">{reviews.length} omdömen</span>
+          <span className="text-[9px] text-muted-foreground">{reviews.length} st</span>
         )}
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-3">
         {/* Rating summary */}
         {avgRating !== null && (
-          <div className="flex items-center gap-5 pb-4 border-b border-border">
+          <div className="flex items-center gap-4 pb-3 border-b border-border/50">
             <div className="text-center">
-              <div className="text-3xl font-bold font-mono-data text-foreground">{avgRating.toFixed(1)}</div>
-              <StarRating rating={Math.round(avgRating)} size="md" />
-              <div className="text-[10px] text-muted-foreground mt-1">{reviews.length} st</div>
+              <div className="text-xl font-bold font-mono text-foreground">{avgRating.toFixed(1)}</div>
+              <StarRating rating={Math.round(avgRating)} />
+              <div className="text-[9px] text-muted-foreground/60 mt-0.5">{reviews.length} st</div>
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-0.5">
               {ratingDist.map(({ star, count, pct }) => (
-                <div key={star} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-3 text-right">{star}</span>
-                  <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div key={star} className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-muted-foreground/60 w-2 text-right">{star}</span>
+                  <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-yellow-400 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground w-4">{count}</span>
+                  <span className="text-[9px] text-muted-foreground/40 w-3">{count}</span>
                 </div>
               ))}
             </div>
@@ -215,67 +212,64 @@ const ReviewSection = () => {
 
         {/* Submit form */}
         {user ? (
-          <form onSubmit={handleSubmit} className="space-y-3 pb-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className={`shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(displayName || user.email || 'U')} flex items-center justify-center`}>
-                <span className="text-[10px] font-bold text-primary-foreground">
-                  {displayName ? getInitials(displayName) : <UserCircle className="w-4 h-4" />}
+          <form onSubmit={handleSubmit} className="space-y-2 pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <div className={`shrink-0 w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(displayName || user.email || 'U')} flex items-center justify-center`}>
+                <span className="text-[8px] font-bold text-primary-foreground">
+                  {displayName ? getInitials(displayName) : <UserCircle className="w-3 h-3" />}
                 </span>
               </div>
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Ditt namn (valfritt)"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  maxLength={50}
-                  className="w-full px-3 py-1.5 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition"
-                />
+              <input
+                type="text"
+                placeholder="Ditt namn (valfritt)"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={50}
+                className="flex-1 px-2.5 py-1 bg-muted/30 border border-border/50 rounded-md text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition"
+              />
+              <div className="flex items-center gap-1">
+                <StarRating rating={rating} onRate={setRating} interactive />
               </div>
-            </div>
-            <div className="flex items-center gap-2 px-1">
-              <span className="text-[10px] text-muted-foreground">Betyg:</span>
-              <StarRating rating={rating} onRate={setRating} interactive size="md" />
             </div>
             <textarea
               placeholder="Berätta om din upplevelse..."
-              rows={3}
+              rows={2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={500}
-              className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none transition"
+              className="w-full px-2.5 py-1.5 bg-muted/30 border border-border/50 rounded-md text-[11px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none transition"
             />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">{message.length}/500</span>
+              <span className="text-[9px] text-muted-foreground/40">{message.length}/500</span>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-[10px] font-semibold hover:bg-primary/90 transition disabled:opacity-50"
               >
                 {submitting ? 'Skickar...' : 'Publicera omdöme'}
               </button>
             </div>
           </form>
         ) : (
-          <p className="text-[11px] text-muted-foreground pb-4 border-b border-border">
+          <p className="text-[10px] text-muted-foreground/60 pb-3 border-b border-border/50">
             Logga in för att lämna ett omdöme.
           </p>
         )}
 
         {/* Reviews list */}
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className="animate-pulse bg-muted/30 rounded-xl h-20" />
+              <div key={i} className="animate-pulse bg-muted/20 rounded-lg h-14" />
             ))}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-8">
-            <MessageSquare className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">Inga omdömen ännu. Bli först!</p>
+          <div className="text-center py-5">
+            <MessageSquare className="w-6 h-6 text-muted-foreground/15 mx-auto mb-1.5" />
+            <p className="text-[10px] text-muted-foreground/50">Inga omdömen ännu. Bli först!</p>
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-0.5">
             {reviews.map((r) => (
               <ReviewCard
                 key={r.id}
