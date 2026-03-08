@@ -466,7 +466,7 @@ const Account = () => {
           </div>
 
           {/* Contact form */}
-          <ContactForm />
+          <ContactSection />
 
           {/* Reviews */}
           <ReviewSection />
