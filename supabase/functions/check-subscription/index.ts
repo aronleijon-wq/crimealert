@@ -103,6 +103,21 @@ serve(async (req) => {
     const eligibleStatuses: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
     const priorityOrder: Stripe.Subscription.Status[] = ['active', 'trialing', 'past_due', 'canceled'];
     const nowSec = Math.floor(Date.now() / 1000);
+
+    const getSubPeriodEndSec = (sub: Stripe.Subscription): number | null => {
+      const rawPeriodEnd = (sub as any).current_period_end ?? (sub as any).cancel_at ?? (sub as any).trial_end;
+      const periodEndSec = Number(rawPeriodEnd);
+      return Number.isFinite(periodEndSec) && periodEndSec > 0 ? periodEndSec : null;
+    };
+
+    const isSubscriptionValidNow = (sub: Stripe.Subscription): boolean => {
+      const periodEndSec = getSubPeriodEndSec(sub);
+      if (periodEndSec !== null) return periodEndSec > nowSec;
+
+      // Fallback: some Stripe list responses may omit period end fields; trust active-like statuses.
+      return sub.status === 'active' || sub.status === 'trialing' || sub.status === 'past_due';
+    };
+
     let validSub: Stripe.Subscription | null = null;
 
     for (const customer of customers.data) {
