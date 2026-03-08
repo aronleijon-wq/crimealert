@@ -87,6 +87,13 @@ const Account = () => {
 
   const isPremium = subscription.subscribed && (
   subscription.productId === PREMIUM_PRODUCT_ID || subscription.productId === PREMIUM_PRODUCT_ID_YEARLY);
+  const subscriptionDaysLeft = subscription.subscriptionEnd ?
+  (() => {
+    const msUntilEnd = new Date(subscription.subscriptionEnd).getTime() - Date.now();
+    if (Number.isNaN(msUntilEnd)) return null;
+    return Math.max(0, Math.ceil(msUntilEnd / (1000 * 60 * 60 * 24)));
+  })() :
+  null;
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -411,7 +418,7 @@ const Account = () => {
                 <p className="text-[10px] text-muted-foreground">
                   {isPremium ?
                 subscription.subscriptionEnd ?
-                `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}` :
+                `Pro aktiv t.o.m. ${new Date(subscription.subscriptionEnd).toLocaleDateString('sv-SE')}${subscriptionDaysLeft !== null ? ` (${subscriptionDaysLeft} dagar kvar)` : ''}` :
                 'Pro aktiv' :
                 'Gratisplan'}
                 </p>
