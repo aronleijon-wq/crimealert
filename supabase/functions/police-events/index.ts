@@ -1237,8 +1237,8 @@ serve(async (req) => {
         })
         .map((i: any) => ({
           ...i,
-          // Strip detailed description for free users
-          description: i.description ? i.description.substring(0, 60) + '…' : '',
+          // Remove description entirely for free users
+          description: '',
         }));
       console.log(`Premium filter applied: ${validIncidents.length} incidents after 15min delay + description truncation`);
     }
