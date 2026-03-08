@@ -251,7 +251,7 @@ const ReviewSection = () => {
             </div>
           </form>
         ) : (
-          <p className="text-[11px] text-muted-foreground pb-4 border-b border-border">
+          <p className="text-[10px] text-muted-foreground/60 pb-3 border-b border-border/50">
             Logga in för att lämna ett omdöme.
           </p>
         )}
