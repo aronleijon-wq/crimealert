@@ -146,21 +146,7 @@ const Account = () => {
   };
 
   const handleManageSubscription = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('Ingen portal-URL mottagen');
-      }
-    } catch (err: any) {
-      toast({
-        title: 'Fel',
-        description: err?.message || 'Kunde inte öppna kundportalen.',
-        variant: 'destructive',
-      });
-    }
+    window.location.href = CUSTOMER_PORTAL_LOGIN_URL;
   };
 
   const tiers = [
