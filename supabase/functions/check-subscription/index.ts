@@ -164,16 +164,16 @@ serve(async (req) => {
     let subscriptionEnd: string | null = null;
 
     if (hasActiveSub && validSub) {
-      const periodEndSec = Number(validSub.current_period_end);
-      if (Number.isFinite(periodEndSec) && periodEndSec > 0) {
+      const periodEndSec = getSubPeriodEndSec(validSub);
+      if (periodEndSec !== null) {
         const parsedEnd = new Date(periodEndSec * 1000);
         if (!Number.isNaN(parsedEnd.getTime())) {
           subscriptionEnd = parsedEnd.toISOString();
         } else {
-          logStep("Invalid current_period_end date", { value: validSub.current_period_end });
+          logStep("Invalid derived subscription end date", { value: periodEndSec });
         }
       } else {
-        logStep("Missing or invalid current_period_end", { value: validSub.current_period_end });
+        logStep("No period_end/cancel_at/trial_end available on valid subscription", { id: validSub.id, status: validSub.status });
       }
 
       const priceProduct = validSub.items?.data?.[0]?.price?.product;
