@@ -436,32 +436,34 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           border: none !important;
         }
         .marker-pulse {
-          opacity: 0.3;
+          position: absolute;
+          border-radius: 50%;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-          will-change: opacity, transform;
+          will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; -webkit-transform: scale(1); transform: scale(1); }
-          50% { opacity: 0; -webkit-transform: scale(2.8); transform: scale(2.8); }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         @keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0; transform: scale(2.8); }
+          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; }
+          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; }
         }
         .marker-pulse-community {
-          opacity: 0.35;
+          position: absolute;
+          border-radius: 4px;
           -webkit-animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
           animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
-          will-change: opacity, transform;
+          will-change: opacity, width, height, top, left;
         }
         @-webkit-keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; -webkit-transform: rotate(45deg) scale(1); transform: rotate(45deg) scale(1); }
-          50% { opacity: 0; -webkit-transform: rotate(45deg) scale(2.5); transform: rotate(45deg) scale(2.5); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
         }
         @keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; transform: rotate(45deg) scale(1); }
-          50% { opacity: 0; transform: rotate(45deg) scale(2.5); }
+          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
+          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; transform: rotate(45deg); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
