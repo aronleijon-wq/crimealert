@@ -27,8 +27,26 @@ const createMarkerIcon = (incident: Incident) => {
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   const ageMs = Date.now() - new Date(incident.time).getTime();
   const isRecent = ageMs < 3 * 60 * 60 * 1000; // under 3 hours
-  // Community reports always get the large pulsing style
   const shouldPulse = isCommunityReport || isRecent;
+
+  if (isCommunityReport) {
+    // Diamond shape for community reports — always large & pulsing
+    const size = 18;
+    const pulseSize = size + 20;
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
+          <div class="marker-pulse-community" style="position:absolute;inset:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
+          <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
+          <span style="position:absolute;z-index:3;font-size:10px;line-height:1;pointer-events:none;">👁️</span>
+        </div>
+      `,
+      iconSize: [pulseSize, pulseSize],
+      iconAnchor: [pulseSize / 2, pulseSize / 2],
+    });
+  }
+
   const size = shouldPulse ? 14 : 10;
   const pulseSize = size + 16;
 
