@@ -19,19 +19,25 @@ const TYPE_ICONS: Record<string, string> = {
   other: '⚠️',
 };
 
+const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
+
 const createMarkerIcon = (incident: Incident) => {
+  const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
+  const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   const ageMs = Date.now() - new Date(incident.time).getTime();
   const isRecent = ageMs < 3 * 60 * 60 * 1000; // under 3 hours
-  const size = isRecent ? 14 : 10;
+  // Community reports always get the large pulsing style
+  const shouldPulse = isCommunityReport || isRecent;
+  const size = shouldPulse ? 14 : 10;
   const pulseSize = size + 16;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-        ${isRecent ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${config.color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${config.color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${config.color}80;"></div>
+        ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;inset:0;border-radius:50%;background:${color};"></div>` : ''}
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
     iconSize: [pulseSize, pulseSize],

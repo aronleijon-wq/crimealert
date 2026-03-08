@@ -46,7 +46,10 @@ const Index = () => {
   }, []);
 
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
-  const allIncidents = [...policeIncidents, ...communityReports];
+  // Community reports only visible for Pro members on the map/list
+  const allIncidents = isPremium
+    ? [...policeIncidents, ...communityReports]
+    : [...policeIncidents];
   const isLive = liveIncidents.length > 0;
 
   // Grova brott som alltid visas på kartan oavsett ålder
