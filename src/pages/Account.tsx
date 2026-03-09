@@ -411,7 +411,7 @@ const Account = () => {
                 <p className="text-[10px] text-muted-foreground">
                   {isPremium ?
                 subscription.subscriptionEnd ?
-                `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10).split('-').reverse().join('-')}` :
+                `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}` :
                 'Pro aktiv' :
                 'Gratisplan'}
                 </p>
