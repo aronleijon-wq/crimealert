@@ -24,7 +24,8 @@ const Index = () => {
   const [mobileListOpen, setMobileListOpen] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
-    return [...ALL_FILTERS];
+    // Non-logged-in users can't see 'other' incidents
+    return isLoggedIn ? [...ALL_FILTERS] : ALL_FILTERS.filter(f => f !== 'other');
   };
 
   const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
