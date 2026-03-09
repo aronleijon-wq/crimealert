@@ -77,7 +77,7 @@ serve(async (req) => {
         JSON.stringify({
           subscribed: true,
           product_id: "prod_U0dsMg8IZZKY7c",
-          subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_end: "lifetime",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
