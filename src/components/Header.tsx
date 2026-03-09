@@ -57,13 +57,23 @@ const Header = () => {
 
         })}
       </nav>
-
-      <div className="flex items-center gap-3">
-        
-
-
-
-      </div>
+      {/* Mobile nav - right aligned */}
+      <nav className="flex md:hidden items-center gap-[2px] ml-auto">
+        {navItems.map(({ to, label, icon: Icon }) => {
+          const active = location.pathname === to;
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              active ?
+              'bg-primary/10 text-primary border border-primary/20' :
+              'text-muted-foreground hover:text-foreground hover:bg-muted'}`
+              }>
+              <Icon className="w-3.5 h-3.5" />
+            </Link>);
+        })}
+      </nav>
     </header>);
 
 };
