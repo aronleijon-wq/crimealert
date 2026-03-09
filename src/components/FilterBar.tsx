@@ -185,7 +185,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium
               transition-all duration-200 whitespace-nowrap select-none
               ${isLocked
-                ? 'bg-transparent text-muted-foreground/40 cursor-pointer hover:bg-muted/30'
+                ? 'bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20'
                 : active
                   ? 'bg-muted text-foreground shadow-sm'
                   : 'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'
@@ -194,7 +194,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}
           >
             {isLocked ? (
-              <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+              <Lock className="w-3 h-3 text-primary shrink-0" />
             ) : (
               <span
                 className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
@@ -206,7 +206,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             
             <span className="leading-none">{config.label}</span>
             {isLocked && (
-              <span className="text-[9px] text-muted-foreground/50 font-normal">Gratis</span>
+              <span className="text-[9px] font-semibold opacity-75">🔒 Logga in</span>
             )}
           </button>
         );
