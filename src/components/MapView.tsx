@@ -467,17 +467,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         .marker-pulse-community {
           position: absolute;
           border-radius: 4px;
-          -webkit-animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
-          animation: marker-pulse-community-anim 1.8s ease-in-out infinite;
+          -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
+          animation: marker-pulse-anim 2s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
-        }
-        @-webkit-keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
-          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
-        }
-        @keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.35; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
-          50% { opacity: 0; width: 250%; height: 250%; top: -75%; left: -75%; transform: rotate(45deg); }
         }
         .leaflet-control-zoom a {
           background: hsl(0, 0%, 100%) !important;
