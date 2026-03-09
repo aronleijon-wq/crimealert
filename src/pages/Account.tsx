@@ -409,7 +409,9 @@ const Account = () => {
               <div>
                 <p className="text-xs text-foreground font-medium">{user.email}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isPremium ?
+                {isPremium ?
+                subscription.subscriptionEnd === 'lifetime' ?
+                'Pro livstid' :
                 subscription.subscriptionEnd ?
                 `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}` :
                 'Pro aktiv' :
