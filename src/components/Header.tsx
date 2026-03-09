@@ -25,7 +25,7 @@ const Header = () => {
 
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
+    <header className="h-14 border-b border-border bg-card flex items-center px-4 z-50 relative">
       <Link to="/" className="flex items-center gap-2.5 group">
         <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/f5451b06-87bc-40d2-80c9-00f484178e3e.png" />
         <div className="flex flex-col leading-none">
