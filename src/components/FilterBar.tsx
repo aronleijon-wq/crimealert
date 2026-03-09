@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
