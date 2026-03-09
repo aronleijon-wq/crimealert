@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
@@ -23,6 +25,9 @@ const TYPE_COLORS: Record<IncidentType, string> = {
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, onSearchLocation }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
+  const navigate = useNavigate();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -164,29 +169,45 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
         const config = incidentTypeConfig[type];
         const active = activeFilters.includes(type);
         const color = TYPE_COLORS[type];
+        const isLocked = type === 'other' && !isLoggedIn;
 
         return (
           <button
             key={type}
-            onClick={() => onToggleFilter(type)}
+            onClick={() => {
+              if (isLocked) {
+                navigate('/auth?mode=login');
+                return;
+              }
+              onToggleFilter(type);
+            }}
             className={`
               relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium
               transition-all duration-200 whitespace-nowrap select-none
-              ${active
-                ? 'bg-muted text-foreground shadow-sm'
-                : 'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'
+              ${isLocked
+                ? 'bg-transparent text-muted-foreground/40 cursor-pointer hover:bg-muted/30'
+                : active
+                  ? 'bg-muted text-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'
               }
             `}
-            title={config.label}
+            title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}
           >
-            <span
-              className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
-                active ? 'opacity-100' : 'opacity-40'
-              }`}
-              style={{ backgroundColor: color }}
-            />
+            {isLocked ? (
+              <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+            ) : (
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
+                  active ? 'opacity-100' : 'opacity-40'
+                }`}
+                style={{ backgroundColor: color }}
+              />
+            )}
             
             <span className="leading-none">{config.label}</span>
+            {isLocked && (
+              <span className="text-[9px] text-muted-foreground/50 font-normal">Gratis</span>
+            )}
           </button>
         );
       })}
