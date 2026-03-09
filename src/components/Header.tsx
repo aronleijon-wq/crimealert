@@ -25,7 +25,7 @@ const Header = () => {
 
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
+    <header className="h-14 border-b border-border bg-card flex items-center px-4 z-50 relative">
       <Link to="/" className="flex items-center gap-2.5 group">
         <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/f5451b06-87bc-40d2-80c9-00f484178e3e.png" />
         <div className="flex flex-col leading-none">
@@ -38,7 +38,7 @@ const Header = () => {
         </div>
       </Link>
 
-      <nav className="flex items-center px-0 mx-0 gap-[2px]">
+      <nav className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-[2px]">
         {navItems.map(({ to, label, icon: Icon }) => {
           const active = location.pathname === to;
           return (
@@ -57,13 +57,23 @@ const Header = () => {
 
         })}
       </nav>
-
-      <div className="flex items-center gap-3">
-        
-
-
-
-      </div>
+      {/* Mobile nav - right aligned */}
+      <nav className="flex md:hidden items-center gap-[2px] ml-auto">
+        {navItems.map(({ to, label, icon: Icon }) => {
+          const active = location.pathname === to;
+          return (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              active ?
+              'bg-primary/10 text-primary border border-primary/20' :
+              'text-muted-foreground hover:text-foreground hover:bg-muted'}`
+              }>
+              <Icon className="w-3.5 h-3.5" />
+            </Link>);
+        })}
+      </nav>
     </header>);
 
 };
