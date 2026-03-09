@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Radio, BarChart3, Bell, User, CreditCard, UserPlus } from 'lucide-react';
+import { Radio, BarChart3, Bell, User, CreditCard } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { useAuth } from '@/hooks/useAuth';
 
