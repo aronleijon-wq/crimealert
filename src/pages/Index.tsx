@@ -106,7 +106,28 @@ const Index = () => {
       {!isFullscreen && (
         <>
           <Header />
-          
+
+          {/* Public hero – visible to everyone, especially non-logged-in visitors */}
+          {!isLoggedIn && (
+            <section className="border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
+              <div className="max-w-3xl mx-auto text-center space-y-3">
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">
+                  Välkommen till <span className="text-primary">CrimeAlert</span>
+                </h1>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
+                  CrimeAlert hjälper dig att hålla koll på säkerheten i Sverige. Vi sammanställer och
+                  visualiserar offentliga händelser från Polisen i realtid på en interaktiv karta – helt
+                  gratis att använda.
+                </p>
+                <div className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Interaktiv karta</span>
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" /> Offentlig data från Polisen</span>
+                  <span className="flex items-center gap-1.5"><BellIcon className="w-3.5 h-3.5 text-primary" /> Notiser per kommun</span>
+                </div>
+              </div>
+            </section>
+          )}
+
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           <FilterBar
             activeFilters={activeFilters}
@@ -222,8 +243,8 @@ const Index = () => {
           </div>
         </div>
       </div>
-      
-      
+
+      {!isFullscreen && <Footer />}
     </div>
   );
 };
