@@ -34,7 +34,9 @@ const Sekretesspolicy = () => {
               <p>Vi samlar in följande typer av information:</p>
               <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>
-                  <strong>Kontoinformation:</strong> E-postadress vid registrering och inloggning.
+                  <strong>Kontoinformation:</strong> E-postadress och namn vid registrering och inloggning. Om du loggar in
+                  via Google OAuth samlar vi in din e-postadress och ditt namn från ditt Google-konto för att identifiera dig
+                  och tillhandahålla tjänsten.
                 </li>
                 <li>
                   <strong>Betalningsuppgifter:</strong> Hanteras av vår betalningsleverantör Stripe. Vi lagrar aldrig

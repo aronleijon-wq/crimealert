@@ -11,8 +11,9 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
-import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X } from 'lucide-react';
+import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Footer from '@/components/Footer';
 
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
 
