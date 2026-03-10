@@ -10,11 +10,11 @@ const Footer = () => (
       <nav className="flex items-center gap-4">
         <Link to="/sekretesspolicy" className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition">
           <Shield className="w-3 h-3" />
-          Integritetspolicy
+          Privacy policy
         </Link>
         <Link to="/villkor" className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition">
           <FileText className="w-3 h-3" />
-          Villkor
+          Terms of use
         </Link>
         <Link to="/cookies" className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition">
           <Cookie className="w-3 h-3" />
