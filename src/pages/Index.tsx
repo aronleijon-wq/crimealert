@@ -27,12 +27,12 @@ const Index = () => {
 
   const getDefaultFilters = (): IncidentType[] => {
     // Non-logged-in users can't see 'other' incidents
-    return isLoggedIn ? [...ALL_FILTERS] : ALL_FILTERS.filter(f => f !== 'other');
+    return isLoggedIn ? [...ALL_FILTERS] : ALL_FILTERS.filter((f) => f !== 'other');
   };
 
   const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom: number; _ts?: number } | null>(null);
+  const [flyToLocation, setFlyToLocation] = useState<{lat: number;lng: number;zoom: number;_ts?: number;} | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
   const { reports: communityReports } = useCommunityReports();
@@ -44,27 +44,27 @@ const Index = () => {
 
   const toggleFilter = useCallback((type: IncidentType) => {
     setActiveFilters((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   }, []);
 
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   // Community reports only visible for Pro members on the map/list
-  const allIncidents = isPremium
-    ? [...policeIncidents, ...communityReports]
-    : [...policeIncidents];
+  const allIncidents = isPremium ?
+  [...policeIncidents, ...communityReports] :
+  [...policeIncidents];
   const isLive = liveIncidents.length > 0;
 
   // Grova brott som alltid visas på kartan oavsett ålder
   const SEVERE_CRIME_KEYWORDS = [
-    'mord', 'dråp', 'skottlossning', 'skjutning', 'rån',
-    'våldtäkt', 'mordförsök', 'knivdåd', 'grov misshandel',
-    'sprängning', 'explosion', 'bombhot', 'kidnappning',
-    'dödligt våld', 'vapenbrott', 'terror',
-  ];
+  'mord', 'dråp', 'skottlossning', 'skjutning', 'rån',
+  'våldtäkt', 'mordförsök', 'knivdåd', 'grov misshandel',
+  'sprängning', 'explosion', 'bombhot', 'kidnappning',
+  'dödligt våld', 'vapenbrott', 'terror'];
+
 
   const isSevereCrime = (title: string) =>
-    SEVERE_CRIME_KEYWORDS.some((kw) => title.toLowerCase().includes(kw));
+  SEVERE_CRIME_KEYWORDS.some((kw) => title.toLowerCase().includes(kw));
 
   // Free users: 15 min delay on new incidents
   // Map: hide incidents older than 3 days UNLESS severe crime
@@ -89,13 +89,13 @@ const Index = () => {
 
   const filtered = useMemo(
     () =>
-      timeFiltered
-        .filter((i) => activeFilters.includes(i.type))
-        .sort((a, b) => {
-          const tA = new Date(a.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
-          const tB = new Date(b.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
-          return tB - tA;
-        }),
+    timeFiltered.
+    filter((i) => activeFilters.includes(i.type)).
+    sort((a, b) => {
+      const tA = new Date(a.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+      const tB = new Date(b.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+      return tB - tA;
+    }),
     [activeFilters, timeFiltered]
   );
 
@@ -104,18 +104,18 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {!isFullscreen && (
-        <>
+      {!isFullscreen &&
+      <>
           <Header />
 
           {/* Public hero – visible to everyone, especially non-logged-in visitors */}
-          {!isLoggedIn && !heroDismissed && (
-            <section className="relative border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
+          {!isLoggedIn && !heroDismissed &&
+        <section className="relative border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
               <button
-                onClick={() => setHeroDismissed(true)}
-                className="absolute top-2 right-2 p-1 rounded hover:bg-muted text-muted-foreground transition"
-                aria-label="Stäng"
-              >
+            onClick={() => setHeroDismissed(true)}
+            className="absolute top-2 right-2 p-1 rounded hover:bg-muted text-muted-foreground transition"
+            aria-label="Stäng">
+            
                 <X className="w-4 h-4" />
               </button>
               <div className="max-w-3xl mx-auto text-center space-y-3">
@@ -129,83 +129,83 @@ const Index = () => {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Interaktiv karta</span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" /> Offentlig data från Polisen</span>
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" />
+</span>
                   <span className="flex items-center gap-1.5"><BellIcon className="w-3.5 h-3.5 text-primary" /> Notiser per kommun</span>
                 </div>
               </div>
-            </section>
-          )}
+            </section>}
 
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           <FilterBar
-            activeFilters={activeFilters}
-            onToggleFilter={toggleFilter}
-            incidentCount={filtered.length}
-            activeCount={activeCount}
-            onSearchLocation={(lat, lng, zoom, name) => {
-              setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
-            }}
-          />
+          activeFilters={activeFilters}
+          onToggleFilter={toggleFilter}
+          incidentCount={filtered.length}
+          activeCount={activeCount}
+          onSearchLocation={(lat, lng, zoom, name) => {
+            setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
+          }} />
+        
         </>
-      )}
+      }
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
-        {!isFullscreen && (!isMobile || mobileListOpen) && (
-          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
+        {!isFullscreen && (!isMobile || mobileListOpen) &&
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {isPremium ? (
-                  <Wifi className="w-3 h-3 text-cr-green" />
-                ) : isLive ? (
-                  <Clock className="w-3 h-3 text-cr-orange" />
-                ) : (
-                  <WifiOff className="w-3 h-3 text-muted-foreground" />
-                )}
+                {isPremium ?
+              <Wifi className="w-3 h-3 text-cr-green" /> :
+              isLive ?
+              <Clock className="w-3 h-3 text-cr-orange" /> :
+
+              <WifiOff className="w-3 h-3 text-muted-foreground" />
+              }
                 <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-                  {isPremium
-                    ? 'Realtid — Polisen.se'
-                    : isLive
-                    ? '15 min fördröjning'
-                    : 'Demo-data'}
+                  {isPremium ?
+                'Realtid — Polisen.se' :
+                isLive ?
+                '15 min fördröjning' :
+                'Demo-data'}
                 </span>
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={refetch}
-                  disabled={loading}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground transition disabled:opacity-50"
-                  title="Uppdatera"
-                >
+                onClick={refetch}
+                disabled={loading}
+                className="p-1 rounded hover:bg-muted text-muted-foreground transition disabled:opacity-50"
+                title="Uppdatera">
+                
                   <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                 </button>
-                {isMobile && (
-                  <button
-                    onClick={() => setMobileListOpen(false)}
-                    className="p-1 rounded hover:bg-muted text-muted-foreground"
-                    title="Stäng listan"
-                  >
+                {isMobile &&
+              <button
+                onClick={() => setMobileListOpen(false)}
+                className="p-1 rounded hover:bg-muted text-muted-foreground"
+                title="Stäng listan">
+                
                     <X className="w-4 h-4" />
                   </button>
-                )}
+              }
               </div>
             </div>
-            {loading && liveIncidents.length === 0 ? (
-              <div className="p-4 text-center">
+            {loading && liveIncidents.length === 0 ?
+          <div className="p-4 text-center">
                 <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground mx-auto mb-2" />
                 <span className="text-[10px] font-mono text-muted-foreground">Hämtar data från Polisen.se...</span>
-              </div>
-            ) : (
-              filtered.map((inc) => (
-                <IncidentCard
-                  key={inc.id}
-                  incident={inc}
-                  selected={selectedId === inc.id}
-                  onClick={() => setSelectedId(selectedId === inc.id ? null : inc.id)}
-                />
-              ))
-            )}
+              </div> :
+
+          filtered.map((inc) =>
+          <IncidentCard
+            key={inc.id}
+            incident={inc}
+            selected={selectedId === inc.id}
+            onClick={() => setSelectedId(selectedId === inc.id ? null : inc.id)} />
+
+          )
+          }
           </div>
-        )}
+        }
 
         {/* Map */}
         <div className="flex-1 relative">
@@ -214,37 +214,37 @@ const Index = () => {
             selectedId={selectedId}
             onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
-            flyToLocation={flyToLocation}
-          />
+            flyToLocation={flyToLocation} />
+          
 
           {/* Mobile: show list button */}
-          {isMobile && !mobileListOpen && !isFullscreen && (
-            <button
-              onClick={() => setMobileListOpen(true)}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-muted transition text-foreground shadow-lg"
-            >
+          {isMobile && !mobileListOpen && !isFullscreen &&
+          <button
+            onClick={() => setMobileListOpen(true)}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-muted transition text-foreground shadow-lg">
+            
               <List className="w-4 h-4" />
               <span className="text-xs font-medium">{filtered.length} händelser</span>
             </button>
-          )}
+          }
 
           {/* Fullscreen toggle button */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="absolute top-3 right-14 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md p-1.5 hover:bg-muted transition text-muted-foreground"
-            title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}
-          >
+            title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}>
+            
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
           <div className="absolute top-3 left-3 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md px-3 py-1.5 flex items-center gap-2">
-            {isPremium ? (
-              <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" />
-            ) : isLive ? (
-              <div className="w-1.5 h-1.5 rounded-full bg-cr-orange animate-pulse-dot" />
-            ) : (
-              <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-            )}
+            {isPremium ?
+            <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" /> :
+            isLive ?
+            <div className="w-1.5 h-1.5 rounded-full bg-cr-orange animate-pulse-dot" /> :
+
+            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+            }
             <span className="text-[10px] font-mono text-muted-foreground">
               {isPremium ? 'REALTID' : isLive ? '15 MIN DELAY' : 'DEMO'} • {filtered.length} HÄNDELSER • <span className="text-cr-red">{activeCount} AKTIVA</span>
             </span>
@@ -253,8 +253,8 @@ const Index = () => {
       </div>
 
       {!isFullscreen && <Footer />}
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
