@@ -11,9 +11,9 @@ const Villkor = () => {
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
+            
+
+            
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">Användarvillkor</h1>
               <p className="text-xs text-muted-foreground">Senast uppdaterad: 7 mars 2026</p>
@@ -101,15 +101,15 @@ const Villkor = () => {
                 Din integritet är viktig för oss. Se vår{' '}
                 <button
                   onClick={() => navigate('/sekretesspolicy')}
-                  className="text-primary hover:underline font-medium"
-                >
+                  className="text-primary hover:underline font-medium">
+                  
                   sekretesspolicy
                 </button>{' '}
                 och{' '}
                 <button
                   onClick={() => navigate('/cookies')}
-                  className="text-primary hover:underline font-medium"
-                >
+                  className="text-primary hover:underline font-medium">
+                  
                   cookiepolicy
                 </button>{' '}
                 för mer information om hur vi hanterar dina uppgifter.
@@ -143,15 +143,15 @@ const Villkor = () => {
 
           <button
             onClick={() => navigate(-1)}
-            className="mt-10 inline-flex items-center gap-2 text-xs text-primary hover:underline font-medium"
-          >
+            className="mt-10 inline-flex items-center gap-2 text-xs text-primary hover:underline font-medium">
+            
             <ArrowLeft className="w-3.5 h-3.5" />
             Tillbaka
           </button>
         </article>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Villkor;
