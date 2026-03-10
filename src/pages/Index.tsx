@@ -109,8 +109,15 @@ const Index = () => {
           <Header />
 
           {/* Public hero – visible to everyone, especially non-logged-in visitors */}
-          {!isLoggedIn && (
-            <section className="border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
+          {!isLoggedIn && !heroDismissed && (
+            <section className="relative border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
+              <button
+                onClick={() => setHeroDismissed(true)}
+                className="absolute top-2 right-2 p-1 rounded hover:bg-muted text-muted-foreground transition"
+                aria-label="Stäng"
+              >
+                <X className="w-4 h-4" />
+              </button>
               <div className="max-w-3xl mx-auto text-center space-y-3">
                 <h1 className="text-lg sm:text-xl font-bold text-foreground">
                   Välkommen till <span className="text-primary">CrimeAlert</span>
