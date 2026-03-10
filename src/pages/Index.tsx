@@ -128,10 +128,9 @@ const Index = () => {
                   gratis att använda.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /> Interaktiv karta</span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" />
-</span>
-                  <span className="flex items-center gap-1.5"><BellIcon className="w-3.5 h-3.5 text-primary" /> Notiser per kommun</span>
+                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /></span>
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" /></span>
+                  <span className="flex items-center gap-1.5"><BellIcon className="w-3.5 h-3.5 text-primary" /></span>
                 </div>
               </div>
             </section>}
