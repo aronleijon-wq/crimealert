@@ -11,9 +11,9 @@ const Sekretesspolicy = () => {
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center gap-3 mb-8">
-            
-
-            
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-primary" />
+            </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-foreground">Sekretesspolicy</h1>
               <p className="text-xs text-muted-foreground">Senast uppdaterad: 7 mars 2026</p>
@@ -175,15 +175,15 @@ const Sekretesspolicy = () => {
           <div className="mt-10 pt-6 border-t border-border">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition">
-              
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
+            >
               <ArrowLeft className="w-4 h-4" /> Tillbaka till startsidan
             </button>
           </div>
         </article>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default Sekretesspolicy;
