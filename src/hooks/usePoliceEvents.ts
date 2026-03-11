@@ -83,7 +83,8 @@ export function usePoliceEvents() {
 
   useEffect(() => {
     fetchEvents();
-    const interval = setInterval(() => fetchEvents(true), 60 * 1000);
+    // Poll every 5 minutes instead of every 60s to reduce costs
+    const interval = setInterval(() => fetchEvents(true), 5 * 60 * 1000);
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') fetchEvents(true);
