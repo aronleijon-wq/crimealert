@@ -84,11 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) checkSubscription();
     });
 
-    // Refresh subscription every minute (only if logged in)
+    // Refresh subscription every 30 minutes (only if logged in)
     const interval = setInterval(async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (s?.user) checkSubscription();
-    }, 60000);
+    }, 30 * 60 * 1000);
 
     return () => {
       authSub.unsubscribe();
