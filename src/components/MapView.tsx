@@ -471,11 +471,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         @-webkit-keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 420%; height: 420%; top: -160%; left: -160%; }
+          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
         }
         @keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 420%; height: 420%; top: -160%; left: -160%; }
+          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
         }
         .marker-pulse-community {
           position: absolute;
