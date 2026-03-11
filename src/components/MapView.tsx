@@ -344,6 +344,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     mapRef.current = map;
     markersRef.current = L.layerGroup().addTo(map);
 
+    // Update pulse size CSS variable based on zoom
+    const updatePulseSize = () => {
+      const zoom = map.getZoom();
+      // Scale from 220% at zoom 5 to 500% at zoom 16
+      const pulsePct = Math.round(220 + (zoom - 5) * (280 / 11));
+      const clamped = Math.max(200, Math.min(550, pulsePct));
+      const offset = Math.round((clamped - 100) / 2);
+      containerRef.current?.style.setProperty('--pulse-size', `${clamped}%`);
+      containerRef.current?.style.setProperty('--pulse-offset', `-${offset}%`);
+    };
+    updatePulseSize();
+    map.on('zoomend', updatePulseSize);
+
     return () => {
       map.remove();
       mapRef.current = null;
