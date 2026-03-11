@@ -123,13 +123,15 @@ const Index = () => {
                   Välkommen till <span className="text-primary">CrimeAlert</span>
                 </h1>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-                  ​CrimeAlert hjälper dig att hålla koll på säkerheten i Sverige. Vi samlar och visualiserar offentliga händelser från Polisen i realtid på en interaktiv karta, så att du enkelt kan se vad som händer i ditt område.
-
-Vår vision är att göra information om trygghet mer tillgänglig och lätt att förstå. Genom smart teknik och tydlig visualisering vill vi skapa större transparens kring samhällshändelser.
+                  ​CrimeAlert hjälper dig att hålla koll på säkerheten i Sverige. Vi samlar och visualiserar offentliga händelser från Polisen i realtid på en interaktiv karta, så att du enkelt kan se vad som händer i ditt område. Vår vision är att göra information om trygghet mer tillgänglig och lätt att förstå. Genom smart teknik och tydlig visualisering vill vi skapa större transparens kring samhällshändelser. 
 
 CrimeAlert är ett oberoende projekt grundat av entreprenörer och utvecklare. Plattformen finns både i en gratisversion och i CrimeAlert Pro, som ger tillgång till fler funktioner och en ännu bättre överblick över händelser i Sverige.
                 
 
+            
+
+
+            
             </p>
                 <div className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /></span>
@@ -140,9 +142,7 @@ CrimeAlert är ett oberoende projekt grundat av entreprenörer och utvecklare. P
             </section>}
 
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
-          <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount}
-          onSearchLocation={(lat, lng, zoom, name) => {
-            setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
+          <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
         
         </>
