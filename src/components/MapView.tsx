@@ -369,39 +369,48 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    // Group incidents by coordinates to detect overlaps
-    const coordKey = (lat: number, lng: number) => `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    const coordGroups = new Map<string, number>();
-    const coordIndex = new Map<string, number>();
-    
-    // Count incidents per location
-    incidents.forEach((inc) => {
-      const key = coordKey(inc.lat, inc.lng);
-      coordGroups.set(key, (coordGroups.get(key) || 0) + 1);
-    });
+    // De-overlap: push markers apart so none visually overlap
+    const MIN_DIST = 0.004; // ~400m minimum separation in degrees
+    const positions = incidents.map((inc) => ({ lat: inc.lat, lng: inc.lng }));
 
-    incidents.forEach((inc) => {
+    // Iterative repulsion: push overlapping points apart
+    for (let iter = 0; iter < 8; iter++) {
+      let moved = false;
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+          const dLat = positions[j].lat - positions[i].lat;
+          const dLng = positions[j].lng - positions[i].lng;
+          const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+          if (dist < MIN_DIST && dist > 0) {
+            const push = (MIN_DIST - dist) / 2;
+            const nLat = dLat / dist;
+            const nLng = dLng / dist;
+            positions[i].lat -= nLat * push;
+            positions[i].lng -= nLng * push;
+            positions[j].lat += nLat * push;
+            positions[j].lng += nLng * push;
+            moved = true;
+          } else if (dist === 0) {
+            // Identical coords: use seeded angle
+            const seed = (incidents[i].id + incidents[j].id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+            const angle = ((seed * 9301 + 49297) % 233280) / 233280 * Math.PI * 2;
+            positions[i].lat -= Math.cos(angle) * MIN_DIST * 0.5;
+            positions[i].lng -= Math.sin(angle) * MIN_DIST * 0.5;
+            positions[j].lat += Math.cos(angle) * MIN_DIST * 0.5;
+            positions[j].lng += Math.sin(angle) * MIN_DIST * 0.5;
+            moved = true;
+          }
+        }
+      }
+      if (!moved) break;
+    }
+
+    incidents.forEach((inc, idx) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
       const config = incidentTypeConfig[inc.type];
       const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-      const key = coordKey(inc.lat, inc.lng);
-      const totalAtLocation = coordGroups.get(key) || 1;
-      const indexAtLocation = coordIndex.get(key) || 0;
-      coordIndex.set(key, indexAtLocation + 1);
-
-      // Spread out overlapping markers with seeded random jitter to avoid geometric patterns
-      let adjustedLat = inc.lat;
-      let adjustedLng = inc.lng;
-      if (totalAtLocation > 1) {
-        // Use incident id as seed for consistent but random-looking offset
-        const seed = inc.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-        const pseudoRand1 = ((seed * 9301 + 49297) % 233280) / 233280;
-        const pseudoRand2 = ((seed * 7919 + 10267) % 176003) / 176003;
-        const angle = pseudoRand1 * 2 * Math.PI;
-        const radius = 0.003 + pseudoRand2 * 0.006;
-        adjustedLat += Math.cos(angle) * radius;
-        adjustedLng += Math.sin(angle) * radius;
-      }
+      const adjustedLat = positions[idx].lat;
+      const adjustedLng = positions[idx].lng;
       
       // Show radius circle for recent incidents (under 3 hours) or community reports
       const ageMs = Date.now() - new Date(inc.time).getTime();
