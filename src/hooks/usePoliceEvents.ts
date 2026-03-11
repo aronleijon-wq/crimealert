@@ -16,8 +16,8 @@ export function usePoliceEvents() {
   const lastFetch = useRef(0);
 
   const fetchEvents = useCallback(async (silent = false, force = false) => {
-    // Throttle: don't fetch more than once per 30s (unless forced)
-    if (!force && Date.now() - lastFetch.current < 30_000) return;
+    // Throttle: don't fetch more than once per 5 min (unless forced)
+    if (!force && Date.now() - lastFetch.current < 5 * 60 * 1000) return;
     lastFetch.current = Date.now();
 
     if (!silent) setLoading(true);
