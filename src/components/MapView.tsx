@@ -344,6 +344,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     mapRef.current = map;
     markersRef.current = L.layerGroup().addTo(map);
 
+    // Update pulse size CSS variable based on zoom
+    const updatePulseSize = () => {
+      const zoom = map.getZoom();
+      // Scale from 220% at zoom 5 to 500% at zoom 16
+      const pulsePct = Math.round(220 + (zoom - 5) * (280 / 11));
+      const clamped = Math.max(200, Math.min(550, pulsePct));
+      const offset = Math.round((clamped - 100) / 2);
+      containerRef.current?.style.setProperty('--pulse-size', `${clamped}%`);
+      containerRef.current?.style.setProperty('--pulse-offset', `-${offset}%`);
+    };
+    updatePulseSize();
+    map.on('zoomend', updatePulseSize);
+
     return () => {
       map.remove();
       mapRef.current = null;
@@ -458,11 +471,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         @-webkit-keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 420%; height: 420%; top: -160%; left: -160%; }
+          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
         }
         @keyframes marker-pulse-anim {
           0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: 420%; height: 420%; top: -160%; left: -160%; }
+          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
         }
         .marker-pulse-community {
           position: absolute;
