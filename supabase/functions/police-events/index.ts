@@ -1061,36 +1061,25 @@ function assessRisk(type: string): string {
   return 'low';
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+// Helper: fetch and process all incidents (expensive — cached)
+async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
+  let apiUrl = 'https://polisen.se/api/events';
+  if (locationParam) {
+    apiUrl += `?locationname=${encodeURIComponent(locationParam)}`;
   }
 
-  try {
-    // Server-side premium check
-    const isPremium = await checkPremiumStatus(req);
-    console.log(`User premium status: ${isPremium}`);
+  console.log('Fetching police events from:', apiUrl);
 
-    const url = new URL(req.url);
-    const location = url.searchParams.get('location') || '';
-    
-    let apiUrl = 'https://polisen.se/api/events';
-    if (location) {
-      apiUrl += `?locationname=${encodeURIComponent(location)}`;
-    }
+  const response = await fetch(apiUrl, {
+    headers: { 'Accept': 'application/json' },
+  });
 
-    console.log('Fetching police events from:', apiUrl);
+  if (!response.ok) {
+    throw new Error(`Polisen API returned ${response.status}`);
+  }
 
-    const response = await fetch(apiUrl, {
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Polisen API returned ${response.status}`);
-    }
-
-    const events = await response.json();
-    console.log(`Received ${events.length} events from Polisen.se`);
+  const events = await response.json();
+  console.log(`Received ${events.length} events from Polisen.se`);
 
     const incidents = [];
     const geocodePromises: Promise<void>[] = [];
