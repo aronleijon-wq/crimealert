@@ -24,7 +24,7 @@ const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Cache premium status per token (short-lived)
 const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
-const PREMIUM_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const PREMIUM_CACHE_TTL = 60 * 1000; // 1 minute
 
 // Check if user has premium subscription (server-side) — with caching
 async function checkPremiumStatus(req: Request): Promise<boolean> {
