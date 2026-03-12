@@ -16,7 +16,17 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com"];
 const DELAY_MS = 15 * 60 * 1000; // 15 minutes
 
-// Check if user has premium subscription (server-side)
+// ─── In-memory caches (persist within isolate lifecycle) ───────────────────────
+// Cache the full incidents array so multiple users share the same data
+let cachedIncidents: any[] | null = null;
+let cachedIncidentsTs = 0;
+const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Cache premium status per token (short-lived)
+const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
+const PREMIUM_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Check if user has premium subscription (server-side) — with caching
 async function checkPremiumStatus(req: Request): Promise<boolean> {
   try {
     const authHeader = req.headers.get('Authorization');
@@ -27,18 +37,35 @@ async function checkPremiumStatus(req: Request): Promise<boolean> {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     if (token === anonKey) return false;
 
+    // Check in-memory cache first
+    const cached = premiumCache.get(token);
+    if (cached && Date.now() - cached.ts < PREMIUM_CACHE_TTL) {
+      console.log('Premium status from cache');
+      return cached.isPremium;
+    }
+
     const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data?.user?.email) return false;
+    if (error || !data?.user?.email) {
+      premiumCache.set(token, { isPremium: false, ts: Date.now() });
+      return false;
+    }
 
     const email = data.user.email.toLowerCase();
-    if (FREE_PREMIUM_EMAILS.includes(email)) return true;
+    if (FREE_PREMIUM_EMAILS.includes(email)) {
+      premiumCache.set(token, { isPremium: true, ts: Date.now() });
+      return true;
+    }
 
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) return false;
+    if (!stripeKey) {
+      premiumCache.set(token, { isPremium: false, ts: Date.now() });
+      return false;
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
     const customers = await stripe.customers.list({ email, limit: 5 });
     
+    let result = false;
     for (const customer of customers.data) {
       const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
       for (const sub of subs.data) {
@@ -46,10 +73,22 @@ async function checkPremiumStatus(req: Request): Promise<boolean> {
           ? sub.items.data[0].price.product
           : sub.items?.data?.[0]?.price?.product?.id;
         if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
-          return true;
+          result = true;
+          break;
         }
       }
+      if (result) break;
     }
+    
+    premiumCache.set(token, { isPremium: result, ts: Date.now() });
+    // Evict old entries to prevent memory leak
+    if (premiumCache.size > 200) {
+      const now = Date.now();
+      for (const [k, v] of premiumCache) {
+        if (now - v.ts > PREMIUM_CACHE_TTL) premiumCache.delete(k);
+      }
+    }
+    return result;
   } catch (e) {
     console.warn('Premium check failed, defaulting to free:', e);
   }
@@ -1022,36 +1061,25 @@ function assessRisk(type: string): string {
   return 'low';
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+// Helper: fetch and process all incidents (expensive — cached)
+async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
+  let apiUrl = 'https://polisen.se/api/events';
+  if (locationParam) {
+    apiUrl += `?locationname=${encodeURIComponent(locationParam)}`;
   }
 
-  try {
-    // Server-side premium check
-    const isPremium = await checkPremiumStatus(req);
-    console.log(`User premium status: ${isPremium}`);
+  console.log('Fetching police events from:', apiUrl);
 
-    const url = new URL(req.url);
-    const location = url.searchParams.get('location') || '';
-    
-    let apiUrl = 'https://polisen.se/api/events';
-    if (location) {
-      apiUrl += `?locationname=${encodeURIComponent(location)}`;
-    }
+  const response = await fetch(apiUrl, {
+    headers: { 'Accept': 'application/json' },
+  });
 
-    console.log('Fetching police events from:', apiUrl);
+  if (!response.ok) {
+    throw new Error(`Polisen API returned ${response.status}`);
+  }
 
-    const response = await fetch(apiUrl, {
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Polisen API returned ${response.status}`);
-    }
-
-    const events = await response.json();
-    console.log(`Received ${events.length} events from Polisen.se`);
+  const events = await response.json();
+  console.log(`Received ${events.length} events from Polisen.se`);
 
     const incidents = [];
     const geocodePromises: Promise<void>[] = [];
@@ -1251,14 +1279,52 @@ serve(async (req) => {
     }
     console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
 
-    let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    
+    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
+      acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`Processed ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    // ── Server-side premium enforcement ──
+    return validIncidents;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Server-side premium check (cached per token)
+    const isPremium = await checkPremiumStatus(req);
+    console.log(`User premium status: ${isPremium}`);
+
+    const url = new URL(req.url);
+    const location = url.searchParams.get('location') || '';
+
+    // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
+    let allIncidents: any[];
+    const now = Date.now();
+    if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
+      console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
+      allIncidents = cachedIncidents;
+    } else {
+      console.log('Cache miss or expired, fetching fresh data...');
+      allIncidents = await fetchAndProcessIncidents(location);
+      // Only cache default (no location filter) requests
+      if (!location) {
+        cachedIncidents = allIncidents;
+        cachedIncidentsTs = Date.now();
+      }
+    }
+
+    // Apply premium filtering per-user
+    let resultIncidents = allIncidents;
     if (!isPremium) {
       const delayCutoff = Date.now() - DELAY_MS;
-      validIncidents = validIncidents
+      resultIncidents = allIncidents
         .filter((i: any) => {
-          // Apply 15-minute delay for free users
           try {
             const t = new Date(i.time).getTime();
             return !isNaN(t) && t <= delayCutoff;
@@ -1266,19 +1332,12 @@ serve(async (req) => {
         })
         .map((i: any) => ({
           ...i,
-          // Remove description entirely for free users
           description: '',
         }));
-      console.log(`Premium filter applied: ${validIncidents.length} incidents after 15min delay + description truncation`);
+      console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
-    
-    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
-      acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
-      return acc;
-    }, {});
-    console.log(`Returning ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: validIncidents, premium: isPremium }), {
+    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

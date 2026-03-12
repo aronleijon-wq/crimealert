@@ -174,14 +174,8 @@ const Analysis = () => {
     return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
   }, [incidents]);
 
-  // Auto-refresh every 15 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-      setLastUpdated(new Date());
-    }, 15 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [refetch]);
+  // No auto-refresh — data comes from the shared usePoliceEvents hook
+  // which already polls every 5 minutes. Manual refresh via button only.
 
   // Track when data loads or changes
   useEffect(() => {
