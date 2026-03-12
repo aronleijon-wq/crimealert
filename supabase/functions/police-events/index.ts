@@ -1279,14 +1279,52 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
     }
     console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
 
-    let validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    
+    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
+      acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`Processed ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    // ── Server-side premium enforcement ──
+    return validIncidents;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Server-side premium check (cached per token)
+    const isPremium = await checkPremiumStatus(req);
+    console.log(`User premium status: ${isPremium}`);
+
+    const url = new URL(req.url);
+    const location = url.searchParams.get('location') || '';
+
+    // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
+    let allIncidents: any[];
+    const now = Date.now();
+    if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
+      console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
+      allIncidents = cachedIncidents;
+    } else {
+      console.log('Cache miss or expired, fetching fresh data...');
+      allIncidents = await fetchAndProcessIncidents(location);
+      // Only cache default (no location filter) requests
+      if (!location) {
+        cachedIncidents = allIncidents;
+        cachedIncidentsTs = Date.now();
+      }
+    }
+
+    // Apply premium filtering per-user
+    let resultIncidents = allIncidents;
     if (!isPremium) {
       const delayCutoff = Date.now() - DELAY_MS;
-      validIncidents = validIncidents
+      resultIncidents = allIncidents
         .filter((i: any) => {
-          // Apply 15-minute delay for free users
           try {
             const t = new Date(i.time).getTime();
             return !isNaN(t) && t <= delayCutoff;
@@ -1294,19 +1332,12 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
         })
         .map((i: any) => ({
           ...i,
-          // Remove description entirely for free users
           description: '',
         }));
-      console.log(`Premium filter applied: ${validIncidents.length} incidents after 15min delay + description truncation`);
+      console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
-    
-    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
-      acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
-      return acc;
-    }, {});
-    console.log(`Returning ${validIncidents.length} incidents. Precision:`, JSON.stringify(precisionCounts));
 
-    return new Response(JSON.stringify({ success: true, data: validIncidents, premium: isPremium }), {
+    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
