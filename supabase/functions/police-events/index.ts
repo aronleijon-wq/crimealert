@@ -16,7 +16,17 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com"];
 const DELAY_MS = 15 * 60 * 1000; // 15 minutes
 
-// Check if user has premium subscription (server-side)
+// ─── In-memory caches (persist within isolate lifecycle) ───────────────────────
+// Cache the full incidents array so multiple users share the same data
+let cachedIncidents: any[] | null = null;
+let cachedIncidentsTs = 0;
+const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Cache premium status per token (short-lived)
+const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
+const PREMIUM_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Check if user has premium subscription (server-side) — with caching
 async function checkPremiumStatus(req: Request): Promise<boolean> {
   try {
     const authHeader = req.headers.get('Authorization');
@@ -27,18 +37,35 @@ async function checkPremiumStatus(req: Request): Promise<boolean> {
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     if (token === anonKey) return false;
 
+    // Check in-memory cache first
+    const cached = premiumCache.get(token);
+    if (cached && Date.now() - cached.ts < PREMIUM_CACHE_TTL) {
+      console.log('Premium status from cache');
+      return cached.isPremium;
+    }
+
     const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data?.user?.email) return false;
+    if (error || !data?.user?.email) {
+      premiumCache.set(token, { isPremium: false, ts: Date.now() });
+      return false;
+    }
 
     const email = data.user.email.toLowerCase();
-    if (FREE_PREMIUM_EMAILS.includes(email)) return true;
+    if (FREE_PREMIUM_EMAILS.includes(email)) {
+      premiumCache.set(token, { isPremium: true, ts: Date.now() });
+      return true;
+    }
 
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) return false;
+    if (!stripeKey) {
+      premiumCache.set(token, { isPremium: false, ts: Date.now() });
+      return false;
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
     const customers = await stripe.customers.list({ email, limit: 5 });
     
+    let result = false;
     for (const customer of customers.data) {
       const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
       for (const sub of subs.data) {
@@ -46,10 +73,22 @@ async function checkPremiumStatus(req: Request): Promise<boolean> {
           ? sub.items.data[0].price.product
           : sub.items?.data?.[0]?.price?.product?.id;
         if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
-          return true;
+          result = true;
+          break;
         }
       }
+      if (result) break;
     }
+    
+    premiumCache.set(token, { isPremium: result, ts: Date.now() });
+    // Evict old entries to prevent memory leak
+    if (premiumCache.size > 200) {
+      const now = Date.now();
+      for (const [k, v] of premiumCache) {
+        if (now - v.ts > PREMIUM_CACHE_TTL) premiumCache.delete(k);
+      }
+    }
+    return result;
   } catch (e) {
     console.warn('Premium check failed, defaulting to free:', e);
   }
