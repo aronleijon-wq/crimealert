@@ -15,6 +15,7 @@ import Cookies from "./pages/Cookies";
 import Sekretesspolicy from "./pages/Sekretesspolicy";
 import Villkor from "./pages/Villkor";
 import ResetPassword from "./pages/ResetPassword";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
