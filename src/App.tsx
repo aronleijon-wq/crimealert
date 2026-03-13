@@ -39,6 +39,7 @@ const App = () => (
           <Route path="/privacy" element={<Sekretesspolicy />} />
           <Route path="/villkor" element={<Villkor />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <CookieConsent />
