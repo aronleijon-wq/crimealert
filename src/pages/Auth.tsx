@@ -182,7 +182,14 @@ const Auth = () => {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
-                <div className="mt-4 text-center">
+                {!isLogin && (
+                  <p className="mt-3 text-[10px] text-muted-foreground text-center leading-relaxed">
+                    Genom att skapa ett konto godkänner du våra{' '}
+                    <button onClick={() => navigate('/villkor')} className="text-primary hover:underline">användarvillkor</button>
+                    {' '}och samtycker till att ta emot tjänsterelaterade e-postmeddelanden.
+                  </p>
+                )}
+                <div className="mt-3 text-center">
                   <button onClick={() => setIsLogin(!isLogin)} className="text-xs text-muted-foreground hover:text-foreground transition">
                     {isLogin ? 'Har du inget konto? Skapa ett' : 'Har du redan ett konto? Logga in'}
                   </button>
