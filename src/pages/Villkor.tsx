@@ -98,11 +98,11 @@ const Villkor = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">8. Kommunikation och e-post</h2>
               <p>
-                Genom att skapa ett konto och använda tjänsten samtycker du till att CrimeAlert vid behov
-                kan skicka dig e-postmeddelanden relaterade till din användning av tjänsten, exempelvis
-                säkerhetsnotiser, tjänsteuppdateringar och funktionsrelaterad information. Vi skickar
-                aldrig marknadsföring till tredje part och du kan när som helst hantera dina
-                kommunikationsinställningar via ditt konto.
+                Genom att skapa ett konto och använda tjänsten samtycker du till att CrimeAlert vid behov kan skicka dig e-postmeddelanden relaterade till din användning av tjänsten, exempelvis säkerhetsnotiser, tjänsteuppdateringar och funktionsrelaterad information. Vi skickar aldrig marknadsföring till tredje part och du kan när som helst hantera dina kommunikationsinställningar via din mail hanterare.   
+              
+
+
+
               </p>
             </section>
 
