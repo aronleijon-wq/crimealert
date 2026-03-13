@@ -96,20 +96,29 @@ const Villkor = () => {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-foreground mb-2">8. Integritet och cookies</h2>
+              <h2 className="text-base font-semibold text-foreground mb-2">8. Kommunikation och e-post</h2>
+              <p>
+                Genom att skapa ett konto och använda tjänsten samtycker du till att CrimeAlert vid behov
+                kan skicka dig e-postmeddelanden relaterade till din användning av tjänsten, exempelvis
+                säkerhetsnotiser, tjänsteuppdateringar och funktionsrelaterad information. Vi skickar
+                aldrig marknadsföring till tredje part och du kan när som helst hantera dina
+                kommunikationsinställningar via ditt konto.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-base font-semibold text-foreground mb-2">9. Integritet och cookies</h2>
               <p>
                 Din integritet är viktig för oss. Se vår{' '}
                 <button
                   onClick={() => navigate('/sekretesspolicy')}
                   className="text-primary hover:underline font-medium">
-                  
                   sekretesspolicy
                 </button>{' '}
                 och{' '}
                 <button
                   onClick={() => navigate('/cookies')}
                   className="text-primary hover:underline font-medium">
-                  
                   cookiepolicy
                 </button>{' '}
                 för mer information om hur vi hanterar dina uppgifter.
