@@ -126,7 +126,7 @@ const Villkor = () => {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-foreground mb-2">9. Ändringar av villkoren</h2>
+              <h2 className="text-base font-semibold text-foreground mb-2">10. Ändringar av villkoren</h2>
               <p>
                 Vi kan uppdatera dessa villkor vid behov. Väsentliga ändringar meddelas via tjänsten.
                 Fortsatt användning efter ändring innebär att du accepterar de uppdaterade villkoren.
@@ -134,7 +134,7 @@ const Villkor = () => {
             </section>
 
             <section>
-              <h2 className="text-base font-semibold text-foreground mb-2">10. Tillämplig lag</h2>
+              <h2 className="text-base font-semibold text-foreground mb-2">11. Tillämplig lag</h2>
               <p>
                 Dessa villkor regleras av svensk lag. Eventuella tvister ska i första hand lösas genom
                 dialog, och i andra hand av svensk domstol.
