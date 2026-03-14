@@ -497,16 +497,21 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   }, [flyToLocation]);
 
   return (
-    <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
+    <div ref={containerRef} className="w-full h-full bg-muted" style={{ touchAction: 'pan-x pan-y' }}>
       <style>{`
+        .leaflet-container {
+          touch-action: pan-x pan-y;
+        }
         .custom-marker {
           overflow: visible !important;
           background: none !important;
           border: none !important;
+          touch-action: manipulation;
         }
         .marker-pulse {
           position: absolute;
           border-radius: 50%;
+          pointer-events: none;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
@@ -522,6 +527,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         .marker-pulse-community {
           position: absolute;
           border-radius: 4px;
+          pointer-events: none;
           -webkit-animation: marker-pulse-community-anim 2s ease-in-out infinite;
           animation: marker-pulse-community-anim 2s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
