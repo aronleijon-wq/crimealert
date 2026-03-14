@@ -335,6 +335,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       zoom: 5,
       zoomControl: false,
       attributionControl: false,
+      // Mobile touch improvements
+      tap: false, // Disable Leaflet's tap handler to avoid 200ms delay & ghost clicks
+      touchZoom: 'center',
+      bounceAtZoomLimits: false,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
