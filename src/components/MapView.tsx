@@ -28,7 +28,7 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = !touch && (isCommunityReport || incident.status === 'active');
+  const shouldPulse = isCommunityReport || incident.status === 'active';
   // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
