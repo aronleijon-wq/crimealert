@@ -21,25 +21,25 @@ const TYPE_ICONS: Record<string, string> = {
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 
-const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const isTouchDevice = () =>
+  typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const createMarkerIcon = (incident: Incident) => {
+const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = isCommunityReport || incident.status === 'active';
-  const touch = isTouchDevice();
+  const shouldPulse = !touch && (isCommunityReport || incident.status === 'active');
   // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
   if (isCommunityReport) {
     const size = touch ? 24 : 18;
-    const pulseSize = size + 20 + mobilePad;
+    const pulseSize = shouldPulse ? size + 20 + mobilePad : size + mobilePad;
     return L.divIcon({
       className: 'custom-marker',
       html: `
-        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-          <div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
+        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+          ${shouldPulse ? `<div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>` : ''}
           <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
           <span style="position:absolute;z-index:3;font-size:${touch ? '13' : '10'}px;line-height:1;pointer-events:none;">👁️</span>
         </div>
@@ -50,12 +50,12 @@ const createMarkerIcon = (incident: Incident) => {
   }
 
   const size = touch ? (shouldPulse ? 20 : 16) : (shouldPulse ? 14 : 10);
-  const pulseSize = size + 16 + mobilePad;
+  const pulseSize = shouldPulse ? size + 16 + mobilePad : size + mobilePad;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
-      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
