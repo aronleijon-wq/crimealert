@@ -21,25 +21,25 @@ const TYPE_ICONS: Record<string, string> = {
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 
-const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const isTouchDevice = () =>
+  typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const createMarkerIcon = (incident: Incident) => {
+const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = isCommunityReport || incident.status === 'active';
-  const touch = isTouchDevice();
+  const shouldPulse = !touch && (isCommunityReport || incident.status === 'active');
   // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
   if (isCommunityReport) {
     const size = touch ? 24 : 18;
-    const pulseSize = size + 20 + mobilePad;
+    const pulseSize = shouldPulse ? size + 20 + mobilePad : size + mobilePad;
     return L.divIcon({
       className: 'custom-marker',
       html: `
-        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
-          <div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>
+        <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+          ${shouldPulse ? `<div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>` : ''}
           <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
           <span style="position:absolute;z-index:3;font-size:${touch ? '13' : '10'}px;line-height:1;pointer-events:none;">👁️</span>
         </div>
@@ -50,12 +50,12 @@ const createMarkerIcon = (incident: Incident) => {
   }
 
   const size = touch ? (shouldPulse ? 20 : 16) : (shouldPulse ? 14 : 10);
-  const pulseSize = size + 16 + mobilePad;
+  const pulseSize = shouldPulse ? size + 16 + mobilePad : size + mobilePad;
 
   return L.divIcon({
     className: 'custom-marker',
     html: `
-      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
@@ -326,6 +326,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  const isTouch = useRef(isTouchDevice()).current;
+  const onSelectIncidentRef = useRef(onSelectIncident);
+
+  useEffect(() => {
+    onSelectIncidentRef.current = onSelectIncident;
+  }, [onSelectIncident]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -337,6 +343,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       attributionControl: false,
       touchZoom: 'center',
       bounceAtZoomLimits: false,
+      preferCanvas: true,
+      inertia: true,
+      inertiaDeceleration: 2800,
+      zoomAnimation: !isTouch,
     } as L.MapOptions & { tap?: boolean });
 
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
@@ -362,6 +372,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       containerRef.current?.style.setProperty('--pulse-size', `${clamped}%`);
       containerRef.current?.style.setProperty('--pulse-offset', `-${offset}%`);
     };
+
     updatePulseSize();
     map.on('zoomend', updatePulseSize);
 
@@ -370,7 +381,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       mapRef.current = null;
       markersRef.current = null;
     };
-  }, []);
+  }, [isTouch]);
 
   useEffect(() => {
     if (!markersRef.current) return;
@@ -378,39 +389,41 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markerMapRef.current.clear();
 
     // De-overlap: push markers apart so none visually overlap
-    const MIN_DIST = 0.004; // ~400m minimum separation in degrees
+    const minDist = isTouch ? 0.0025 : 0.004;
+    const maxIterations = isTouch ? 3 : 8;
+    const shouldRunRepulsion = incidents.length <= (isTouch ? 180 : 450);
     const positions = incidents.map((inc) => ({ lat: inc.lat, lng: inc.lng }));
 
-    // Iterative repulsion: push overlapping points apart
-    for (let iter = 0; iter < 8; iter++) {
-      let moved = false;
-      for (let i = 0; i < positions.length; i++) {
-        for (let j = i + 1; j < positions.length; j++) {
-          const dLat = positions[j].lat - positions[i].lat;
-          const dLng = positions[j].lng - positions[i].lng;
-          const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-          if (dist < MIN_DIST && dist > 0) {
-            const push = (MIN_DIST - dist) / 2;
-            const nLat = dLat / dist;
-            const nLng = dLng / dist;
-            positions[i].lat -= nLat * push;
-            positions[i].lng -= nLng * push;
-            positions[j].lat += nLat * push;
-            positions[j].lng += nLng * push;
-            moved = true;
-          } else if (dist === 0) {
-            // Identical coords: use seeded angle
-            const seed = (incidents[i].id + incidents[j].id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-            const angle = ((seed * 9301 + 49297) % 233280) / 233280 * Math.PI * 2;
-            positions[i].lat -= Math.cos(angle) * MIN_DIST * 0.5;
-            positions[i].lng -= Math.sin(angle) * MIN_DIST * 0.5;
-            positions[j].lat += Math.cos(angle) * MIN_DIST * 0.5;
-            positions[j].lng += Math.sin(angle) * MIN_DIST * 0.5;
-            moved = true;
+    if (shouldRunRepulsion) {
+      for (let iter = 0; iter < maxIterations; iter++) {
+        let moved = false;
+        for (let i = 0; i < positions.length; i++) {
+          for (let j = i + 1; j < positions.length; j++) {
+            const dLat = positions[j].lat - positions[i].lat;
+            const dLng = positions[j].lng - positions[i].lng;
+            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            if (dist < minDist && dist > 0) {
+              const push = (minDist - dist) / 2;
+              const nLat = dLat / dist;
+              const nLng = dLng / dist;
+              positions[i].lat -= nLat * push;
+              positions[i].lng -= nLng * push;
+              positions[j].lat += nLat * push;
+              positions[j].lng += nLng * push;
+              moved = true;
+            } else if (dist === 0) {
+              const seed = (incidents[i].id + incidents[j].id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+              const angle = (((seed * 9301 + 49297) % 233280) / 233280) * Math.PI * 2;
+              positions[i].lat -= Math.cos(angle) * minDist * 0.5;
+              positions[i].lng -= Math.sin(angle) * minDist * 0.5;
+              positions[j].lat += Math.cos(angle) * minDist * 0.5;
+              positions[j].lng += Math.sin(angle) * minDist * 0.5;
+              moved = true;
+            }
           }
         }
+        if (!moved) break;
       }
-      if (!moved) break;
     }
 
     incidents.forEach((inc, idx) => {
@@ -419,18 +432,23 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
       const adjustedLat = positions[idx].lat;
       const adjustedLng = positions[idx].lng;
-      
-      // Show radius circle for recent incidents (under 3 hours) or community reports
-      const ageMs = Date.now() - new Date(inc.time).getTime();
-      if (isCommunityReport || ageMs < 3 * 60 * 60 * 1000) {
+
+      // Skip heavy radius effects on touch devices for smoother panning/tapping
+      const parsedTime = parseSwedishDate(inc.time);
+      const ageMs = parsedTime ? Date.now() - parsedTime.getTime() : Number.POSITIVE_INFINITY;
+      if (!isTouch && (isCommunityReport || ageMs < 3 * 60 * 60 * 1000)) {
         const circleOptions = isCommunityReport
-          ? { radius: 600, color: COMMUNITY_REPORT_COLOR, fillColor: COMMUNITY_REPORT_COLOR, fillOpacity: 0.12, weight: 2, opacity: 0.5, dashArray: '6 4' }
-          : { radius: 500, color, fillColor: color, fillOpacity: 0.08, weight: 1, opacity: 0.3 };
+          ? { radius: 600, color: COMMUNITY_REPORT_COLOR, fillColor: COMMUNITY_REPORT_COLOR, fillOpacity: 0.12, weight: 2, opacity: 0.5, dashArray: '6 4', interactive: false }
+          : { radius: 500, color, fillColor: color, fillOpacity: 0.08, weight: 1, opacity: 0.3, interactive: false };
         const circle = L.circle([adjustedLat, adjustedLng], circleOptions);
         markersRef.current!.addLayer(circle);
       }
 
-      const marker = L.marker([adjustedLat, adjustedLng], { icon: createMarkerIcon(inc) });
+      const marker = L.marker([adjustedLat, adjustedLng], {
+        icon: createMarkerIcon(inc, isTouch),
+        keyboard: false,
+      });
+
       marker.bindPopup(createPopupContent(inc, isPremium), {
         className: 'incident-popup',
         maxWidth: 320,
@@ -438,12 +456,19 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         autoPan: true,
         autoPanPadding: L.point(40, 40),
       });
-      marker.on('click', () => onSelectIncident(inc.id));
-      marker.on('popupclose', () => { prevSelectedRef.current = null; onSelectIncident(''); });
+
+      const handleSelect = () => onSelectIncidentRef.current(inc.id);
+      marker.on('click', handleSelect);
+      marker.on('touchend', handleSelect);
+      marker.on('popupclose', () => {
+        prevSelectedRef.current = null;
+        onSelectIncidentRef.current('');
+      });
+
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
-  }, [incidents, onSelectIncident, isPremium]);
+  }, [incidents, isPremium, isTouch]);
 
   const prevSelectedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -472,16 +497,21 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   }, [flyToLocation]);
 
   return (
-    <div ref={containerRef} className="w-full h-full" style={{ background: '#f0f0f0' }}>
+    <div ref={containerRef} className="w-full h-full bg-muted" style={{ touchAction: 'pan-x pan-y' }}>
       <style>{`
+        .leaflet-container {
+          touch-action: pan-x pan-y;
+        }
         .custom-marker {
           overflow: visible !important;
           background: none !important;
           border: none !important;
+          touch-action: manipulation;
         }
         .marker-pulse {
           position: absolute;
           border-radius: 50%;
+          pointer-events: none;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
@@ -497,6 +527,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         .marker-pulse-community {
           position: absolute;
           border-radius: 4px;
+          pointer-events: none;
           -webkit-animation: marker-pulse-community-anim 2s ease-in-out infinite;
           animation: marker-pulse-community-anim 2s ease-in-out infinite;
           will-change: opacity, width, height, top, left;
