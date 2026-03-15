@@ -1290,6 +1290,76 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
     return validIncidents;
 }
 
+// ─── Archive helpers ──────────────────────────────────────────────────────────
+async function archiveIncidents(incidents: any[]) {
+  if (!incidents.length) return;
+  try {
+    const rows = incidents.map((i: any) => ({
+      id: i.id,
+      type: i.type,
+      title: i.title,
+      description: i.description || '',
+      lat: i.lat,
+      lng: i.lng,
+      area: i.area,
+      time: i.time,
+      status: i.status,
+      risk: i.risk,
+      source: i.source || 'Polisen.se',
+      original_type: i.originalType || null,
+      url: i.url || null,
+      location_precision: i.location_precision || 'area',
+    }));
+    // Upsert in batches of 50
+    for (let b = 0; b < rows.length; b += 50) {
+      const batch = rows.slice(b, b + 50);
+      const { error } = await supabase
+        .from('police_events_archive')
+        .upsert(batch, { onConflict: 'id', ignoreDuplicates: false });
+      if (error) console.warn('Archive upsert error:', error.message);
+    }
+    console.log(`Archived ${rows.length} incidents to DB`);
+  } catch (e) {
+    console.warn('Archive failed:', e);
+  }
+}
+
+async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<any[]> {
+  try {
+    const cutoff = new Date(Date.now() - cutoffDays * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('police_events_archive')
+      .select('*')
+      .gte('time', cutoff)
+      .order('time', { ascending: false })
+      .limit(2000);
+    if (error) {
+      console.warn('Archive fetch error:', error.message);
+      return [];
+    }
+    // Map DB rows back to incident format
+    return (data || []).map((r: any) => ({
+      id: r.id,
+      type: r.type,
+      title: r.title,
+      description: r.description,
+      lat: r.lat,
+      lng: r.lng,
+      area: r.area,
+      time: r.time,
+      status: r.status,
+      risk: r.risk,
+      source: r.source,
+      originalType: r.original_type,
+      url: r.url,
+      location_precision: r.location_precision,
+    }));
+  } catch (e) {
+    console.warn('Archive fetch failed:', e);
+    return [];
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -1304,20 +1374,29 @@ serve(async (req) => {
     const location = url.searchParams.get('location') || '';
 
     // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
-    let allIncidents: any[];
+    let freshIncidents: any[];
     const now = Date.now();
     if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
       console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
-      allIncidents = cachedIncidents;
+      freshIncidents = cachedIncidents;
     } else {
       console.log('Cache miss or expired, fetching fresh data...');
-      allIncidents = await fetchAndProcessIncidents(location);
+      freshIncidents = await fetchAndProcessIncidents(location);
       // Only cache default (no location filter) requests
       if (!location) {
-        cachedIncidents = allIncidents;
+        cachedIncidents = freshIncidents;
         cachedIncidentsTs = Date.now();
+        // Archive fresh incidents to DB (fire and forget)
+        archiveIncidents(freshIncidents);
       }
     }
+
+    // Merge fresh data with archived data (archived fills the 10-30 day gap)
+    const freshIds = new Set(freshIncidents.map((i: any) => i.id));
+    const archived = await fetchArchivedIncidents(30);
+    const olderArchived = archived.filter((a: any) => !freshIds.has(a.id));
+    const allIncidents = [...freshIncidents, ...olderArchived];
+    console.log(`Combined: ${freshIncidents.length} fresh + ${olderArchived.length} archived = ${allIncidents.length} total`);
 
     // Apply premium filtering per-user
     let resultIncidents = allIncidents;
