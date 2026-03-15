@@ -199,10 +199,6 @@ const Analysis = () => {
         cutoff = new Date(now);
         cutoff.setDate(cutoff.getDate() - 30);
         break;
-      case '30d':
-        cutoff = new Date(now);
-        cutoff.setDate(cutoff.getDate() - 30);
-        break;
     }
     return incidents.filter((i) => {
       try {

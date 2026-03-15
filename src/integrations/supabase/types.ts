@@ -128,6 +128,60 @@ export type Database = {
         }
         Relationships: []
       }
+      police_events_archive: {
+        Row: {
+          area: string | null
+          created_at: string
+          description: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          location_precision: string | null
+          original_type: string | null
+          risk: string | null
+          source: string | null
+          status: string | null
+          time: string
+          title: string
+          type: string
+          url: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          description?: string | null
+          id: string
+          lat?: number | null
+          lng?: number | null
+          location_precision?: string | null
+          original_type?: string | null
+          risk?: string | null
+          source?: string | null
+          status?: string | null
+          time: string
+          title: string
+          type: string
+          url?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          location_precision?: string | null
+          original_type?: string | null
+          risk?: string | null
+          source?: string | null
+          status?: string | null
+          time?: string
+          title?: string
+          type?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           created_at: string
