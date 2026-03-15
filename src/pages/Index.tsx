@@ -70,7 +70,7 @@ const Index = () => {
   // Map: hide incidents older than 3 days UNLESS severe crime
   const timeFiltered = useMemo(() => {
     const now = Date.now();
-    const cutoff3d = now - 3 * 24 * 60 * 60 * 1000;
+    const cutoff7d = now - 7 * 24 * 60 * 60 * 1000;
     const cutoff24h = now - 24 * 60 * 60 * 1000;
     const delayCutoff = isPremium ? Infinity : now - 15 * 60 * 1000;
     return allIncidents.filter((i) => {
@@ -83,7 +83,7 @@ const Index = () => {
       // Always show severe crimes regardless of age
       if (isSevereCrime(i.title)) return t <= delayCutoff;
       // Non-severe: must be within 3 days
-      return t >= cutoff3d && t <= delayCutoff;
+      return t >= cutoff7d && t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
 
