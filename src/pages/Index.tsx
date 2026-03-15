@@ -83,7 +83,7 @@ const Index = () => {
       // Always show severe crimes regardless of age
       if (isSevereCrime(i.title)) return t <= delayCutoff;
       // Non-severe: must be within 3 days
-      return t >= cutoff3d && t <= delayCutoff;
+      return t >= cutoff7d && t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
 
