@@ -120,7 +120,7 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
         }
       </button>
       {open &&
-      <div className="absolute top-full mt-1 right-0 z-50 w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+      <div className="absolute top-full mt-1 left-0 sm:right-0 sm:left-auto z-[99999] w-[calc(100vw-2rem)] sm:w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
