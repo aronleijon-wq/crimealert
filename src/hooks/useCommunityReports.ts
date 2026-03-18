@@ -38,6 +38,7 @@ export function useCommunityReports() {
       source: 'Medborgarrapport',
       approximate: false,
       originalType: CATEGORY_LABELS[r.category] || r.category,
+      image_url: r.image_url || null,
     }));
 
     setReports(mapped);

@@ -259,6 +259,18 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
 
       ${isPremium && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${safeDescription}</p>` : !isPremium ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
+      ${inc.image_url ? `
+      <div style="margin-bottom:10px;">
+        <img
+          src="${sanitizeHTML(inc.image_url)}"
+          alt="Rapportbild"
+          style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
+          onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))"
+        />
+        <div style="font-size:9px;color:#aaa;margin-top:3px;text-align:center;">Klicka för att förstora</div>
+      </div>
+      ` : ''}
+
       ${isPremium && extractedDetails.length > 0 ? `
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
         ${extractedDetails.map(d => `
