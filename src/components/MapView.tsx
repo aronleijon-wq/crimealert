@@ -340,6 +340,20 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // Listen for lightbox events from popup image clicks
+  useEffect(() => {
+    const handler = () => {
+      const url = (window as any).__crimeAlertLightbox;
+      if (url) {
+        setLightboxUrl(url);
+        (window as any).__crimeAlertLightbox = null;
+      }
+    };
+    window.addEventListener('crimealert-lightbox', handler);
+    return () => window.removeEventListener('crimealert-lightbox', handler);
+  }, []);
 
   useEffect(() => {
     onSelectIncidentRef.current = onSelectIncident;
