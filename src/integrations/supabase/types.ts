@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          image_url: string | null
           lat: number | null
           lng: number | null
           status: string
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          image_url?: string | null
           lat?: number | null
           lng?: number | null
           status?: string
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          image_url?: string | null
           lat?: number | null
           lng?: number | null
           status?: string
@@ -218,6 +221,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string | null
+          image_url: string | null
           lat: number | null
           lng: number | null
           status: string | null
@@ -229,6 +233,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string | null
+          image_url?: string | null
           lat?: number | null
           lng?: number | null
           status?: string | null
@@ -240,6 +245,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string | null
+          image_url?: string | null
           lat?: number | null
           lng?: number | null
           status?: string | null
