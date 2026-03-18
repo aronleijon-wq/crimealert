@@ -599,6 +599,53 @@ const Analysis = () => {
                   )}
                 </div>
 
+                {/* Incident History for selected municipality */}
+                {selectedArea && filteredIncidents.length > 0 && (
+                  <div className="bg-card border border-border rounded-lg p-4 md:p-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <h2 className="text-sm font-bold text-foreground">
+                        Händelsehistorik – {selectedArea}
+                      </h2>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-4">
+                      {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : timeRange === '7d' ? '7 dagarna' : '30 dagarna'}
+                    </p>
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                      {filteredIncidents.map((inc) => {
+                        const t = parseTime(inc.time);
+                        const dateStr = t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
+                        const timeStr = t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                        return (
+                          <div key={inc.id} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition">
+                            <div className="flex-shrink-0 mt-0.5">
+                              <span
+                                className="block w-2.5 h-2.5 rounded-full"
+                                style={{ background: TYPE_COLORS[inc.type] || TYPE_COLORS.other }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{inc.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {TYPE_LABELS[inc.type] || inc.type} · {dateStr} kl {timeStr}
+                              </p>
+                              {inc.description && (
+                                <p className="text-[10px] text-muted-foreground/70 mt-1 line-clamp-2">{inc.description}</p>
+                              )}
+                            </div>
+                            {inc.risk === 'high' && (
+                              <span className="flex-shrink-0 text-[9px] font-mono font-bold text-cr-red bg-cr-red/10 px-1.5 py-0.5 rounded">HÖG</span>
+                            )}
+                            {inc.risk === 'medium' && (
+                              <span className="flex-shrink-0 text-[9px] font-mono font-bold text-cr-orange bg-cr-orange/10 px-1.5 py-0.5 rounded">MEDEL</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Community Reports */}
                 <CommunityReports />
 
