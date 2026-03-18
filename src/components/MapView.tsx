@@ -590,6 +590,28 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           background: transparent !important;
         }
       `}</style>
+
+      {/* Image lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+          style={{ cursor: 'pointer' }}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition z-10"
+            onClick={() => setLightboxUrl(null)}
+          >
+            ✕
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Rapportbild"
+            className="max-w-full max-h-[85vh] rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
