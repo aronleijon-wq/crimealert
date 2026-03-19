@@ -464,11 +464,11 @@ const Account = () => {
               ['Gratis', '15 min delay på händelser & push'],
               ['Pro', 'Realtid – direkt utan fördröjning'],
               ['Företag', 'Realtid + avancerade notiser & API']].
-              map(([plan, desc]) =>
-              <div key={plan} className="flex items-center px-4 py-2.5">
-                  <span className="font-medium text-foreground w-20">{plan}</span>
-                  <span className="text-muted-foreground">{desc}</span>
-                </div>
+              map(([plan, desc]) => {}
+
+
+
+
               )}
             </div>
           </div>
