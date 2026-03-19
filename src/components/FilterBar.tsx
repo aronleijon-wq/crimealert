@@ -206,7 +206,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             
             <span className="leading-none">{config.label}</span>
             {isLocked &&
-            <span className="text-[9px] font-semibold opacity-75">Logga in</span>
+            <span className="text-[9px] font-semibold opacity-75">​Gratis   </span>
             }
           </button>);
 
