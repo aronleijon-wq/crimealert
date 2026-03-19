@@ -24,6 +24,7 @@ const Index = () => {
   const isLoggedIn = !!user;
   const [mobileListOpen, setMobileListOpen] = useState(true);
   const [heroDismissed, setHeroDismissed] = useState(false);
+  const [showCommunityReports, setShowCommunityReports] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
     // Non-logged-in users can't see 'other' incidents
