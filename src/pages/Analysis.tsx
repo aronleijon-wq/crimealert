@@ -499,41 +499,7 @@ const Analysis = () => {
                   />
                 </div>
 
-                {/* Safety Index Section */}
-                {stats?.areaComparison?.length > 0 && (
-                  <div className="bg-card border border-border rounded-lg p-4 md:p-6">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Shield className="w-4 h-4 text-cr-green" />
-                      <h2 className="text-sm font-bold text-foreground">Säkerhetsindex per område</h2>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mb-4">
-                      Högre index = säkrare område · {selectedArea ? `Data för ${selectedArea}` : 'Alla områden'}
-                    </p>
-                    <div className="space-y-2">
-                      {stats.areaComparison.map((item: { område: string; index: number; total: number; high: number }) => (
-                        <div key={item.område} className="flex items-center gap-3">
-                          <span className="text-xs font-medium text-foreground w-28 truncate flex-shrink-0">{item.område}</span>
-                          <div className="flex-1 h-4 bg-muted rounded-sm overflow-hidden">
-                            <div
-                              className="h-full rounded-sm transition-all duration-500"
-                              style={{
-                                width: `${Math.max(item.index, 3)}%`,
-                                background: item.index > 70
-                                  ? 'hsl(var(--cr-green))'
-                                  : item.index > 40
-                                    ? 'hsl(var(--cr-orange))'
-                                    : 'hsl(var(--cr-red))',
-                              }}
-                            />
-                          </div>
-                          <span className="text-[11px] font-mono font-bold text-muted-foreground w-10 text-right flex-shrink-0">
-                            {item.index}/100
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Predictive Analysis Section */}
                 <div className="bg-card border border-border rounded-lg p-4 md:p-6">
