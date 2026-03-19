@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AlertTriangle, ChevronDown } from 'lucide-react';
 import { Incident } from '@/data/mockIncidents';
 
 interface DangerRankingProps {
