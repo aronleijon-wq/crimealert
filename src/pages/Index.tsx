@@ -108,38 +108,6 @@ const Index = () => {
       <>
           <Header />
 
-          {/* Public hero – visible to everyone, especially non-logged-in visitors */}
-          {!isLoggedIn && !heroDismissed &&
-        <section className="relative border-b border-border bg-card/60 backdrop-blur px-4 py-6 sm:py-8">
-              <button
-            onClick={() => setHeroDismissed(true)}
-            className="absolute top-2 right-2 p-1 rounded hover:bg-muted text-muted-foreground transition"
-            aria-label="Stäng">
-            
-                <X className="w-4 h-4" />
-              </button>
-              <div className="max-w-3xl mx-auto text-center space-y-3">
-                <h1 className="text-lg sm:text-xl font-bold text-foreground">
-                  Välkommen till <span className="text-primary">CrimeAlert</span>
-                </h1>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-                  ​CrimeAlert hjälper dig att hålla koll på säkerheten i Sverige. Vi samlar och visualiserar offentliga händelser från Polisen i realtid på en interaktiv karta, så att du enkelt kan se vad som händer i ditt område. Vår vision är att göra information om trygghet mer tillgänglig och lätt att förstå. Genom smart teknik och tydlig visualisering vill vi skapa större transparens kring samhällshändelser. 
-
-CrimeAlert är ett oberoende projekt grundat av entreprenörer och utvecklare. Plattformen finns både i en gratisversion och i CrimeAlert Pro, som ger tillgång till fler funktioner och en ännu bättre överblick över händelser i Sverige.
-                
-
-            
-
-
-            
-            </p>
-                <div className="flex flex-wrap justify-center gap-4 pt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-primary" /></span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-primary" /></span>
-                  <span className="flex items-center gap-1.5"><BellIcon className="w-3.5 h-3.5 text-primary" /></span>
-                </div>
-              </div>
-            </section>}
 
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
