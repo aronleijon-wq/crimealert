@@ -2,15 +2,18 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin, Lock } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock, Crown } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsPremium } from '@/hooks/useIsPremium';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
   onToggleFilter: (type: IncidentType) => void;
   incidentCount: number;
   activeCount: number;
+  showCommunityReports: boolean;
+  onToggleCommunityReports: () => void;
   onSearchLocation?: (lat: number, lng: number, zoom: number, name: string) => void;
 }
 
