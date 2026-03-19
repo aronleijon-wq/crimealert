@@ -227,7 +227,7 @@ const Account = () => {
   const proFeatures = [
   { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
   { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
-  { icon: MessageSquare, text: 'CrimeAlert AI-chatt' },
+  { icon: MessageSquare, text: 'Medborgarrapporter' },
   { icon: Clock, text: 'Full historik (30+ dagar)' },
   { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
   { icon: EyeOff, text: 'Ingen reklam' },
