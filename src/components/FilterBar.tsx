@@ -102,161 +102,161 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   };
 
   return (
-    <div className="flex items-center gap-1.5 px-3 border-b border-border bg-card/80 backdrop-blur-sm overflow-x-auto scrollbar-none py-[6px]">
-      <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mr-1" />
-      
-      {/* Municipality search */}
-      <div className="relative shrink-0" ref={dropdownRef}>
-        {searchOpen ?
-        <div className="flex items-center gap-1 bg-muted rounded-full px-2 py-1">
-            <Search className="w-3 h-3 text-muted-foreground shrink-0" />
-            <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value.replace(/<[^>]*>/g, '').slice(0, 50))}
-            onKeyDown={handleKeyDown}
-            placeholder="Sök kommun..."
-            className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/50 outline-none w-28 sm:w-36" />
-          
-            <button
-            onClick={() => {setSearchOpen(false);setQuery('');}}
-            className="p-0.5 hover:bg-muted-foreground/10 rounded-full">
-            
-              <X className="w-3 h-3 text-muted-foreground" />
-            </button>
-          </div> :
+    <div className="border-b border-border bg-card/80 backdrop-blur-sm">
+      <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto scrollbar-none">
+        {/* Label */}
+        <div className="flex items-center gap-1.5 shrink-0 mr-1">
+          <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground/60" />
+          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 hidden sm:inline">Filter</span>
+        </div>
 
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground transition-all duration-200 whitespace-nowrap"
-          title="Sök kommun">
-          
-            <Search className="w-3 h-3" />
-            <span className="hidden sm:inline">Sök kommun</span>
-          </button>
-        }
-
-        {/* Dropdown results */}
-        {searchOpen && results.length > 0 && createPortal(
-          <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
-            {results.map((m, i) =>
-            <button
-              key={m.name}
-              onClick={() => selectMunicipality(m)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-              i === selectedIndex ?
-              'bg-accent text-accent-foreground' :
-              'text-foreground hover:bg-muted'}`
-              }>
-              
-                <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span className="font-medium">{m.name}</span>
+        {/* Municipality search */}
+        <div className="relative shrink-0" ref={dropdownRef}>
+          {searchOpen ? (
+            <div className="flex items-center gap-1 bg-muted rounded-md px-2.5 py-1.5 border border-border">
+              <Search className="w-3 h-3 text-muted-foreground shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value.replace(/<[^>]*>/g, '').slice(0, 50))}
+                onKeyDown={handleKeyDown}
+                placeholder="Sök kommun..."
+                className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/50 outline-none w-28 sm:w-36"
+              />
+              <button
+                onClick={() => { setSearchOpen(false); setQuery(''); }}
+                className="p-0.5 hover:bg-muted-foreground/10 rounded">
+                <X className="w-3 h-3 text-muted-foreground" />
               </button>
-            )}
-          </div>,
-          document.body
-        )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 whitespace-nowrap border border-transparent hover:border-border"
+              title="Sök kommun">
+              <Search className="w-3 h-3" />
+              <span className="hidden sm:inline">Sök kommun</span>
+            </button>
+          )}
 
-        {searchOpen && query.trim() && results.length === 0 && createPortal(
-          <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl p-3" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
-            <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
-          </div>,
-          document.body
-        )}
-      </div>
+          {/* Dropdown results */}
+          {searchOpen && results.length > 0 && createPortal(
+            <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+              {results.map((m, i) => (
+                <button
+                  key={m.name}
+                  onClick={() => selectMunicipality(m)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                    i === selectedIndex ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted'
+                  }`}>
+                  <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="font-medium">{m.name}</span>
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
 
-      {/* Separator */}
-      <div className="w-px h-4 bg-border shrink-0" />
+          {searchOpen && query.trim() && results.length === 0 && createPortal(
+            <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl p-3" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+              <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
+            </div>,
+            document.body
+          )}
+        </div>
 
-      {types.map((type) => {
-        const config = incidentTypeConfig[type];
-        const active = activeFilters.includes(type);
-        const color = TYPE_COLORS[type];
-        const isLocked = type === 'other' && !isLoggedIn;
+        {/* Divider */}
+        <div className="w-px h-5 bg-border shrink-0" />
 
-        return (
-          <button
-            key={type}
-            onClick={() => {
-              if (isLocked) {
-                navigate('/auth?mode=login');
-                return;
-              }
-              onToggleFilter(type);
-            }}
-            className={`
-              relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium
-              transition-all duration-200 whitespace-nowrap select-none
-              ${isLocked ?
-            'bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20' :
-            active ?
-            'bg-muted text-foreground shadow-sm' :
-            'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'}
-            `
+        {/* Incident type filters */}
+        <div className="flex items-center gap-1 shrink-0">
+          {types.map((type) => {
+            const config = incidentTypeConfig[type];
+            const active = activeFilters.includes(type);
+            const color = TYPE_COLORS[type];
+            const isLocked = type === 'other' && !isLoggedIn;
+
+            return (
+              <button
+                key={type}
+                onClick={() => {
+                  if (isLocked) {
+                    navigate('/auth?mode=login');
+                    return;
+                  }
+                  onToggleFilter(type);
+                }}
+                className={`
+                  relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium
+                  transition-all duration-150 whitespace-nowrap select-none border
+                  ${isLocked
+                    ? 'bg-primary/5 text-primary border-primary/15 cursor-pointer hover:bg-primary/10'
+                    : active
+                    ? 'bg-muted text-foreground border-border shadow-sm'
+                    : 'bg-transparent text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+                `}
+                title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
+                {isLocked ? (
+                  <Lock className="w-3 h-3 text-primary shrink-0" />
+                ) : (
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${active ? 'opacity-100' : 'opacity-30'}`}
+                    style={{ backgroundColor: color }}
+                  />
+                )}
+                <span className="leading-none">{config.label}</span>
+                {isLocked && (
+                  <span className="text-[9px] font-semibold text-primary/70">Gratis</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-border shrink-0" />
+
+        {/* Medborgarrapporter — Pro-locked */}
+        <button
+          onClick={() => {
+            if (!isPremium) {
+              navigate('/account');
+              return;
             }
-            title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
-            
-            {isLocked ?
-            <Lock className="w-3 h-3 text-primary shrink-0" /> :
-
+            onToggleCommunityReports();
+          }}
+          className={`
+            relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium
+            transition-all duration-150 whitespace-nowrap select-none border
+            ${!isPremium
+              ? 'bg-secondary/8 text-secondary border-secondary/15 cursor-pointer hover:bg-secondary/15'
+              : showCommunityReports
+              ? 'bg-muted text-foreground border-border shadow-sm'
+              : 'bg-transparent text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+          `}
+          title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Visa/dölj medborgarrapporter'}>
+          {!isPremium ? (
+            <Lock className="w-3 h-3 text-secondary shrink-0" />
+          ) : (
             <span
-              className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
-              active ? 'opacity-100' : 'opacity-40'}`
-              }
-              style={{ backgroundColor: color }} />
-
-            }
-            
-            <span className="leading-none">{config.label}</span>
-            {isLocked &&
-            <span className="text-[9px] font-semibold opacity-75">​Gratis   </span>
-            }
-          </button>);
-
-      })}
-
-      {/* Separator */}
-      <div className="w-px h-4 bg-border shrink-0" />
-
-      {/* Medborgarrapporter Pro-locked filter */}
-      <button
-        onClick={() => {
-          if (!isPremium) {
-            navigate('/account');
-            return;
-          }
-          onToggleCommunityReports();
-        }}
-        className={`
-          relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium
-          transition-all duration-200 whitespace-nowrap select-none
-          ${!isPremium
-            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 cursor-pointer hover:bg-amber-500/20'
-            : showCommunityReports
-            ? 'bg-muted text-foreground shadow-sm'
-            : 'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'}
-        `}
-        title={!isPremium ? 'Uppgradera till Pro för att se medborgarrapporter' : 'Medborgarrapporter'}>
-        {!isPremium ? (
-          <Lock className="w-3 h-3 text-amber-500 shrink-0" />
-        ) : (
-          <span
-            className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
-              showCommunityReports ? 'opacity-100' : 'opacity-40'
-            }`}
-            style={{ backgroundColor: 'hsl(33, 100%, 50%)' }}
-          />
-        )}
-        <span className="leading-none">Rapporter</span>
-        {!isPremium && (
-          <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-            <Crown className="w-2.5 h-2.5" />
-            PRO
-          </span>
-        )}
-      </button>
-    </div>);
+              className={`w-2 h-2 rounded-sm rotate-45 shrink-0 transition-opacity duration-200 ${
+                showCommunityReports ? 'opacity-100' : 'opacity-30'
+              }`}
+              style={{ backgroundColor: 'hsl(var(--cr-orange))' }}
+            />
+          )}
+          <span className="leading-none">Medborgarrapporter</span>
+          {!isPremium && (
+            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/10 rounded px-1 py-0.5 leading-none">
+              <Crown className="w-2.5 h-2.5" />
+              PRO
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default FilterBar;
