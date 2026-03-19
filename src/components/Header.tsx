@@ -27,7 +27,7 @@ const Header = () => {
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
       <Link to="/" className="flex items-center gap-2.5 group">
-        <img alt="CrimeAlert" className="w-8 h-8" src={logo} />
+        <img alt="CrimeAlert" className="w-8 h-8 object-contain" src={logo} />
         <div className="flex flex-col leading-none">
           <span className="font-bold text-sm tracking-wider text-foreground">
             CRIME<span className="text-primary">​ALERT</span>
