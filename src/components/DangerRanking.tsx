@@ -38,6 +38,7 @@ interface AreaData {
 }
 
 const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
+  const [expanded, setExpanded] = useState(false);
   const ranking = useMemo(() => {
     const areaMap: Record<string, Record<CategoryKey, number>> = {};
 
