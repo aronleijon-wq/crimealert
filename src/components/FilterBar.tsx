@@ -256,7 +256,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
           </span>
         )}
       </button>
-
+    </div>);
 };
 
 export default FilterBar;
