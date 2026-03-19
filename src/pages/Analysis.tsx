@@ -648,6 +648,9 @@ const Analysis = () => {
                   </div>
                 )}
 
+                {/* Export */}
+                <ExportData />
+
                 {/* Community Reports */}
                 <CommunityReports />
 
