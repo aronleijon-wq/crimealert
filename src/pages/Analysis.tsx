@@ -10,6 +10,7 @@ import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
+import DangerRanking from '@/components/DangerRanking';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
