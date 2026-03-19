@@ -200,7 +200,7 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
       </div>
 
       <p className="text-[10px] text-muted-foreground mb-3">
-        {needsArchive && archiveLoading ? 'Hämtar data...' : `${sourceIncidents.length} händelser tillgängliga`}
+        {needsArchive && archiveLoading ? 'Hämtar data...' : `${sourceIncidents.length} händelser tillgängliga${selectedArea ? ` i ${selectedArea}` : ''}`}
       </p>
 
       <div className="flex gap-2">
