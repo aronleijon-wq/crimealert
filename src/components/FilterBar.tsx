@@ -215,7 +215,47 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
           </button>);
 
       })}
-    </div>);
+
+      {/* Separator */}
+      <div className="w-px h-4 bg-border shrink-0" />
+
+      {/* Medborgarrapporter Pro-locked filter */}
+      <button
+        onClick={() => {
+          if (!isPremium) {
+            navigate('/account');
+            return;
+          }
+          onToggleCommunityReports();
+        }}
+        className={`
+          relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium
+          transition-all duration-200 whitespace-nowrap select-none
+          ${!isPremium
+            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 cursor-pointer hover:bg-amber-500/20'
+            : showCommunityReports
+            ? 'bg-muted text-foreground shadow-sm'
+            : 'bg-transparent text-muted-foreground/60 hover:bg-muted/40 hover:text-muted-foreground'}
+        `}
+        title={!isPremium ? 'Uppgradera till Pro för att se medborgarrapporter' : 'Medborgarrapporter'}>
+        {!isPremium ? (
+          <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+        ) : (
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-200 ${
+              showCommunityReports ? 'opacity-100' : 'opacity-40'
+            }`}
+            style={{ backgroundColor: 'hsl(33, 100%, 50%)' }}
+          />
+        )}
+        <span className="leading-none">Rapporter</span>
+        {!isPremium && (
+          <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+            <Crown className="w-2.5 h-2.5" />
+            PRO
+          </span>
+        )}
+      </button>
 
 };
 
