@@ -92,22 +92,18 @@ const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
         ))}
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {ranking.map((item, index) => (
           <div key={item.area} className="group">
-            <div className="flex items-center gap-3">
-              {/* Rank number */}
+            {/* Top row: rank, name, bar, score */}
+            <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-muted-foreground w-5 text-right flex-shrink-0">
                 {index + 1}
               </span>
-
-              {/* Area name */}
-              <span className="text-xs font-medium text-foreground w-28 truncate flex-shrink-0">
+              <span className="text-xs font-medium text-foreground w-24 md:w-28 truncate flex-shrink-0">
                 {item.area}
               </span>
-
-              {/* Progress bar */}
-              <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden relative">
+              <div className="flex-1 h-4 bg-muted rounded-sm overflow-hidden">
                 <div
                   className="h-full rounded-sm transition-all duration-500"
                   style={{
@@ -117,27 +113,24 @@ const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
                   }}
                 />
               </div>
-
-              {/* Category badges */}
-              <div className="flex flex-wrap gap-1 flex-shrink-0 justify-end" style={{ minWidth: '180px' }}>
-                {SEVERITY_CATEGORIES.map((cat) => {
-                  const count = item.categories[cat.key];
-                  if (!count) return null;
-                  return (
-                    <span
-                      key={cat.key}
-                      className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${cat.bgClass}`}
-                    >
-                      {count > 1 ? `${count}× ` : ''}{cat.label}
-                    </span>
-                  );
-                })}
-              </div>
-
-              {/* Score */}
-              <span className="text-xs font-mono font-bold text-muted-foreground w-8 text-right flex-shrink-0">
+              <span className="text-[11px] font-mono font-bold text-muted-foreground w-7 text-right flex-shrink-0">
                 {Math.round(item.score)}p
               </span>
+            </div>
+            {/* Bottom row: category badges */}
+            <div className="flex flex-wrap gap-1 ml-7 mt-1">
+              {SEVERITY_CATEGORIES.map((cat) => {
+                const count = item.categories[cat.key];
+                if (!count) return null;
+                return (
+                  <span
+                    key={cat.key}
+                    className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${cat.bgClass}`}
+                  >
+                    {count > 1 ? `${count}× ` : ''}{cat.label}
+                  </span>
+                );
+              })}
             </div>
           </div>
         ))}
