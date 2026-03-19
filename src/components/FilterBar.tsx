@@ -176,9 +176,10 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               {!isPremium ? (
                 <Lock className="w-3 h-3 text-secondary shrink-0" />
               ) : (
-                <svg width="12" height="12" viewBox="0 0 12 12" className={`shrink-0 transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`}>
-                  <rect x="6" y="6" width="5.5" height="5.5" rx="1" transform="rotate(45 6 6)" fill="hsl(var(--cr-orange))" stroke="white" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 1px 2px hsl(var(--cr-orange) / 0.5))' }} />
-                </svg>
+                <span className={`relative shrink-0 flex items-center justify-center transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`} style={{ width: 14, height: 14 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: '#f97316', border: '1.5px solid rgba(255,255,255,0.95)', transform: 'rotate(45deg)', boxShadow: '0 1px 4px rgba(249,115,22,0.5)', display: 'block' }} />
+                  <span style={{ position: 'absolute', fontSize: 7, lineHeight: 1, pointerEvents: 'none' }}>👁️</span>
+                </span>
               )}
               <span className="leading-none">Medborgarrapporter</span>
               {!isPremium && (
