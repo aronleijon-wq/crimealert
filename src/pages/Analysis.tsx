@@ -364,7 +364,7 @@ const Analysis = () => {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <h1 className="text-xl font-bold text-foreground">
-                  Analys {selectedArea && <span className="text-primary">· {selectedArea}</span>}
+                  Analys & Statistik {selectedArea && <span className="text-primary">· {selectedArea}</span>}
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {filteredIncidents.length} händelser{selectedArea ? ` i ${selectedArea}` : ''} · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
