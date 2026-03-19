@@ -24,6 +24,7 @@ const Index = () => {
   const isLoggedIn = !!user;
   const [mobileListOpen, setMobileListOpen] = useState(true);
   const [heroDismissed, setHeroDismissed] = useState(false);
+  const [showCommunityReports, setShowCommunityReports] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
     // Non-logged-in users can't see 'other' incidents
@@ -50,9 +51,13 @@ const Index = () => {
 
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   // Community reports only visible for Pro members on the map/list
-  const allIncidents = isPremium ?
-  [...policeIncidents, ...communityReports] :
-  [...policeIncidents];
+  const allIncidents = useMemo(() => {
+    const base = policeIncidents;
+    if (isPremium && showCommunityReports) {
+      return [...base, ...communityReports];
+    }
+    return [...base];
+  }, [policeIncidents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
   // Grova brott som alltid visas på kartan oavsett ålder
@@ -110,7 +115,7 @@ const Index = () => {
 
 
           <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
-          <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
+          <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} showCommunityReports={showCommunityReports} onToggleCommunityReports={() => setShowCommunityReports(prev => !prev)} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
         
         </>
