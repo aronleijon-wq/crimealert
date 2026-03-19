@@ -10,6 +10,7 @@ import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
+import DangerRanking from '@/components/DangerRanking';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
@@ -492,42 +493,10 @@ const Analysis = () => {
                     )}
                   </div>
 
-                  <div className="bg-card border border-border rounded-lg p-4">
-                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-1">
-                      <Shield className="w-3 h-3 inline mr-1" />
-                      Säkerhetsindex per område
-                    </h3>
-                    <p className="text-[10px] text-muted-foreground mb-3">Baserat på {TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label?.toLowerCase() ?? 'vald period'} · 100 = säkrast</p>
-                    {stats?.areaComparison?.length ? (
-                    <div className="space-y-3 mt-2">
-                      {stats.areaComparison.map((a) =>
-                  <div key={a.område}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-foreground truncate mr-2">{a.område}</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-muted-foreground">{a.total} brott{a.high > 0 ? ` (${a.high} allvarliga)` : ''}</span>
-                              <span className={`text-xs font-mono font-bold ${a.index <= 30 ? 'text-cr-red' : a.index <= 60 ? 'text-cr-orange' : 'text-cr-green'}`}>
-                                {a.index}/100
-                              </span>
-                            </div>
-                          </div>
-                          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${a.index}%`,
-                          background: a.index <= 30 ? 'hsl(0, 100%, 62%)' : a.index <= 60 ? 'hsl(25, 100%, 63%)' : 'hsl(142, 70%, 45%)'
-                        }} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    ) : (
-                    <div className="h-[120px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
-                    </div>
-                    )}
-                  </div>
+                  <DangerRanking
+                    incidents={filteredIncidents}
+                    periodLabel={`Baserat på ${TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label?.toLowerCase() ?? 'vald period'}s data${selectedArea ? ` i ${selectedArea}` : ''}`}
+                  />
                 </div>
 
                 {/* Predictive Analysis Section */}
