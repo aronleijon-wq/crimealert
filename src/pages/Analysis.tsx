@@ -161,52 +161,52 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 };
 
 const Analysis = () => {
-  const { incidents, loading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
+  const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
 
+  // Fetch archive data for 7d and 30d (with pagination to bypass 1000-row limit)
+  const archiveDays = timeRange === '30d' ? 30 : timeRange === '7d' ? 7 : 0;
+  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, timeRange !== '24h');
+
+  // Use live data for 24h, archive data for 7d/30d
+  const incidents = timeRange === '24h' ? liveIncidents : archiveIncidents;
+  const loading = timeRange === '24h' ? liveLoading : archiveLoading;
+
   // Extract unique areas from all incidents
   const availableAreas = useMemo(() => {
     const areas = new Set<string>();
-    incidents.forEach((i) => {if (i.area) areas.add(i.area);});
+    // Combine both sources for area list
+    [...liveIncidents, ...archiveIncidents].forEach((i) => {if (i.area) areas.add(i.area);});
     return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
-  }, [incidents]);
-
-  // No auto-refresh — data comes from the shared usePoliceEvents hook
-  // which already polls every 5 minutes. Manual refresh via button only.
+  }, [liveIncidents, archiveIncidents]);
 
   // Track when data loads or changes
   useEffect(() => {
     if (incidents.length > 0) setLastUpdated(new Date());
-  }, [dataVersion]);
+  }, [dataVersion, incidents.length]);
 
-  // Filter incidents based on selected time range
+  // Filter incidents based on selected area (time filtering already done by data source)
   const filteredIncidents = useMemo(() => {
-    const now = new Date();
-    let cutoff: Date;
-    switch (timeRange) {
-      case '24h':
-        // Reset at midnight — show only today's incidents
-        cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        break;
-      case '7d':
-        cutoff = new Date(now);
-        cutoff.setDate(cutoff.getDate() - 7);
-        break;
-      case '30d':
-        cutoff = new Date(now);
-        cutoff.setDate(cutoff.getDate() - 30);
-        break;
+    if (timeRange === '24h') {
+      // For 24h, still filter from live data by midnight cutoff
+      const now = new Date();
+      const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      return incidents.filter((i) => {
+        try {
+          const inTimeRange = parseTime(i.time) >= cutoff;
+          const inArea = !selectedArea || i.area === selectedArea;
+          return inTimeRange && inArea;
+        } catch {return false;}
+      });
     }
+    // For 7d/30d, archive hook already filters by time — just filter by area
     return incidents.filter((i) => {
-      try {
-        const inTimeRange = parseTime(i.time) >= cutoff;
-        const inArea = !selectedArea || i.area === selectedArea;
-        return inTimeRange && inArea;
-      } catch {return false;}
+      const inArea = !selectedArea || i.area === selectedArea;
+      return inArea;
     });
   }, [incidents, timeRange, selectedArea, dataVersion]);
 
