@@ -9,6 +9,7 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
+import ExportData from '@/components/ExportData';
 
 /** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
@@ -646,6 +647,9 @@ const Analysis = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Export */}
+                <ExportData />
 
                 {/* Community Reports */}
                 <CommunityReports />
