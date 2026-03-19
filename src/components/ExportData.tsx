@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ExportDataProps {
   liveIncidents: Incident[];
+  selectedArea?: string | null;
 }
 
 const RISK_LABELS: Record<string, string> = { low: 'Låg', medium: 'Medel', high: 'Hög' };
