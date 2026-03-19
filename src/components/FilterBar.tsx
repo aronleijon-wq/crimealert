@@ -26,9 +26,10 @@ const TYPE_COLORS: Record<IncidentType, string> = {
   other: 'hsl(var(--muted-foreground))'
 };
 
-const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, onSearchLocation }: FilterBarProps) => {
+const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, showCommunityReports, onToggleCommunityReports, onSearchLocation }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
   const { user } = useAuth();
+  const { isPremium } = useIsPremium();
   const isLoggedIn = !!user;
   const navigate = useNavigate();
 
