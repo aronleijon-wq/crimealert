@@ -166,7 +166,7 @@ const Account = () => {
     { text: 'Reklam i app/webb', included: true },
     { text: 'Realtidsdata', included: false },
     { text: 'Riskanalys & statistik', included: false },
-    { text: 'AI-chatt', included: false },
+    { text: 'Medborgarrapporter', included: false },
     { text: 'Full historik', included: false }],
 
     cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
@@ -227,7 +227,7 @@ const Account = () => {
   const proFeatures = [
   { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
   { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
-  { icon: MessageSquare, text: 'CrimeAlert AI-chatt' },
+  { icon: MessageSquare, text: 'Medborgarrapporter' },
   { icon: Clock, text: 'Full historik (30+ dagar)' },
   { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
   { icon: EyeOff, text: 'Ingen reklam' },
