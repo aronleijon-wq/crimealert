@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin, Lock, Crown, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock, Crown } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -32,14 +32,13 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   const isLoggedIn = !!user;
   const navigate = useNavigate();
 
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
-  const filterPanelRef = useRef<HTMLDivElement>(null);
 
   const activeFilterCount = activeFilters.length + (showCommunityReports && isPremium ? 1 : 0);
 
@@ -77,17 +76,6 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
     return () => document.removeEventListener('mousedown', handler);
   }, [searchOpen]);
 
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (filterPanelRef.current && !filterPanelRef.current.contains(e.target as Node)) {
-        setFiltersOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [filtersOpen]);
-
   const selectMunicipality = (m: Municipality) => {
     onSearchLocation?.(m.lat, m.lng, m.zoom, m.name);
     setSearchOpen(false);
@@ -103,142 +91,108 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
   return (
     <div className="border-b border-border bg-card/80 backdrop-blur-sm">
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        {/* Filter toggle button */}
-        <div className="relative" ref={filterPanelRef}>
-          <button
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`
-              flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium
-              transition-all duration-150 whitespace-nowrap select-none border
-              ${filtersOpen
-                ? 'bg-muted text-foreground border-border shadow-sm'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground border-transparent hover:border-border'}
-            `}>
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                {activeFilterCount}
-              </span>
-            )}
-            <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${filtersOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {/* Filter dropdown panel */}
-          {filtersOpen && (
-            <div className="absolute top-full left-0 mt-1 z-[9999] bg-card border border-border rounded-lg shadow-xl p-3 min-w-[220px]">
-              <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Händelsetyper</p>
-              <div className="flex flex-col gap-0.5 mb-3">
-                {types.map((type) => {
-                  const config = incidentTypeConfig[type];
-                  const active = activeFilters.includes(type);
-                  const color = TYPE_COLORS[type];
-                  const isLocked = type === 'other' && !isLoggedIn;
-
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        if (isLocked) { navigate('/auth?mode=login'); return; }
-                        onToggleFilter(type);
-                      }}
-                      className={`
-                        flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-medium
-                        transition-all duration-150 whitespace-nowrap select-none
-                        ${isLocked
-                          ? 'text-primary hover:bg-primary/5'
-                          : active
-                          ? 'bg-muted text-foreground'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
-                      `}>
-                      {isLocked ? (
-                        <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
-                      ) : (
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 border-2 transition-all duration-150 ${
-                            active ? 'border-transparent' : 'border-muted-foreground/20 bg-transparent'
-                          }`}
-                          style={active ? { backgroundColor: color } : {}}
-                        />
-                      )}
-                      <span className="flex-1 text-left">{config.label}</span>
-                      {isLocked && (
-                        <span className="text-[9px] font-semibold text-primary/70 bg-primary/5 rounded px-1.5 py-0.5">Gratis</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="h-px bg-border mb-3" />
-
-              <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Medborgarrapporter</p>
-              <button
-                onClick={() => {
-                  if (!isPremium) { navigate('/account'); return; }
-                  onToggleCommunityReports();
-                }}
-                className={`
-                  w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-medium
-                  transition-all duration-150 whitespace-nowrap select-none
-                  ${!isPremium
-                    ? 'text-secondary hover:bg-secondary/5'
-                    : showCommunityReports
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}
-                `}
-                title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Visa/dölj medborgarrapporter'}>
-                {!isPremium ? (
-                  <Lock className="w-3.5 h-3.5 text-secondary shrink-0" />
-                ) : (
-                  <span
-                    className={`w-2.5 h-2.5 rounded-sm rotate-45 shrink-0 border-2 transition-all duration-150 ${
-                      showCommunityReports ? 'border-transparent' : 'border-muted-foreground/20 bg-transparent'
-                    }`}
-                    style={showCommunityReports ? { backgroundColor: 'hsl(var(--cr-orange))' } : {}}
-                  />
-                )}
-                <span className="flex-1 text-left">Medborgarrapporter</span>
-                {!isPremium && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/10 rounded px-1.5 py-0.5 leading-none">
-                    <Crown className="w-2.5 h-2.5" />
-                    PRO
-                  </span>
-                )}
-              </button>
-            </div>
+      <div className="flex items-center gap-1.5 px-3 py-1.5 overflow-x-auto scrollbar-none">
+        {/* Filter toggle */}
+        <button
+          onClick={() => setFiltersVisible(!filtersVisible)}
+          className={`
+            flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
+            transition-all duration-150 whitespace-nowrap select-none border
+            ${filtersVisible
+              ? 'bg-muted text-foreground border-border shadow-sm'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground border-transparent hover:border-border'}
+          `}>
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span>Filter</span>
+          {!filtersVisible && activeFilterCount > 0 && (
+            <span className="bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+              {activeFilterCount}
+            </span>
           )}
-        </div>
+        </button>
 
-        {/* Active filter pills */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-          {activeFilters.map((type) => {
-            const color = TYPE_COLORS[type];
-            const config = incidentTypeConfig[type];
-            return (
-              <button
-                key={type}
-                onClick={() => onToggleFilter(type)}
-                className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted/60 text-[10px] font-medium text-foreground hover:bg-muted transition-colors shrink-0"
-                title={`Ta bort ${config.label}`}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-                <span>{config.label}</span>
-                <X className="w-2.5 h-2.5 text-muted-foreground" />
-              </button>
-            );
-          })}
-          {isPremium && showCommunityReports && (
+        {/* Inline filter chips — shown when filtersVisible */}
+        {filtersVisible && (
+          <>
+            <div className="w-px h-4 bg-border shrink-0" />
+
+            {types.map((type) => {
+              const config = incidentTypeConfig[type];
+              const active = activeFilters.includes(type);
+              const color = TYPE_COLORS[type];
+              const isLocked = type === 'other' && !isLoggedIn;
+
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    if (isLocked) { navigate('/auth?mode=login'); return; }
+                    onToggleFilter(type);
+                  }}
+                  className={`
+                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
+                    transition-all duration-150 whitespace-nowrap select-none border
+                    ${isLocked
+                      ? 'bg-primary/5 text-primary border-primary/15 hover:bg-primary/10'
+                      : active
+                      ? 'bg-muted text-foreground border-border shadow-sm'
+                      : 'text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+                  `}
+                  title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
+                  {isLocked ? (
+                    <Lock className="w-3 h-3 text-primary shrink-0" />
+                  ) : (
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-150 ${active ? 'opacity-100' : 'opacity-30'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  )}
+                  <span className="leading-none">{config.label}</span>
+                  {isLocked && (
+                    <span className="text-[9px] font-semibold text-primary/70">Gratis</span>
+                  )}
+                </button>
+              );
+            })}
+
+            <div className="w-px h-4 bg-border shrink-0" />
+
+            {/* Medborgarrapporter */}
             <button
-              onClick={onToggleCommunityReports}
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted/60 text-[10px] font-medium text-foreground hover:bg-muted transition-colors shrink-0"
-              title="Ta bort Medborgarrapporter">
-              <span className="w-1.5 h-1.5 rounded-sm rotate-45" style={{ backgroundColor: 'hsl(var(--cr-orange))' }} />
-              <span>Rapporter</span>
-              <X className="w-2.5 h-2.5 text-muted-foreground" />
+              onClick={() => {
+                if (!isPremium) { navigate('/account'); return; }
+                onToggleCommunityReports();
+              }}
+              className={`
+                flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
+                transition-all duration-150 whitespace-nowrap select-none border
+                ${!isPremium
+                  ? 'bg-secondary/5 text-secondary border-secondary/15 hover:bg-secondary/10'
+                  : showCommunityReports
+                  ? 'bg-muted text-foreground border-border shadow-sm'
+                  : 'text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+              `}
+              title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Medborgarrapporter'}>
+              {!isPremium ? (
+                <Lock className="w-3 h-3 text-secondary shrink-0" />
+              ) : (
+                <span
+                  className={`w-2 h-2 rounded-sm rotate-45 shrink-0 transition-opacity duration-150 ${
+                    showCommunityReports ? 'opacity-100' : 'opacity-30'
+                  }`}
+                  style={{ backgroundColor: 'hsl(var(--cr-orange))' }}
+                />
+              )}
+              <span className="leading-none">Medborgarrapporter</span>
+              {!isPremium && (
+                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/10 rounded px-1 py-0.5 leading-none">
+                  <Crown className="w-2.5 h-2.5" />
+                  PRO
+                </span>
+              )}
             </button>
-          )}
-        </div>
+          </>
+        )}
 
         <div className="flex-1" />
 
