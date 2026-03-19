@@ -92,6 +92,61 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   return (
     <div className="border-b border-border bg-card/80 backdrop-blur-sm">
       <div className="flex items-center gap-1.5 px-3 py-1.5 overflow-x-auto scrollbar-none">
+        {/* Municipality search */}
+        <div className="relative shrink-0" ref={dropdownRef}>
+          {searchOpen ? (
+            <div className="flex items-center gap-1 bg-muted rounded-md px-2.5 py-1.5 border border-border">
+              <Search className="w-3 h-3 text-muted-foreground shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value.replace(/<[^>]*>/g, '').slice(0, 50))}
+                onKeyDown={handleKeyDown}
+                placeholder="Sök kommun..."
+                className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/50 outline-none w-28 sm:w-36"
+              />
+              <button
+                onClick={() => { setSearchOpen(false); setQuery(''); }}
+                className="p-0.5 hover:bg-muted-foreground/10 rounded">
+                <X className="w-3 h-3 text-muted-foreground" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 whitespace-nowrap border border-transparent hover:border-border"
+              title="Sök kommun">
+              <Search className="w-3 h-3" />
+              <span className="hidden sm:inline">Sök kommun</span>
+            </button>
+          )}
+
+          {searchOpen && results.length > 0 && createPortal(
+            <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+              {results.map((m, i) => (
+                <button
+                  key={m.name}
+                  onClick={() => selectMunicipality(m)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                    i === selectedIndex ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted'
+                  }`}>
+                  <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="font-medium">{m.name}</span>
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
+
+          {searchOpen && query.trim() && results.length === 0 && createPortal(
+            <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl p-3" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
+              <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
+            </div>,
+            document.body
+          )}
+        </div>
+
         {/* Filter toggle */}
         <button
           onClick={() => setFiltersVisible(!filtersVisible)}
@@ -193,61 +248,6 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
         )}
 
         <div className="flex-1" />
-
-        {/* Municipality search */}
-        <div className="relative shrink-0" ref={dropdownRef}>
-          {searchOpen ? (
-            <div className="flex items-center gap-1 bg-muted rounded-md px-2.5 py-1.5 border border-border">
-              <Search className="w-3 h-3 text-muted-foreground shrink-0" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value.replace(/<[^>]*>/g, '').slice(0, 50))}
-                onKeyDown={handleKeyDown}
-                placeholder="Sök kommun..."
-                className="bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/50 outline-none w-28 sm:w-36"
-              />
-              <button
-                onClick={() => { setSearchOpen(false); setQuery(''); }}
-                className="p-0.5 hover:bg-muted-foreground/10 rounded">
-                <X className="w-3 h-3 text-muted-foreground" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 whitespace-nowrap border border-transparent hover:border-border"
-              title="Sök kommun">
-              <Search className="w-3 h-3" />
-              <span className="hidden sm:inline">Sök kommun</span>
-            </button>
-          )}
-
-          {searchOpen && results.length > 0 && createPortal(
-            <div ref={portalRef} className="fixed w-52 bg-card border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
-              {results.map((m, i) => (
-                <button
-                  key={m.name}
-                  onClick={() => selectMunicipality(m)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                    i === selectedIndex ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted'
-                  }`}>
-                  <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                  <span className="font-medium">{m.name}</span>
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
-
-          {searchOpen && query.trim() && results.length === 0 && createPortal(
-            <div className="fixed w-52 bg-card border border-border rounded-lg shadow-xl p-3" style={{ zIndex: 99999, top: (inputRef.current?.getBoundingClientRect().bottom ?? 0) + 4, left: inputRef.current?.getBoundingClientRect().left ?? 0 }}>
-              <p className="text-[10px] text-muted-foreground text-center">Ingen kommun hittades</p>
-            </div>,
-            document.body
-          )}
-        </div>
       </div>
     </div>
   );
