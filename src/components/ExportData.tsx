@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ExportDataProps {
   liveIncidents: Incident[];
+  selectedArea?: string | null;
 }
 
 const RISK_LABELS: Record<string, string> = { low: 'Låg', medium: 'Medel', high: 'Hög' };
@@ -114,7 +115,7 @@ function downloadPDF(incidents: Incident[], range: string) {
 
 type Range = '24h' | '7d' | '30d';
 
-const ExportData = ({ liveIncidents }: ExportDataProps) => {
+const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   const { isPremium } = useIsPremium();
   const [range, setRange] = useState<Range>('24h');
   const [exporting, setExporting] = useState(false);
@@ -132,7 +133,11 @@ const ExportData = ({ liveIncidents }: ExportDataProps) => {
     });
   }, [liveIncidents]);
 
-  const sourceIncidents = needsArchive ? archiveIncidents : filtered24h;
+  const timeFiltered = needsArchive ? archiveIncidents : filtered24h;
+  const sourceIncidents = useMemo(() => {
+    if (!selectedArea) return timeFiltered;
+    return timeFiltered.filter((i) => i.area === selectedArea);
+  }, [timeFiltered, selectedArea]);
   const rangeLabel = range === '24h' ? 'Senaste 24h' : range === '7d' ? 'Senaste 7 dagar' : 'Senaste 30 dagar';
 
   const handleExport = (format: 'csv' | 'pdf') => {
@@ -195,7 +200,7 @@ const ExportData = ({ liveIncidents }: ExportDataProps) => {
       </div>
 
       <p className="text-[10px] text-muted-foreground mb-3">
-        {needsArchive && archiveLoading ? 'Hämtar data...' : `${sourceIncidents.length} händelser tillgängliga`}
+        {needsArchive && archiveLoading ? 'Hämtar data...' : `${sourceIncidents.length} händelser tillgängliga${selectedArea ? ` i ${selectedArea}` : ''}`}
       </p>
 
       <div className="flex gap-2">

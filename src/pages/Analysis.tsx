@@ -649,7 +649,7 @@ const Analysis = () => {
                 )}
 
                 {/* Export */}
-                <ExportData liveIncidents={liveIncidents} />
+                <ExportData liveIncidents={liveIncidents} selectedArea={selectedArea} />
 
                 {/* Community Reports */}
                 <CommunityReports />
