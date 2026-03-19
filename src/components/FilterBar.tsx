@@ -176,8 +176,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               {!isPremium ? (
                 <Lock className="w-3 h-3 text-secondary shrink-0" />
               ) : (
-                <svg width="10" height="10" viewBox="0 0 10 10" className={`shrink-0 transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`}>
-                  <rect x="5" y="0" width="7" height="7" rx="1.5" transform="rotate(45 5 5)" fill="hsl(var(--cr-orange))" stroke="hsl(var(--background))" strokeWidth="1.5" />
+                <svg width="12" height="12" viewBox="0 0 12 12" className={`shrink-0 transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`}>
+                  <rect x="6" y="6" width="5.5" height="5.5" rx="1" transform="rotate(45 6 6)" fill="hsl(var(--cr-orange))" stroke="white" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 1px 2px hsl(var(--cr-orange) / 0.5))' }} />
                 </svg>
               )}
               <span className="leading-none">Medborgarrapporter</span>
