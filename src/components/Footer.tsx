@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Shield, FileText, Cookie } from 'lucide-react';
 
-const Footer = () => (
-  <footer className="border-t border-border bg-card px-4 py-4">
+const Footer = () =>
+<footer className="border-t border-border bg-card px-4 my-0 py-[3px]">
     <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
       <span className="text-[10px] text-muted-foreground font-mono">
         © {new Date().getFullYear()} CrimeAlert — Säkerhetskarta åt allmänheten
@@ -22,7 +22,7 @@ const Footer = () => (
         </Link>
       </nav>
     </div>
-  </footer>
-);
+  </footer>;
+
 
 export default Footer;
