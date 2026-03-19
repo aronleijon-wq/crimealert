@@ -94,9 +94,8 @@ const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
       </div>
 
       <div className="space-y-3">
-        {ranking.map((item, index) => (
+        {(expanded ? ranking : ranking.slice(0, 3)).map((item, index) => (
           <div key={item.area} className="group">
-            {/* Top row: rank, name, bar, score */}
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-muted-foreground w-5 text-right flex-shrink-0">
                 {index + 1}
@@ -118,7 +117,6 @@ const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
                 {Math.round(item.score)}p
               </span>
             </div>
-            {/* Bottom row: category badges */}
             <div className="flex flex-wrap gap-1 ml-7 mt-1">
               {SEVERITY_CATEGORIES.map((cat) => {
                 const count = item.categories[cat.key];
@@ -136,6 +134,16 @@ const DangerRanking = ({ incidents, periodLabel }: DangerRankingProps) => {
           </div>
         ))}
       </div>
+
+      {ranking.length > 3 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors py-1.5 rounded-md hover:bg-muted"
+        >
+          {expanded ? 'Visa färre' : `Se fler (${ranking.length - 3} till)`}
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
     </div>
   );
 };
