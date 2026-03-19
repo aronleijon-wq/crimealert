@@ -98,7 +98,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   };
 
   return (
-    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card/80 backdrop-blur-sm overflow-x-auto scrollbar-none">
+    <div className="flex items-center gap-1.5 px-3 border-b border-border bg-card/80 backdrop-blur-sm overflow-x-auto scrollbar-none py-[6px]">
       <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mr-1" />
       
       {/* Municipality search */}
