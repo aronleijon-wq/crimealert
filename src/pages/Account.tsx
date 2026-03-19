@@ -454,25 +454,6 @@ const Account = () => {
             </div>
           }
 
-          {/* Comparison table */}
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <span className="text-xs font-bold text-foreground">Notiser & Fördröjning</span>
-            </div>
-            <div className="divide-y divide-border text-[11px]">
-              {[
-              ['Gratis', '15 min delay på händelser & push'],
-              ['Pro', 'Realtid – direkt utan fördröjning'],
-              ['Företag', 'Realtid + avancerade notiser & API']].
-              map(([plan, desc]) => {}
-
-
-
-
-              )}
-            </div>
-          </div>
-
           {/* Contact form */}
           <ContactSection />
 
