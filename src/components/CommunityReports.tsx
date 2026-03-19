@@ -242,9 +242,7 @@ export default function CommunityReports() {
         <CardHeader className="p-4 pb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquarePlus className="w-4 h-4 text-primary" />
-              </div>
+
               <div>
                 <CardTitle className="text-sm font-bold">Medborgarrapporter</CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
