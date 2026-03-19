@@ -19,7 +19,7 @@ const Header = () => {
   ...(user ?
   [{ to: '/account', label: 'Konto', icon: User }] :
   [
-  { to: '/auth', label: 'Logga in', icon: User },
+  { to: '/auth', label: 'Skapa Konto', icon: User },
   { to: '/account', label: 'Prisplan', icon: CreditCard }])];
 
 
