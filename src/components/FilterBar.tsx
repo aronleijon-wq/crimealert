@@ -32,7 +32,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   const isLoggedIn = !!user;
   const navigate = useNavigate();
 
-  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
