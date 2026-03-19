@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Download, FileText, Table2, Calendar, Loader2 } from 'lucide-react';
 import { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
