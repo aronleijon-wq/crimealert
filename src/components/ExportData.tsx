@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Download, FileText, Table2, Calendar, Loader2 } from 'lucide-react';
 import { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -96,7 +96,16 @@ const ExportData = () => {
   const archiveDays = range === '30d' ? 30 : 7;
   const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, needsArchive && isPremium);
 
-  const sourceIncidents = needsArchive ? archiveIncidents : liveIncidents;
+  // Filter live incidents to last 24h only
+  const filtered24h = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return liveIncidents.filter(i => {
+      const t = new Date(i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+      return !isNaN(t) && t >= cutoff;
+    });
+  }, [liveIncidents]);
+
+  const sourceIncidents = needsArchive ? archiveIncidents : filtered24h;
   const rangeLabel = range === '24h' ? 'Senaste 24h' : range === '7d' ? 'Senaste 7 dagar' : 'Senaste 30 dagar';
 
   const handleExport = (format: 'csv' | 'pdf') => {
