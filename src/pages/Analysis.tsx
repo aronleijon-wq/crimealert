@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
+import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 
