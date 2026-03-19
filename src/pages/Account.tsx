@@ -166,7 +166,7 @@ const Account = () => {
     { text: 'Reklam i app/webb', included: true },
     { text: 'Realtidsdata', included: false },
     { text: 'Riskanalys & statistik', included: false },
-    { text: 'AI-chatt', included: false },
+    { text: 'Medborgarrapporter', included: false },
     { text: 'Full historik', included: false }],
 
     cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
