@@ -115,7 +115,7 @@ function downloadPDF(incidents: Incident[], range: string) {
 
 type Range = '24h' | '7d' | '30d';
 
-const ExportData = ({ liveIncidents }: ExportDataProps) => {
+const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   const { isPremium } = useIsPremium();
   const [range, setRange] = useState<Range>('24h');
   const [exporting, setExporting] = useState(false);
@@ -133,7 +133,11 @@ const ExportData = ({ liveIncidents }: ExportDataProps) => {
     });
   }, [liveIncidents]);
 
-  const sourceIncidents = needsArchive ? archiveIncidents : filtered24h;
+  const timeFiltered = needsArchive ? archiveIncidents : filtered24h;
+  const sourceIncidents = useMemo(() => {
+    if (!selectedArea) return timeFiltered;
+    return timeFiltered.filter((i) => i.area === selectedArea);
+  }, [timeFiltered, selectedArea]);
   const rangeLabel = range === '24h' ? 'Senaste 24h' : range === '7d' ? 'Senaste 7 dagar' : 'Senaste 30 dagar';
 
   const handleExport = (format: 'csv' | 'pdf') => {
