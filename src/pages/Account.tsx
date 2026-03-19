@@ -190,6 +190,7 @@ const Account = () => {
     { text: 'Heatmaps & riskanalys', included: true },
     { text: 'Ingen reklam', included: true },
     { text: 'Detaljerade brottsbeskrivningar', included: true },
+    { text: 'Medborgarrapporter', included: true },
     { text: 'Export PDF/CSV', included: true },
     { text: 'API-access', included: false },
     { text: 'White-label', included: false }],
