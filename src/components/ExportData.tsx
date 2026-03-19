@@ -100,7 +100,9 @@ const ExportData = () => {
   const filtered24h = useMemo(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     return liveIncidents.filter(i => {
-      const t = new Date(i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
+      // Handle both ISO format and "2026-02-18 22:03:10 +01:00" format
+      const normalized = i.time.includes('T') ? i.time : i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
+      const t = new Date(normalized).getTime();
       return !isNaN(t) && t >= cutoff;
     });
   }, [liveIncidents]);
