@@ -55,7 +55,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
               key={r.type}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!user) { window.location.href = '/auth'; return; }
+                if (!user) { setShowAuthNudge(true); return; }
                 toggleReaction(r.type);
               }}
               style={{
