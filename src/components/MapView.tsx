@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { createRoot, Root } from 'react-dom/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import PopupEngagement from './PopupEngagement';
 
 interface MapViewProps {
   incidents: Incident[];
@@ -329,6 +331,8 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         <span>Källa: ${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
+
+      <div id="popup-engagement-${inc.id.replace(/[^a-zA-Z0-9_-]/g, '_')}" data-incident-id="${inc.id}"></div>
     </div>
   `;
 };
@@ -340,6 +344,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
+  const popupRootsRef = useRef<Map<string, Root>>(new Map());
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Listen for lightbox events from popup image clicks
@@ -486,7 +491,21 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
       marker.on('click', handleSelect);
       marker.on('touchend', handleSelect);
+      marker.on('popupopen', () => {
+        const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const el = document.getElementById(`popup-engagement-${safeId}`);
+        if (el && !popupRootsRef.current.has(inc.id)) {
+          const root = createRoot(el);
+          root.render(<PopupEngagement incidentId={inc.id} />);
+          popupRootsRef.current.set(inc.id, root);
+        }
+      });
       marker.on('popupclose', () => {
+        const existingRoot = popupRootsRef.current.get(inc.id);
+        if (existingRoot) {
+          existingRoot.unmount();
+          popupRootsRef.current.delete(inc.id);
+        }
         prevSelectedRef.current = null;
         onSelectIncidentRef.current('');
       });

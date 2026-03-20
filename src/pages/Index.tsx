@@ -4,7 +4,7 @@ import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
-import IncidentBottomSheet from '@/components/IncidentBottomSheet';
+
 
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -105,7 +105,7 @@ const Index = () => {
   );
 
   const activeCount = filtered.filter((i) => i.status === 'active').length;
-  const selectedIncident = filtered.find((i) => i.id === selectedId) || null;
+  
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -226,13 +226,6 @@ const Index = () => {
 
       {!isFullscreen && <Footer />}
 
-      {/* Community comments bottom sheet */}
-      {selectedIncident && (
-        <IncidentBottomSheet
-          incident={selectedIncident}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
     </div>);
 
 };
