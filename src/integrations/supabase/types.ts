@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "incident_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_reports: {
         Row: {
           area: string | null
@@ -107,6 +136,54 @@ export type Database = {
           lng?: number
           precision?: string
           query?: string
+        }
+        Relationships: []
+      }
+      incident_comments: {
+        Row: {
+          created_at: string
+          id: string
+          incident_id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incident_id: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incident_id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      incident_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          incident_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incident_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incident_id?: string
+          reaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }
