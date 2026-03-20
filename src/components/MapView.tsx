@@ -491,7 +491,21 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
       marker.on('click', handleSelect);
       marker.on('touchend', handleSelect);
+      marker.on('popupopen', () => {
+        const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const el = document.getElementById(`popup-engagement-${safeId}`);
+        if (el && !popupRootsRef.current.has(inc.id)) {
+          const root = createRoot(el);
+          root.render(<PopupEngagement incidentId={inc.id} />);
+          popupRootsRef.current.set(inc.id, root);
+        }
+      });
       marker.on('popupclose', () => {
+        const existingRoot = popupRootsRef.current.get(inc.id);
+        if (existingRoot) {
+          existingRoot.unmount();
+          popupRootsRef.current.delete(inc.id);
+        }
         prevSelectedRef.current = null;
         onSelectIncidentRef.current('');
       });
