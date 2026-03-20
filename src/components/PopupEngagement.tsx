@@ -29,7 +29,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const { reactions, toggleReaction } = useIncidentReactions(incidentId);
-  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId);
+  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [text, setText] = useState('');
   const [showAuthNudge, setShowAuthNudge] = useState(false);
