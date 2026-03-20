@@ -105,7 +105,7 @@ const Index = () => {
   );
 
   const activeCount = filtered.filter((i) => i.status === 'active').length;
-  const selectedIncident = filtered.find((i) => i.id === selectedId) || null;
+  
 
   return (
     <div className="h-screen flex flex-col bg-background">
