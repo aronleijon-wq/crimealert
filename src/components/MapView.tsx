@@ -331,6 +331,8 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         <span>Källa: ${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
+
+      <div id="popup-engagement-${inc.id.replace(/[^a-zA-Z0-9_-]/g, '_')}" data-incident-id="${inc.id}"></div>
     </div>
   `;
 };
