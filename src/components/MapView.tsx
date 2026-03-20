@@ -530,7 +530,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       
       setTimeout(() => {
         const marker = markerMapRef.current.get(inc.id);
-        if (marker) marker.openPopup();
+        if (marker && !marker.isPopupOpen()) marker.openPopup();
       }, 850);
     }
   }, [selectedId, incidents]);
