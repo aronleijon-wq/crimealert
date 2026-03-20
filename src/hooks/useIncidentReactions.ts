@@ -15,12 +15,14 @@ export interface ReactionCount {
   userReacted: boolean;
 }
 
-export function useIncidentReactions(incidentId: string | null) {
+export function useIncidentReactions(incidentId: string | null, enabled = true) {
   const { user } = useAuth();
-  const [reactions, setReactions] = useState<ReactionCount[]>([]);
+  const [reactions, setReactions] = useState<ReactionCount[]>(
+    REACTION_TYPES.map(r => ({ type: r.type, count: 0, userReacted: false }))
+  );
 
   const fetchReactions = useCallback(async () => {
-    if (!incidentId) return;
+    if (!incidentId || !enabled) return;
     const { data } = await supabase
       .from('incident_reactions')
       .select('reaction_type, user_id')
@@ -41,34 +43,22 @@ export function useIncidentReactions(incidentId: string | null) {
       count: counts.get(r.type)?.count || 0,
       userReacted: counts.get(r.type)?.userReacted || false,
     })));
-  }, [incidentId, user]);
+  }, [incidentId, user, enabled]);
 
-  useEffect(() => { fetchReactions(); }, [fetchReactions]);
-
-  // Realtime
-  useEffect(() => {
-    if (!incidentId) return;
-    const channel = supabase
-      .channel(`reactions-${incidentId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'incident_reactions',
-        filter: `incident_id=eq.${incidentId}`,
-      }, () => { fetchReactions(); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [incidentId, fetchReactions]);
+  useEffect(() => { if (enabled) fetchReactions(); }, [fetchReactions, enabled]);
 
   const toggleReaction = useCallback(async (reactionType: string) => {
     if (!user || !incidentId) return;
     const existing = reactions.find(r => r.type === reactionType);
     if (existing?.userReacted) {
+      // Optimistic update
+      setReactions(prev => prev.map(r => r.type === reactionType ? { ...r, count: r.count - 1, userReacted: false } : r));
       await supabase.from('incident_reactions').delete()
         .eq('incident_id', incidentId)
         .eq('user_id', user.id)
         .eq('reaction_type', reactionType);
     } else {
+      setReactions(prev => prev.map(r => r.type === reactionType ? { ...r, count: r.count + 1, userReacted: true } : r));
       await supabase.from('incident_reactions').insert({
         incident_id: incidentId,
         user_id: user.id,
