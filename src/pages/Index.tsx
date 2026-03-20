@@ -226,13 +226,6 @@ const Index = () => {
 
       {!isFullscreen && <Footer />}
 
-      {/* Community comments bottom sheet */}
-      {selectedIncident && (
-        <IncidentBottomSheet
-          incident={selectedIncident}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
     </div>);
 
 };
