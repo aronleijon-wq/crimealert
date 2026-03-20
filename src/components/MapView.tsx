@@ -4,6 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import PopupEngagement from './PopupEngagement';
+import { AuthProvider } from '@/hooks/useAuth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 interface MapViewProps {
   incidents: Incident[];
