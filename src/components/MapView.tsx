@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { createRoot, Root } from 'react-dom/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import PopupEngagement from './PopupEngagement';
 
 interface MapViewProps {
   incidents: Incident[];
