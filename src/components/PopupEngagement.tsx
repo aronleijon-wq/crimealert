@@ -28,11 +28,11 @@ const formatTimeAgo = (dateStr: string): string => {
 const PopupEngagement = ({ incidentId }: Props) => {
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
-  const { reactions, toggleReaction } = useIncidentReactions(incidentId);
-  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [text, setText] = useState('');
   const [showAuthNudge, setShowAuthNudge] = useState(false);
+  const { reactions, toggleReaction } = useIncidentReactions(incidentId);
+  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
 
   const visibleComments = isPremium ? comments : comments.slice(0, 3);
   const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
