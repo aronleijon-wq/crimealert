@@ -108,6 +108,16 @@ const PopupEngagement = ({ incidentId }: Props) => {
         </button>
       </div>
 
+      {/* Auth nudge */}
+      {showAuthNudge && !user && (
+        <div style={AUTH_NUDGE_STYLE}>
+          <a href="/auth" onClick={(e) => e.stopPropagation()} style={{ color: '#ea580c', fontWeight: 600, textDecoration: 'underline' }}>
+            Logga in
+          </a>{' '}
+          för att reagera och kommentera
+        </div>
+      )}
+
       {/* Expandable comments section */}
       {commentsOpen && (
         <div style={{ marginTop: 8 }}>
