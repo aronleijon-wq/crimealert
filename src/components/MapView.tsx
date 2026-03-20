@@ -346,7 +346,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
-  const popupRootsRef = useRef<Map<string, Root>>(new Map());
+  const popupQueryClient = useRef(new QueryClient()).current;
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Listen for lightbox events from popup image clicks
