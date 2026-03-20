@@ -230,17 +230,16 @@ const PopupEngagement = ({ incidentId }: Props) => {
                 </button>
               </div>
             ) : (
-              <a
-                href="/auth"
-                onClick={(e) => e.stopPropagation()}
+              <div
+                onClick={(e) => { e.stopPropagation(); setShowAuthNudge(true); }}
                 style={{
                   display: 'block', textAlign: 'center', padding: '6px 0',
-                  fontSize: 10, color: '#888', textDecoration: 'none',
+                  fontSize: 10, color: '#888', cursor: 'pointer',
                   background: '#f8f8f8', borderRadius: 8, border: '1px solid #e5e7eb',
                 }}
               >
-                Logga in för att kommentera
-              </a>
+                <a href="/auth" onClick={(e) => e.stopPropagation()} style={{ color: '#3b82f6', textDecoration: 'underline' }}>Logga in</a> för att kommentera
+              </div>
             )}
           </div>
         </div>
