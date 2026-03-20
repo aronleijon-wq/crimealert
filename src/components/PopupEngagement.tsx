@@ -8,6 +8,11 @@ interface Props {
   incidentId: string;
 }
 
+const AUTH_NUDGE_STYLE: React.CSSProperties = {
+  fontSize: 10, color: '#f97316', background: '#fff7ed', border: '1px solid #fed7aa',
+  borderRadius: 6, padding: '4px 8px', marginTop: 4, textAlign: 'center' as const,
+};
+
 const formatTimeAgo = (dateStr: string): string => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
@@ -27,6 +32,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
   const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [text, setText] = useState('');
+  const [showAuthNudge, setShowAuthNudge] = useState(false);
 
   const visibleComments = isPremium ? comments : comments.slice(0, 3);
   const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
@@ -49,7 +55,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
               key={r.type}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!user) { window.location.href = '/auth'; return; }
+                if (!user) { setShowAuthNudge(true); return; }
                 toggleReaction(r.type);
               }}
               style={{
@@ -102,6 +108,16 @@ const PopupEngagement = ({ incidentId }: Props) => {
         </button>
       </div>
 
+      {/* Auth nudge */}
+      {showAuthNudge && !user && (
+        <div style={AUTH_NUDGE_STYLE}>
+          <a href="/auth" onClick={(e) => e.stopPropagation()} style={{ color: '#ea580c', fontWeight: 600, textDecoration: 'underline' }}>
+            Logga in
+          </a>{' '}
+          för att reagera och kommentera
+        </div>
+      )}
+
       {/* Expandable comments section */}
       {commentsOpen && (
         <div style={{ marginTop: 8 }}>
@@ -136,7 +152,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!user) { window.location.href = '/auth'; return; }
+                          if (!user) { setShowAuthNudge(true); return; }
                           toggleLike(c.id, c.user_has_liked);
                         }}
                         style={{
@@ -214,17 +230,16 @@ const PopupEngagement = ({ incidentId }: Props) => {
                 </button>
               </div>
             ) : (
-              <a
-                href="/auth"
-                onClick={(e) => e.stopPropagation()}
+              <div
+                onClick={(e) => { e.stopPropagation(); setShowAuthNudge(true); }}
                 style={{
                   display: 'block', textAlign: 'center', padding: '6px 0',
-                  fontSize: 10, color: '#888', textDecoration: 'none',
+                  fontSize: 10, color: '#888', cursor: 'pointer',
                   background: '#f8f8f8', borderRadius: 8, border: '1px solid #e5e7eb',
                 }}
               >
-                Logga in för att kommentera
-              </a>
+                <a href="/auth" onClick={(e) => e.stopPropagation()} style={{ color: '#3b82f6', textDecoration: 'underline' }}>Logga in</a> för att kommentera
+              </div>
             )}
           </div>
         </div>
