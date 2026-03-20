@@ -406,37 +406,8 @@ const Account = () => {
           </p>
 
           {/* User section */}
-          {user ?
-          <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-foreground font-medium">{user.email}</p>
-                <p className="text-[10px] text-muted-foreground">
-                {isPremium ?
-                subscription.subscriptionEnd === 'lifetime' ?
-                'Pro livstid' :
-                subscription.subscriptionEnd ?
-                `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}` :
-                'Pro aktiv' :
-                'Gratisplan'}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {isPremium &&
-              <button
-                onClick={handleManageSubscription}
-                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
-                
-                    <CreditCard className="w-3 h-3" /> Hantera
-                  </button>
-              }
-                <button
-                onClick={signOut}
-                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
-                
-                  <LogOut className="w-3 h-3" /> Logga ut
-                </button>
-              </div>
-            </div> :
+          {user ? <UserProfileSection user={user} isPremium={isPremium} subscription={subscription} signOut={signOut} handleManageSubscription={handleManageSubscription} /> :
+
 
           <div className="bg-card border border-border rounded-lg p-4 text-center">
               <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
