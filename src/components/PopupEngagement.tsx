@@ -35,8 +35,25 @@ const PopupEngagement = ({ incidentId }: Props) => {
   const { reactions, toggleReaction } = useIncidentReactions(incidentId);
   const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
 
+  const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
+
   const visibleComments = isPremium ? comments : comments.slice(0, 3);
   const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
+
+  // Fetch display names for comment authors
+  useEffect(() => {
+    if (comments.length === 0) return;
+    const userIds = [...new Set(comments.map(c => c.user_id))].filter(id => !displayNames[id]);
+    if (userIds.length === 0) return;
+    supabase.from('profiles').select('id, display_name').in('id', userIds).then(({ data }) => {
+      if (!data) return;
+      setDisplayNames(prev => {
+        const next = { ...prev };
+        data.forEach(p => { if (p.display_name) next[p.id] = p.display_name; });
+        return next;
+      });
+    });
+  }, [comments]);
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
