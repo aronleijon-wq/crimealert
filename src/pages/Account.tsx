@@ -136,6 +136,7 @@ const UserProfileSection = ({ user, isPremium, subscription, signOut, handleMana
 };
 
 const Account = () => {
+  const { theme, setTheme } = useTheme();
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
