@@ -37,8 +37,8 @@ const PopupEngagement = ({ incidentId }: Props) => {
 
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
 
-  const visibleComments = isPremium ? comments : comments.slice(0, 3);
-  const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
+  const visibleComments = comments;
+  const hiddenCount = 0;
 
   // Fetch display names for comment authors
   useEffect(() => {
