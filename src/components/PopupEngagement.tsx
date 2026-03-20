@@ -8,6 +8,11 @@ interface Props {
   incidentId: string;
 }
 
+const AUTH_NUDGE_STYLE: React.CSSProperties = {
+  fontSize: 10, color: '#f97316', background: '#fff7ed', border: '1px solid #fed7aa',
+  borderRadius: 6, padding: '4px 8px', marginTop: 4, textAlign: 'center' as const,
+};
+
 const formatTimeAgo = (dateStr: string): string => {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
