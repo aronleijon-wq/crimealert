@@ -156,11 +156,11 @@ const PopupEngagement = ({ incidentId }: Props) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 700, color: '#888', flexShrink: 0, marginTop: 1,
                   }}>
-                    {(c.user_id || 'A').charAt(0).toUpperCase()}
+                    {(displayNames[c.user_id] || 'A').charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#333' }}>Anonym</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#333' }}>{displayNames[c.user_id] || 'Anonym'}</span>
                       <span style={{ fontSize: 9, color: '#aaa' }}>{formatTimeAgo(c.created_at)}</span>
                     </div>
                     <p style={{ fontSize: 10, color: '#555', margin: '2px 0 0', lineHeight: 1.5, wordBreak: 'break-word' }}>
