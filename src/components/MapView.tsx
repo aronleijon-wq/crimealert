@@ -4,6 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import PopupEngagement from './PopupEngagement';
+import { AuthProvider } from '@/hooks/useAuth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 interface MapViewProps {
   incidents: Incident[];
@@ -344,7 +346,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
-  const popupRootsRef = useRef<Map<string, Root>>(new Map());
+  const popupQueryClient = useRef(new QueryClient()).current;
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Listen for lightbox events from popup image clicks
@@ -494,17 +496,26 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       marker.on('popupopen', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
         const el = document.getElementById(`popup-engagement-${safeId}`);
-        if (el && !popupRootsRef.current.has(inc.id)) {
+        if (el && !el.dataset.mounted) {
+          el.dataset.mounted = 'true';
           const root = createRoot(el);
-          root.render(<PopupEngagement incidentId={inc.id} />);
-          popupRootsRef.current.set(inc.id, root);
+          root.render(
+            <AuthProvider>
+              <QueryClientProvider client={popupQueryClient}>
+                <PopupEngagement incidentId={inc.id} />
+              </QueryClientProvider>
+            </AuthProvider>
+          );
+          (el as any).__reactRoot = root;
         }
       });
       marker.on('popupclose', () => {
-        const existingRoot = popupRootsRef.current.get(inc.id);
-        if (existingRoot) {
-          existingRoot.unmount();
-          popupRootsRef.current.delete(inc.id);
+        const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const el = document.getElementById(`popup-engagement-${safeId}`);
+        if (el && (el as any).__reactRoot) {
+          const root = (el as any).__reactRoot as Root;
+          setTimeout(() => root.unmount(), 0);
+          delete (el as any).__reactRoot;
         }
         prevSelectedRef.current = null;
         onSelectIncidentRef.current('');
