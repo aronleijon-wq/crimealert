@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIncidentReactions, REACTION_TYPES } from '@/hooks/useIncidentReactions';
 import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   incidentId: string;
