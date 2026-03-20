@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIncidentReactions, REACTION_TYPES } from '@/hooks/useIncidentReactions';
 import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   incidentId: string;
@@ -34,8 +35,25 @@ const PopupEngagement = ({ incidentId }: Props) => {
   const { reactions, toggleReaction } = useIncidentReactions(incidentId);
   const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
 
+  const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
+
   const visibleComments = isPremium ? comments : comments.slice(0, 3);
   const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
+
+  // Fetch display names for comment authors
+  useEffect(() => {
+    if (comments.length === 0) return;
+    const userIds = [...new Set(comments.map(c => c.user_id))].filter(id => !displayNames[id]);
+    if (userIds.length === 0) return;
+    supabase.from('profiles').select('id, display_name').in('id', userIds).then(({ data }) => {
+      if (!data) return;
+      setDisplayNames(prev => {
+        const next = { ...prev };
+        data.forEach(p => { if (p.display_name) next[p.id] = p.display_name; });
+        return next;
+      });
+    });
+  }, [comments]);
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
@@ -138,11 +156,11 @@ const PopupEngagement = ({ incidentId }: Props) => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 700, color: '#888', flexShrink: 0, marginTop: 1,
                   }}>
-                    {(c.user_id || 'A').charAt(0).toUpperCase()}
+                    {(displayNames[c.user_id] || 'A').charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#333' }}>Anonym</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: '#333' }}>{displayNames[c.user_id] || 'Anonym'}</span>
                       <span style={{ fontSize: 9, color: '#aaa' }}>{formatTimeAgo(c.created_at)}</span>
                     </div>
                     <p style={{ fontSize: 10, color: '#555', margin: '2px 0 0', lineHeight: 1.5, wordBreak: 'break-word' }}>

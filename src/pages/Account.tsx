@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText } from 'lucide-react';
+import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText, Pencil } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/hooks/useTheme';
@@ -36,6 +36,103 @@ const ContactSection = () => {
       </a>
     </div>);
 
+};
+
+const UserProfileSection = ({ user, isPremium, subscription, signOut, handleManageSubscription }: {
+  user: any; isPremium: boolean; subscription: any; signOut: () => Promise<void>; handleManageSubscription: () => void;
+}) => {
+  const [displayName, setDisplayName] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('display_name').eq('id', user.id).single().then(({ data }) => {
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+        setNameInput(data.display_name);
+      }
+    });
+  }, [user]);
+
+  const saveName = async () => {
+    const trimmed = nameInput.trim().slice(0, 30);
+    if (!trimmed) return;
+    setSaving(true);
+    const { error } = await supabase.from('profiles').upsert({ id: user.id, display_name: trimmed });
+    setSaving(false);
+    if (!error) {
+      setDisplayName(trimmed);
+      setEditingName(false);
+      toast({ title: 'Sparat!', description: `Ditt användarnamn är nu "${trimmed}"` });
+    }
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-foreground font-medium">{user.email}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {isPremium
+              ? subscription.subscriptionEnd === 'lifetime'
+                ? 'Pro livstid'
+                : subscription.subscriptionEnd
+                  ? `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}`
+                  : 'Pro aktiv'
+              : 'Gratisplan'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {isPremium && (
+            <button onClick={handleManageSubscription} className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
+              <CreditCard className="w-3 h-3" /> Hantera
+            </button>
+          )}
+          <button onClick={signOut} className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
+            <LogOut className="w-3 h-3" /> Logga ut
+          </button>
+        </div>
+      </div>
+
+      {/* Display name editor */}
+      <div className="border-t border-border pt-3">
+        <label className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Användarnamn</label>
+        {editingName ? (
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveName(); }}
+              maxLength={30}
+              placeholder="Ditt användarnamn..."
+              className="flex-1 px-3 py-1.5 bg-muted border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+              autoFocus
+            />
+            <button onClick={saveName} disabled={saving || !nameInput.trim()} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50">
+              {saving ? '...' : 'Spara'}
+            </button>
+            <button onClick={() => { setEditingName(false); setNameInput(displayName); }} className="px-2 py-1.5 text-muted-foreground hover:text-foreground text-xs transition">
+              Avbryt
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs text-foreground font-medium">
+              {displayName || <span className="text-muted-foreground italic">Ej angivet</span>}
+            </span>
+            <button onClick={() => setEditingName(true)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition">
+              <Pencil className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+        <p className="text-[9px] text-muted-foreground mt-1">Visas vid dina kommentarer på händelser</p>
+      </div>
+    </div>
+  );
 };
 
 const Account = () => {
@@ -405,37 +502,8 @@ const Account = () => {
           </p>
 
           {/* User section */}
-          {user ?
-          <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-foreground font-medium">{user.email}</p>
-                <p className="text-[10px] text-muted-foreground">
-                {isPremium ?
-                subscription.subscriptionEnd === 'lifetime' ?
-                'Pro livstid' :
-                subscription.subscriptionEnd ?
-                `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}` :
-                'Pro aktiv' :
-                'Gratisplan'}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {isPremium &&
-              <button
-                onClick={handleManageSubscription}
-                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
-                
-                    <CreditCard className="w-3 h-3" /> Hantera
-                  </button>
-              }
-                <button
-                onClick={signOut}
-                className="flex items-center gap-1 px-3 py-1.5 bg-muted text-foreground rounded-md text-xs font-medium hover:bg-muted/80 transition">
-                
-                  <LogOut className="w-3 h-3" /> Logga ut
-                </button>
-              </div>
-            </div> :
+          {user ? <UserProfileSection user={user} isPremium={isPremium} subscription={subscription} signOut={signOut} handleManageSubscription={handleManageSubscription} /> :
+
 
           <div className="bg-card border border-border rounded-lg p-4 text-center">
               <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
