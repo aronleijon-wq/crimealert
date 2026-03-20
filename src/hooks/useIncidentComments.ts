@@ -12,10 +12,11 @@ export interface IncidentComment {
   user_has_liked: boolean;
 }
 
-export function useIncidentComments(incidentId: string | null) {
+export function useIncidentComments(incidentId: string | null, enabled = false) {
   const { user } = useAuth();
   const [comments, setComments] = useState<IncidentComment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchComments = useCallback(async () => {
     if (!incidentId) return;
@@ -29,12 +30,10 @@ export function useIncidentComments(incidentId: string | null) {
 
       if (!commentsData) { setComments([]); return; }
 
-      // Fetch likes counts
       const commentIds = commentsData.map(c => c.id);
-      const { data: likesData } = await supabase
-        .from('comment_likes')
-        .select('comment_id, user_id')
-        .in('comment_id', commentIds.length > 0 ? commentIds : ['__none__']);
+      const { data: likesData } = commentIds.length > 0
+        ? await supabase.from('comment_likes').select('comment_id, user_id').in('comment_id', commentIds)
+        : { data: [] };
 
       const likesMap = new Map<string, { count: number; userLiked: boolean }>();
       (likesData || []).forEach(l => {
@@ -49,47 +48,43 @@ export function useIncidentComments(incidentId: string | null) {
         likes_count: likesMap.get(c.id)?.count || 0,
         user_has_liked: likesMap.get(c.id)?.userLiked || false,
       })));
+      setHasFetched(true);
     } finally {
       setLoading(false);
     }
   }, [incidentId, user]);
 
+  // Only fetch when enabled (user opened comments)
   useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+    if (enabled && !hasFetched) fetchComments();
+  }, [enabled, hasFetched, fetchComments]);
 
-  // Realtime subscription
+  // Reset on incident change
   useEffect(() => {
-    if (!incidentId) return;
-    const channel = supabase
-      .channel(`comments-${incidentId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'incident_comments',
-        filter: `incident_id=eq.${incidentId}`,
-      }, () => { fetchComments(); })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'comment_likes',
-      }, () => { fetchComments(); })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [incidentId, fetchComments]);
+    setHasFetched(false);
+    setComments([]);
+  }, [incidentId]);
 
   const addComment = useCallback(async (text: string) => {
     if (!user || !incidentId || !text.trim()) return;
-    await supabase.from('incident_comments').insert({
+    const { data } = await supabase.from('incident_comments').insert({
       incident_id: incidentId,
       user_id: user.id,
       text: text.trim(),
-    });
+    }).select().single();
+    if (data) {
+      setComments(prev => [...prev, { ...data, likes_count: 0, user_has_liked: false }]);
+    }
   }, [user, incidentId]);
 
   const toggleLike = useCallback(async (commentId: string, hasLiked: boolean) => {
     if (!user) return;
+    // Optimistic
+    setComments(prev => prev.map(c => c.id === commentId ? {
+      ...c,
+      likes_count: hasLiked ? c.likes_count - 1 : c.likes_count + 1,
+      user_has_liked: !hasLiked,
+    } : c));
     if (hasLiked) {
       await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', user.id);
     } else {
@@ -99,6 +94,7 @@ export function useIncidentComments(incidentId: string | null) {
 
   const deleteComment = useCallback(async (commentId: string) => {
     if (!user) return;
+    setComments(prev => prev.filter(c => c.id !== commentId));
     await supabase.from('incident_comments').delete().eq('id', commentId).eq('user_id', user.id);
   }, [user]);
 
