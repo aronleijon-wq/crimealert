@@ -481,52 +481,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    // De-overlap: push markers apart so none visually overlap
-    // Sort by time descending so newer incidents keep their position and older ones get pushed
-    const sortedIndices = incidents
-      .map((inc, idx) => ({ idx, time: parseSwedishDate(inc.time)?.getTime() || 0 }))
-      .sort((a, b) => b.time - a.time)
-      .map(e => e.idx);
+    const recentIncidents = incidents.filter((inc) => isWithinDays(inc.time, 7));
+    const positions = getJitteredPositions(recentIncidents);
 
-    const minDist = isTouch ? 0.003 : 0.005;
-    const maxIterations = isTouch ? 5 : 12;
-    const shouldRunRepulsion = incidents.length <= (isTouch ? 180 : 450);
-    const positions = incidents.map((inc) => ({ lat: inc.lat, lng: inc.lng }));
-
-    if (shouldRunRepulsion) {
-      for (let iter = 0; iter < maxIterations; iter++) {
-        let moved = false;
-        for (let si = 0; si < sortedIndices.length; si++) {
-          const i = sortedIndices[si];
-          for (let sj = si + 1; sj < sortedIndices.length; sj++) {
-            const j = sortedIndices[sj];
-            const dLat = positions[j].lat - positions[i].lat;
-            const dLng = positions[j].lng - positions[i].lng;
-            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-            if (dist < minDist && dist > 0) {
-              // Push the older incident (j, since sorted newer-first) away more
-              const push = (minDist - dist);
-              const nLat = dLat / dist;
-              const nLng = dLng / dist;
-              positions[j].lat += nLat * push * 0.8;
-              positions[j].lng += nLng * push * 0.8;
-              positions[i].lat -= nLat * push * 0.2;
-              positions[i].lng -= nLng * push * 0.2;
-              moved = true;
-            } else if (dist === 0) {
-              // Exact same coords: deterministic spread based on index
-              const angle = (sj / sortedIndices.length) * Math.PI * 2 + (sj * 2.399);
-              positions[j].lat += Math.cos(angle) * minDist * 0.7;
-              positions[j].lng += Math.sin(angle) * minDist * 0.7;
-              moved = true;
-            }
-          }
-        }
-        if (!moved) break;
-      }
-    }
-
-    incidents.forEach((inc, idx) => {
+    recentIncidents.forEach((inc, idx) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
       const config = incidentTypeConfig[inc.type];
       const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
