@@ -1353,6 +1353,50 @@ async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<any[]> {
   }
 }
 
+function parseIncidentTimestamp(time: string | null | undefined): number {
+  if (!time) return 0;
+  const parsed = new Date(time).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function isWithinLastDays(time: string | null | undefined, days: number): boolean {
+  const timestamp = parseIncidentTimestamp(time);
+  if (!timestamp) return false;
+  const diff = Date.now() - timestamp;
+  return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
+}
+
+function hasSummaryPlaceholderDescription(description: string | null | undefined): boolean {
+  const normalized = (description || '').trim().toLowerCase();
+  return normalized.startsWith('ett urval av nattens polisverksamhet');
+}
+
+async function persistBackfilledSummaryDescriptions(summaryScrapeResults: Map<string, string>) {
+  if (summaryScrapeResults.size === 0) return;
+
+  const entries = [...summaryScrapeResults.entries()];
+  const BATCH_SIZE = 20;
+
+  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+    const batch = entries.slice(i, i + BATCH_SIZE);
+    const updates = await Promise.all(
+      batch.map(async ([id, description]) => {
+        const { error } = await supabase
+          .from('police_events_archive')
+          .update({ description })
+          .eq('id', id);
+
+        return error ? { id, error: error.message } : null;
+      })
+    );
+
+    const failed = updates.filter(Boolean);
+    if (failed.length > 0) {
+      console.warn('Failed to persist some summary descriptions:', failed);
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -1397,12 +1441,17 @@ serve(async (req) => {
     };
 
     const summaryScrapeTargets = allIncidents
-      .filter((i: any) => isSummaryIncident(i) && i.url && (!i.description || i.description.length < 180))
-      .slice(0, 30);
+      .filter((i: any) => isSummaryIncident(i) && i.url && isWithinLastDays(i.time, 7))
+      .filter((i: any) => hasSummaryPlaceholderDescription(i.description) || !i.description || i.description.length < 180)
+      .sort((a: any, b: any) => {
+        const placeholderPriority = Number(hasSummaryPlaceholderDescription(b.description)) - Number(hasSummaryPlaceholderDescription(a.description));
+        if (placeholderPriority !== 0) return placeholderPriority;
+        return parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time);
+      });
 
     if (summaryScrapeTargets.length > 0) {
       const summaryScrapeResults = new Map<string, string>();
-      const SUMMARY_BATCH_SIZE = 5;
+      const SUMMARY_BATCH_SIZE = 8;
 
       for (let b = 0; b < summaryScrapeTargets.length; b += SUMMARY_BATCH_SIZE) {
         const batch = summaryScrapeTargets.slice(b, b + SUMMARY_BATCH_SIZE);
@@ -1420,6 +1469,8 @@ serve(async (req) => {
           ...incident,
           description: summaryScrapeResults.get(incident.id) || incident.description,
         }));
+
+        await persistBackfilledSummaryDescriptions(summaryScrapeResults);
       }
 
       console.log(`Backfilled ${summaryScrapeResults.size} summary descriptions`);
