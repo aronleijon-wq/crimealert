@@ -28,6 +28,23 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
+const parseSwedishDate = (dateStr: string): Date | null => {
+  try {
+    if (!dateStr) return null;
+    let s = dateStr.trim();
+    s = s.replace(
+      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
+      (_, d, h, m, sec, tz) => {
+        const hh = h.padStart(2, '0');
+        const tzClean = tz ? tz.replace(/\s/g, '') : '';
+        return `${d}T${hh}:${m}:${sec}${tzClean}`;
+      }
+    );
+    const date = new Date(s);
+    return isNaN(date.getTime()) ? null : date;
+  } catch { return null; }
+};
+
 const isWithinHours = (timeStr: string, hours: number) => {
   const d = parseSwedishDate(timeStr);
   if (!d) return false;
@@ -51,7 +68,6 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   const shouldPulse = shouldIncidentPulse(incident);
-  // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
   if (isCommunityReport) {
@@ -73,36 +89,6 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
 
   const size = touch ? (shouldPulse ? 20 : 16) : (shouldPulse ? 14 : 10);
   const pulseSize = shouldPulse ? size + 16 + mobilePad : size + mobilePad;
-
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `
-      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
-        ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
-      </div>
-    `,
-    iconSize: [pulseSize, pulseSize],
-    iconAnchor: [pulseSize / 2, pulseSize / 2],
-  });
-};
-
-const parseSwedishDate = (dateStr: string): Date | null => {
-  try {
-    if (!dateStr) return null;
-    let s = dateStr.trim();
-    s = s.replace(
-      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
-      (_, d, h, m, sec, tz) => {
-        const hh = h.padStart(2, '0');
-        const tzClean = tz ? tz.replace(/\s/g, '') : '';
-        return `${d}T${hh}:${m}:${sec}${tzClean}`;
-      }
-    );
-    const date = new Date(s);
-    return isNaN(date.getTime()) ? null : date;
-  } catch { return null; }
-};
 
 const formatTime = (time: string) => {
   const d = parseSwedishDate(time);
