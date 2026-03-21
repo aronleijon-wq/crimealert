@@ -32,8 +32,26 @@ const PopupEngagement = ({ incidentId }: Props) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [text, setText] = useState('');
   const [showAuthNudge, setShowAuthNudge] = useState(false);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
   const { reactions, toggleReaction } = useIncidentReactions(incidentId);
   const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
+
+  // Eagerly fetch comment count
+  useEffect(() => {
+    if (!incidentId) return;
+    supabase
+      .from('incident_comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('incident_id', incidentId)
+      .then(({ count }) => {
+        setCommentCount(count ?? 0);
+      });
+  }, [incidentId]);
+
+  // Keep count in sync when comments are loaded or added/deleted
+  useEffect(() => {
+    if (commentsOpen) setCommentCount(comments.length);
+  }, [comments.length, commentsOpen]);
 
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
 
@@ -122,7 +140,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
           }}
         >
           <span style={{ fontSize: 13 }}>💬</span>
-          <span>{comments.length}</span>
+          <span>{commentCount ?? 0}</span>
         </button>
       </div>
 
