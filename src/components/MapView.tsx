@@ -28,21 +28,10 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const parseIncidentTime = (timeStr: string) => {
-  try {
-    const normalized = timeStr.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
-    const timestamp = new Date(normalized).getTime();
-    return Number.isNaN(timestamp) ? null : timestamp;
-  } catch {
-    return null;
-  }
-};
-
 const isWithinHours = (timeStr: string, hours: number) => {
-  const timestamp = parseIncidentTime(timeStr);
-  if (timestamp === null) return false;
-
-  const diff = Date.now() - timestamp;
+  const d = parseSwedishDate(timeStr);
+  if (!d) return false;
+  const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
