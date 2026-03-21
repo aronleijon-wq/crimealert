@@ -308,11 +308,6 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">⚠ Riskbedömning</div>
         <p style="font-size:10px;color:#555;margin:0;line-height:1.6;">${riskDesc}</p>
       </div>
-
-      <div style="background:#f0f4ff;border:1px solid #dbeafe;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
-        <div style="font-size:9px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">ℹ Rekommendation</div>
-        <p style="font-size:10px;color:#555;margin:0;line-height:1.6;">${getRecommendation(inc.risk, inc.type)}</p>
-      </div>
       ` : `
       <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:10px 12px;margin-bottom:10px;text-align:center;">
         <div style="font-size:10px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
