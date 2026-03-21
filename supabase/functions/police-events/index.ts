@@ -1083,15 +1083,8 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
 
     const incidents = [];
     const geocodePromises: Promise<void>[] = [];
-    
-    // Filter out police night/day summaries (e.g. "Sammanfattning natt", "Sammanfattning kväll och natt")
-    const filteredEvents = events.filter((event: any) => {
-      const type = (event.type || '').toLowerCase();
-      return !type.includes('sammanfattning');
-    });
-    console.log(`Filtered ${events.length - filteredEvents.length} summary events, processing ${filteredEvents.length}`);
 
-    for (const event of filteredEvents) {
+    for (const event of events) {
       const rawLat = event.location?.gps ? parseFloat(event.location.gps.split(',')[0]) : null;
       const rawLng = event.location?.gps ? parseFloat(event.location.gps.split(',')[1]) : null;
       const locationName = event.location?.name || '';
