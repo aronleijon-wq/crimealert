@@ -103,6 +103,7 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
   });
 };
 
+const formatTime = (time: string) => {
   const d = parseSwedishDate(time);
   if (!d) return time;
   return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
