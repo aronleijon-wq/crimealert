@@ -176,7 +176,6 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   return (
     <div className="bg-card border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Download className="w-4 h-4 text-primary" />
         <span className="text-xs font-bold text-foreground">Exportera händelsedata</span>
       </div>
 
