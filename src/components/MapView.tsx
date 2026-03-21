@@ -90,7 +90,19 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const size = touch ? (shouldPulse ? 20 : 16) : (shouldPulse ? 14 : 10);
   const pulseSize = shouldPulse ? size + 16 + mobilePad : size + mobilePad;
 
-const formatTime = (time: string) => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+        ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
+        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
+      </div>
+    `,
+    iconSize: [pulseSize, pulseSize],
+    iconAnchor: [pulseSize / 2, pulseSize / 2],
+  });
+};
+
   const d = parseSwedishDate(time);
   if (!d) return time;
   return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
