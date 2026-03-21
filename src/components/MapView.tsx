@@ -52,15 +52,57 @@ const isWithinHours = (timeStr: string, hours: number) => {
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
+const isWithinDays = (timeStr: string, days: number) => {
+  const d = parseSwedishDate(timeStr);
+  if (!d) return false;
+  const diff = Date.now() - d.getTime();
+  return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
+};
+
+const getStableHash = (value: string) => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+};
+
+const getJitteredPositions = (items: Incident[]) => {
+  const positions = items.map((item) => ({ lat: item.lat, lng: item.lng }));
+  const buckets = new Map<string, number[]>();
+
+  items.forEach((item, index) => {
+    const key = `${item.lat.toFixed(3)}:${item.lng.toFixed(3)}`;
+    const existing = buckets.get(key) || [];
+    existing.push(index);
+    buckets.set(key, existing);
+  });
+
+  buckets.forEach((indices) => {
+    if (indices.length < 2) return;
+
+    const baseRotation = ((getStableHash(items[indices[0]].id) % 360) * Math.PI) / 180;
+
+    indices.forEach((itemIndex, clusterIndex) => {
+      const item = items[itemIndex];
+      const seed = getStableHash(`${item.id}:${clusterIndex}`);
+      const angle = baseRotation + (Math.PI * 2 * clusterIndex) / indices.length + (((seed % 60) - 30) * Math.PI) / 720;
+      const ring = Math.floor(clusterIndex / 8);
+      const radius = Math.min(0.009, 0.003 + ring * 0.002 + ((seed % 1000) / 1000) * 0.0025);
+
+      positions[itemIndex] = {
+        lat: item.lat + Math.cos(angle) * radius,
+        lng: item.lng + Math.sin(angle) * radius,
+      };
+    });
+  });
+
+  return positions;
+};
+
 const isMissingPersonIncident = (incident: Incident) => {
   const haystack = `${incident.title} ${incident.description} ${incident.originalType || ''}`.toLowerCase();
   return /försvunnen|saknad|borttappad|efterlyst person|person försvunnen/.test(haystack);
-};
-
-const shouldIncidentPulse = (incident: Incident) => {
-  if (incident.source === 'Medborgarrapport') return isWithinHours(incident.time, 24);
-  if (isMissingPersonIncident(incident)) return isWithinHours(incident.time, 24);
-  return isWithinHours(incident.time, 3);
 };
 
 const createMarkerIcon = (incident: Incident, touch: boolean) => {
