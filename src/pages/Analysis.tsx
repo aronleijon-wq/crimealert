@@ -193,22 +193,23 @@ const Analysis = () => {
 
   // Filter incidents based on selected area (time filtering already done by data source)
   const filteredIncidents = useMemo(() => {
+    const isSummary = (i: any) =>
+      (i.originalType || '').toLowerCase().includes('sammanfattning');
+
     if (timeRange === '24h') {
-      // For 24h, still filter from live data by midnight cutoff
       const now = new Date();
       const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
       return incidents.filter((i) => {
         try {
           const inTimeRange = parseTime(i.time) >= cutoff;
           const inArea = !selectedArea || i.area === selectedArea;
-          return inTimeRange && inArea;
+          return inTimeRange && inArea && !isSummary(i);
         } catch {return false;}
       });
     }
-    // For 7d/30d, archive hook already filters by time — just filter by area
     return incidents.filter((i) => {
       const inArea = !selectedArea || i.area === selectedArea;
-      return inArea;
+      return inArea && !isSummary(i);
     });
   }, [incidents, timeRange, selectedArea, dataVersion]);
 
