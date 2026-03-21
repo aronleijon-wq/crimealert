@@ -434,35 +434,42 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markerMapRef.current.clear();
 
     // De-overlap: push markers apart so none visually overlap
-    const minDist = isTouch ? 0.0025 : 0.004;
-    const maxIterations = isTouch ? 3 : 8;
+    // Sort by time descending so newer incidents keep their position and older ones get pushed
+    const sortedIndices = incidents
+      .map((inc, idx) => ({ idx, time: parseSwedishDate(inc.time)?.getTime() || 0 }))
+      .sort((a, b) => b.time - a.time)
+      .map(e => e.idx);
+
+    const minDist = isTouch ? 0.003 : 0.005;
+    const maxIterations = isTouch ? 5 : 12;
     const shouldRunRepulsion = incidents.length <= (isTouch ? 180 : 450);
     const positions = incidents.map((inc) => ({ lat: inc.lat, lng: inc.lng }));
 
     if (shouldRunRepulsion) {
       for (let iter = 0; iter < maxIterations; iter++) {
         let moved = false;
-        for (let i = 0; i < positions.length; i++) {
-          for (let j = i + 1; j < positions.length; j++) {
+        for (let si = 0; si < sortedIndices.length; si++) {
+          const i = sortedIndices[si];
+          for (let sj = si + 1; sj < sortedIndices.length; sj++) {
+            const j = sortedIndices[sj];
             const dLat = positions[j].lat - positions[i].lat;
             const dLng = positions[j].lng - positions[i].lng;
             const dist = Math.sqrt(dLat * dLat + dLng * dLng);
             if (dist < minDist && dist > 0) {
-              const push = (minDist - dist) / 2;
+              // Push the older incident (j, since sorted newer-first) away more
+              const push = (minDist - dist);
               const nLat = dLat / dist;
               const nLng = dLng / dist;
-              positions[i].lat -= nLat * push;
-              positions[i].lng -= nLng * push;
-              positions[j].lat += nLat * push;
-              positions[j].lng += nLng * push;
+              positions[j].lat += nLat * push * 0.8;
+              positions[j].lng += nLng * push * 0.8;
+              positions[i].lat -= nLat * push * 0.2;
+              positions[i].lng -= nLng * push * 0.2;
               moved = true;
             } else if (dist === 0) {
-              const seed = (incidents[i].id + incidents[j].id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-              const angle = (((seed * 9301 + 49297) % 233280) / 233280) * Math.PI * 2;
-              positions[i].lat -= Math.cos(angle) * minDist * 0.5;
-              positions[i].lng -= Math.sin(angle) * minDist * 0.5;
-              positions[j].lat += Math.cos(angle) * minDist * 0.5;
-              positions[j].lng += Math.sin(angle) * minDist * 0.5;
+              // Exact same coords: deterministic spread based on index
+              const angle = (sj / sortedIndices.length) * Math.PI * 2 + (sj * 2.399);
+              positions[j].lat += Math.cos(angle) * minDist * 0.7;
+              positions[j].lng += Math.sin(angle) * minDist * 0.7;
               moved = true;
             }
           }
