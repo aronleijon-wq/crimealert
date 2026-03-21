@@ -54,7 +54,7 @@ const isMissingPersonIncident = (incident: Incident) => {
 const shouldIncidentPulse = (incident: Incident) => {
   if (incident.source === 'Medborgarrapport') return isWithinHours(incident.time, 24);
   if (isMissingPersonIncident(incident)) return isWithinHours(incident.time, 24);
-  return incident.status === 'active' && isWithinHours(incident.time, 3);
+  return isWithinHours(incident.time, 3);
 };
 
 const createMarkerIcon = (incident: Incident, touch: boolean) => {
