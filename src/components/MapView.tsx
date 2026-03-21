@@ -278,7 +278,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean) => {
         </div>
       </div>
 
-      ${(isPremium || (inc.original_type && inc.original_type.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${safeDescription}</p>` : !isPremium && !(inc.original_type && inc.original_type.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
       ${inc.image_url ? `
       <div style="margin-bottom:10px;">
