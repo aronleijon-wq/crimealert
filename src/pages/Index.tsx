@@ -85,10 +85,10 @@ const Index = () => {
       if (isNaN(t)) return true;
       // Community reports: visible for 24 hours
       if (isCommunity) return t >= cutoff24h;
-      // Always show severe crimes regardless of age
-      if (isSevereCrime(i.title)) return t <= delayCutoff;
-      // Non-severe: must be within 3 days
-      return t >= cutoff7d && t <= delayCutoff;
+      // Hard 7-day cutoff for ALL incidents including severe crimes
+      if (t < cutoff7d) return false;
+      // Non-premium delay
+      return t <= delayCutoff;
     });
   }, [allIncidents, isPremium]);
 
