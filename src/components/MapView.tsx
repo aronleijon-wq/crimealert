@@ -28,19 +28,40 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const isWithin3Hours = (timeStr: string) => {
+const parseIncidentTime = (timeStr: string) => {
   try {
     const normalized = timeStr.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
-    const t = new Date(normalized).getTime();
-    return !isNaN(t) && (Date.now() - t) <= 3 * 60 * 60 * 1000;
-  } catch { return false; }
+    const timestamp = new Date(normalized).getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  } catch {
+    return null;
+  }
+};
+
+const isWithinHours = (timeStr: string, hours: number) => {
+  const timestamp = parseIncidentTime(timeStr);
+  if (timestamp === null) return false;
+
+  const diff = Date.now() - timestamp;
+  return diff >= 0 && diff <= hours * 60 * 60 * 1000;
+};
+
+const isMissingPersonIncident = (incident: Incident) => {
+  const haystack = `${incident.title} ${incident.description} ${incident.originalType || ''}`.toLowerCase();
+  return /försvunnen|saknad|borttappad|efterlyst person|person försvunnen/.test(haystack);
+};
+
+const shouldIncidentPulse = (incident: Incident) => {
+  if (incident.source === 'Medborgarrapport') return isWithinHours(incident.time, 24);
+  if (isMissingPersonIncident(incident)) return isWithinHours(incident.time, 24);
+  return incident.status === 'active' && isWithinHours(incident.time, 3);
 };
 
 const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = isCommunityReport || isWithin3Hours(incident.time);
+  const shouldPulse = shouldIncidentPulse(incident);
   // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
