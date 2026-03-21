@@ -28,21 +28,27 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const parseIncidentTime = (timeStr: string) => {
+const parseSwedishDate = (dateStr: string): Date | null => {
   try {
-    const normalized = timeStr.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
-    const timestamp = new Date(normalized).getTime();
-    return Number.isNaN(timestamp) ? null : timestamp;
-  } catch {
-    return null;
-  }
+    if (!dateStr) return null;
+    let s = dateStr.trim();
+    s = s.replace(
+      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
+      (_, d, h, m, sec, tz) => {
+        const hh = h.padStart(2, '0');
+        const tzClean = tz ? tz.replace(/\s/g, '') : '';
+        return `${d}T${hh}:${m}:${sec}${tzClean}`;
+      }
+    );
+    const date = new Date(s);
+    return isNaN(date.getTime()) ? null : date;
+  } catch { return null; }
 };
 
 const isWithinHours = (timeStr: string, hours: number) => {
-  const timestamp = parseIncidentTime(timeStr);
-  if (timestamp === null) return false;
-
-  const diff = Date.now() - timestamp;
+  const d = parseSwedishDate(timeStr);
+  if (!d) return false;
+  const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
@@ -62,7 +68,6 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
   const shouldPulse = shouldIncidentPulse(incident);
-  // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
   if (isCommunityReport) {
@@ -96,23 +101,6 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
     iconSize: [pulseSize, pulseSize],
     iconAnchor: [pulseSize / 2, pulseSize / 2],
   });
-};
-
-const parseSwedishDate = (dateStr: string): Date | null => {
-  try {
-    if (!dateStr) return null;
-    let s = dateStr.trim();
-    s = s.replace(
-      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
-      (_, d, h, m, sec, tz) => {
-        const hh = h.padStart(2, '0');
-        const tzClean = tz ? tz.replace(/\s/g, '') : '';
-        return `${d}T${hh}:${m}:${sec}${tzClean}`;
-      }
-    );
-    const date = new Date(s);
-    return isNaN(date.getTime()) ? null : date;
-  } catch { return null; }
 };
 
 const formatTime = (time: string) => {
