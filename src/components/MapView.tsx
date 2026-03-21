@@ -28,11 +28,19 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
+const isWithin3Hours = (timeStr: string) => {
+  try {
+    const normalized = timeStr.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
+    const t = new Date(normalized).getTime();
+    return !isNaN(t) && (Date.now() - t) <= 3 * 60 * 60 * 1000;
+  } catch { return false; }
+};
+
 const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = isCommunityReport || incident.status === 'active';
+  const shouldPulse = isCommunityReport || isWithin3Hours(incident.time);
   // Larger tap targets on mobile for easier interaction
   const mobilePad = touch ? 10 : 0;
 
