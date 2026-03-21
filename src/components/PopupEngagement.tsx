@@ -140,7 +140,7 @@ const PopupEngagement = ({ incidentId }: Props) => {
           }}
         >
           <span style={{ fontSize: 13 }}>💬</span>
-          <span>{comments.length}</span>
+          <span>{commentCount ?? 0}</span>
         </button>
       </div>
 
