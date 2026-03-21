@@ -1388,8 +1388,42 @@ serve(async (req) => {
     const freshIds = new Set(freshIncidents.map((i: any) => i.id));
     const archived = await fetchArchivedIncidents(30);
     const olderArchived = archived.filter((a: any) => !freshIds.has(a.id));
-    const allIncidents = [...freshIncidents, ...olderArchived];
+    let allIncidents = [...freshIncidents, ...olderArchived];
     console.log(`Combined: ${freshIncidents.length} fresh + ${olderArchived.length} archived = ${allIncidents.length} total`);
+
+    const isSummaryIncident = (incident: any) => {
+      const haystack = `${incident.originalType || incident.original_type || ''} ${incident.title || ''}`.toLowerCase();
+      return haystack.includes('sammanfattning');
+    };
+
+    const summaryScrapeTargets = allIncidents
+      .filter((i: any) => isSummaryIncident(i) && i.url && (!i.description || i.description.length < 180))
+      .slice(0, 30);
+
+    if (summaryScrapeTargets.length > 0) {
+      const summaryScrapeResults = new Map<string, string>();
+      const SUMMARY_BATCH_SIZE = 5;
+
+      for (let b = 0; b < summaryScrapeTargets.length; b += SUMMARY_BATCH_SIZE) {
+        const batch = summaryScrapeTargets.slice(b, b + SUMMARY_BATCH_SIZE);
+        const batchPromises = batch.map(async (incident: any) => {
+          const detail = await scrapeEventDetail(incident.url);
+          if (detail && detail.length > (incident.description || '').length) {
+            summaryScrapeResults.set(incident.id, detail);
+          }
+        });
+        await Promise.all(batchPromises);
+      }
+
+      if (summaryScrapeResults.size > 0) {
+        allIncidents = allIncidents.map((incident: any) => ({
+          ...incident,
+          description: summaryScrapeResults.get(incident.id) || incident.description,
+        }));
+      }
+
+      console.log(`Backfilled ${summaryScrapeResults.size} summary descriptions`);
+    }
 
     // Apply premium filtering per-user
     let resultIncidents = allIncidents;
@@ -1404,7 +1438,7 @@ serve(async (req) => {
         })
         .map((i: any) => ({
           ...i,
-          description: '',
+          description: isSummaryIncident(i) ? (i.description || '') : '',
         }));
       console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
