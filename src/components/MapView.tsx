@@ -52,6 +52,54 @@ const isWithinHours = (timeStr: string, hours: number) => {
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
+const isWithinDays = (timeStr: string, days: number) => {
+  const d = parseSwedishDate(timeStr);
+  if (!d) return false;
+  const diff = Date.now() - d.getTime();
+  return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
+};
+
+const getStableHash = (value: string) => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+};
+
+const getJitteredPositions = (items: Incident[]) => {
+  const positions = items.map((item) => ({ lat: item.lat, lng: item.lng }));
+  const buckets = new Map<string, number[]>();
+
+  items.forEach((item, index) => {
+    const key = `${item.lat.toFixed(3)}:${item.lng.toFixed(3)}`;
+    const existing = buckets.get(key) || [];
+    existing.push(index);
+    buckets.set(key, existing);
+  });
+
+  buckets.forEach((indices) => {
+    if (indices.length < 2) return;
+
+    const baseRotation = ((getStableHash(items[indices[0]].id) % 360) * Math.PI) / 180;
+
+    indices.forEach((itemIndex, clusterIndex) => {
+      const item = items[itemIndex];
+      const seed = getStableHash(`${item.id}:${clusterIndex}`);
+      const angle = baseRotation + (Math.PI * 2 * clusterIndex) / indices.length + (((seed % 60) - 30) * Math.PI) / 720;
+      const ring = Math.floor(clusterIndex / 8);
+      const radius = Math.min(0.009, 0.003 + ring * 0.002 + ((seed % 1000) / 1000) * 0.0025);
+
+      positions[itemIndex] = {
+        lat: item.lat + Math.cos(angle) * radius,
+        lng: item.lng + Math.sin(angle) * radius,
+      };
+    });
+  });
+
+  return positions;
+};
+
 const isMissingPersonIncident = (incident: Incident) => {
   const haystack = `${incident.title} ${incident.description} ${incident.originalType || ''}`.toLowerCase();
   return /försvunnen|saknad|borttappad|efterlyst person|person försvunnen/.test(haystack);
@@ -433,52 +481,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    // De-overlap: push markers apart so none visually overlap
-    // Sort by time descending so newer incidents keep their position and older ones get pushed
-    const sortedIndices = incidents
-      .map((inc, idx) => ({ idx, time: parseSwedishDate(inc.time)?.getTime() || 0 }))
-      .sort((a, b) => b.time - a.time)
-      .map(e => e.idx);
+    const recentIncidents = incidents.filter((inc) => isWithinDays(inc.time, 7));
+    const positions = getJitteredPositions(recentIncidents);
 
-    const minDist = isTouch ? 0.003 : 0.005;
-    const maxIterations = isTouch ? 5 : 12;
-    const shouldRunRepulsion = incidents.length <= (isTouch ? 180 : 450);
-    const positions = incidents.map((inc) => ({ lat: inc.lat, lng: inc.lng }));
-
-    if (shouldRunRepulsion) {
-      for (let iter = 0; iter < maxIterations; iter++) {
-        let moved = false;
-        for (let si = 0; si < sortedIndices.length; si++) {
-          const i = sortedIndices[si];
-          for (let sj = si + 1; sj < sortedIndices.length; sj++) {
-            const j = sortedIndices[sj];
-            const dLat = positions[j].lat - positions[i].lat;
-            const dLng = positions[j].lng - positions[i].lng;
-            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-            if (dist < minDist && dist > 0) {
-              // Push the older incident (j, since sorted newer-first) away more
-              const push = (minDist - dist);
-              const nLat = dLat / dist;
-              const nLng = dLng / dist;
-              positions[j].lat += nLat * push * 0.8;
-              positions[j].lng += nLng * push * 0.8;
-              positions[i].lat -= nLat * push * 0.2;
-              positions[i].lng -= nLng * push * 0.2;
-              moved = true;
-            } else if (dist === 0) {
-              // Exact same coords: deterministic spread based on index
-              const angle = (sj / sortedIndices.length) * Math.PI * 2 + (sj * 2.399);
-              positions[j].lat += Math.cos(angle) * minDist * 0.7;
-              positions[j].lng += Math.sin(angle) * minDist * 0.7;
-              moved = true;
-            }
-          }
-        }
-        if (!moved) break;
-      }
-    }
-
-    incidents.forEach((inc, idx) => {
+    recentIncidents.forEach((inc, idx) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
       const config = incidentTypeConfig[inc.type];
       const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
