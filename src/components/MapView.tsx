@@ -105,6 +105,12 @@ const isMissingPersonIncident = (incident: Incident) => {
   return /försvunnen|saknad|borttappad|efterlyst person|person försvunnen/.test(haystack);
 };
 
+const shouldIncidentPulse = (incident: Incident) => {
+  if (incident.source === 'Medborgarrapport') return isWithinHours(incident.time, 24);
+  if (isMissingPersonIncident(incident)) return isWithinHours(incident.time, 24);
+  return isWithinHours(incident.time, 3);
+};
+
 const createMarkerIcon = (incident: Incident, touch: boolean) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
