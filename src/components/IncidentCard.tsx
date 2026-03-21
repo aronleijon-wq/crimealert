@@ -55,13 +55,9 @@ const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {incident.status === 'active' && (() => {
-            // Client-side safety: only pulse if actually within 3 hours
-            const normalized = incident.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
-            const t = new Date(normalized).getTime();
-            const isRecent = !isNaN(t) && (Date.now() - t) < 3 * 60 * 60 * 1000;
-            return isRecent ? <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" /> : null;
-          })()}
+          {incident.status === 'active' && (
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" />
+          )}
           {isPremium ? (
             <span className={`text-[10px] font-mono font-semibold ${riskConf.colorClass}`}>
               {riskConf.label}

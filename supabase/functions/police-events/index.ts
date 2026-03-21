@@ -1107,14 +1107,9 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
         time: event.datetime,
         status: (() => {
           try {
-            // Normalize datetime string for reliable parsing
-            let dt = (event.datetime || '').trim();
-            dt = dt.replace(/\s+(?=\+|-)/, 'T').replace(/^(\d{4}-\d{2}-\d{2})\s+/, '$1T');
-            const eventTime = new Date(dt).getTime();
-            if (isNaN(eventTime)) return 'resolved';
-            const ageMs = Date.now() - eventTime;
-            return ageMs > 3 * 60 * 60 * 1000 ? 'resolved' : 'active';
-          } catch { return 'resolved'; }
+            const eventTime = new Date(event.datetime).getTime();
+            return (Date.now() - eventTime) > 3 * 60 * 60 * 1000 ? 'resolved' : 'active';
+          } catch { return 'active'; }
         })(),
         risk: assessRisk(event.type),
         source: 'Polisen.se',
