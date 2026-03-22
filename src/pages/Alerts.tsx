@@ -1,9 +1,10 @@
 import Header from '@/components/Header';
-import { Bell, MapPin, Clock, Plus, X, Search } from 'lucide-react';
+import { Bell, BellRing, MapPin, Clock, Plus, X, Search } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
