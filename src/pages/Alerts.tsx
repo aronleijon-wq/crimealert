@@ -67,6 +67,7 @@ const Alerts = () => {
   const { incidents } = usePoliceEvents();
   const { isPremium, isLoggedIn } = useIsPremium();
   const { kommuner, loading, addKommun, removeKommun } = useNotificationPreferences();
+  const { isSubscribed, isSupported, loading: pushLoading, permission, subscribe, unsubscribe } = usePushNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
