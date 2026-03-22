@@ -33,7 +33,7 @@ const Header = () => {
             CRIME<span className="text-primary">​ALERT</span>
           </span>
           <span className="text-[9px] tracking-[0.2em] text-muted-foreground font-mono uppercase">
-            ​CrimeAlert-säkerhetskarta åt allmänheten    
+            ​CrimeAlert-säkerhetskarta    
           </span>
         </div>
       </Link>
