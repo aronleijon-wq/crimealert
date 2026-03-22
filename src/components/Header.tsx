@@ -25,7 +25,7 @@ const Header = () => {
 
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative">
+    <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative py-0 my-[15px]">
       <Link to="/" className="flex items-center gap-2.5 group">
         <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png" />
         <div className="flex flex-col leading-none">
