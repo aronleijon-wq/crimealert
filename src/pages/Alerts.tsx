@@ -207,6 +207,46 @@ const Alerts = () => {
                 </p>
             }
 
+              {/* Push notification toggle */}
+              {isSupported && kommuner.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BellRing className="w-4 h-4 text-primary" />
+                      <div>
+                        <span className="text-xs font-medium text-foreground">Push-notiser</span>
+                        <p className="text-[10px] text-muted-foreground">
+                          {isSubscribed ? 'Du får notiser direkt i webbläsaren' : 'Aktivera för att få notiser direkt'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (isSubscribed) {
+                          await unsubscribe();
+                          toast({ title: 'Avaktiverat', description: 'Push-notiser avstängda.' });
+                        } else {
+                          const ok = await subscribe();
+                          if (ok) {
+                            toast({ title: 'Aktiverat!', description: 'Du får nu push-notiser för bevakade kommuner.' });
+                          } else if (permission === 'denied') {
+                            toast({ title: 'Blockerad', description: 'Du har blockerat notiser i webbläsaren. Ändra i inställningarna.', variant: 'destructive' });
+                          }
+                        }
+                      }}
+                      disabled={pushLoading}
+                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                        isSubscribed
+                          ? 'bg-muted text-foreground hover:bg-muted/80'
+                          : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      } disabled:opacity-50`}
+                    >
+                      {pushLoading ? '...' : isSubscribed ? 'Stäng av' : 'Aktivera'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Incidents matching watched kommuner */}
               {watchedIncidents.length > 0 &&
             <div className="mt-4 pt-4 border-t border-border space-y-2">
