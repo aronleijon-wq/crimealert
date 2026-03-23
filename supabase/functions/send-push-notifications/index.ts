@@ -369,7 +369,7 @@ Deno.serve(async (req) => {
     const { data: subscriptions } = await supabase
       .from("push_subscriptions")
       .select("*")
-      .in("user_id", userIds);
+      .in("user_id", filteredUserIds);
 
     if (!subscriptions || subscriptions.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_push_subs" }), {
