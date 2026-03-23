@@ -259,7 +259,7 @@ const Account = () => {
     { text: 'Alla filter & kategorier', included: true },
     { text: 'Kommunbevakning & notiser', included: true },
     { text: 'Senaste 24h historik', included: true },
-    { text: 'Grundläggande heatmaps', included: true },
+    
     { text: 'Reklam i app/webb', included: true },
     { text: 'Realtidsdata', included: false },
     { text: 'Riskanalys & statistik', included: false },
