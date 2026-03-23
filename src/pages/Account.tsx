@@ -284,7 +284,7 @@ const Account = () => {
     { text: 'Prioriterad support', included: true },
     { text: 'Riskanalys & statistik', included: true },
     { text: 'Full historik (30+ dagar)', included: true },
-    { text: 'Heatmaps & riskanalys', included: true },
+    
     { text: 'Ingen reklam', included: true },
     { text: 'Detaljerade brottsbeskrivningar', included: true },
     { text: 'Medborgarrapporter', included: true },
