@@ -279,13 +279,13 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Find events from the last 5 minutes
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    // Find events from the last 30 minutes (wider window to avoid missing events)
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     
     const { data: recentEvents, error: eventsError } = await supabase
       .from("police_events_archive")
       .select("id, title, area, type, risk, time, original_type")
-      .gte("created_at", fiveMinAgo)
+      .gte("created_at", thirtyMinAgo)
       .not("original_type", "ilike", "%sammanfattning%");
 
     if (eventsError) throw eventsError;
@@ -332,11 +332,44 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Filter out already-sent notifications
+    const allEventIds = recentEvents.map((e) => e.id);
+    const { data: alreadySent } = await supabase
+      .from("sent_push_log")
+      .select("event_id, user_id")
+      .in("event_id", allEventIds)
+      .in("user_id", userIds);
+
+    const sentSet = new Set(
+      (alreadySent || []).map((s) => `${s.event_id}:${s.user_id}`)
+    );
+
+    // Remove already-sent events per user
+    for (const [userId, events] of Object.entries(userNotifications)) {
+      userNotifications[userId] = events.filter(
+        (e) => !sentSet.has(`${e.id}:${userId}`)
+      );
+    }
+
+    // Remove users with no new events
+    for (const userId of Object.keys(userNotifications)) {
+      if (userNotifications[userId].length === 0) {
+        delete userNotifications[userId];
+      }
+    }
+
+    const filteredUserIds = Object.keys(userNotifications);
+    if (filteredUserIds.length === 0) {
+      return new Response(JSON.stringify({ sent: 0, reason: "already_sent" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Get push subscriptions for matched users
     const { data: subscriptions } = await supabase
       .from("push_subscriptions")
       .select("*")
-      .in("user_id", userIds);
+      .in("user_id", filteredUserIds);
 
     if (!subscriptions || subscriptions.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_push_subs" }), {
@@ -379,6 +412,12 @@ Deno.serve(async (req) => {
 
       if (success) {
         sentCount++;
+        // Log sent notification to avoid re-sending
+        const logEntries = events.map((e) => ({
+          event_id: e.id,
+          user_id: sub.user_id,
+        }));
+        await supabase.from("sent_push_log").insert(logEntries);
       } else {
         expiredEndpoints.push(sub.endpoint);
       }

@@ -55,12 +55,8 @@ export function usePushNotifications() {
     if (!user || !isSupported) return false;
     setLoading(true);
     try {
-      // Register the push service worker
-      let reg = await navigator.serviceWorker.getRegistration();
-      if (!reg) {
-        reg = await navigator.serviceWorker.register('/sw-push.js');
-        await navigator.serviceWorker.ready;
-      }
+      // Use the existing PWA service worker (which imports sw-push.js)
+      const reg = await navigator.serviceWorker.ready;
 
       const perm = await Notification.requestPermission();
       setPermission(perm);
