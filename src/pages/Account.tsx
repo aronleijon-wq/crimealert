@@ -259,7 +259,7 @@ const Account = () => {
     { text: 'Alla filter & kategorier', included: true },
     { text: 'Kommunbevakning & notiser', included: true },
     { text: 'Senaste 24h historik', included: true },
-    { text: 'Grundläggande heatmaps', included: true },
+    
     { text: 'Reklam i app/webb', included: true },
     { text: 'Realtidsdata', included: false },
     { text: 'Riskanalys & statistik', included: false },
@@ -284,7 +284,7 @@ const Account = () => {
     { text: 'Prioriterad support', included: true },
     { text: 'Riskanalys & statistik', included: true },
     { text: 'Full historik (30+ dagar)', included: true },
-    { text: 'Heatmaps & riskanalys', included: true },
+    
     { text: 'Ingen reklam', included: true },
     { text: 'Detaljerade brottsbeskrivningar', included: true },
     { text: 'Medborgarrapporter', included: true },
