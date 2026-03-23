@@ -412,6 +412,12 @@ Deno.serve(async (req) => {
 
       if (success) {
         sentCount++;
+        // Log sent notification to avoid re-sending
+        const logEntries = events.map((e) => ({
+          event_id: e.id,
+          user_id: sub.user_id,
+        }));
+        await supabase.from("sent_push_log").insert(logEntries);
       } else {
         expiredEndpoints.push(sub.endpoint);
       }
