@@ -108,7 +108,7 @@ const Index = () => {
   
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {!isFullscreen &&
       <>
           <Header />
