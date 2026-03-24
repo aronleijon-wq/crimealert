@@ -1234,6 +1234,56 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
       ]);
     }
 
+    // ── Post-geocoding: scan description + title for known stadsdelar/orter ──
+    // If current precision is NOT street-level, check if description mentions a
+    // more specific location (stadsdel) than what we resolved to.
+    for (const inc of incidents) {
+      if (inc.location_precision === 'street') continue; // already precise
+      
+      const textToScan = `${inc.title || ''} ${inc.description || ''}`.toLowerCase();
+      let bestMatch: { key: string; entry: LocationEntry } | null = null;
+      
+      // Search for stadsdelar first (most specific), then orter
+      for (const [key, entry] of Object.entries(SWEDISH_LOCATIONS)) {
+        if (entry.type !== 'stadsdel') continue;
+        // Require word boundary match to avoid false positives
+        const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(`(?:^|[\\s,.:;!?()/"'])${escaped}(?:[\\s,.:;!?()/"']|$)`, 'i');
+        if (re.test(textToScan)) {
+          // Verify the stadsdel is in the same city as the incident
+          // (e.g. don't match "Tensta" if incident is in Malmö)
+          const cityFromTitle = (inc.title || '').split(',').pop()?.trim().toLowerCase() || '';
+          const isStockholmDistrict = ['stockholm', 'stockholms län'].includes(cityFromTitle) || 
+            inc.area?.toLowerCase().includes('stockholm');
+          const isGbgDistrict = ['göteborg', 'göteborgs'].some(g => cityFromTitle.includes(g) || (inc.area || '').toLowerCase().includes(g));
+          const isMalmoDistrict = ['malmö'].some(m => cityFromTitle.includes(m) || (inc.area || '').toLowerCase().includes(m));
+          
+          // Check district belongs to the right city
+          const stockholmDistricts = ['södermalm','norrmalm','kungsholmen','östermalm','gamla stan','vasastan','bromma','hägersten','liljeholmen','älvsjö','enskede','farsta','skärholmen','hässelby','vällingby','rinkeby','tensta','spånga','kista','hjulsta','akalla','husby','skarpnäck','hammarbyhöjden','hammarby sjöstad','gullmarsplan','hornstull','fruängen','bandhagen','bagarmossen','rågsved','hagsätra','högdalen','gubbängen','stureby','svedmyra','aspudden','midsommarkransen','telefonplan','globen'];
+          const gbgDistricts = ['majorna','linné','hisingen','angered','bergsjön','biskopsgården','centrum göteborg','frölunda','gamlestaden','kortedala','lundby'];
+          const malmoDistricts = ['rosengård','fosie','limhamn','husie','oxie','kirseberg','västra hamnen','hyllie'];
+          
+          const districtBelongs = 
+            (isStockholmDistrict && stockholmDistricts.includes(key)) ||
+            (isGbgDistrict && gbgDistricts.includes(key)) ||
+            (isMalmoDistrict && malmoDistricts.includes(key)) ||
+            (!isStockholmDistrict && !isGbgDistrict && !isMalmoDistrict); // unknown city, accept any
+          
+          if (districtBelongs) {
+            bestMatch = { key, entry };
+            break; // first stadsdel match is good enough
+          }
+        }
+      }
+      
+      if (bestMatch) {
+        console.log(`Description location upgrade: "${bestMatch.key}" for "${inc.title}" (was ${inc.location_precision} → district)`);
+        inc.lat = bestMatch.entry.lat;
+        inc.lng = bestMatch.entry.lng;
+        inc.location_precision = 'district';
+      }
+    }
+
     // ── Scrape detail pages for full descriptions with updates ──
     // Only scrape events from the last 3 days to keep response time reasonable
     const now = Date.now();
