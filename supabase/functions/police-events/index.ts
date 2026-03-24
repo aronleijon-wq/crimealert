@@ -1312,6 +1312,22 @@ async function archiveIncidents(incidents: any[]) {
       if (error) console.warn('Archive upsert error:', error.message);
     }
     console.log(`Archived ${rows.length} incidents to DB`);
+
+    // Trigger push notifications immediately after archiving
+    try {
+      const pushUrl = `${supabaseUrl}/functions/v1/send-push-notifications`;
+      const pushRes = await fetch(pushUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      });
+      const pushResult = await pushRes.json();
+      console.log('Push notifications triggered:', JSON.stringify(pushResult));
+    } catch (pushErr) {
+      console.warn('Push notification trigger failed:', pushErr);
+    }
   } catch (e) {
     console.warn('Archive failed:', e);
   }
