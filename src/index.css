@@ -214,8 +214,15 @@
 
 .animate-ticker {
   animation: ticker 40s linear infinite;
+  will-change: transform;
 }
 
 .animate-ticker:hover {
   animation-play-state: paused;
+}
+
+@media (max-width: 767px) {
+  .animate-ticker {
+    animation-duration: 60s;
+  }
 }

@@ -45,7 +45,7 @@ const Header = () => {
             <Link
               key={to}
               to={to}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex items-center gap-1 px-2 md:px-3 py-1.5 rounded-md text-[11px] md:text-xs font-medium transition-all ${
               active ?
               'bg-primary/10 text-primary border border-primary/20' :
               'text-muted-foreground hover:text-foreground hover:bg-muted'}`

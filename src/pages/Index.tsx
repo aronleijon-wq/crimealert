@@ -226,7 +226,7 @@ const Index = () => {
         </div>
       </div>
 
-      {!isFullscreen && <Footer />}
+      {!isFullscreen && <div className="hidden md:block"><Footer /></div>}
 
     </div>);
 
