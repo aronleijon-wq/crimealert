@@ -114,7 +114,9 @@ const Index = () => {
           <Header />
 
 
-          <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
+          <div className="hidden md:block">
+            <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
+          </div>
           <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} showCommunityReports={showCommunityReports} onToggleCommunityReports={() => setShowCommunityReports(prev => !prev)} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
         
