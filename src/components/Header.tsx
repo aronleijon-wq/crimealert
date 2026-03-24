@@ -25,7 +25,7 @@ const Header = () => {
 
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between z-50 relative py-0 mb-0 mt-[25px] my-[20px]">
+    <header className="h-12 md:h-14 border-b border-border bg-card flex items-center px-3 md:px-4 justify-between z-50 relative pt-[env(safe-area-inset-top)]">
       <Link to="/" className="flex items-center gap-2.5 group">
         <img alt="CrimeRadar" className="w-8 h-8 rounded-md object-cover" style={{ background: 'transparent' }} src="/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png" />
         <div className="flex flex-col leading-none">
@@ -38,14 +38,14 @@ const Header = () => {
         </div>
       </Link>
 
-      <nav className="flex items-center mx-0 px-[3px] gap-[4px]">
+      <nav className="flex items-center gap-0.5 md:gap-1">
         {navItems.map(({ to, label, icon: Icon }) => {
           const active = location.pathname === to;
           return (
             <Link
               key={to}
               to={to}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex items-center gap-1 px-2 md:px-3 py-1.5 rounded-md text-[11px] md:text-xs font-medium transition-all ${
               active ?
               'bg-primary/10 text-primary border border-primary/20' :
               'text-muted-foreground hover:text-foreground hover:bg-muted'}`

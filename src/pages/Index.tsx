@@ -108,13 +108,15 @@ const Index = () => {
   
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {!isFullscreen &&
       <>
           <Header />
 
 
-          <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
+          <div className="hidden md:block">
+            <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
+          </div>
           <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} showCommunityReports={showCommunityReports} onToggleCommunityReports={() => setShowCommunityReports(prev => !prev)} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
         
@@ -123,7 +125,7 @@ const Index = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
         {!isFullscreen && (!isMobile || mobileListOpen) &&
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none relative">
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[30vh] md:max-h-none relative">
             <div className="px-3 py-2 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ?
@@ -224,7 +226,7 @@ const Index = () => {
         </div>
       </div>
 
-      {!isFullscreen && <Footer />}
+      {!isFullscreen && <div className="hidden md:block"><Footer /></div>}
 
     </div>);
 
