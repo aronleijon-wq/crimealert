@@ -44,7 +44,33 @@ export function usePushNotifications() {
       try {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!sub);
+        if (!sub) {
+          setIsSubscribed(false);
+          return;
+        }
+
+        const key = sub.getKey('p256dh');
+        const auth = sub.getKey('auth');
+
+        if (!key || !auth) {
+          setIsSubscribed(true);
+          return;
+        }
+
+        const { error } = await supabase.from('push_subscriptions').upsert({
+          user_id: user.id,
+          endpoint: sub.endpoint,
+          p256dh: uint8ArrayToBase64url(new Uint8Array(key)),
+          auth: uint8ArrayToBase64url(new Uint8Array(auth)),
+        }, { onConflict: 'user_id,endpoint' });
+
+        if (error) {
+          console.error('Push sync error:', error);
+          setIsSubscribed(false);
+          return;
+        }
+
+        setIsSubscribed(true);
       } catch {
         setIsSubscribed(false);
       }
