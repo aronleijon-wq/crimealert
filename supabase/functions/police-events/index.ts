@@ -1129,22 +1129,34 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
         
         // Also try a simpler query as fallback
         const simpleQuery = `${extractedAddress}, Sverige`;
+
+        // Resolve expected city coords for sanity checking street geocode results
+        const expectedCity = cityFromTitle ? lookupSwedishLocation(cityFromTitle) : null;
         
         const promise = geocodeWithNominatim(geocodeQuery).then(async coords => {
-          if (coords) {
-            incident.lat = coords[0];
-            incident.lng = coords[1];
-            incident.location_precision = 'street';
-            console.log(`Street geocode: "${geocodeQuery}" → ${coords[0]}, ${coords[1]}`);
-          } else {
+          let result = coords;
+          if (!result) {
             // Try simpler query
-            const fallback = await geocodeWithNominatim(simpleQuery);
-            if (fallback) {
-              incident.lat = fallback[0];
-              incident.lng = fallback[1];
-              incident.location_precision = 'street';
-              console.log(`Street geocode (simple): "${simpleQuery}" → ${fallback[0]}, ${fallback[1]}`);
+            result = await geocodeWithNominatim(simpleQuery);
+          }
+          
+          if (result) {
+            // Sanity check: verify the geocoded street is within ~50km of the expected city
+            // This prevents "Storgatan" in Malmö being used for a Luleå incident
+            if (expectedCity) {
+              const dLat = Math.abs(result[0] - expectedCity.lat);
+              const dLng = Math.abs(result[1] - expectedCity.lng);
+              const approxDistKm = Math.sqrt(dLat * dLat + (dLng * 0.55) * (dLng * 0.55)) * 111;
+              if (approxDistKm > 50) {
+                console.log(`Street geocode REJECTED: "${geocodeQuery}" → ${result[0]},${result[1]} is ${Math.round(approxDistKm)}km from ${cityFromTitle} (${expectedCity.lat},${expectedCity.lng})`);
+                return; // discard this result, keep existing coords
+              }
             }
+            
+            incident.lat = result[0];
+            incident.lng = result[1];
+            incident.location_precision = 'street';
+            console.log(`Street geocode: "${geocodeQuery}" → ${result[0]}, ${result[1]}`);
           }
         });
         geocodePromises.push(promise);
