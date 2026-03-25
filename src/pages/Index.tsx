@@ -220,7 +220,7 @@ const Index = () => {
             <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
             }
             <span className="text-[10px] font-mono text-muted-foreground">
-              {isPremium ? 'REALTID' : isLive ? '15 MIN DELAY' : 'DEMO'} • {filtered.length} HÄNDELSER • <span className="text-cr-red">{activeCount} AKTIVA</span>
+              {isPremium ? 'REALTID' : isLive ? '15 MIN DELAY' : 'DEMO'} • SENASTE 7 DAGARNA • <span className="text-cr-red">{activeCount} AKTIVA</span>
             </span>
           </div>
         </div>
