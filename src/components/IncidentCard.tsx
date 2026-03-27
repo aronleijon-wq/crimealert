@@ -63,8 +63,9 @@ const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
               {riskConf.label}
             </span>
           ) : (
-            <span className="text-[10px] font-mono text-muted-foreground/40 flex items-center gap-0.5">
-              <Lock className="w-2.5 h-2.5" /> Risk
+            <span className="text-[10px] font-mono text-muted-foreground/40 flex items-center gap-0.5 relative">
+              <Lock className="w-2.5 h-2.5 text-destructive/60 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" />
+              <span className="blur-[3px] select-none pointer-events-none text-destructive/40 font-semibold" aria-hidden="true">Medel</span>
             </span>
           )}
         </div>
