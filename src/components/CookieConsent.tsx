@@ -1,22 +1,53 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cookie, X } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const COOKIE_CONSENT_KEY = 'crimealert_cookie_consent';
 
 const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Always show on every page load/reload
-    const timer = setTimeout(() => setVisible(true), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    // If already accepted in localStorage, don't show
+    const localConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (localConsent === 'accepted') return;
 
-  const accept = () => {
+    // If logged in, check profile for saved consent
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('cookie_consent')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.cookie_consent) {
+            // User already accepted on another session — persist locally and hide
+            localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
+          } else {
+            setTimeout(() => setVisible(true), 1000);
+          }
+        });
+    } else {
+      // Not logged in, no local consent — show banner
+      setTimeout(() => setVisible(true), 1000);
+    }
+  }, [user]);
+
+  const accept = async () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
     setVisible(false);
+
+    // Persist to profile if logged in
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ cookie_consent: true })
+        .eq('id', user.id);
+    }
   };
 
   const dismiss = () => {
