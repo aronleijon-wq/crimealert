@@ -205,13 +205,14 @@ const Index = () => {
           {/* Fullscreen toggle button */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="absolute top-3 right-14 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md p-1.5 hover:bg-muted transition text-muted-foreground"
+            className="absolute right-14 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md p-1.5 hover:bg-muted transition text-muted-foreground"
+            style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}
             title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}>
             
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
-          <div className="absolute top-3 left-3 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md px-3 py-1.5 flex items-center gap-2">
+          <div className="absolute left-3 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md px-3 py-1.5 flex items-center gap-2" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
             {isPremium ?
             <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" /> :
             isLive ?
