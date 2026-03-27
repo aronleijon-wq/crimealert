@@ -41,6 +41,7 @@ const App = () => (
           <Route path="/villkor" element={<Villkor />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/debug-push" element={<DebugPush />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <CookieConsent />
