@@ -513,12 +513,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         keyboard: false,
       });
 
-      marker.bindPopup(createPopupContent(inc, isPremium), {
+      marker.bindPopup(createPopupContent(inc, isPremium, isTouch), {
         className: 'incident-popup',
-        maxWidth: 320,
+        maxWidth: isTouch ? 270 : 320,
         closeButton: true,
         autoPan: true,
-        autoPanPadding: L.point(40, 40),
+        autoPanPadding: L.point(isTouch ? 20 : 40, isTouch ? 20 : 40),
       });
 
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
