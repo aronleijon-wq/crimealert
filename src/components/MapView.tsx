@@ -309,14 +309,14 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const safeConfigLabel = sanitizeHTML(config.label);
   const safeRiskLabel = sanitizeHTML(risk.label);
 
-  const minW = compact ? 200 : 260;
-  const maxW = compact ? 260 : 320;
-  const gap = compact ? 5 : 8;
-  const mb = compact ? 6 : 10;
-  const iconSz = compact ? 18 : 22;
-  const titleSz = compact ? 11 : 13;
-  const subSz = compact ? 9 : 10;
-  const badgeSz = compact ? 8 : 9;
+  const minW = compact ? 160 : 260;
+  const maxW = compact ? 220 : 320;
+  const gap = compact ? 4 : 8;
+  const mb = compact ? 4 : 10;
+  const iconSz = compact ? 15 : 22;
+  const titleSz = compact ? 10 : 13;
+  const subSz = compact ? 8 : 10;
+  const badgeSz = compact ? 7 : 9;
 
   return `
     <div style="font-family:system-ui;min-width:${minW}px;max-width:${maxW}px;">
@@ -335,7 +335,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 10 : 11}px;color:#444;margin:0 0 ${compact ? 6 : 10}px;line-height:1.5;border-left:3px solid ${config.color};padding-left:${compact ? 6 : 8}px;${compact ? 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;' : ''}">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 9 : 10}px;color:#aaa;margin:0 0 ${compact ? 6 : 10}px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 9 : 11}px;color:#444;margin:0 0 ${compact ? 4 : 10}px;line-height:1.4;border-left:2px solid ${config.color};padding-left:${compact ? 5 : 8}px;display:-webkit-box;-webkit-line-clamp:${compact ? 2 : 99};-webkit-box-orient:vertical;overflow:hidden;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 8 : 10}px;color:#aaa;margin:0 0 ${compact ? 4 : 10}px;font-style:italic;">🔒 Beskrivning kräver Pro</p>` : ''}
 
       ${inc.image_url ? `
       <div style="margin-bottom:${compact ? 6 : 10}px;">
@@ -348,10 +348,10 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       </div>
       ` : ''}
 
-      ${isPremium && extractedDetails.length > 0 ? `
-      <div style="display:flex;flex-wrap:wrap;gap:${compact ? 3 : 4}px;margin-bottom:${compact ? 6 : 10}px;">
+      ${!compact && isPremium && extractedDetails.length > 0 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
         ${extractedDetails.map(d => `
-          <span style="font-size:${compact ? 8 : 9}px;padding:2px ${compact ? 5 : 7}px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
+          <span style="font-size:9px;padding:2px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
             <span>${sanitizeHTML(d.icon)}</span>
             <span style="font-weight:600;">${sanitizeHTML(d.label)}:</span> ${sanitizeHTML(d.value)}
           </span>
@@ -359,44 +359,52 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       </div>
       ` : ''}
 
-      ${isPremium ? `
-      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:${compact ? '6px 8px' : '10px 12px'};margin-bottom:${compact ? 6 : 10}px;">
-        <div style="font-size:${compact ? 8 : 9}px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
-        <p style="font-size:${compact ? 9 : 10}px;color:#555;margin:0;line-height:1.5;${compact ? 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;' : ''}">${riskDesc}</p>
+      ${compact ? `
+      <div style="display:flex;gap:3px;font-size:8px;margin-bottom:3px;">
+        <span style="background:#f8f8f8;padding:2px 5px;border-radius:4px;color:#555;">📍 ${safeArea}</span>
+        <span style="background:#f8f8f8;padding:2px 5px;border-radius:4px;color:#555;">🕐 ${formatTime(inc.time)}</span>
+        ${isPremium ? `<span style="padding:2px 5px;border-radius:4px;background:${riskBg};color:${riskColor};font-weight:600;">⚠ ${safeRiskLabel}</span>` : ''}
       </div>
       ` : `
-      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:${compact ? '6px 8px' : '10px 12px'};margin-bottom:${compact ? 6 : 10}px;text-align:center;">
-        <div style="font-size:${compact ? 9 : 10}px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
-        ${compact ? '' : '<div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>'}
+      ${isPremium ? `
+      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
+        <p style="font-size:10px;color:#555;margin:0;line-height:1.5;">${riskDesc}</p>
+      </div>
+      ` : `
+      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:10px 12px;margin-bottom:10px;text-align:center;">
+        <div style="font-size:10px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
+        <div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
       </div>
       `}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:${compact ? 3 : 4}px;font-size:${compact ? 9 : 10}px;margin-bottom:${compact ? 4 : 6}px;">
-        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
-          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📍 Område</span><br/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:6px;">
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">📍 Område</span><br/>
           <span style="color:#333;font-weight:600;">${safeArea}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
-          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">🕐 Tidpunkt</span><br/>
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">🕐 Tidpunkt</span><br/>
           <span style="color:#333;font-weight:500;">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
-          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📋 Typ</span><br/>
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">📋 Typ</span><br/>
           <span style="color:#333;font-weight:500;">${safeConfigLabel}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
-          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📡 Status</span><br/>
+        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
+          <span style="color:#aaa;font-size:9px;">📡 Status</span><br/>
           ${isPremium
             ? `<span style="color:${statusColor};font-weight:600;">${statusLabel}</span>`
             : `<span style="color:#aaa;font-weight:500;">🔒 Pro</span>`
           }
         </div>
       </div>
+      `}
 
-      ${inc.approximate ? `<div style="margin-top:4px;font-size:${compact ? 8 : 9}px;color:#f97316;background:#fff7ed;padding:3px 6px;border-radius:4px;">⊙ Positionen är approximerad</div>` : ''}
+      ${inc.approximate ? `<div style="margin-top:3px;font-size:${compact ? 7 : 9}px;color:#f97316;background:#fff7ed;padding:2px 5px;border-radius:4px;">⊙ Approximerad position</div>` : ''}
 
-      <div style="margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:${compact ? 8 : 9}px;color:#bbb;display:flex;justify-content:space-between;">
-        <span>Källa: ${safeSource}</span>
+      <div style="margin-top:3px;padding-top:3px;border-top:1px solid #eee;font-size:${compact ? 7 : 9}px;color:#bbb;display:flex;justify-content:space-between;">
+        <span>${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
 
@@ -515,10 +523,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
       marker.bindPopup(createPopupContent(inc, isPremium, isTouch), {
         className: 'incident-popup',
-        maxWidth: isTouch ? 270 : 320,
+        maxWidth: isTouch ? 230 : 320,
         closeButton: true,
         autoPan: true,
-        autoPanPadding: L.point(isTouch ? 20 : 40, isTouch ? 20 : 40),
+        autoPanPadding: L.point(isTouch ? 10 : 40, isTouch ? 10 : 40),
       });
 
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
