@@ -121,8 +121,9 @@ const Index = () => {
           </div>
           <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} showCommunityReports={showCommunityReports} onToggleCommunityReports={() => setShowCommunityReports(prev => !prev)} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
-        
+          {!isLoggedIn && <SignupBanner />}
         </>
+
       }
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
