@@ -309,49 +309,41 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const safeConfigLabel = sanitizeHTML(config.label);
   const safeRiskLabel = sanitizeHTML(risk.label);
 
-  const minW = compact ? 160 : 260;
-  const maxW = compact ? 220 : 320;
-  const gap = compact ? 4 : 8;
-  const mb = compact ? 4 : 10;
-  const iconSz = compact ? 15 : 22;
-  const titleSz = compact ? 10 : 13;
-  const subSz = compact ? 8 : 10;
-  const badgeSz = compact ? 7 : 9;
+  // compact = tighter shell, ALL content preserved
+  const sz = (normal: number, small: number) => compact ? small : normal;
 
   return `
-    <div style="font-family:system-ui;min-width:${minW}px;max-width:${maxW}px;">
-      <div style="display:flex;align-items:center;gap:${gap}px;margin-bottom:${mb}px;">
-        <span style="font-size:${iconSz}px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
+    <div style="font-family:system-ui;min-width:${sz(260,210)}px;max-width:${sz(320,260)}px;">
+      <div style="display:flex;align-items:center;gap:${sz(8,5)}px;margin-bottom:${sz(10,5)}px;">
+        <span style="font-size:${sz(22,16)}px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:${titleSz}px;font-weight:700;color:#1a1a1a;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${safeTitle}</div>
-          <div style="font-size:${subSz}px;color:#888;margin-top:1px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
+          <div style="font-size:${sz(13,11)}px;font-weight:700;color:#1a1a1a;line-height:1.3;">${safeTitle}</div>
+          <div style="font-size:${sz(10,8)}px;color:#888;margin-top:1px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
           ${isPremium
-            ? `<span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-               <span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
-            : `<span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
+            ? `<span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
+               <span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
+            : `<span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
           }
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 9 : 11}px;color:#444;margin:0 0 ${compact ? 4 : 10}px;line-height:1.4;border-left:2px solid ${config.color};padding-left:${compact ? 5 : 8}px;display:-webkit-box;-webkit-line-clamp:${compact ? 2 : 99};-webkit-box-orient:vertical;overflow:hidden;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 8 : 10}px;color:#aaa;margin:0 0 ${compact ? 4 : 10}px;font-style:italic;">🔒 Beskrivning kräver Pro</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${sz(11,9)}px;color:#444;margin:0 0 ${sz(10,5)}px;line-height:1.5;border-left:3px solid ${config.color};padding-left:${sz(8,6)}px;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${sz(10,8)}px;color:#aaa;margin:0 0 ${sz(10,5)}px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
       ${inc.image_url ? `
-      <div style="margin-bottom:${compact ? 6 : 10}px;">
-        <img
-          src="${sanitizeHTML(inc.image_url)}"
-          alt="Rapportbild"
-          style="width:100%;max-height:${compact ? 80 : 120}px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
-          onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))"
-        />
+      <div style="margin-bottom:${sz(10,5)}px;">
+        <img src="${sanitizeHTML(inc.image_url)}" alt="Rapportbild"
+          style="width:100%;max-height:${sz(120,80)}px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
+          onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
+        <div style="font-size:${sz(9,7)}px;color:#aaa;margin-top:2px;text-align:center;">Klicka för att förstora</div>
       </div>
       ` : ''}
 
-      ${!compact && isPremium && extractedDetails.length > 0 ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+      ${isPremium && extractedDetails.length > 0 ? `
+      <div style="display:flex;flex-wrap:wrap;gap:${sz(4,3)}px;margin-bottom:${sz(10,5)}px;">
         ${extractedDetails.map(d => `
-          <span style="font-size:9px;padding:2px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
+          <span style="font-size:${sz(9,7)}px;padding:${sz(3,2)}px ${sz(7,4)}px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
             <span>${sanitizeHTML(d.icon)}</span>
             <span style="font-weight:600;">${sanitizeHTML(d.label)}:</span> ${sanitizeHTML(d.value)}
           </span>
@@ -359,52 +351,44 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       </div>
       ` : ''}
 
-      ${compact ? `
-      <div style="display:flex;gap:3px;font-size:8px;margin-bottom:3px;">
-        <span style="background:#f8f8f8;padding:2px 5px;border-radius:4px;color:#555;">📍 ${safeArea}</span>
-        <span style="background:#f8f8f8;padding:2px 5px;border-radius:4px;color:#555;">🕐 ${formatTime(inc.time)}</span>
-        ${isPremium ? `<span style="padding:2px 5px;border-radius:4px;background:${riskBg};color:${riskColor};font-weight:600;">⚠ ${safeRiskLabel}</span>` : ''}
-      </div>
-      ` : `
       ${isPremium ? `
-      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
-        <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
-        <p style="font-size:10px;color:#555;margin:0;line-height:1.5;">${riskDesc}</p>
+      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:${sz(10,5)}px ${sz(12,7)}px;margin-bottom:${sz(10,5)}px;">
+        <div style="font-size:${sz(9,7)}px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
+        <p style="font-size:${sz(10,8)}px;color:#555;margin:0;line-height:1.5;">${riskDesc}</p>
       </div>
       ` : `
-      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:10px 12px;margin-bottom:10px;text-align:center;">
-        <div style="font-size:10px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
-        <div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
+      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:${sz(10,5)}px ${sz(12,7)}px;margin-bottom:${sz(10,5)}px;text-align:center;">
+        <div style="font-size:${sz(10,8)}px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
+        <div style="font-size:${sz(9,7)}px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
       </div>
       `}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:6px;">
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📍 Område</span><br/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:${sz(4,3)}px;font-size:${sz(10,8)}px;margin-bottom:${sz(6,3)}px;">
+        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
+          <span style="color:#aaa;font-size:${sz(9,7)}px;">📍 Område</span><br/>
           <span style="color:#333;font-weight:600;">${safeArea}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">🕐 Tidpunkt</span><br/>
+        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
+          <span style="color:#aaa;font-size:${sz(9,7)}px;">🕐 Tidpunkt</span><br/>
           <span style="color:#333;font-weight:500;">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📋 Typ</span><br/>
+        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
+          <span style="color:#aaa;font-size:${sz(9,7)}px;">📋 Typ</span><br/>
           <span style="color:#333;font-weight:500;">${safeConfigLabel}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📡 Status</span><br/>
+        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
+          <span style="color:#aaa;font-size:${sz(9,7)}px;">📡 Status</span><br/>
           ${isPremium
             ? `<span style="color:${statusColor};font-weight:600;">${statusLabel}</span>`
             : `<span style="color:#aaa;font-weight:500;">🔒 Pro</span>`
           }
         </div>
       </div>
-      `}
 
-      ${inc.approximate ? `<div style="margin-top:3px;font-size:${compact ? 7 : 9}px;color:#f97316;background:#fff7ed;padding:2px 5px;border-radius:4px;">⊙ Approximerad position</div>` : ''}
+      ${inc.approximate ? `<div style="margin-top:${sz(6,3)}px;font-size:${sz(9,7)}px;color:#f97316;background:#fff7ed;padding:${sz(4,2)}px ${sz(8,5)}px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
 
-      <div style="margin-top:3px;padding-top:3px;border-top:1px solid #eee;font-size:${compact ? 7 : 9}px;color:#bbb;display:flex;justify-content:space-between;">
-        <span>${safeSource}</span>
+      <div style="margin-top:${sz(6,3)}px;padding-top:${sz(6,3)}px;border-top:1px solid #eee;font-size:${sz(9,7)}px;color:#bbb;display:flex;justify-content:space-between;">
+        <span>Källa: ${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
 
