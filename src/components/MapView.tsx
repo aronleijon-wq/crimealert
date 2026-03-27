@@ -335,24 +335,23 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:11px;color:#444;margin:0 0 10px;line-height:1.6;border-left:3px solid ${config.color};padding-left:8px;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:10px;color:#aaa;margin:0 0 10px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 10 : 11}px;color:#444;margin:0 0 ${compact ? 6 : 10}px;line-height:1.5;border-left:3px solid ${config.color};padding-left:${compact ? 6 : 8}px;${compact ? 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;' : ''}">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 9 : 10}px;color:#aaa;margin:0 0 ${compact ? 6 : 10}px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
 
       ${inc.image_url ? `
-      <div style="margin-bottom:10px;">
+      <div style="margin-bottom:${compact ? 6 : 10}px;">
         <img
           src="${sanitizeHTML(inc.image_url)}"
           alt="Rapportbild"
-          style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
+          style="width:100%;max-height:${compact ? 80 : 120}px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
           onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))"
         />
-        <div style="font-size:9px;color:#aaa;margin-top:3px;text-align:center;">Klicka för att förstora</div>
       </div>
       ` : ''}
 
       ${isPremium && extractedDetails.length > 0 ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+      <div style="display:flex;flex-wrap:wrap;gap:${compact ? 3 : 4}px;margin-bottom:${compact ? 6 : 10}px;">
         ${extractedDetails.map(d => `
-          <span style="font-size:9px;padding:3px 7px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:3px;border:1px solid #e2e8f0;">
+          <span style="font-size:${compact ? 8 : 9}px;padding:2px ${compact ? 5 : 7}px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
             <span>${sanitizeHTML(d.icon)}</span>
             <span style="font-weight:600;">${sanitizeHTML(d.label)}:</span> ${sanitizeHTML(d.value)}
           </span>
@@ -361,32 +360,32 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       ` : ''}
 
       ${isPremium ? `
-      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
-        <div style="font-size:9px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">⚠ Riskbedömning</div>
-        <p style="font-size:10px;color:#555;margin:0;line-height:1.6;">${riskDesc}</p>
+      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:${compact ? '6px 8px' : '10px 12px'};margin-bottom:${compact ? 6 : 10}px;">
+        <div style="font-size:${compact ? 8 : 9}px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
+        <p style="font-size:${compact ? 9 : 10}px;color:#555;margin:0;line-height:1.5;${compact ? 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;' : ''}">${riskDesc}</p>
       </div>
       ` : `
-      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:10px 12px;margin-bottom:10px;text-align:center;">
-        <div style="font-size:10px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
-        <div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
+      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:${compact ? '6px 8px' : '10px 12px'};margin-bottom:${compact ? 6 : 10}px;text-align:center;">
+        <div style="font-size:${compact ? 9 : 10}px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
+        ${compact ? '' : '<div style="font-size:9px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>'}
       </div>
       `}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;margin-bottom:6px;">
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📍 Område</span><br/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:${compact ? 3 : 4}px;font-size:${compact ? 9 : 10}px;margin-bottom:${compact ? 4 : 6}px;">
+        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
+          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📍 Område</span><br/>
           <span style="color:#333;font-weight:600;">${safeArea}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">🕐 Tidpunkt</span><br/>
+        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
+          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">🕐 Tidpunkt</span><br/>
           <span style="color:#333;font-weight:500;">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📋 Typ</span><br/>
+        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
+          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📋 Typ</span><br/>
           <span style="color:#333;font-weight:500;">${safeConfigLabel}</span>
         </div>
-        <div style="background:#f8f8f8;padding:6px 8px;border-radius:5px;">
-          <span style="color:#aaa;font-size:9px;">📡 Status</span><br/>
+        <div style="background:#f8f8f8;padding:${compact ? '4px 6px' : '6px 8px'};border-radius:5px;">
+          <span style="color:#aaa;font-size:${compact ? 8 : 9}px;">📡 Status</span><br/>
           ${isPremium
             ? `<span style="color:${statusColor};font-weight:600;">${statusLabel}</span>`
             : `<span style="color:#aaa;font-weight:500;">🔒 Pro</span>`
@@ -394,11 +393,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${''}
+      ${inc.approximate ? `<div style="margin-top:4px;font-size:${compact ? 8 : 9}px;color:#f97316;background:#fff7ed;padding:3px 6px;border-radius:4px;">⊙ Positionen är approximerad</div>` : ''}
 
-      ${inc.approximate ? `<div style="margin-top:6px;font-size:9px;color:#f97316;background:#fff7ed;padding:4px 8px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
-
-      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee;font-size:9px;color:#bbb;display:flex;justify-content:space-between;">
+      <div style="margin-top:4px;padding-top:4px;border-top:1px solid #eee;font-size:${compact ? 8 : 9}px;color:#bbb;display:flex;justify-content:space-between;">
         <span>Källa: ${safeSource}</span>
         <span>CrimeAlert</span>
       </div>
