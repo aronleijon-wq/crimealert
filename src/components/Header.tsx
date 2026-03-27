@@ -23,7 +23,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="h-11 md:h-14 border-b border-border bg-card flex items-center px-2 md:px-4 justify-between z-50 relative pt-[env(safe-area-inset-top)]">
+    <header className="border-b border-border bg-card flex items-center px-2 md:px-4 justify-between z-50 relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }}>
       <Link to="/" className="flex items-center gap-2 group shrink-0">
         <img
           alt="CrimeAlert"

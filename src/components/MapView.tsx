@@ -313,7 +313,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const sz = (normal: number, small: number) => compact ? small : normal;
 
   return `
-    <div style="font-family:system-ui;min-width:${sz(260,210)}px;max-width:${sz(320,260)}px;">
+    <div style="font-family:system-ui;min-width:${sz(260,200)}px;max-width:${sz(320,250)}px;${compact ? 'max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px;' : ''}">
       <div style="display:flex;align-items:center;gap:${sz(8,5)}px;margin-bottom:${sz(10,5)}px;">
         <span style="font-size:${sz(22,16)}px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
         <div style="flex:1;min-width:0;">
@@ -507,10 +507,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
       marker.bindPopup(createPopupContent(inc, isPremium, isTouch), {
         className: 'incident-popup',
-        maxWidth: isTouch ? 230 : 320,
+        maxWidth: isTouch ? 250 : 320,
         closeButton: true,
         autoPan: true,
-        autoPanPadding: L.point(isTouch ? 10 : 40, isTouch ? 10 : 40),
+        autoPanPadding: L.point(isTouch ? 15 : 40, isTouch ? 15 : 40),
       });
 
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
