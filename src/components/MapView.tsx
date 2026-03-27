@@ -309,14 +309,14 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const safeConfigLabel = sanitizeHTML(config.label);
   const safeRiskLabel = sanitizeHTML(risk.label);
 
-  const minW = compact ? 200 : 260;
-  const maxW = compact ? 260 : 320;
-  const gap = compact ? 5 : 8;
-  const mb = compact ? 6 : 10;
-  const iconSz = compact ? 18 : 22;
-  const titleSz = compact ? 11 : 13;
-  const subSz = compact ? 9 : 10;
-  const badgeSz = compact ? 8 : 9;
+  const minW = compact ? 160 : 260;
+  const maxW = compact ? 220 : 320;
+  const gap = compact ? 4 : 8;
+  const mb = compact ? 4 : 10;
+  const iconSz = compact ? 15 : 22;
+  const titleSz = compact ? 10 : 13;
+  const subSz = compact ? 8 : 10;
+  const badgeSz = compact ? 7 : 9;
 
   return `
     <div style="font-family:system-ui;min-width:${minW}px;max-width:${maxW}px;">
