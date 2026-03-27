@@ -227,4 +227,13 @@
   .animate-ticker {
     animation-duration: 60s;
   }
+
+  /* Compact mobile popup styling */
+  .leaflet-popup-content-wrapper {
+    padding: 6px !important;
+    border-radius: 10px !important;
+  }
+  .leaflet-popup-content {
+    margin: 6px !important;
+  }
 }
