@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN cookie_consent boolean NOT NULL DEFAULT false;

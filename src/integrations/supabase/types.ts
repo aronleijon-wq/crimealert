@@ -264,18 +264,21 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cookie_consent: boolean
           created_at: string
           display_name: string | null
           id: string
           updated_at: string
         }
         Insert: {
+          cookie_consent?: boolean
           created_at?: string
           display_name?: string | null
           id: string
           updated_at?: string
         }
         Update: {
+          cookie_consent?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
