@@ -195,7 +195,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                   `}
                   title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
                   {isLocked ? (
-                    <Lock className="w-3 h-3 text-primary shrink-0" />
+                    <Lock className="w-3 h-3 text-destructive/70 shrink-0 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" />
                   ) : (
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 transition-opacity duration-150 ${active ? 'opacity-100' : 'opacity-30'}`}
