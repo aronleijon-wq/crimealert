@@ -54,13 +54,22 @@ const SWEDISH_KOMMUNER = [
 
 const getTimeAgo = (time: string): string => {
   try {
-    const diff = Date.now() - new Date(time).getTime();
+    if (!time) return '';
+    // Normalize formats like "2024-03-27 14:30:00 +02:00" to ISO
+    let s = time.trim().replace(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):/, '$1T$2:');
+    // Remove space before timezone offset e.g. " +02:00" → "+02:00"
+    s = s.replace(/\s+([+-]\d{2}:\d{2})$/, '$1');
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '';
+    const diff = Date.now() - d.getTime();
+    if (diff < 0) return 'Just nu';
     const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just nu';
     if (mins < 60) return `${mins} min sedan`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}h sedan`;
     return `${Math.floor(hours / 24)}d sedan`;
-  } catch {return '';}
+  } catch { return ''; }
 };
 
 const Alerts = () => {
