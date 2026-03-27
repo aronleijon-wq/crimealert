@@ -6,7 +6,7 @@ import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 import SignupBanner from '@/components/SignupBanner';
 import MobileSignupBar from '@/components/MobileSignupBar';
-import SignupPopup from '@/components/SignupPopup';
+
 
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
