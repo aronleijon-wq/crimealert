@@ -260,7 +260,7 @@ const Account = () => {
     { text: 'Kommunbevakning & notiser', included: true },
     { text: 'Senaste 7 dagars karta', included: true },
     
-    { text: 'Reklam i app/webb', included: true },
+    { text: 'Ingen reklam', included: false },
     { text: 'Realtidsdata', included: false },
     { text: 'Riskanalys & statistik', included: false },
     { text: 'Medborgarrapporter', included: false },
