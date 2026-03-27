@@ -289,7 +289,7 @@ const sanitizeHTML = (str: string): string => {
   return div.innerHTML;
 };
 
-const createPopupContent = (inc: Incident, isPremium: boolean) => {
+const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
   const riskColor = inc.risk === 'high' ? '#ef4444' : inc.risk === 'medium' ? '#f97316' : '#22c55e';
