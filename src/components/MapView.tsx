@@ -335,7 +335,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 10 : 11}px;color:#444;margin:0 0 ${compact ? 6 : 10}px;line-height:1.5;border-left:3px solid ${config.color};padding-left:${compact ? 6 : 8}px;${compact ? 'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;' : ''}">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 9 : 10}px;color:#aaa;margin:0 0 ${compact ? 6 : 10}px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${compact ? 9 : 11}px;color:#444;margin:0 0 ${compact ? 4 : 10}px;line-height:1.4;border-left:2px solid ${config.color};padding-left:${compact ? 5 : 8}px;display:-webkit-box;-webkit-line-clamp:${compact ? 2 : 99};-webkit-box-orient:vertical;overflow:hidden;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${compact ? 8 : 10}px;color:#aaa;margin:0 0 ${compact ? 4 : 10}px;font-style:italic;">🔒 Beskrivning kräver Pro</p>` : ''}
 
       ${inc.image_url ? `
       <div style="margin-bottom:${compact ? 6 : 10}px;">
