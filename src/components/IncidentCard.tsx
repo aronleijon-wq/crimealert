@@ -64,8 +64,8 @@ const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
             </span>
           ) : (
             <span className="text-[10px] font-mono text-muted-foreground/60 flex items-center gap-1 relative">
-              <span>Risk</span>
               <Lock className="w-2.5 h-2.5 text-destructive/60 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" />
+              <span>Risk</span>
             </span>
           )}
         </div>
