@@ -258,7 +258,7 @@ const Account = () => {
     { text: 'Karta med 15 min fördröjning', included: true },
     { text: 'Alla filter ', included: true },
     { text: 'Kommunbevakning & notiser', included: true },
-    { text: 'Senaste 24h historik', included: true },
+    { text: 'Senaste 7 dagars karta', included: true },
     
     { text: 'Reklam i app/webb', included: true },
     { text: 'Realtidsdata', included: false },
