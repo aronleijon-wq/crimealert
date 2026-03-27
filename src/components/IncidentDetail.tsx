@@ -91,7 +91,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
               onClick={() => navigate('/account')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-md text-[11px] font-semibold text-primary hover:bg-primary/20 transition"
             >
-              <Lock className="w-3 h-3" /> Uppgradera för detaljer
+              <Lock className="w-3 h-3 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> Uppgradera för detaljer
             </button>
           </div>
         </div>
@@ -152,7 +152,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
             </span>
           ) : (
             <span className="text-muted-foreground/40 flex items-center gap-1 text-[10px]">
-              <Lock className="w-3 h-3" /> Pro
+              <Lock className="w-3 h-3 text-destructive/60 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> Pro
             </span>
           )}
         </div>

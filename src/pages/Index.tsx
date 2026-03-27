@@ -4,7 +4,9 @@ import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
-
+import SignupBanner from '@/components/SignupBanner';
+import MobileSignupBar from '@/components/MobileSignupBar';
+import SignupPopup from '@/components/SignupPopup';
 
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -119,8 +121,9 @@ const Index = () => {
           </div>
           <FilterBar activeFilters={activeFilters} onToggleFilter={toggleFilter} incidentCount={filtered.length} activeCount={activeCount} showCommunityReports={showCommunityReports} onToggleCommunityReports={() => setShowCommunityReports(prev => !prev)} onSearchLocation={(lat, lng, zoom, name) => {setFlyToLocation({ lat, lng, zoom, _ts: Date.now() });
           }} />
-        
+          {!isLoggedIn && <SignupBanner />}
         </>
+
       }
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
@@ -228,7 +231,8 @@ const Index = () => {
       </div>
 
       {!isFullscreen && <div className="hidden md:block"><Footer /></div>}
-
+      {!isLoggedIn && <MobileSignupBar />}
+      {!isLoggedIn && <SignupPopup incidentCount={filtered.length} />}
     </div>);
 
 };
