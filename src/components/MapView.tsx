@@ -309,19 +309,28 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const safeConfigLabel = sanitizeHTML(config.label);
   const safeRiskLabel = sanitizeHTML(risk.label);
 
+  const minW = compact ? 200 : 260;
+  const maxW = compact ? 260 : 320;
+  const gap = compact ? 5 : 8;
+  const mb = compact ? 6 : 10;
+  const iconSz = compact ? 18 : 22;
+  const titleSz = compact ? 11 : 13;
+  const subSz = compact ? 9 : 10;
+  const badgeSz = compact ? 8 : 9;
+
   return `
-    <div style="font-family:system-ui;min-width:260px;max-width:320px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:22px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
-        <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.3;">${safeTitle}</div>
-          <div style="font-size:10px;color:#888;margin-top:2px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
+    <div style="font-family:system-ui;min-width:${minW}px;max-width:${maxW}px;">
+      <div style="display:flex;align-items:center;gap:${gap}px;margin-bottom:${mb}px;">
+        <span style="font-size:${iconSz}px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:${titleSz}px;font-weight:700;color:#1a1a1a;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${safeTitle}</div>
+          <div style="font-size:${subSz}px;color:#888;margin-top:1px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
           ${isPremium
-            ? `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-               <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
-            : `<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
+            ? `<span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
+               <span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
+            : `<span style="font-size:${badgeSz}px;font-weight:600;padding:2px 5px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
           }
         </div>
       </div>
