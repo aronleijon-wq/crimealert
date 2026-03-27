@@ -18,8 +18,8 @@ const SignupBanner = () => {
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <Unlock className="w-4 h-4 text-primary shrink-0" />
         <p className="text-xs text-muted-foreground truncate">
-          <span className="hidden sm:inline">Du ser begränsad data — logga in gratis för realtid, riskbedömning och push-notiser</span>
-          <span className="sm:hidden">Logga in gratis för realtid & push-notiser</span>
+          <span className="hidden sm:inline">🔓 Logga in gratis för övrigt-filtret, push-notiser och nattsammanfattningar</span>
+          <span className="sm:hidden">Logga in för push-notiser & nattsammanfattningar</span>
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
