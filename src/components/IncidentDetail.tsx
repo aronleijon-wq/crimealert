@@ -152,7 +152,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
             </span>
           ) : (
             <span className="text-muted-foreground/40 flex items-center gap-1 text-[10px]">
-              <Lock className="w-3 h-3" /> Pro
+              <Lock className="w-3 h-3 text-destructive/60 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> Pro
             </span>
           )}
         </div>

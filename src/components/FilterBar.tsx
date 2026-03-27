@@ -229,7 +229,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               `}
               title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Medborgarrapporter'}>
               {!isPremium ? (
-                <Lock className="w-3 h-3 text-secondary shrink-0" />
+                <Lock className="w-3 h-3 text-destructive/70 shrink-0 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" />
               ) : (
                 <span className={`relative shrink-0 flex items-center justify-center transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`} style={{ width: 14, height: 14 }}>
                   <span style={{ width: 10, height: 10, borderRadius: 2, background: '#f97316', border: '1.5px solid rgba(255,255,255,0.95)', transform: 'rotate(45deg)', boxShadow: '0 1px 4px rgba(249,115,22,0.5)', display: 'block' }} />
