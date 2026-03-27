@@ -32,7 +32,14 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   const isLoggedIn = !!user;
   const navigate = useNavigate();
 
-  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filtersVisible, setFiltersVisible] = useState(() => {
+    const stored = sessionStorage.getItem('filtersVisible');
+    return stored !== null ? stored === 'true' : true;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('filtersVisible', String(filtersVisible));
+  }, [filtersVisible]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
