@@ -264,8 +264,21 @@ export function usePushNotifications() {
         return false;
       }
 
+      // Always unsubscribe existing subscription and create a fresh one with current VAPID key
+      // This fixes 403 errors when VAPID keys have been rotated
       const existingSubscription = await registration.pushManager.getSubscription();
-      const activeSubscription = existingSubscription ?? await registration.pushManager.subscribe({
+      if (existingSubscription) {
+        log('Avregistrerar gammal subscription för att säkerställa korrekt VAPID-nyckel');
+        await existingSubscription.unsubscribe();
+        // Clean up old DB entry
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('endpoint', existingSubscription.endpoint);
+      }
+
+      const activeSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(config.vapidPublicKey) as BufferSource,
       });
