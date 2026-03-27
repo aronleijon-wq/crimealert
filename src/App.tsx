@@ -16,6 +16,7 @@ import Sekretesspolicy from "./pages/Sekretesspolicy";
 import Villkor from "./pages/Villkor";
 import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
+import DebugPush from "./pages/DebugPush";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
