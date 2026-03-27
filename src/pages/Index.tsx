@@ -232,7 +232,7 @@ const Index = () => {
 
       {!isFullscreen && <div className="hidden md:block"><Footer /></div>}
       {!isLoggedIn && <MobileSignupBar />}
-      {!isLoggedIn && <SignupPopup incidentCount={filtered.length} />}
+      
     </div>);
 
 };
