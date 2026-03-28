@@ -24,7 +24,7 @@ const SignupBanner = () => {
         </div>
         <div className="min-w-0">
           <p className="text-xs font-bold text-destructive-foreground truncate">
-            <span className="hidden sm:inline">🔓 Gratis konto → Realtidsnotiser · Övrigt-filter · Nattsammanfattningar</span>
+            <span className="hidden sm:inline">Skapa gratis konto → Realtidsnotiser · Övrigt-filter · Nattsammanfattningar</span>
             <span className="sm:hidden">🔓 Gratis konto → Pushnotiser & mer</span>
           </p>
         </div>
