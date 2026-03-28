@@ -90,9 +90,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (s?.user) checkSubscription();
     }, 30 * 60 * 1000);
 
+    // Session inactivity timeout (30 min)
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+    let inactivityTimer: ReturnType<typeof setTimeout>;
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(async () => {
+        const { data: { session: s } } = await supabase.auth.getSession();
+        if (s?.user) {
+          await supabase.auth.signOut({ scope: 'local' });
+          setUser(null);
+          setSession(null);
+          setSubscription({ subscribed: false, productId: null, subscriptionEnd: null });
+        }
+      }, INACTIVITY_TIMEOUT);
+    };
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, resetInactivityTimer, { passive: true }));
+    resetInactivityTimer();
+
     return () => {
       authSub.unsubscribe();
       clearInterval(interval);
+      clearTimeout(inactivityTimer);
+      events.forEach(e => window.removeEventListener(e, resetInactivityTimer));
     };
   }, []);
 

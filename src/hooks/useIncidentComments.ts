@@ -67,10 +67,12 @@ export function useIncidentComments(incidentId: string | null, enabled = false) 
 
   const addComment = useCallback(async (text: string) => {
     if (!user || !incidentId || !text.trim()) return;
+    const sanitized = text.replace(/<[^>]*>/g, '').trim().slice(0, 500);
+    if (!sanitized) return;
     const { data } = await supabase.from('incident_comments').insert({
       incident_id: incidentId,
       user_id: user.id,
-      text: text.trim(),
+      text: sanitized,
     }).select().single();
     if (data) {
       setComments(prev => [...prev, { ...data, likes_count: 0, user_has_liked: false }]);
