@@ -32,14 +32,14 @@ const SignupBanner = () => {
       <div className="flex items-center gap-2 shrink-0 relative z-10">
         <Button
           size="sm"
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/auth?mode=signup')}
           className="h-8 px-4 text-xs font-bold bg-white text-destructive hover:bg-white/90 shadow-lg hover:shadow-xl transition-all hover:scale-105"
         >
           <Zap className="w-3.5 h-3.5 mr-1" />
           Skapa konto nu
         </Button>
         <button
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/auth?mode=login')}
           className="text-[11px] text-destructive-foreground/80 hover:text-destructive-foreground hover:underline hidden sm:block font-medium"
         >
           Logga in
