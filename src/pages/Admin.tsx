@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,17 +10,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, Loader2, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 
-const ADMIN_EMAILS = ["aronleijon@icloud.com"];
-
 export default function Admin() {
   const { user, session, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [users, setUsers] = useState<{ email: string; created_at: string }[]>([]);
   const [total, setTotal] = useState<number | null>(null);
   const [csv, setCsv] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
+
+  if (authLoading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -27,7 +38,7 @@ export default function Admin() {
     );
   }
 
-  if (!user || !ADMIN_EMAILS.includes(user.email ?? "")) {
+  if (!user || !isAdmin) {
     return <Navigate to="/" replace />;
   }
 
