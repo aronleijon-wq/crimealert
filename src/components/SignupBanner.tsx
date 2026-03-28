@@ -39,7 +39,7 @@ const SignupBanner = () => {
           Skapa konto nu
         </Button>
         <button
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/auth?mode=login')}
           className="text-[11px] text-destructive-foreground/80 hover:text-destructive-foreground hover:underline hidden sm:block font-medium"
         >
           Logga in

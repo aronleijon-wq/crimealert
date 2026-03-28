@@ -15,7 +15,7 @@ const MobileSignupBar = () => {
       </div>
       <Button
         size="sm"
-        onClick={() => navigate('/auth')}
+        onClick={() => navigate('/auth?mode=signup')}
         className="h-8 px-3 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground shrink-0 whitespace-nowrap"
       >
         Skapa gratis konto →
