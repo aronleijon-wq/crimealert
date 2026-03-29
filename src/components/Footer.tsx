@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, FileText, Cookie } from 'lucide-react';
+import { Shield, FileText, Cookie, Info } from 'lucide-react';
 
 const Footer = () =>
 <footer className="border-t border-border bg-card px-4 my-0 py-[2px]">
