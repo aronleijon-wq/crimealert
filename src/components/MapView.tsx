@@ -388,7 +388,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       ${inc.approximate ? `<div style="margin-top:${sz(6,3)}px;font-size:${sz(9,7)}px;color:#f97316;background:#fff7ed;padding:${sz(4,2)}px ${sz(8,5)}px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
 
       <div style="margin-top:${sz(6,3)}px;padding-top:${sz(6,3)}px;border-top:1px solid #eee;font-size:${sz(9,7)}px;color:#bbb;display:flex;justify-content:space-between;">
-        <span>Källa: ${safeSource}</span>
+        <span>Källa: ${safeSource.toLowerCase().includes('polisen') ? `<a href="https://polisen.se/aktuellt/polisens-nyheter/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">${safeSource}</a>` : safeSource}</span>
         <span>CrimeAlert</span>
       </div>
 
