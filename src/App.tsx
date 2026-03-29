@@ -6,20 +6,29 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
-import Analysis from "./pages/Analysis";
-import Alerts from "./pages/Alerts";
-import Account from "./pages/Account";
-import Auth from "./pages/Auth";
-import Cookies from "./pages/Cookies";
-import Sekretesspolicy from "./pages/Sekretesspolicy";
-import Villkor from "./pages/Villkor";
-import ResetPassword from "./pages/ResetPassword";
-import Admin from "./pages/Admin";
-import DebugPush from "./pages/DebugPush";
-import NotFound from "./pages/NotFound";
+
+// Lazy load non-critical routes for better initial load
+const Analysis = lazy(() => import("./pages/Analysis"));
+const Alerts = lazy(() => import("./pages/Alerts"));
+const Account = lazy(() => import("./pages/Account"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Cookies = lazy(() => import("./pages/Cookies"));
+const Sekretesspolicy = lazy(() => import("./pages/Sekretesspolicy"));
+const Villkor = lazy(() => import("./pages/Villkor"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Admin = lazy(() => import("./pages/Admin"));
+const DebugPush = lazy(() => import("./pages/DebugPush"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <ThemeProvider>
@@ -29,6 +38,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Suspense fallback={<LazyFallback />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/analysis" element={<Analysis />} />
@@ -44,6 +54,7 @@ const App = () => (
           <Route path="/debug-push" element={<DebugPush />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         <CookieConsent />
       </BrowserRouter>
     </TooltipProvider>
