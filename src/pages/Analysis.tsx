@@ -164,6 +164,11 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 };
 
 const Analysis = () => {
+  useSEO({
+    title: 'Brottsanalys & statistik — CrimeAlert',
+    description: 'Analysera brottsstatistik och polishändelser i Sverige. Trender, farligaste områden och datadriven trygghetsanalys.',
+    canonical: 'https://crimealert.se/analysis',
+  });
   const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 

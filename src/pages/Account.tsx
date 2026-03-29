@@ -137,6 +137,11 @@ const UserProfileSection = ({ user, isPremium, subscription, signOut, handleMana
 };
 
 const Account = () => {
+  useSEO({
+    title: 'Konto & Premium — CrimeAlert',
+    description: 'Hantera ditt CrimeAlert-konto. Uppgradera till Premium för avancerade funktioner, nattsammanfattningar och obegränsade filter.',
+    canonical: 'https://crimealert.se/account',
+  });
   const { theme, setTheme } = useTheme();
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();
