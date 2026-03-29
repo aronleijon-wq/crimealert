@@ -19,7 +19,7 @@ const OmOss = () => {
         <p className="text-muted-foreground leading-relaxed">
           CrimeAlert är Sveriges trygghetskarta — en tjänst som samlar polishändelser, bränder, trafikolyckor och andra
           säkerhetsrelaterade händelser i realtid. Vårt mål är att göra samhällsinformation tillgänglig och lättförståelig
-          för alla medborgare.
+          för alla medborgare. All vår data är tagen ifrån polisen.se händelser.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4">
