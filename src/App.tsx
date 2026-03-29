@@ -20,6 +20,7 @@ const Villkor = lazy(() => import("./pages/Villkor"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const DebugPush = lazy(() => import("./pages/DebugPush"));
+const OmOss = lazy(() => import("./pages/OmOss"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();

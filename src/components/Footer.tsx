@@ -20,6 +20,10 @@ const Footer = () =>
           <Cookie className="w-3 h-3" />
           Cookies
         </Link>
+        <Link to="/om-oss" className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition">
+          <Info className="w-3 h-3" />
+          Om oss
+        </Link>
       </nav>
     </div>
   </footer>;
