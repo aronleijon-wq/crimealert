@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText, Pencil } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';

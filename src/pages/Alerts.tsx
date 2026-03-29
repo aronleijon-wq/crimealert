@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { Bell, BellRing, MapPin, Clock, Plus, X, Search } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { incidentTypeConfig } from '@/data/mockIncidents';
