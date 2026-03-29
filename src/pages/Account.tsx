@@ -541,6 +541,8 @@ const Account = () => {
             <button onClick={() => navigate('/sekretesspolicy')} className="hover:text-primary transition">Sekretesspolicy</button>
             <span>·</span>
             <button onClick={() => navigate('/villkor')} className="hover:text-primary transition">Användarvillkor</button>
+            <span>·</span>
+            <button onClick={() => navigate('/om-oss')} className="hover:text-primary transition">Om oss</button>
           </div>
 
           <p className="text-[10px] text-muted-foreground/50 font-mono text-center">
