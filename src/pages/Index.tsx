@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
