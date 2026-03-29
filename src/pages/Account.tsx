@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText, Pencil } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';
@@ -136,6 +137,11 @@ const UserProfileSection = ({ user, isPremium, subscription, signOut, handleMana
 };
 
 const Account = () => {
+  useSEO({
+    title: 'Konto & Premium — CrimeAlert',
+    description: 'Hantera ditt CrimeAlert-konto. Uppgradera till Premium för avancerade funktioner, nattsammanfattningar och obegränsade filter.',
+    canonical: 'https://crimealert.se/account',
+  });
   const { theme, setTheme } = useTheme();
   const { user, subscription, signOut, checkSubscription } = useAuth();
   const navigate = useNavigate();

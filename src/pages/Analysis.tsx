@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useState, useRef } from 'react';
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 
 import PremiumGate from '@/components/PremiumGate';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
@@ -163,6 +164,11 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 };
 
 const Analysis = () => {
+  useSEO({
+    title: 'Brottsanalys & statistik — CrimeAlert',
+    description: 'Analysera brottsstatistik och polishändelser i Sverige. Trender, farligaste områden och datadriven trygghetsanalys.',
+    canonical: 'https://crimealert.se/analysis',
+  });
   const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 

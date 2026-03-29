@@ -1,4 +1,5 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { Bell, BellRing, MapPin, Clock, Plus, X, Search } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { incidentTypeConfig } from '@/data/mockIncidents';
@@ -73,6 +74,11 @@ const getTimeAgo = (time: string): string => {
 };
 
 const Alerts = () => {
+  useSEO({
+    title: 'Notiser & bevakningar — CrimeAlert',
+    description: 'Ställ in pushnotiser för polishändelser i din kommun. Få realtidsvarningar om brott, brand och olyckor.',
+    canonical: 'https://crimealert.se/alerts',
+  });
   const { incidents } = usePoliceEvents();
   const { isPremium, isLoggedIn } = useIsPremium();
   const { kommuner, loading, addKommun, removeKommun } = useNotificationPreferences();

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
@@ -20,6 +21,11 @@ import Footer from '@/components/Footer';
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
 
 const Index = () => {
+  useSEO({
+    title: 'CrimeAlert — Realtidskarta över brott och polishändelser i Sverige',
+    description: 'Se polishändelser, brand, trafikolyckor och brott i realtid på kartan. Trygghetskarta för hela Sverige med live-uppdateringar.',
+    canonical: 'https://crimealert.se/',
+  });
   const { isPremium } = useIsPremium();
   const { user } = useAuth();
   const isMobile = useIsMobile();
