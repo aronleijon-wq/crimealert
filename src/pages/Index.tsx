@@ -5,7 +5,6 @@ import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
-import SignupBanner from '@/components/SignupBanner';
 import MobileSignupBar from '@/components/MobileSignupBar';
 
 
