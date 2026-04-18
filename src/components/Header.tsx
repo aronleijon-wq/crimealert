@@ -30,6 +30,10 @@ const Header = () => {
           className="w-7 h-7 md:w-8 md:h-8 rounded-md object-cover"
           style={{ background: 'transparent' }}
           src="/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png"
+          width={32}
+          height={32}
+          fetchPriority="high"
+          decoding="async"
         />
         <div className="flex flex-col leading-none">
           <span className="font-bold text-xs md:text-sm tracking-wider text-foreground">
