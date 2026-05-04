@@ -540,16 +540,6 @@ const Account = () => {
             </div>
           }
 
-          {/* Admin shortcut */}
-          {user && isAdmin && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-destructive text-destructive-foreground rounded-md text-xs font-bold hover:bg-destructive/90 transition">
-              <Shield className="w-4 h-4" />
-              Admin – Exportera användare (CSV)
-            </button>
-          )}
-
           {/* Contact form */}
           <ContactSection />
 
