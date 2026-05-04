@@ -152,6 +152,18 @@ const Account = () => {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [wasPolling, setWasPolling] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   // After successful checkout, poll checkSubscription until it activates
   useEffect(() => {
@@ -527,6 +539,16 @@ const Account = () => {
               </button>
             </div>
           }
+
+          {/* Admin shortcut */}
+          {user && isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-destructive text-destructive-foreground rounded-md text-xs font-bold hover:bg-destructive/90 transition">
+              <Shield className="w-4 h-4" />
+              Admin – Exportera användare (CSV)
+            </button>
+          )}
 
           {/* Contact form */}
           <ContactSection />
