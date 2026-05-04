@@ -152,18 +152,8 @@ const Account = () => {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [wasPolling, setWasPolling] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    if (!user) { setIsAdmin(false); return; }
-    supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
+
 
   // After successful checkout, poll checkSubscription until it activates
   useEffect(() => {
