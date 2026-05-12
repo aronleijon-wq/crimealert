@@ -51,7 +51,6 @@ const Index = () => {
   }, [isPremium, isLoggedIn]);
 
   // Handle ?incident=ID from push notifications — focus and zoom to that event
-  const handledIncidentRef = (typeof window !== 'undefined') ? null : null;
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const incidentId = params.get('incident');
