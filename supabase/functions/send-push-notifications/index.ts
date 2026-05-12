@@ -442,13 +442,14 @@ Deno.serve(async (req) => {
       const firstEvent = events[0];
       const title = events.length === 1 ? `${firstEvent.type} — ${firstEvent.area}` : `${events.length} nya händelser i dina bevakade kommuner`;
       const body = events.length === 1 ? firstEvent.title : events.slice(0, 3).map((event) => `${event.type}: ${event.area}`).join('\n');
+      const targetUrl = events.length === 1 ? `/?incident=${encodeURIComponent(firstEvent.id)}` : '/';
       const payload = JSON.stringify({
         title,
         body,
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
-        tag: 'crimealert-incident',
-        data: { url: '/' },
+        tag: `crimealert-incident-${firstEvent.id}`,
+        data: { url: targetUrl, incidentId: events.length === 1 ? firstEvent.id : null },
         requireInteraction: true,
       });
 

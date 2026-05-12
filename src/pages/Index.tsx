@@ -50,6 +50,22 @@ const Index = () => {
     setActiveFilters(getDefaultFilters());
   }, [isPremium, isLoggedIn]);
 
+  // Handle ?incident=ID from push notifications — focus and zoom to that event
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const incidentId = params.get('incident');
+    if (!incidentId || liveIncidents.length === 0) return;
+    const target = liveIncidents.find((i) => i.id === incidentId);
+    if (!target) return;
+    setSelectedId(target.id);
+    setFlyToLocation({ lat: target.lat, lng: target.lng, zoom: 15, _ts: Date.now() });
+    if (isMobile) setMobileListOpen(false);
+    // Clean up the URL so reloads don't re-trigger
+    const url = new URL(window.location.href);
+    url.searchParams.delete('incident');
+    window.history.replaceState({}, '', url.toString());
+  }, [liveIncidents, isMobile]);
+
   const toggleFilter = useCallback((type: IncidentType) => {
     setActiveFilters((prev) =>
     prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
