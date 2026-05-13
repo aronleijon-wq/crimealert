@@ -1,0 +1,14 @@
+# CrimeAlert
+
+> CrimeAlert är Sveriges trygghetskarta — en realtidskarta över polishändelser, bränder, trafikolyckor och andra säkerhetsrelaterade händelser i hela Sverige. Data hämtas direkt från Polisen.se och uppdateras kontinuerligt.
+
+## Pages
+
+- [/](/): Realtidskarta med polishändelser, filter efter typ och kommun, push-notiser och detaljerad händelseinformation.
+- [/om-oss](/om-oss): Information om CrimeAlert, vårt syfte och kontaktvägar.
+- [/analysis](/analysis): Statistik och analys över brott och händelser, filtrering på tidsperiod (24h/7d/30d), kommunranking och dataexport för Pro-användare.
+- [/alerts](/alerts): Inställningar för push-notiser — välj vilka kommuner du vill bevaka och vilka händelsetyper som ska trigga notiser.
+- [/konto](/konto): Användarkonto, profilinställningar, push-notispreferenser, betalningshantering och recensioner.
+- [/villkor](/villkor): Användarvillkor och medlemsvillkor för CrimeAlert.
+- [/sekretesspolicy](/sekretesspolicy): Integritetspolicy och hantering av personuppgifter.
+- [/auth](/auth): Inloggning och registrering via Google eller e-post.
