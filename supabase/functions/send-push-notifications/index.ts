@@ -345,6 +345,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Live mode: only internal service-role callers may trigger mass broadcasts
+    if (!isInternalCall) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: recentEvents, error: eventsError } = await supabase
       .from('police_events_archive')
