@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -236,4 +236,117 @@
   .leaflet-popup-content {
     margin: 6px !important;
   }
+}
+
+/* ==========================================================
+   CrimeAlert Landing — cinematic dark surface
+   ========================================================== */
+.ca-dark {
+  --background: 210 23% 3%;
+  --foreground: 220 14% 96%;
+  --card: 213 27% 6%;
+  --card-foreground: 220 14% 96%;
+  --popover: 213 27% 6%;
+  --popover-foreground: 220 14% 96%;
+  --primary: 0 68% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 26 75% 53%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 215 27% 9%;
+  --muted-foreground: 208 9% 53%;
+  --accent: 207 27% 10%;
+  --accent-foreground: 220 14% 96%;
+  --border: 210 20% 14%;
+  --input: 210 20% 14%;
+  --ring: 0 68% 54%;
+
+  /* Landing-specifika tokens */
+  --ca-base: 210 23% 3%;
+  --ca-base-2: 214 27% 5%;
+  --ca-base-3: 215 28% 7%;
+  --ca-panel: 210 30% 6%;
+  --ca-panel-2: 215 27% 9%;
+  --ca-panel-3: 207 27% 10%;
+  --ca-text: 220 14% 96%;
+  --ca-text-2: 209 12% 69%;
+  --ca-text-3: 208 9% 53%;
+  --ca-red: 0 68% 54%;
+  --ca-amber: 26 75% 53%;
+  --ca-blue: 223 100% 68%;
+  --ca-steel: 200 38% 65%;
+  --ca-line: 0 0% 100% / 0.08;
+  --ca-line-strong: 0 0% 100% / 0.12;
+
+  background-color: hsl(var(--ca-base));
+  color: hsl(var(--ca-text));
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.ca-dark .ca-display {
+  font-family: 'Archivo', 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+.ca-dark .ca-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.ca-panel {
+  background: linear-gradient(180deg, hsl(var(--ca-panel-2)) 0%, hsl(var(--ca-panel)) 100%);
+  border: 1px solid hsl(var(--ca-line));
+}
+.ca-panel-hover {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s ease, background-color 0.4s ease;
+}
+.ca-panel-hover:hover {
+  transform: translateY(-4px);
+  border-color: hsl(var(--ca-line-strong));
+  background: hsl(var(--ca-panel-3));
+}
+
+.ca-gridlines {
+  background-image:
+    linear-gradient(hsla(0, 0%, 100%, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(0, 0%, 100%, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+.ca-vignette {
+  background: radial-gradient(120% 90% at 50% 0%, transparent 30%, hsl(var(--ca-base)) 100%);
+}
+.ca-hairline {
+  border-color: hsl(var(--ca-line));
+}
+
+@keyframes ca-ping {
+  0% { transform: scale(0.4); opacity: 0.55; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.ca-ping { animation: ca-ping 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+
+@keyframes ca-draw {
+  from { stroke-dasharray: 1400; stroke-dashoffset: 1400; }
+  to { stroke-dasharray: 1400; stroke-dashoffset: 0; }
+}
+.ca-draw { animation: ca-draw 2.6s ease-out forwards; }
+
+@keyframes ca-sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(400%); opacity: 0; }
+}
+.ca-sweep { animation: ca-sweep 7s linear infinite; }
+
+@keyframes ca-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ca-rise { animation: ca-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-ping, .ca-draw, .ca-sweep, .ca-rise, .animate-ticker {
+    animation: none !important;
+  }
+  .ca-panel-hover:hover { transform: none; }
 }
