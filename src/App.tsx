@@ -59,6 +59,8 @@ const App = () => (
         </Routes>
         </Suspense>
         <CookieConsent />
+        <BackendStatusBanner />
+
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
