@@ -8,7 +8,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { lazy, Suspense } from "react";
-import Index from "./pages/Index";
+import Landing from "./pages/Landing";
+const Index = lazy(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
 const Analysis = lazy(() => import("./pages/Analysis"));
@@ -42,7 +43,8 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<LazyFallback />}>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/karta" element={<Index />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />

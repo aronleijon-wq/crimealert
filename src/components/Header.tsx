@@ -3,7 +3,7 @@ import { Radio, BarChart3, Bell, User, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const baseNavItems = [
-  { to: '/', label: 'Karta', icon: Radio },
+  { to: '/karta', label: 'Karta', icon: Radio },
   { to: '/analysis', label: 'Analys', icon: BarChart3 },
   { to: '/alerts', label: 'Notiser', icon: Bell },
 ];
