@@ -171,17 +171,16 @@ const StickyStory = () => {
   );
 };
 
+function useMotionSnapshot(mv: MotionValue<number>) {
+  const [v, setV] = useState(mv.get());
+  useEffect(() => mv.on('change', (latest) => setV(Math.round(latest * 10) / 10)), [mv]);
+  return v;
+}
+
 const MapStage = ({ reveal }: { reveal: MotionValue<number> }) => {
-  const [value, setValue] = useReactState(reveal);
+  const value = useMotionSnapshot(reveal);
   return <SwedenMap className="h-full w-auto" reveal={value} />;
 };
 
-// liten hook som speglar en MotionValue till state utan extra beroenden
-import { useState, useEffect } from 'react';
-function useReactState(mv: MotionValue<number>) {
-  const [v, setV] = useState(mv.get());
-  useEffect(() => mv.on('change', (latest) => setV(Math.round(latest * 10) / 10)), [mv]);
-  return [v, setV] as const;
-}
 
 export default StickyStory;
