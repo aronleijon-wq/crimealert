@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useSEO } from '@/hooks/useSEO';
 import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
@@ -18,12 +19,17 @@ const Landing = () => {
     canonical: 'https://crimealert.se/',
   });
 
+  const location = useLocation();
+  const incident = new URLSearchParams(location.search).get('incident');
+
   useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
     return () => {
       document.documentElement.style.scrollBehavior = '';
     };
   }, []);
+
+  if (incident) return <Navigate to={`/karta${location.search}`} replace />;
 
   return (
     <div className="ca-dark min-h-screen antialiased">
