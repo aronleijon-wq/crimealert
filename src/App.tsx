@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
+import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 
