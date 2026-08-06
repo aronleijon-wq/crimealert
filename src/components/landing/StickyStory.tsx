@@ -7,23 +7,23 @@ import SwedenMap from './SwedenMap';
 const stages = [
   {
     tag: 'ÖVERBLICK',
-    heading: 'Aktuella händelser, samlade i en vy',
-    text: 'CrimeAlert ger en samlad överblick över polisärenden, olyckor och andra händelser som påverkar lägesbilden i Sverige.',
+    heading: 'Allt som händer, på samma karta',
+    text: 'Polisärenden, olyckor och räddningsinsatser hämtas löpande från Polisen.se och placeras där de inträffat.',
   },
   {
     tag: 'FILTER',
-    heading: 'Filtrera efter det som är relevant',
-    text: 'Välj exempelvis polisinsats, brand, ambulans eller trafikolycka för att fokusera på den information du vill följa.',
+    heading: 'Visa bara det du bryr dig om',
+    text: 'Slå av och på polisinsats, brand, ambulans eller trafikolycka. Kartan uppdateras direkt.',
   },
   {
     tag: 'LOKALT',
-    heading: 'Följ utvecklingen lokalt',
-    text: 'Sök efter kommun eller område och få en tydligare bild av händelser i närheten av din valda plats.',
+    heading: 'Zooma in på din kommun',
+    text: 'Sök på kommun eller adress och se vad som hänt i närheten de senaste dygnen.',
   },
   {
     tag: 'UPPFÖLJNING',
-    heading: 'Från karta till överblick',
-    text: 'Kombinera livekartan med notiser, analys och sparade bevakningar för en mer användbar uppföljning över tid.',
+    heading: 'Notiser när något händer',
+    text: 'Spara en bevakning och få en notis direkt i mobilen när en ny händelse dyker upp i ditt område.',
   },
 ];
 
@@ -101,16 +101,24 @@ const StickyStory = () => {
       style={{ height: `${stages.length * 100 + 60}vh` }}
     >
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <div className="absolute inset-0 ca-gridlines opacity-40" />
+        <div className="absolute inset-0 ca-gridlines opacity-25" />
         <div
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(90% 70% at 70% 40%, hsla(200,38%,65%,0.07), transparent 70%)' }}
+          className="ca-fog absolute inset-0"
+          style={{ background: 'radial-gradient(80% 60% at 72% 42%, hsla(200,38%,62%,0.10), transparent 70%)' }}
         />
+        <div
+          className="ca-fog absolute inset-0"
+          style={{
+            background: 'radial-gradient(60% 50% at 20% 80%, hsla(0,68%,52%,0.09), transparent 70%)',
+            animationDelay: '-13s',
+          }}
+        />
+        <div className="absolute inset-0 ca-vignette pointer-events-none" />
 
         {/* Visuell scen */}
         <motion.div
           style={{ scale: mapScale, x: mapX, y: mapY }}
-          className="absolute right-[-25%] md:right-[2%] top-1/2 -translate-y-1/2 h-[75%] md:h-[86%] opacity-40 md:opacity-90 will-change-transform"
+          className="absolute right-[-25%] md:right-[2%] top-1/2 -translate-y-1/2 h-[75%] md:h-[86%] opacity-25 md:opacity-55 will-change-transform"
         >
           <MapStage reveal={reveal} />
         </motion.div>

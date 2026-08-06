@@ -4,15 +4,15 @@ import { ArrowRight } from 'lucide-react';
 const FinalCTA = () => (
   <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)] overflow-hidden">
     <div
-      className="absolute inset-x-0 bottom-[-40%] h-[520px] blur-[150px] opacity-[0.14]"
+      className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
       style={{ background: 'radial-gradient(circle at 50% 50%, hsl(var(--ca-red)) 0%, transparent 65%)' }}
     />
     <div className="relative max-w-[1400px] mx-auto text-center">
       <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-6">
-        SYSTEM • SVERIGE
+        LIVE • SVERIGE
       </div>
       <h2 className="ca-display text-[clamp(2.2rem,6.5vw,5rem)] uppercase max-w-[900px] mx-auto">
-        Öppna livekartan och följ utvecklingen i realtid
+        Se vad som händer just nu
       </h2>
       <div className="mt-10 flex flex-wrap justify-center gap-3">
         <Link

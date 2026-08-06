@@ -261,21 +261,21 @@
   --ring: 0 68% 54%;
 
   /* Landing-specifika tokens */
-  --ca-base: 210 23% 3%;
-  --ca-base-2: 214 27% 5%;
-  --ca-base-3: 215 28% 7%;
-  --ca-panel: 210 30% 6%;
-  --ca-panel-2: 215 27% 9%;
-  --ca-panel-3: 207 27% 10%;
+  --ca-base: 212 26% 2%;
+  --ca-base-2: 214 27% 4%;
+  --ca-base-3: 215 28% 6%;
+  --ca-panel: 210 30% 5%;
+  --ca-panel-2: 215 27% 7%;
+  --ca-panel-3: 207 27% 9%;
   --ca-text: 220 14% 96%;
-  --ca-text-2: 209 12% 69%;
-  --ca-text-3: 208 9% 53%;
-  --ca-red: 0 68% 54%;
-  --ca-amber: 26 75% 53%;
+  --ca-text-2: 209 12% 66%;
+  --ca-text-3: 208 9% 47%;
+  --ca-red: 0 68% 52%;
+  --ca-amber: 26 75% 51%;
   --ca-blue: 223 100% 68%;
-  --ca-steel: 200 38% 65%;
-  --ca-line: 0 0% 100% / 0.08;
-  --ca-line-strong: 0 0% 100% / 0.12;
+  --ca-steel: 200 38% 62%;
+  --ca-line: 0 0% 100% / 0.06;
+  --ca-line-strong: 0 0% 100% / 0.11;
 
   background-color: hsl(var(--ca-base));
   color: hsl(var(--ca-text));
@@ -292,60 +292,96 @@
   font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* Glasartade, halvtransparenta ytor */
 .ca-panel {
-  background: linear-gradient(180deg, hsl(var(--ca-panel-2)) 0%, hsl(var(--ca-panel)) 100%);
+  background: linear-gradient(180deg, hsla(215, 27%, 9%, 0.55) 0%, hsla(210, 30%, 5%, 0.4) 100%);
   border: 1px solid hsl(var(--ca-line));
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.ca-glass {
+  background: hsla(210, 30%, 6%, 0.35);
+  border: 1px solid hsl(var(--ca-line));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 .ca-panel-hover {
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s ease, background-color 0.4s ease;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.7s ease,
+    background-color 0.7s ease, opacity 0.7s ease;
 }
 .ca-panel-hover:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: hsl(var(--ca-line-strong));
-  background: hsl(var(--ca-panel-3));
+  background-color: hsla(207, 27%, 10%, 0.55);
 }
 
 .ca-gridlines {
   background-image:
-    linear-gradient(hsla(0, 0%, 100%, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, hsla(0, 0%, 100%, 0.035) 1px, transparent 1px);
+    linear-gradient(hsla(0, 0%, 100%, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(0, 0%, 100%, 0.022) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 .ca-vignette {
-  background: radial-gradient(120% 90% at 50% 0%, transparent 30%, hsl(var(--ca-base)) 100%);
+  background: radial-gradient(115% 85% at 50% 0%, transparent 22%, hsla(212, 26%, 2%, 0.85) 72%, hsl(var(--ca-base)) 100%);
 }
 .ca-hairline {
   border-color: hsl(var(--ca-line));
 }
 
-@keyframes ca-ping {
-  0% { transform: scale(0.4); opacity: 0.55; }
-  70% { transform: scale(1.9); opacity: 0; }
-  100% { transform: scale(1.9); opacity: 0; }
+/* Dimma / nattatmosfär som driver långsamt */
+@keyframes ca-fog {
+  0% { transform: translate3d(-4%, 0, 0) scale(1.05); opacity: 0.16; }
+  50% { transform: translate3d(4%, -2%, 0) scale(1.12); opacity: 0.28; }
+  100% { transform: translate3d(-4%, 0, 0) scale(1.05); opacity: 0.16; }
 }
-.ca-ping { animation: ca-ping 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+.ca-fog {
+  animation: ca-fog 26s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Långsam ljusstråle över ytan */
+@keyframes ca-scan {
+  0% { transform: translateY(-30%); opacity: 0; }
+  20% { opacity: 0.5; }
+  80% { opacity: 0.35; }
+  100% { transform: translateY(140%); opacity: 0; }
+}
+.ca-scan { animation: ca-scan 11s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+@keyframes ca-ping {
+  0% { transform: scale(0.4); opacity: 0.4; }
+  70% { transform: scale(2.1); opacity: 0; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.ca-ping { animation: ca-ping 4.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
 
 @keyframes ca-draw {
   from { stroke-dasharray: 1400; stroke-dashoffset: 1400; }
   to { stroke-dasharray: 1400; stroke-dashoffset: 0; }
 }
-.ca-draw { animation: ca-draw 2.6s ease-out forwards; }
+.ca-draw { animation: ca-draw 3.4s ease-out forwards; }
 
 @keyframes ca-sweep {
   0% { transform: translateY(-100%); opacity: 0; }
-  30% { opacity: 1; }
+  30% { opacity: 0.6; }
   100% { transform: translateY(400%); opacity: 0; }
 }
-.ca-sweep { animation: ca-sweep 7s linear infinite; }
+.ca-sweep { animation: ca-sweep 9s linear infinite; }
 
 @keyframes ca-rise {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(22px); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
-.ca-rise { animation: ca-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ca-rise { animation: ca-rise 1.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes ca-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+.ca-breathe { animation: ca-breathe 6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ca-ping, .ca-draw, .ca-sweep, .ca-rise, .animate-ticker {
+  .ca-ping, .ca-draw, .ca-sweep, .ca-rise, .ca-fog, .ca-scan, .ca-breathe, .animate-ticker {
     animation: none !important;
   }
   .ca-panel-hover:hover { transform: none; }

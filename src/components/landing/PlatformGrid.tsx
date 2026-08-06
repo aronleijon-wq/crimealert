@@ -5,25 +5,25 @@ const cards = [
   {
     icon: BarChart3,
     title: 'Analys',
-    text: 'Se händelser i ett större sammanhang med en tydligare uppföljning över tid.',
+    text: 'Statistik per kommun och kategori, 24 timmar till 30 dagar.',
     to: '/analysis',
   },
   {
     icon: Bell,
     title: 'Notiser',
-    text: 'Få uppdateringar om utvalda områden eller kategorier när något nytt inträffar.',
+    text: 'Push direkt till mobilen för de områden du bevakar.',
     to: '/alerts',
   },
   {
     icon: UserPlus,
     title: 'Skapa konto',
-    text: 'Spara bevakningar, anpassa vyer och samla det som är relevant för dig.',
+    text: 'Spara kommuner, filter och notiser. Gratis att komma igång.',
     to: '/auth?mode=signup',
   },
   {
     icon: CreditCard,
     title: 'Prisplan',
-    text: 'Välj den nivå som passar ditt behov, från enkel överblick till mer avancerad bevakning.',
+    text: 'Gratis med 15 minuters fördröjning, Pro i realtid.',
     to: '/account',
   },
 ];
@@ -35,7 +35,7 @@ const PlatformGrid = () => (
         PLATTFORMEN
       </div>
       <h2 className="ca-display text-[clamp(2rem,5vw,3.6rem)] uppercase max-w-[680px] mb-14">
-        Mer än en karta
+        Mer än kartan
       </h2>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
