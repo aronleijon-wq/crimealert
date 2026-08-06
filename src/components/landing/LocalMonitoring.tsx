@@ -5,7 +5,7 @@ const chips = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Västerås', 'Lin
 
 const LocalMonitoring = () => (
   <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)]">
-    <div className="absolute inset-0 ca-gridlines opacity-30 pointer-events-none" />
+    <div className="absolute inset-0 ca-gridlines opacity-20 pointer-events-none" />
     <div className="relative max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-14 items-center">
       <div>
         <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-4">
@@ -15,10 +15,10 @@ const LocalMonitoring = () => (
           Följ din kommun
         </h2>
         <p className="mt-6 max-w-[460px] text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-          Välj plats och följ relevanta händelser med en mer lokal överblick.
+          Sök upp din kommun en gång — sedan ligger den kvar som bevakning med notiser.
         </p>
 
-        <div className="mt-8 flex items-center gap-3 px-4 py-3.5 rounded-md bg-[hsl(var(--ca-panel-2))] border border-[hsla(0,0%,100%,0.12)] max-w-[420px]">
+        <div className="mt-8 flex items-center gap-3 px-4 py-3.5 rounded-md bg-[hsla(215,27%,9%,0.45)] backdrop-blur-md border border-[hsla(0,0%,100%,0.1)] max-w-[420px]">
           <Search className="w-4 h-4 text-[hsl(var(--ca-text-3))]" />
           <span className="text-[14px] text-[hsl(var(--ca-text-3))]">Sök kommun eller område</span>
         </div>
@@ -60,7 +60,7 @@ const LocalMonitoring = () => (
           ].map(([t, p, time]) => (
             <div
               key={t}
-              className="ca-panel-hover rounded-lg px-4 py-3.5 border border-[hsla(0,0%,100%,0.08)] bg-[hsl(var(--ca-base-2))]"
+              className="ca-panel-hover rounded-lg px-4 py-3.5 border border-[hsla(0,0%,100%,0.08)] bg-[hsla(214,27%,4%,0.55)] backdrop-blur-sm"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-[hsl(var(--ca-text))]">{t}</span>
@@ -76,7 +76,7 @@ const LocalMonitoring = () => (
         <div className="mt-5 flex items-center gap-3 px-4 py-3.5 rounded-lg border border-dashed border-[hsla(0,0%,100%,0.12)]">
           <Bell className="w-4 h-4 text-[hsl(var(--ca-amber))]" />
           <span className="text-[12px] text-[hsl(var(--ca-text-2))]">
-            Notiser aktiverade för valda kategorier
+            Notiser på för valda kategorier
           </span>
         </div>
       </div>
