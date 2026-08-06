@@ -7,23 +7,23 @@ import SwedenMap from './SwedenMap';
 const stages = [
   {
     tag: 'ÖVERBLICK',
-    heading: 'Aktuella händelser, samlade i en vy',
-    text: 'CrimeAlert ger en samlad överblick över polisärenden, olyckor och andra händelser som påverkar lägesbilden i Sverige.',
+    heading: 'Allt som händer, på samma karta',
+    text: 'Polisärenden, olyckor och räddningsinsatser hämtas löpande från Polisen.se och placeras där de inträffat.',
   },
   {
     tag: 'FILTER',
-    heading: 'Filtrera efter det som är relevant',
-    text: 'Välj exempelvis polisinsats, brand, ambulans eller trafikolycka för att fokusera på den information du vill följa.',
+    heading: 'Visa bara det du bryr dig om',
+    text: 'Slå av och på polisinsats, brand, ambulans eller trafikolycka. Kartan uppdateras direkt.',
   },
   {
     tag: 'LOKALT',
-    heading: 'Följ utvecklingen lokalt',
-    text: 'Sök efter kommun eller område och få en tydligare bild av händelser i närheten av din valda plats.',
+    heading: 'Zooma in på din kommun',
+    text: 'Sök på kommun eller adress och se vad som hänt i närheten de senaste dygnen.',
   },
   {
     tag: 'UPPFÖLJNING',
-    heading: 'Från karta till överblick',
-    text: 'Kombinera livekartan med notiser, analys och sparade bevakningar för en mer användbar uppföljning över tid.',
+    heading: 'Notiser när något händer',
+    text: 'Spara en bevakning och få en notis direkt i mobilen när en ny händelse dyker upp i ditt område.',
   },
 ];
 
