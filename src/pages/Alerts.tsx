@@ -171,7 +171,7 @@ const Alerts = () => {
                   className="bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none flex-1"
                   autoFocus />
                 
-                    <button onClick={() => {setShowSearch(false);setSearch('');}} className="text-muted-foreground hover:text-foreground">
+                    <button aria-label="Stäng sökfältet" onClick={() => {setShowSearch(false);setSearch('');}} className="text-muted-foreground hover:text-foreground">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -208,6 +208,7 @@ const Alerts = () => {
                       <MapPin className="w-3 h-3 text-primary" />
                       <span className="text-xs font-medium text-foreground">{k}</span>
                       <button
+                  aria-label={`Ta bort ${k} från bevakning`}
                   onClick={() => handleRemove(k)}
                   className="text-muted-foreground hover:text-cr-red transition ml-0.5">
                   
