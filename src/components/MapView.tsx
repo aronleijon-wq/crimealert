@@ -788,6 +788,39 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         }
         .incident-popup a.leaflet-popup-close-button { top: 6px; right: 6px; }
 
+        /* Ljust läge: vita ytor på kartkontroller och händelsepanel */
+        html:not(.dark) .leaflet-control-zoom a {
+          background: rgba(255,255,255,0.92) !important;
+          color: #4b5563 !important;
+          border-color: rgba(17,24,39,0.1) !important;
+        }
+        html:not(.dark) .leaflet-control-zoom a:hover {
+          background: #ffffff !important;
+          color: #111827 !important;
+        }
+        html:not(.dark) .leaflet-control-zoom {
+          box-shadow: 0 8px 24px rgba(17,24,39,0.14) !important;
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-content-wrapper {
+          background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%);
+          border: 1px solid rgba(17,24,39,0.1);
+          box-shadow: 0 24px 60px rgba(17,24,39,0.18), 0 0 0 1px rgba(201,42,42,0.06);
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-tip {
+          background: rgba(255,255,255,0.98);
+          border: 1px solid rgba(17,24,39,0.1);
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-close-button { color: #9ca3af !important; }
+        html:not(.dark) .incident-popup .leaflet-popup-close-button:hover { color: #111827 !important; }
+        html:not(.dark) .ca-pop-scan { display: none; }
+        html:not(.dark) .ca-focus-ring { border-color: rgba(201,42,42,0.8); }
+        html:not(.dark) .ca-focus-cross {
+          background:
+            linear-gradient(rgba(201,42,42,0.6), rgba(201,42,42,0.6)) no-repeat center / 1px 20px,
+            linear-gradient(rgba(201,42,42,0.6), rgba(201,42,42,0.6)) no-repeat center / 20px 1px;
+        }
+
+
         /* Inzoomad "dossier"-entré */
         .ca-pop {
           position: relative;
