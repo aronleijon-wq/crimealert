@@ -205,15 +205,16 @@ export default function CommunityReports() {
 
     const image_url = await uploadImage();
 
-    const { error } = await supabase.from('community_reports').insert({
-      user_id: user.id,
-      category,
-      title: stripHtml(title).slice(0, 200),
-      description: stripHtml(description).slice(0, 1000),
-      area: stripHtml(area).slice(0, 200) || null,
-      lat, lng,
-      status: 'open',
-      image_url,
+    // Server-side function validates auth + Pro status before inserting.
+    const { error } = await supabase.functions.invoke('submit-community-report', {
+      body: {
+        category,
+        title: stripHtml(title).slice(0, 200),
+        description: stripHtml(description).slice(0, 1000),
+        area: stripHtml(area).slice(0, 200) || null,
+        lat, lng,
+        image_url,
+      },
     });
     if (!error) {
       resetForm();
