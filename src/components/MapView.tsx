@@ -283,11 +283,27 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   return details;
 };
 
-const sanitizeHTML = (str: string): string => {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+const sanitizeHTML = (str: string): string =>
+  String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+// Only allow images served from our own public storage bucket.
+const safeImageUrl = (value?: string | null): string | null => {
+  if (!value) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.protocol !== 'https:') return null;
+    if (!url.pathname.includes('/storage/v1/object/public/community-reports/')) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 };
+
 
 const P_DARK = {
   text: '#eef1f5',
@@ -370,14 +386,20 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
           ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;">🔒 Detaljerad beskrivning kräver Pro</p>`
           : ''}
 
-      ${inc.image_url ? `
+      ${(() => {
+        const imgUrl = safeImageUrl(inc.image_url);
+        if (!imgUrl) return '';
+        const attrUrl = sanitizeHTML(imgUrl);
+        const jsUrl = sanitizeHTML(encodeURIComponent(imgUrl));
+        return `
       <div style="margin-bottom:${sz(10,6)}px;">
-        <img src="${sanitizeHTML(inc.image_url)}" alt="Rapportbild"
+        <img src="${attrUrl}" alt="Rapportbild"
           style="width:100%;max-height:${sz(120,80)}px;object-fit:cover;border-radius:4px;border:1px solid ${P.line};cursor:pointer;"
-          onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
+          onclick="window.__crimeAlertLightbox=decodeURIComponent('${jsUrl}');window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
         <div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.faint};margin-top:4px;text-align:center;letter-spacing:0.1em;">KLICKA FÖR ATT FÖRSTORA</div>
       </div>
-      ` : ''}
+      `;
+      })()}
 
       ${isPremium && extractedDetails.length > 0 ? `
       <div style="display:flex;flex-wrap:wrap;gap:${sz(4,3)}px;margin-bottom:${sz(11,6)}px;">

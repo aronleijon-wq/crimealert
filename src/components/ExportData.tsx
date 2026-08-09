@@ -40,22 +40,38 @@ function formatTime(value: string) {
   return Number.isNaN(timestamp) ? value : new Date(timestamp).toLocaleString('sv-SE');
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Neutralize spreadsheet formula injection (=, +, -, @, tab, CR)
+function csvCell(value: unknown): string {
+  let str = String(value ?? '');
+  if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 function generateCSV(incidents: Incident[]): string {
   const header = ['Tid', 'Typ', 'Titel', 'Område', 'Beskrivning', 'Risk', 'Status', 'Lat', 'Lng', 'Källa'];
   const rows = incidents.map((incident) => [
-    formatTime(incident.time),
-    TYPE_LABELS[incident.type] || incident.type,
-    `"${(incident.title || '').replace(/"/g, '""')}"`,
-    `"${(incident.area || '').replace(/"/g, '""')}"`,
-    `"${(incident.description || '').replace(/"/g, '""')}"`,
-    RISK_LABELS[incident.risk] || incident.risk,
-    incident.status === 'active' ? 'Aktiv' : 'Avslutad',
-    incident.lat,
-    incident.lng,
-    incident.source || '',
+    csvCell(formatTime(incident.time)),
+    csvCell(TYPE_LABELS[incident.type] || incident.type),
+    csvCell(incident.title || ''),
+    csvCell(incident.area || ''),
+    csvCell(incident.description || ''),
+    csvCell(RISK_LABELS[incident.risk] || incident.risk),
+    csvCell(incident.status === 'active' ? 'Aktiv' : 'Avslutad'),
+    csvCell(incident.lat),
+    csvCell(incident.lng),
+    csvCell(incident.source || ''),
   ]);
 
-  return [header.join(','), ...rows.map((row) => row.join(','))].join('\n');
+  return [header.map(csvCell).join(','), ...rows.map((row) => row.join(','))].join('\n');
 }
 
 function generatePDFHtml(incidents: Incident[], range: string): string {
@@ -64,12 +80,12 @@ function generatePDFHtml(incidents: Incident[], range: string): string {
     .map(
       (incident) => `
     <tr>
-      <td>${formatTime(incident.time)}</td>
-      <td>${TYPE_LABELS[incident.type] || incident.type}</td>
-      <td>${incident.title}</td>
-      <td>${incident.area || '—'}</td>
-      <td>${RISK_LABELS[incident.risk] || incident.risk}</td>
-      <td>${incident.status === 'active' ? 'Aktiv' : 'Avslutad'}</td>
+      <td>${escapeHtml(formatTime(incident.time))}</td>
+      <td>${escapeHtml(TYPE_LABELS[incident.type] || incident.type)}</td>
+      <td>${escapeHtml(incident.title)}</td>
+      <td>${escapeHtml(incident.area || '—')}</td>
+      <td>${escapeHtml(RISK_LABELS[incident.risk] || incident.risk)}</td>
+      <td>${escapeHtml(incident.status === 'active' ? 'Aktiv' : 'Avslutad')}</td>
     </tr>`
     )
     .join('');
@@ -85,7 +101,7 @@ function generatePDFHtml(incidents: Incident[], range: string): string {
   tr:nth-child(even){background:#fafafa}
 </style></head><body>
   <h1>CrimeAlert — Händelserapport</h1>
-  <div class="meta">${range} · Exporterad ${now} · ${incidents.length} händelser</div>
+  <div class="meta">${escapeHtml(range)} · Exporterad ${escapeHtml(now)} · ${incidents.length} händelser</div>
   <table><thead><tr><th>Tid</th><th>Typ</th><th>Titel</th><th>Område</th><th>Risk</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
 </body></html>`;
