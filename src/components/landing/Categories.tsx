@@ -12,7 +12,7 @@ const items = [
 ];
 
 const Categories = () => (
-  <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)]">
+  <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsl(var(--ca-line))]">
     <div className="max-w-[1400px] mx-auto">
       <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-4">
         KATEGORIER
@@ -21,11 +21,11 @@ const Categories = () => (
         Vad du kan följa
       </h2>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[hsla(0,0%,100%,0.08)] border border-[hsla(0,0%,100%,0.08)] rounded-xl overflow-hidden">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[hsl(var(--ca-line))] border border-[hsl(var(--ca-line))] rounded-xl overflow-hidden">
         {items.map(({ icon: Icon, title, text }) => (
           <div
             key={title}
-            className="group bg-[hsla(210,30%,5%,0.5)] backdrop-blur-md p-6 md:p-7 min-h-[190px] flex flex-col transition-colors duration-500 hover:bg-[hsla(207,27%,10%,0.7)]"
+            className="group bg-[hsl(var(--ca-panel))] backdrop-blur-md p-6 md:p-7 min-h-[190px] flex flex-col transition-colors duration-500 hover:bg-[hsl(var(--ca-panel-3))]"
           >
             <Icon className="w-5 h-5 text-[hsl(var(--ca-text-3))] transition-all duration-500 group-hover:text-[hsl(var(--ca-red))] group-hover:-translate-y-0.5" />
             <h3 className="mt-6 text-[15px] font-semibold text-[hsl(var(--ca-text))]">{title}</h3>

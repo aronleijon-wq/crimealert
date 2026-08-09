@@ -289,19 +289,38 @@ const sanitizeHTML = (str: string): string => {
   return div.innerHTML;
 };
 
-const P = {
+const P_DARK = {
   text: '#eef1f5',
   dim: '#8b96a3',
   faint: '#5d6874',
   line: 'rgba(255,255,255,0.08)',
   lineSoft: 'rgba(255,255,255,0.05)',
   panel: 'rgba(255,255,255,0.035)',
+  cell: 'hsl(213,27%,6%)',
   red: '#e04a4a',
   amber: '#e08a3c',
   green: '#3fbf7f',
 };
 
+const P_LIGHT = {
+  text: '#111827',
+  dim: '#4b5563',
+  faint: '#6b7280',
+  line: 'rgba(17,24,39,0.12)',
+  lineSoft: 'rgba(17,24,39,0.07)',
+  panel: 'rgba(17,24,39,0.035)',
+  cell: '#ffffff',
+  red: '#c92a2a',
+  amber: '#b45309',
+  green: '#177245',
+};
+
+const isLightMode = () =>
+  typeof document !== 'undefined' && !document.documentElement.classList.contains('dark');
+
 const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) => {
+  const P = isLightMode() ? P_LIGHT : P_DARK;
+
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
   const riskColor = inc.risk === 'high' ? P.red : inc.risk === 'medium' ? P.amber : P.green;
@@ -383,19 +402,19 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       `}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:${P.line};border:1px solid ${P.line};border-radius:4px;overflow:hidden;margin-bottom:${sz(8,5)}px;">
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Område')}<br/>
           <span style="font-size:${sz(11,9)}px;font-weight:600;color:${P.text};">${safeArea}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Tidpunkt')}<br/>
           <span style="font-family:${mono};font-size:${sz(10.5,8.5)}px;color:${P.text};">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Typ')}<br/>
           <span style="font-size:${sz(11,9)}px;color:${P.text};">${safeConfigLabel}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Status')}<br/>
           ${isPremium
             ? `<span style="font-size:${sz(11,9)}px;font-weight:600;color:${statusColor};">${statusLabel}</span>`
@@ -463,11 +482,27 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
     if ((map as any).tap) (map as any).tap.disable();
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OSM &copy; CARTO',
-      className: 'ca-tiles',
-    }).addTo(map);
+    const tiles = L.tileLayer(
+      isLightMode()
+        ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      {
+        maxZoom: 19,
+        attribution: '&copy; OSM &copy; CARTO',
+        className: 'ca-tiles',
+      }
+    ).addTo(map);
+
+    // Byt basemap när användaren växlar mellan ljust och mörkt läge
+    const themeObserver = new MutationObserver(() => {
+      tiles.setUrl(
+        isLightMode()
+          ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      );
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
 
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -490,10 +525,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     map.on('zoomend', updatePulseSize);
 
     return () => {
+      themeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       markersRef.current = null;
     };
+
   }, [isTouch]);
 
   useEffect(() => {
@@ -750,6 +787,39 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           color: #fff !important;
         }
         .incident-popup a.leaflet-popup-close-button { top: 6px; right: 6px; }
+
+        /* Ljust läge: vita ytor på kartkontroller och händelsepanel */
+        html:not(.dark) .leaflet-control-zoom a {
+          background: rgba(255,255,255,0.92) !important;
+          color: #4b5563 !important;
+          border-color: rgba(17,24,39,0.1) !important;
+        }
+        html:not(.dark) .leaflet-control-zoom a:hover {
+          background: #ffffff !important;
+          color: #111827 !important;
+        }
+        html:not(.dark) .leaflet-control-zoom {
+          box-shadow: 0 8px 24px rgba(17,24,39,0.14) !important;
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-content-wrapper {
+          background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%);
+          border: 1px solid rgba(17,24,39,0.1);
+          box-shadow: 0 24px 60px rgba(17,24,39,0.18), 0 0 0 1px rgba(201,42,42,0.06);
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-tip {
+          background: rgba(255,255,255,0.98);
+          border: 1px solid rgba(17,24,39,0.1);
+        }
+        html:not(.dark) .incident-popup .leaflet-popup-close-button { color: #9ca3af !important; }
+        html:not(.dark) .incident-popup .leaflet-popup-close-button:hover { color: #111827 !important; }
+        html:not(.dark) .ca-pop-scan { display: none; }
+        html:not(.dark) .ca-focus-ring { border-color: rgba(201,42,42,0.8); }
+        html:not(.dark) .ca-focus-cross {
+          background:
+            linear-gradient(rgba(201,42,42,0.6), rgba(201,42,42,0.6)) no-repeat center / 1px 20px,
+            linear-gradient(rgba(201,42,42,0.6), rgba(201,42,42,0.6)) no-repeat center / 20px 1px;
+        }
+
 
         /* Inzoomad "dossier"-entré */
         .ca-pop {

@@ -77,7 +77,7 @@ const StickyStory = () => {
 
   if (reduced) {
     return (
-      <section id="hur-det-fungerar" className="relative py-24 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)]">
+      <section id="hur-det-fungerar" className="relative py-24 px-5 md:px-10 border-t border-[hsl(var(--ca-line))]">
         <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-2">
           {stages.map((s, i) => (
             <div key={s.heading}>
@@ -97,7 +97,7 @@ const StickyStory = () => {
     <section
       id="hur-det-fungerar"
       ref={ref}
-      className="relative border-t border-[hsla(0,0%,100%,0.08)]"
+      className="relative border-t border-[hsl(var(--ca-line))]"
       style={{ height: `${stages.length * 100 + 60}vh` }}
     >
       <div className="sticky top-0 h-[100svh] overflow-hidden">
@@ -142,7 +142,7 @@ const StickyStory = () => {
                 <span>{label}</span>
                 <span className="ca-mono">{v}</span>
               </div>
-              <div className="h-1 rounded-full bg-[hsla(0,0%,100%,0.08)] overflow-hidden">
+              <div className="h-1 rounded-full bg-[hsl(var(--ca-line))] overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[hsl(var(--ca-red))]"
                   style={{ width: `${(v as number) / 0.7}%`, opacity: 0.8 }}
@@ -171,7 +171,7 @@ const StickyStory = () => {
         </div>
 
         {/* Förloppsindikator */}
-        <div className="absolute bottom-0 inset-x-0 h-px bg-[hsla(0,0%,100%,0.08)]">
+        <div className="absolute bottom-0 inset-x-0 h-px bg-[hsl(var(--ca-line))]">
           <motion.div style={{ width: barWidth }} className="h-px bg-[hsl(var(--ca-red))]" />
         </div>
       </div>

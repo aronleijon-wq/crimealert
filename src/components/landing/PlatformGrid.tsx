@@ -29,7 +29,7 @@ const cards = [
 ];
 
 const PlatformGrid = () => (
-  <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)]">
+  <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsl(var(--ca-line))]">
     <div className="max-w-[1400px] mx-auto">
       <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-4">
         PLATTFORMEN

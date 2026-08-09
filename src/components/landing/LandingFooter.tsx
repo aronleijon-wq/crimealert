@@ -28,7 +28,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
 ];
 
 const LandingFooter = () => (
-  <footer className="border-t border-[hsla(0,0%,100%,0.08)] px-5 md:px-10 py-14">
+  <footer className="border-t border-[hsl(var(--ca-line))] px-5 md:px-10 py-14">
     <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
       <div>
         <div className="flex items-center gap-2.5">
@@ -71,7 +71,7 @@ const LandingFooter = () => (
       ))}
     </div>
 
-    <div className="max-w-[1400px] mx-auto mt-12 pt-6 border-t border-[hsla(0,0%,100%,0.08)] flex flex-col sm:flex-row justify-between gap-3">
+    <div className="max-w-[1400px] mx-auto mt-12 pt-6 border-t border-[hsl(var(--ca-line))] flex flex-col sm:flex-row justify-between gap-3">
       <span className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))]">
         © {new Date().getFullYear()} CRIMEALERT
       </span>

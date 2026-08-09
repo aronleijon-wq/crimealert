@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 const FinalCTA = () => (
-  <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsla(0,0%,100%,0.08)] overflow-hidden">
+  <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsl(var(--ca-line))] overflow-hidden">
     <div
       className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
       style={{ background: 'radial-gradient(circle at 50% 50%, hsl(var(--ca-red)) 0%, transparent 65%)' }}
@@ -24,7 +24,7 @@ const FinalCTA = () => (
         </Link>
         <Link
           to="/auth?mode=signup"
-          className="inline-flex items-center px-7 py-4 rounded-md border border-[hsla(0,0%,100%,0.12)] text-sm hover:bg-[hsl(var(--ca-panel-2))] transition"
+          className="inline-flex items-center px-7 py-4 rounded-md border border-[hsl(var(--ca-line-strong))] text-sm hover:bg-[hsl(var(--ca-panel-2))] transition"
         >
           Skapa konto
         </Link>

@@ -97,7 +97,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   };
 
   return (
-    <div className="border-b border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))]/80 backdrop-blur-md">
+    <div className="border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))]/80 backdrop-blur-md">
       <div className="flex items-center gap-1.5 px-3 py-1.5 overflow-x-auto scrollbar-none">
         {/* Municipality search */}
         <div className="relative shrink-0" ref={dropdownRef}>
@@ -122,7 +122,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
           <button
             onClick={() => setSearchOpen(true)}
-            className="ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] text-[hsl(var(--ca-text-3))] hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text))] transition-all duration-300 whitespace-nowrap border border-transparent hover:border-[hsla(0,0%,100%,0.08)]"
+            className="ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] text-[hsl(var(--ca-text-3))] hover:bg-[hsl(var(--ca-panel-3))] hover:text-[hsl(var(--ca-text))] transition-all duration-300 whitespace-nowrap border border-transparent hover:border-[hsl(var(--ca-line))]"
             title="Sök kommun">
               <Search className="w-3 h-3" />
               <span className="hidden sm:inline">Sök kommun</span>
@@ -161,8 +161,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] shrink-0
             transition-all duration-300 whitespace-nowrap select-none border
             ${filtersVisible ?
-          'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
-          'text-[hsl(var(--ca-text-3))] hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] border-transparent hover:border-[hsla(0,0%,100%,0.08)]'}
+          'bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))] border-[hsl(var(--ca-line-strong))]' :
+          'text-[hsl(var(--ca-text-3))] hover:bg-[hsl(var(--ca-panel-3))] hover:text-[hsl(var(--ca-text-2))] border-transparent hover:border-[hsl(var(--ca-line))]'}
           `}>
 
           <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -198,8 +198,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                     ${isLocked ?
                 'bg-primary/5 text-primary border-primary/15 hover:bg-primary/10' :
                 active ?
-                'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
-                'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsla(0,0%,100%,0.08)]'}
+                'bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))] border-[hsl(var(--ca-line-strong))]' :
+                'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-[hsl(var(--ca-panel-3))] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsl(var(--ca-line))]'}
                   `}
 
                 title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
@@ -233,8 +233,8 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                 ${!isPremium ?
             'bg-secondary/5 text-secondary border-secondary/15 hover:bg-secondary/10' :
             showCommunityReports ?
-            'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
-            'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsla(0,0%,100%,0.08)]'}
+            'bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))] border-[hsl(var(--ca-line-strong))]' :
+            'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-[hsl(var(--ca-panel-3))] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsl(var(--ca-line))]'}
               `}
 
             title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Medborgarrapporter'}>

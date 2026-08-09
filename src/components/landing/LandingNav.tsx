@@ -23,7 +23,7 @@ const LandingNav = () => {
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl border-b border-[hsla(0,0%,100%,0.08)]'
+          ? 'bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl border-b border-[hsl(var(--ca-line))]'
           : 'bg-transparent border-b border-transparent'
       }`}
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
@@ -63,7 +63,7 @@ const LandingNav = () => {
           </span>
           <Link
             to="/karta"
-            className="hidden sm:grid place-items-center w-9 h-9 rounded-md border border-[hsla(0,0%,100%,0.08)] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] hover:border-[hsla(0,0%,100%,0.16)] transition"
+            className="hidden sm:grid place-items-center w-9 h-9 rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] hover:border-[hsl(var(--ca-line-strong))] transition"
             aria-label="Sök kommun"
           >
             <Search className="w-4 h-4" />
@@ -82,7 +82,7 @@ const LandingNav = () => {
           </Link>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden grid place-items-center w-9 h-9 rounded-md border border-[hsla(0,0%,100%,0.08)] text-[hsl(var(--ca-text-2))]"
+            className="md:hidden grid place-items-center w-9 h-9 rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))]"
             aria-label="Meny"
           >
             {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -91,7 +91,7 @@ const LandingNav = () => {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-[hsla(0,0%,100%,0.08)] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
+        <div className="md:hidden border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
           {[...links, { to: '/account', label: 'Prisplan' }].map((l) => (
             <Link
               key={l.to}
