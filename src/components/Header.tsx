@@ -23,7 +23,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="border-b border-border bg-card flex items-center px-2 md:px-4 justify-between z-50 relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }}>
+    <header className="border-b border-border bg-card/80 backdrop-blur-md flex items-center px-2 md:px-4 justify-between z-50 relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }}>
       <Link to="/" className="flex items-center gap-2 group shrink-0">
         <img
           alt="CrimeAlert"
@@ -36,13 +36,14 @@ const Header = () => {
           decoding="async"
         />
         <div className="flex flex-col leading-none">
-          <span className="font-bold text-xs md:text-sm tracking-wider text-foreground">
+          <span className="ca-display font-bold text-xs md:text-sm tracking-wider text-foreground">
             CRIME<span className="text-primary">ALERT</span>
           </span>
-          <span className="hidden md:block text-[9px] tracking-[0.2em] text-muted-foreground font-mono uppercase">
-            CrimeAlert-säkerhetskarta
+          <span className="ca-mono hidden md:block text-[8.5px] tracking-[0.24em] text-muted-foreground font-mono uppercase mt-0.5">
+            Lägesbild Sverige
           </span>
         </div>
+
       </Link>
 
       <nav className="flex items-center gap-0.5">

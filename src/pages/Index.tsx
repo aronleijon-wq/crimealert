@@ -131,7 +131,7 @@ const Index = () => {
   
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+    <div className="ca-dark h-[100dvh] flex flex-col overflow-hidden">
       {!isFullscreen &&
       <>
           <Header />
@@ -148,8 +148,8 @@ const Index = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
         {!isFullscreen && (!isMobile || mobileListOpen) &&
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border bg-card overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
-            <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))] overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
+            <div className="sticky top-0 z-10 px-3 py-2 border-b border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))]/95 backdrop-blur-md flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ?
               <Wifi className="w-3 h-3 text-cr-green" /> :
@@ -158,7 +158,7 @@ const Index = () => {
 
               <WifiOff className="w-3 h-3 text-muted-foreground" />
               }
-                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+                <span className="ca-mono text-[9px] text-[hsl(var(--ca-text-3))] uppercase tracking-[0.2em]">
                   {isPremium ?
                 'Realtid — Polisen.se' :
                 isLive ?
@@ -170,7 +170,7 @@ const Index = () => {
                 <button
                 onClick={refetch}
                 disabled={loading}
-                className="p-1 rounded hover:bg-muted text-muted-foreground transition disabled:opacity-50"
+                className="p-1 rounded hover:bg-white/5 text-muted-foreground transition disabled:opacity-50"
                 title="Uppdatera">
                 
                   <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
@@ -178,7 +178,7 @@ const Index = () => {
                 {isMobile &&
               <button
                 onClick={() => setMobileListOpen(false)}
-                className="p-1 rounded hover:bg-muted text-muted-foreground"
+                className="p-1 rounded hover:bg-white/5 text-muted-foreground"
                 title="Stäng listan">
                 
                     <X className="w-4 h-4" />
@@ -189,13 +189,14 @@ const Index = () => {
             {loading && liveIncidents.length === 0 ?
           <div className="p-4 text-center">
                 <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground mx-auto mb-2" />
-                <span className="text-[10px] font-mono text-muted-foreground">Hämtar data från Polisen.se...</span>
+                <span className="ca-mono text-[10px] text-[hsl(var(--ca-text-3))] tracking-[0.14em] uppercase">Hämtar data från Polisen.se</span>
               </div> :
 
-          filtered.map((inc) =>
+          filtered.map((inc, idx) =>
           <IncidentCard
             key={inc.id}
             incident={inc}
+            index={idx}
             selected={selectedId === inc.id}
             onClick={() => setSelectedId(selectedId === inc.id ? null : inc.id)} />
 
@@ -203,6 +204,7 @@ const Index = () => {
           }
           </div>
         }
+
 
         {/* Map */}
         <div className="flex-1 relative">
@@ -212,30 +214,35 @@ const Index = () => {
             onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
             flyToLocation={flyToLocation} />
-          
+
+          {/* Vinjett för nattkänsla över kartan */}
+          <div
+            className="pointer-events-none absolute inset-0 z-[400]"
+            style={{ background: 'radial-gradient(120% 90% at 50% 45%, transparent 45%, hsla(212,26%,2%,0.45) 100%)' }}
+          />
 
           {/* Mobile: show list button */}
           {isMobile && !mobileListOpen && !isFullscreen &&
           <button
             onClick={() => setMobileListOpen(true)}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-muted transition text-foreground shadow-lg">
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] ca-glass rounded-full px-4 py-2 flex items-center gap-2 transition-colors duration-300 hover:bg-white/[0.07] text-[hsl(var(--ca-text))] shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
             
               <List className="w-4 h-4" />
-              <span className="text-xs font-medium">{filtered.length} händelser</span>
+              <span className="ca-mono text-[10px] tracking-[0.16em] uppercase">{filtered.length} händelser</span>
             </button>
           }
 
           {/* Fullscreen toggle button */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="absolute right-14 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md p-1.5 hover:bg-muted transition text-muted-foreground"
+            className="absolute right-14 z-[1000] ca-glass rounded-md p-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors duration-300"
             style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}
             title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}>
             
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
-          <div className="absolute left-3 z-[1000] bg-card/90 backdrop-blur border border-border rounded-md px-3 py-1.5 flex items-center gap-2" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
+          <div className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex items-center gap-2 ca-rise" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
             {isPremium ?
             <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" /> :
             isLive ?
@@ -243,11 +250,12 @@ const Index = () => {
 
             <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
             }
-            <span className="text-[10px] font-mono text-muted-foreground">
-              {isPremium ? 'REALTID' : isLive ? '15 MIN DELAY' : 'DEMO'} • SENASTE 7 DAGARNA • <span className="text-cr-red">{activeCount} AKTIVA</span>
+            <span className="ca-mono text-[9px] tracking-[0.18em] uppercase text-[hsl(var(--ca-text-3))]">
+              {isPremium ? 'Realtid' : isLive ? '15 min delay' : 'Demo'} <span className="text-[hsl(var(--ca-text-3))]/50">/</span> 7 dagar <span className="text-[hsl(var(--ca-text-3))]/50">/</span> <span className="text-[hsl(var(--ca-red))]">{activeCount} aktiva</span>
             </span>
           </div>
         </div>
+
       </div>
 
       {!isFullscreen && <div className="hidden md:block"><Footer /></div>}

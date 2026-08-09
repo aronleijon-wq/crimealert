@@ -289,14 +289,24 @@ const sanitizeHTML = (str: string): string => {
   return div.innerHTML;
 };
 
+const P = {
+  text: '#eef1f5',
+  dim: '#8b96a3',
+  faint: '#5d6874',
+  line: 'rgba(255,255,255,0.08)',
+  lineSoft: 'rgba(255,255,255,0.05)',
+  panel: 'rgba(255,255,255,0.035)',
+  red: '#e04a4a',
+  amber: '#e08a3c',
+  green: '#3fbf7f',
+};
+
 const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) => {
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
-  const riskColor = inc.risk === 'high' ? '#ef4444' : inc.risk === 'medium' ? '#f97316' : '#22c55e';
-  const riskBg = inc.risk === 'high' ? '#fef2f2' : inc.risk === 'medium' ? '#fff7ed' : '#f0fdf4';
+  const riskColor = inc.risk === 'high' ? P.red : inc.risk === 'medium' ? P.amber : P.green;
   const statusLabel = inc.status === 'active' ? 'Pågående' : 'Avslutad';
-  const statusColor = inc.status === 'active' ? '#ef4444' : '#22c55e';
-  const statusBg = inc.status === 'active' ? '#fef2f2' : '#f0fdf4';
+  const statusColor = inc.status === 'active' ? P.red : P.green;
   const riskDesc = getRiskDescription(inc.risk, inc.type);
   const timeAgo = getTimeAgo(inc.time);
   const extractedDetails = extractDetails(inc.description, inc.title, inc.originalType);
@@ -309,86 +319,95 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const safeConfigLabel = sanitizeHTML(config.label);
   const safeRiskLabel = sanitizeHTML(risk.label);
 
+  const mono = "'JetBrains Mono', ui-monospace, monospace";
+  const label = (t: string) =>
+    `<span style="font-family:${mono};font-size:${compact ? 7 : 8.5}px;letter-spacing:0.16em;text-transform:uppercase;color:${P.faint};">${t}</span>`;
+
   // compact = tighter shell, ALL content preserved
   const sz = (normal: number, small: number) => compact ? small : normal;
 
   return `
-    <div style="font-family:system-ui;min-width:${sz(260,200)}px;max-width:${sz(320,250)}px;${compact ? 'max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px;' : ''}">
-      <div style="display:flex;align-items:center;gap:${sz(8,5)}px;margin-bottom:${sz(10,5)}px;">
-        <span style="font-size:${sz(22,16)}px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
+    <div class="ca-pop" style="font-family:Inter,system-ui,sans-serif;color:${P.text};min-width:${sz(268,200)}px;max-width:${sz(324,250)}px;${compact ? 'max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px;' : ''}">
+      <div class="ca-pop-scan"></div>
+
+      <div style="display:flex;align-items:flex-start;gap:${sz(9,6)}px;padding-bottom:${sz(9,6)}px;border-bottom:1px solid ${P.line};margin-bottom:${sz(10,6)}px;">
+        <span style="font-size:${sz(18,14)}px;line-height:1;margin-top:2px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:${sz(13,11)}px;font-weight:700;color:#1a1a1a;line-height:1.3;">${safeTitle}</div>
-          <div style="font-size:${sz(10,8)}px;color:#888;margin-top:1px;">${safeConfigLabel} • <span style="font-weight:600;color:#555;">🕐 ${timeAgo}</span></div>
+          <div style="font-family:Archivo,Inter,sans-serif;font-weight:800;letter-spacing:-0.02em;font-size:${sz(14,11.5)}px;line-height:1.2;color:${P.text};">${safeTitle}</div>
+          <div style="font-family:${mono};font-size:${sz(9,7.5)}px;letter-spacing:0.12em;text-transform:uppercase;color:${P.dim};margin-top:5px;">${safeConfigLabel} · ${timeAgo}</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
           ${isPremium
-            ? `<span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-               <span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:${riskBg};color:${riskColor};">Risk: ${safeRiskLabel}</span>`
-            : `<span style="font-size:${sz(9,7)}px;font-weight:600;padding:2px ${sz(6,4)}px;border-radius:4px;background:#f3f4f6;color:#aaa;">🔒 Pro</span>`
+            ? `<span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;text-transform:uppercase;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${statusColor}55;background:${statusColor}1a;color:${statusColor};">${statusLabel}</span>
+               <span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;text-transform:uppercase;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${riskColor}55;background:${riskColor}1a;color:${riskColor};">${safeRiskLabel}</span>`
+            : `<span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${P.line};background:${P.panel};color:${P.faint};">🔒 PRO</span>`
           }
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description ? `<p style="font-size:${sz(11,9)}px;color:#444;margin:0 0 ${sz(10,5)}px;line-height:1.5;border-left:3px solid ${config.color};padding-left:${sz(8,6)}px;">${safeDescription}</p>` : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning')) ? `<p style="font-size:${sz(10,8)}px;color:#aaa;margin:0 0 ${sz(10,5)}px;font-style:italic;">🔒 Detaljerad beskrivning kräver Pro-medlemskap</p>` : ''}
+      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description
+        ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}</p>`
+        : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))
+          ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;">🔒 Detaljerad beskrivning kräver Pro</p>`
+          : ''}
 
       ${inc.image_url ? `
-      <div style="margin-bottom:${sz(10,5)}px;">
+      <div style="margin-bottom:${sz(10,6)}px;">
         <img src="${sanitizeHTML(inc.image_url)}" alt="Rapportbild"
-          style="width:100%;max-height:${sz(120,80)}px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;"
+          style="width:100%;max-height:${sz(120,80)}px;object-fit:cover;border-radius:4px;border:1px solid ${P.line};cursor:pointer;"
           onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
-        <div style="font-size:${sz(9,7)}px;color:#aaa;margin-top:2px;text-align:center;">Klicka för att förstora</div>
+        <div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.faint};margin-top:4px;text-align:center;letter-spacing:0.1em;">KLICKA FÖR ATT FÖRSTORA</div>
       </div>
       ` : ''}
 
       ${isPremium && extractedDetails.length > 0 ? `
-      <div style="display:flex;flex-wrap:wrap;gap:${sz(4,3)}px;margin-bottom:${sz(10,5)}px;">
+      <div style="display:flex;flex-wrap:wrap;gap:${sz(4,3)}px;margin-bottom:${sz(11,6)}px;">
         ${extractedDetails.map(d => `
-          <span style="font-size:${sz(9,7)}px;padding:${sz(3,2)}px ${sz(7,4)}px;border-radius:12px;background:#f1f5f9;color:#475569;display:inline-flex;align-items:center;gap:2px;border:1px solid #e2e8f0;">
-            <span>${sanitizeHTML(d.icon)}</span>
-            <span style="font-weight:600;">${sanitizeHTML(d.label)}:</span> ${sanitizeHTML(d.value)}
+          <span style="font-family:${mono};font-size:${sz(8.5,7)}px;padding:${sz(3,2)}px ${sz(7,5)}px;border-radius:3px;background:${P.panel};color:${P.dim};display:inline-flex;align-items:center;gap:4px;border:1px solid ${P.lineSoft};">
+            <span style="color:${P.faint};">${sanitizeHTML(d.label)}</span> ${sanitizeHTML(d.value)}
           </span>
         `).join('')}
       </div>
       ` : ''}
 
       ${isPremium ? `
-      <div style="background:${riskBg};border:1px solid ${riskColor}20;border-radius:6px;padding:${sz(10,5)}px ${sz(12,7)}px;margin-bottom:${sz(10,5)}px;">
-        <div style="font-size:${sz(9,7)}px;font-weight:700;color:${riskColor};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">⚠ Riskbedömning</div>
-        <p style="font-size:${sz(10,8)}px;color:#555;margin:0;line-height:1.5;">${riskDesc}</p>
+      <div style="background:${riskColor}12;border:1px solid ${riskColor}33;border-radius:4px;padding:${sz(10,6)}px ${sz(11,7)}px;margin-bottom:${sz(11,6)}px;">
+        <div style="font-family:${mono};font-size:${sz(8.5,7)}px;font-weight:600;color:${riskColor};text-transform:uppercase;letter-spacing:0.18em;margin-bottom:5px;">Riskbedömning</div>
+        <p style="font-size:${sz(10.5,8.5)}px;color:${P.dim};margin:0;line-height:1.6;">${riskDesc}</p>
       </div>
       ` : `
-      <div style="background:#f8f8f8;border:1px solid #e5e5e5;border-radius:6px;padding:${sz(10,5)}px ${sz(12,7)}px;margin-bottom:${sz(10,5)}px;text-align:center;">
-        <div style="font-size:${sz(10,8)}px;color:#888;">🔒 Riskbedömning & rekommendationer</div>
-        <div style="font-size:${sz(9,7)}px;color:#aaa;margin-top:2px;">Tillgängligt med Pro-medlemskap</div>
+      <div style="background:${P.panel};border:1px solid ${P.line};border-radius:4px;padding:${sz(10,6)}px ${sz(11,7)}px;margin-bottom:${sz(11,6)}px;text-align:center;">
+        <div style="font-family:${mono};font-size:${sz(9,7.5)}px;color:${P.dim};letter-spacing:0.12em;text-transform:uppercase;">🔒 Riskbedömning</div>
+        <div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.faint};margin-top:3px;">Tillgängligt med Pro</div>
       </div>
       `}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:${sz(4,3)}px;font-size:${sz(10,8)}px;margin-bottom:${sz(6,3)}px;">
-        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
-          <span style="color:#aaa;font-size:${sz(9,7)}px;">📍 Område</span><br/>
-          <span style="color:#333;font-weight:600;">${safeArea}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:${P.line};border:1px solid ${P.line};border-radius:4px;overflow:hidden;margin-bottom:${sz(8,5)}px;">
+        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+          ${label('Område')}<br/>
+          <span style="font-size:${sz(11,9)}px;font-weight:600;color:${P.text};">${safeArea}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
-          <span style="color:#aaa;font-size:${sz(9,7)}px;">🕐 Tidpunkt</span><br/>
-          <span style="color:#333;font-weight:500;">${formatTime(inc.time)}</span>
+        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+          ${label('Tidpunkt')}<br/>
+          <span style="font-family:${mono};font-size:${sz(10.5,8.5)}px;color:${P.text};">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
-          <span style="color:#aaa;font-size:${sz(9,7)}px;">📋 Typ</span><br/>
-          <span style="color:#333;font-weight:500;">${safeConfigLabel}</span>
+        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+          ${label('Typ')}<br/>
+          <span style="font-size:${sz(11,9)}px;color:${P.text};">${safeConfigLabel}</span>
         </div>
-        <div style="background:#f8f8f8;padding:${sz(6,3)}px ${sz(8,5)}px;border-radius:5px;">
-          <span style="color:#aaa;font-size:${sz(9,7)}px;">📡 Status</span><br/>
+        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+          ${label('Status')}<br/>
           ${isPremium
-            ? `<span style="color:${statusColor};font-weight:600;">${statusLabel}</span>`
-            : `<span style="color:#aaa;font-weight:500;">🔒 Pro</span>`
+            ? `<span style="font-size:${sz(11,9)}px;font-weight:600;color:${statusColor};">${statusLabel}</span>`
+            : `<span style="font-size:${sz(11,9)}px;color:${P.faint};">🔒 Pro</span>`
           }
         </div>
       </div>
 
-      ${inc.approximate ? `<div style="margin-top:${sz(6,3)}px;font-size:${sz(9,7)}px;color:#f97316;background:#fff7ed;padding:${sz(4,2)}px ${sz(8,5)}px;border-radius:4px;">⊙ Positionen är approximerad – exakt adress visas ej av integritetsskäl</div>` : ''}
+      ${inc.approximate ? `<div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.amber};background:${P.amber}12;border:1px solid ${P.amber}33;padding:${sz(5,3)}px ${sz(8,5)}px;border-radius:3px;">⊙ Positionen är approximerad</div>` : ''}
 
-      <div style="margin-top:${sz(6,3)}px;padding-top:${sz(6,3)}px;border-top:1px solid #eee;font-size:${sz(9,7)}px;color:#bbb;display:flex;justify-content:space-between;">
-        <span>Källa: ${safeSource.toLowerCase().includes('polisen') ? `<a href="https://polisen.se/aktuellt/polisens-nyheter/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">${safeSource}</a>` : safeSource}</span>
+      <div style="margin-top:${sz(8,5)}px;padding-top:${sz(7,4)}px;border-top:1px solid ${P.line};font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.12em;text-transform:uppercase;color:${P.faint};display:flex;justify-content:space-between;">
+        <span>${safeSource.toLowerCase().includes('polisen') ? `<a href="https://polisen.se/aktuellt/polisens-nyheter/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">${safeSource}</a>` : safeSource}</span>
         <span>CrimeAlert</span>
       </div>
 
@@ -396,6 +415,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
     </div>
   `;
 };
+
 
 const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
@@ -443,10 +463,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
     if ((map as any).tap) (map as any).tap.disable();
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       attribution: '&copy; OSM &copy; CARTO',
+      className: 'ca-tiles',
     }).addTo(map);
+
 
     L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -550,8 +572,14 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   }, [incidents, isPremium, isTouch]);
 
   const prevSelectedRef = useRef<string | null>(null);
+  const focusRingRef = useRef<L.Marker | null>(null);
   useEffect(() => {
-    if (!mapRef.current || !selectedId || selectedId === prevSelectedRef.current) return;
+    if (!mapRef.current) return;
+    if (focusRingRef.current) {
+      mapRef.current.removeLayer(focusRingRef.current);
+      focusRingRef.current = null;
+    }
+    if (!selectedId || selectedId === prevSelectedRef.current) return;
     prevSelectedRef.current = selectedId;
     const inc = incidents.find((i) => i.id === selectedId);
     if (inc) {
@@ -561,13 +589,29 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       targetPoint.y -= 120;
       const targetLatLng = map.unproject(targetPoint, targetZoom);
       map.flyTo(targetLatLng, targetZoom, { duration: 0.8 });
-      
+
+      // Palantir-artad sikte-ring på vald händelse
+      const ring = L.marker([inc.lat, inc.lng], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -500,
+        icon: L.divIcon({
+          className: 'ca-focus-icon',
+          html: '<div class="ca-focus"><span class="ca-focus-ring"></span><span class="ca-focus-ring ca-focus-ring-2"></span><span class="ca-focus-cross"></span></div>',
+          iconSize: [96, 96],
+          iconAnchor: [48, 48],
+        }),
+      });
+      ring.addTo(map);
+      focusRingRef.current = ring;
+
       setTimeout(() => {
         const marker = markerMapRef.current.get(inc.id);
         if (marker && !marker.isPopupOpen()) marker.openPopup();
       }, 850);
     }
   }, [selectedId, incidents]);
+
 
   // Fly to searched location
   useEffect(() => {
@@ -576,9 +620,49 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   }, [flyToLocation]);
 
   return (
-    <div ref={containerRef} className="w-full h-full bg-muted" style={{ touchAction: 'pan-x pan-y' }}>
+    <div ref={containerRef} className="w-full h-full" style={{ touchAction: 'pan-x pan-y', backgroundColor: 'hsl(212 26% 2%)' }}>
       <style>{`
+        .ca-tiles {
+          filter: saturate(0.75) contrast(1.06) brightness(0.92);
+        }
+        .ca-focus-icon { background: none !important; border: none !important; }
+        .ca-focus {
+          position: relative;
+          width: 96px; height: 96px;
+          animation: ca-focus-in .6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes ca-focus-in {
+          from { opacity: 0; transform: scale(1.6) rotate(-12deg); }
+          to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        .ca-focus-ring {
+          position: absolute; inset: 22px;
+          border: 1px solid rgba(224,74,74,0.75);
+          border-radius: 50%;
+          animation: ca-focus-pulse 2.6s ease-out infinite;
+        }
+        .ca-focus-ring-2 { inset: 6px; opacity: .35; animation-delay: .5s; border-style: dashed; }
+        .ca-focus-cross {
+          position: absolute; inset: 0;
+          background:
+            linear-gradient(rgba(224,74,74,0.5), rgba(224,74,74,0.5)) no-repeat center / 1px 20px,
+            linear-gradient(rgba(224,74,74,0.5), rgba(224,74,74,0.5)) no-repeat center / 20px 1px;
+          opacity: .8;
+        }
+        @keyframes ca-focus-pulse {
+          0% { transform: scale(0.86); opacity: .9; }
+          70% { transform: scale(1.18); opacity: 0; }
+          100% { transform: scale(1.18); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ca-focus, .ca-focus-ring { animation: none !important; }
+        }
+
         .leaflet-container {
+          background: hsl(212, 26%, 2%);
+        }
+        .leaflet-container {
+
           touch-action: pan-x pan-y;
         }
         .custom-marker {
@@ -620,25 +704,80 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; transform: rotate(45deg); }
         }
         .leaflet-control-zoom a {
-          background: hsl(0, 0%, 100%) !important;
-          color: hsl(222, 20%, 20%) !important;
-          border-color: hsl(220, 10%, 85%) !important;
+          background: hsla(213, 27%, 7%, 0.85) !important;
+          color: hsl(209, 12%, 72%) !important;
+          border-color: rgba(255,255,255,0.08) !important;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          transition: color .25s ease, background-color .25s ease;
         }
         .leaflet-control-zoom a:hover {
-          background: hsl(220, 10%, 95%) !important;
+          background: hsla(210, 30%, 11%, 0.92) !important;
+          color: #fff !important;
         }
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+        }
+
+        /* Palantir-artad, mörk händelsepanel */
         .incident-popup .leaflet-popup-content-wrapper {
-          border-radius: 12px;
-          padding: 6px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-          max-width: 340px;
+          border-radius: 6px;
+          padding: 4px;
+          background: linear-gradient(180deg, hsla(215,27%,9%,0.96) 0%, hsla(212,26%,3%,0.97) 100%);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(224,74,74,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+          backdrop-filter: blur(16px) saturate(120%);
+          -webkit-backdrop-filter: blur(16px) saturate(120%);
+          max-width: 344px;
+          overflow: hidden;
         }
         .incident-popup .leaflet-popup-content {
-          margin: 8px;
+          margin: 10px 11px;
         }
         .incident-popup .leaflet-popup-tip {
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          background: hsla(212,26%,3%,0.97);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: none;
         }
+        .incident-popup .leaflet-popup-close-button {
+          color: #6b7683 !important;
+          font-weight: 400 !important;
+          transition: color .2s ease;
+        }
+        .incident-popup .leaflet-popup-close-button:hover {
+          color: #fff !important;
+        }
+        .incident-popup a.leaflet-popup-close-button { top: 6px; right: 6px; }
+
+        /* Inzoomad "dossier"-entré */
+        .ca-pop {
+          position: relative;
+          animation: ca-pop-in .5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes ca-pop-in {
+          from { opacity: 0; transform: translateY(8px) scale(0.985); filter: blur(6px); }
+          to { opacity: 1; transform: none; filter: blur(0); }
+        }
+        .ca-pop-scan {
+          position: absolute;
+          top: 0; left: -12px; right: -12px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(224,74,74,0.55), transparent);
+          animation: ca-pop-scan 1.5s cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+          pointer-events: none;
+        }
+        @keyframes ca-pop-scan {
+          0% { transform: translateY(0); opacity: 0; }
+          15% { opacity: 1; }
+          100% { transform: translateY(220px); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ca-pop, .ca-pop-scan { animation: none !important; }
+          .ca-pop-scan { display: none; }
+        }
+
         .custom-cluster-icon {
           background: transparent !important;
         }
