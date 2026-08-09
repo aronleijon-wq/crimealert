@@ -525,10 +525,12 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     map.on('zoomend', updatePulseSize);
 
     return () => {
+      themeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       markersRef.current = null;
     };
+
   }, [isTouch]);
 
   useEffect(() => {
