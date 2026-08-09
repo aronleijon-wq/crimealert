@@ -22,7 +22,8 @@ if ('serviceWorker' in navigator) {
       console.info('[PWA] Service workers avregistrerade i preview/iframe');
     });
   } else {
-    registerSW({
+    let reloading = false;
+    const updateSW = registerSW({
       immediate: true,
       onRegisteredSW(swUrl, registration) {
         console.info('[PWA] Service worker registrerad', {
@@ -32,9 +33,13 @@ if ('serviceWorker' in navigator) {
           waiting: Boolean(registration?.waiting),
           installing: Boolean(registration?.installing),
         });
+        // Leta efter ny version direkt och varje halvtimme
+        registration?.update?.();
+        setInterval(() => registration?.update?.(), 30 * 60 * 1000);
       },
       onNeedRefresh() {
-        console.info('[PWA] Ny version finns tillgänglig');
+        console.info('[PWA] Ny version hittad – uppdaterar automatiskt');
+        updateSW(true);
       },
       onOfflineReady() {
         console.info('[PWA] Offline-stöd klart');
@@ -43,6 +48,13 @@ if ('serviceWorker' in navigator) {
         console.error('[PWA] Service worker kunde inte registreras', error);
       },
     });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
+    });
+
 
     navigator.serviceWorker.ready
       .then((registration) => {
