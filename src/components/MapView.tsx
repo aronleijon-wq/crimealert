@@ -482,11 +482,27 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
     if ((map as any).tap) (map as any).tap.disable();
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OSM &copy; CARTO',
-      className: 'ca-tiles',
-    }).addTo(map);
+    const tiles = L.tileLayer(
+      isLightMode()
+        ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      {
+        maxZoom: 19,
+        attribution: '&copy; OSM &copy; CARTO',
+        className: 'ca-tiles',
+      }
+    ).addTo(map);
+
+    // Byt basemap när användaren växlar mellan ljust och mörkt läge
+    const themeObserver = new MutationObserver(() => {
+      tiles.setUrl(
+        isLightMode()
+          ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      );
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
 
 
     L.control.zoom({ position: 'topright' }).addTo(map);
