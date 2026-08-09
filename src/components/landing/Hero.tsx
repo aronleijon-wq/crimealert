@@ -16,7 +16,7 @@ const Hero = () => {
         className="ca-fog absolute bottom-[-30%] left-[-10%] w-[900px] h-[600px] rounded-full blur-[180px] opacity-[0.12]"
         style={{ background: 'radial-gradient(circle, hsla(200,38%,62%,0.5) 0%, transparent 70%)', animationDelay: '-9s' }}
       />
-      <div className="absolute inset-x-0 top-0 h-px bg-[hsla(0,0%,100%,0.06)]" />
+      <div className="absolute inset-x-0 top-0 h-px bg-[hsl(var(--ca-line))]" />
 
       {/* Kartlager */}
       <div className="absolute right-[-12%] md:right-[4%] top-1/2 -translate-y-1/2 h-[85%] md:h-[92%] opacity-25 md:opacity-50 pointer-events-none">
@@ -29,7 +29,7 @@ const Hero = () => {
       <div className="relative max-w-[1400px] w-full mx-auto px-5 md:px-10">
         <div className="max-w-[820px]">
           <div className="ca-rise flex items-center gap-3 mb-7" style={{ animationDelay: '0.1s' }}>
-            <span className="flex items-center gap-2 ca-mono text-[10px] tracking-[0.22em] text-[hsl(var(--ca-text-3))] border border-[hsla(0,0%,100%,0.07)] rounded-full px-3 py-1.5 backdrop-blur-md">
+            <span className="flex items-center gap-2 ca-mono text-[10px] tracking-[0.22em] text-[hsl(var(--ca-text-3))] border border-[hsl(var(--ca-line))] rounded-full px-3 py-1.5 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
               LIVE • SVERIGE
             </span>
@@ -63,7 +63,7 @@ const Hero = () => {
             </Link>
             <Link
               to="/karta"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-md border border-[hsla(0,0%,100%,0.1)] text-sm text-[hsl(var(--ca-text))] backdrop-blur-md hover:bg-[hsla(215,27%,9%,0.5)] transition"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-md border border-[hsl(var(--ca-line-strong))] text-sm text-[hsl(var(--ca-text))] backdrop-blur-md hover:bg-[hsl(var(--ca-panel-3))] transition"
             >
               <MapPin className="w-4 h-4" />
               Sök kommun
@@ -77,7 +77,7 @@ const Hero = () => {
           </div>
 
           <div
-            className="ca-rise mt-14 flex flex-wrap gap-x-10 gap-y-3 border-t border-[hsla(0,0%,100%,0.06)] pt-5"
+            className="ca-rise mt-14 flex flex-wrap gap-x-10 gap-y-3 border-t border-[hsl(var(--ca-line))] pt-5"
             style={{ animationDelay: '0.76s' }}
           >
             {[

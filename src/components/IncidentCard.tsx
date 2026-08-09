@@ -46,7 +46,7 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
     <button
       onClick={onClick}
       style={{ animationDelay: `${Math.min(index, 14) * 35}ms` }}
-      className={`group relative w-full text-left px-3 py-2.5 border-b border-[hsla(0,0%,100%,0.06)] overflow-hidden ca-rise
+      className={`group relative w-full text-left px-3 py-2.5 border-b border-[hsl(var(--ca-line))] overflow-hidden ca-rise
         transition-[background-color,border-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${selected
           ? 'bg-[hsla(0,68%,52%,0.07)]'
@@ -58,7 +58,7 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
         className={`absolute left-0 top-0 bottom-0 w-[2px] transition-all duration-500 ${
           selected
             ? 'bg-[hsl(var(--ca-red))] shadow-[0_0_12px_hsl(var(--ca-red)/0.8)]'
-            : 'bg-transparent group-hover:bg-[hsla(0,0%,100%,0.14)]'
+            : 'bg-transparent group-hover:bg-[hsl(var(--ca-line-strong))]'
         }`}
       />
 

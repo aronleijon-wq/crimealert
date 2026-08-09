@@ -148,8 +148,8 @@ const Index = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
         {!isFullscreen && (!isMobile || mobileListOpen) &&
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))] overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
-            <div className="sticky top-0 z-10 px-3 py-2 border-b border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))]/95 backdrop-blur-md flex items-center justify-between">
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))] overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
+            <div className="sticky top-0 z-10 px-3 py-2 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))]/95 backdrop-blur-md flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ?
               <Wifi className="w-3 h-3 text-cr-green" /> :
@@ -218,14 +218,14 @@ const Index = () => {
           {/* Vinjett för nattkänsla över kartan */}
           <div
             className="pointer-events-none absolute inset-0 z-[400]"
-            style={{ background: 'radial-gradient(120% 90% at 50% 45%, transparent 45%, hsla(212,26%,2%,0.45) 100%)' }}
+            style={{ background: 'radial-gradient(120% 90% at 50% 45%, transparent 45%, hsl(var(--ca-base)) 100%)' }}
           />
 
           {/* Mobile: show list button */}
           {isMobile && !mobileListOpen && !isFullscreen &&
           <button
             onClick={() => setMobileListOpen(true)}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] ca-glass rounded-full px-4 py-2 flex items-center gap-2 transition-colors duration-300 hover:bg-white/[0.07] text-[hsl(var(--ca-text))] shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] ca-glass rounded-full px-4 py-2 flex items-center gap-2 transition-colors duration-300 hover:bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))] shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
             
               <List className="w-4 h-4" />
               <span className="ca-mono text-[10px] tracking-[0.16em] uppercase">{filtered.length} händelser</span>

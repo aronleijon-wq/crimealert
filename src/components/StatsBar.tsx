@@ -35,7 +35,7 @@ const StatsBar = ({ incidents, onSelectIncident }: StatsBarProps) => {
   const items = [...latest, ...latest];
 
   return (
-    <div className="bg-[hsl(var(--ca-base))] border-b border-[hsla(0,0%,100%,0.07)] overflow-hidden relative">
+    <div className="bg-[hsl(var(--ca-base))] border-b border-[hsl(var(--ca-line))] overflow-hidden relative">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-16 z-10 bg-gradient-to-r from-[hsl(var(--ca-base))] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-10 bg-gradient-to-l from-[hsl(var(--ca-base))] to-transparent" />
       <div className="flex animate-ticker whitespace-nowrap">
@@ -46,7 +46,7 @@ const StatsBar = ({ incidents, onSelectIncident }: StatsBarProps) => {
             <div
               key={`${inc.id}-${i}`}
               onClick={() => onSelectIncident?.(inc.id)}
-              className="group inline-flex items-center gap-2 px-4 py-1.5 shrink-0 cursor-pointer transition-colors duration-300 hover:bg-white/[0.04]"
+              className="group inline-flex items-center gap-2 px-4 py-1.5 shrink-0 cursor-pointer transition-colors duration-300 hover:bg-[hsl(var(--ca-panel-3))]"
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'animate-pulse-dot' : ''}`}
