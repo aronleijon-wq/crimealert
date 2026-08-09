@@ -115,9 +115,6 @@ const DebugPush = () => {
               <h2 className="font-semibold text-foreground">Backend & VAPID</h2>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>VAPID_PUBLIC_KEY tillgänglig: <span className="text-foreground">{backendConfig?.hasPublicKey ? 'Ja' : 'Nej'}</span></p>
-                <p>VAPID_PRIVATE_KEY tillgänglig: <span className="text-foreground">{backendConfig?.hasPrivateKey ? 'Ja' : 'Nej'}</span></p>
-                <p>Backend URL tillgänglig: <span className="text-foreground">{backendConfig?.hasSupabaseUrl ? 'Ja' : 'Nej'}</span></p>
-                <p>Service role key tillgänglig: <span className="text-foreground">{backendConfig?.hasServiceRoleKey ? 'Ja' : 'Nej'}</span></p>
                 <p className="break-all">VAPID public key: <span className="text-foreground">{backendConfig?.vapidPublicKey ?? '—'}</span></p>
               </div>
             </section>
