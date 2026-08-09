@@ -218,7 +218,7 @@ const Index = () => {
           {/* Vinjett för nattkänsla över kartan */}
           <div
             className="pointer-events-none absolute inset-0 z-[400]"
-            style={{ background: 'radial-gradient(120% 90% at 50% 45%, transparent 45%, hsl(var(--ca-base)) 100%)' }}
+            style={{ background: 'radial-gradient(120% 90% at 50% 45%, transparent 45%, hsl(var(--ca-base) / 0.45) 100%)' }}
           />
 
           {/* Mobile: show list button */}
