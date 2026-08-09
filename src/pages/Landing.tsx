@@ -13,7 +13,7 @@ import LandingFooter from '@/components/landing/LandingFooter';
 
 const Landing = () => {
   useSEO({
-    title: 'CrimeAlert — Livekarta för polisärenden och olyckor i Sverige',
+    title: 'CrimeAlert — Livekarta över polishändelser i Sverige',
     description:
       'Följ aktuella polisärenden, olyckor och samhällshändelser i realtid på en interaktiv karta. Sök kommun, filtrera kategori och få notiser.',
     canonical: 'https://crimealert.se/',

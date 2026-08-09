@@ -1,8 +1,10 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Cookies = () => {
+  useSEO({ title: 'Cookies | CrimeAlert', description: 'Vilka cookies CrimeAlert använder, varför de behövs och hur du ändrar dina inställningar i webbläsaren.', canonical: 'https://crimealert.se/cookies' });
   const navigate = useNavigate();
 
   return (

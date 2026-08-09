@@ -1,8 +1,10 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Sekretesspolicy = () => {
+  useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar in, använder och skyddar CrimeAlert dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
   const navigate = useNavigate();
 
   return (
