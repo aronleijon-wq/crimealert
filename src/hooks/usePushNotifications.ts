@@ -15,9 +15,6 @@ import {
 interface BackendPushConfig {
   vapidPublicKey: string | null;
   hasPublicKey: boolean;
-  hasPrivateKey: boolean;
-  hasSupabaseUrl: boolean;
-  hasServiceRoleKey: boolean;
 }
 
 interface DatabaseSubscriptionRow {
