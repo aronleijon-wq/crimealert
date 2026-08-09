@@ -289,19 +289,38 @@ const sanitizeHTML = (str: string): string => {
   return div.innerHTML;
 };
 
-const P = {
+const P_DARK = {
   text: '#eef1f5',
   dim: '#8b96a3',
   faint: '#5d6874',
   line: 'rgba(255,255,255,0.08)',
   lineSoft: 'rgba(255,255,255,0.05)',
   panel: 'rgba(255,255,255,0.035)',
+  cell: 'hsl(213,27%,6%)',
   red: '#e04a4a',
   amber: '#e08a3c',
   green: '#3fbf7f',
 };
 
+const P_LIGHT = {
+  text: '#111827',
+  dim: '#4b5563',
+  faint: '#6b7280',
+  line: 'rgba(17,24,39,0.12)',
+  lineSoft: 'rgba(17,24,39,0.07)',
+  panel: 'rgba(17,24,39,0.035)',
+  cell: '#ffffff',
+  red: '#c92a2a',
+  amber: '#b45309',
+  green: '#177245',
+};
+
+const isLightMode = () =>
+  typeof document !== 'undefined' && !document.documentElement.classList.contains('dark');
+
 const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) => {
+  const P = isLightMode() ? P_LIGHT : P_DARK;
+
   const config = incidentTypeConfig[inc.type];
   const risk = riskConfig[inc.risk];
   const riskColor = inc.risk === 'high' ? P.red : inc.risk === 'medium' ? P.amber : P.green;
