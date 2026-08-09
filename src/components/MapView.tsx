@@ -386,14 +386,20 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
           ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;">🔒 Detaljerad beskrivning kräver Pro</p>`
           : ''}
 
-      ${inc.image_url ? `
+      ${(() => {
+        const imgUrl = safeImageUrl(inc.image_url);
+        if (!imgUrl) return '';
+        const attrUrl = sanitizeHTML(imgUrl);
+        const jsUrl = sanitizeHTML(encodeURIComponent(imgUrl));
+        return `
       <div style="margin-bottom:${sz(10,6)}px;">
-        <img src="${sanitizeHTML(inc.image_url)}" alt="Rapportbild"
+        <img src="${attrUrl}" alt="Rapportbild"
           style="width:100%;max-height:${sz(120,80)}px;object-fit:cover;border-radius:4px;border:1px solid ${P.line};cursor:pointer;"
-          onclick="window.__crimeAlertLightbox='${sanitizeHTML(inc.image_url)}';window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
+          onclick="window.__crimeAlertLightbox=decodeURIComponent('${jsUrl}');window.dispatchEvent(new CustomEvent('crimealert-lightbox'))" />
         <div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.faint};margin-top:4px;text-align:center;letter-spacing:0.1em;">KLICKA FÖR ATT FÖRSTORA</div>
       </div>
-      ` : ''}
+      `;
+      })()}
 
       ${isPremium && extractedDetails.length > 0 ? `
       <div style="display:flex;flex-wrap:wrap;gap:${sz(4,3)}px;margin-bottom:${sz(11,6)}px;">
