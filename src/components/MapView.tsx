@@ -402,19 +402,19 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       `}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:${P.line};border:1px solid ${P.line};border-radius:4px;overflow:hidden;margin-bottom:${sz(8,5)}px;">
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Område')}<br/>
           <span style="font-size:${sz(11,9)}px;font-weight:600;color:${P.text};">${safeArea}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Tidpunkt')}<br/>
           <span style="font-family:${mono};font-size:${sz(10.5,8.5)}px;color:${P.text};">${formatTime(inc.time)}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Typ')}<br/>
           <span style="font-size:${sz(11,9)}px;color:${P.text};">${safeConfigLabel}</span>
         </div>
-        <div style="background:hsl(213,27%,6%);padding:${sz(7,4)}px ${sz(9,6)}px;">
+        <div style="background:${P.cell};padding:${sz(7,4)}px ${sz(9,6)}px;">
           ${label('Status')}<br/>
           ${isPremium
             ? `<span style="font-size:${sz(11,9)}px;font-weight:600;color:${statusColor};">${statusLabel}</span>`
