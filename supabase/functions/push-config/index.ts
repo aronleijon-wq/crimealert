@@ -10,13 +10,12 @@ Deno.serve(async (req) => {
 
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') ?? null;
 
+  // Only expose the public VAPID key. Internal secret-configuration state
+  // must never be disclosed to unauthenticated callers.
   return new Response(
     JSON.stringify({
       vapidPublicKey,
       hasPublicKey: Boolean(vapidPublicKey),
-      hasPrivateKey: Boolean(Deno.env.get('VAPID_PRIVATE_KEY')),
-      hasSupabaseUrl: Boolean(Deno.env.get('SUPABASE_URL')),
-      hasServiceRoleKey: Boolean(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')),
     }),
     {
       headers: {

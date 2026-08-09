@@ -293,6 +293,14 @@ Deno.serve(async (req) => {
       requestUserId = data.user.id;
     }
 
+    // Live broadcasts may only be triggered internally (service role key).
+    if (mode !== 'test' && !isInternalCall) {
+      return new Response(JSON.stringify({ error: 'Ej behörig.' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (mode === 'test') {
       if (!requestUserId) {
         return new Response(JSON.stringify({ error: 'Du måste vara inloggad för att skicka testnotis.' }), {
