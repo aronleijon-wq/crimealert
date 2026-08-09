@@ -520,7 +520,7 @@ const Analysis = () => {
                   <div className="mb-6">
                     <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
                       Tidsprofil – Brottstyp per timme
-                    </h3>
+                    </h2>
                     <p className="text-[10px] text-muted-foreground mb-3">Visar när på dygnet olika händelsetyper är vanligast</p>
                     {stats?.timeProfileData && stats.timeProfileTypes.length > 0 ? (
                       <ResponsiveContainer width="100%" height={260}>
