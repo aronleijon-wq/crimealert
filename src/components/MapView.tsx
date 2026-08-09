@@ -761,7 +761,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         .incident-popup .leaflet-popup-content-wrapper {
           border-radius: 6px;
           padding: 4px;
-          background: linear-gradient(180deg, hsl(var(--ca-panel-3)) 0%, hsla(212,26%,3%,0.97) 100%);
+          background: linear-gradient(180deg, hsla(215,27%,9%,0.96) 0%, hsla(212,26%,3%,0.97) 100%);
           border: 1px solid rgba(255,255,255,0.1);
           box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(224,74,74,0.08),
             inset 0 1px 0 rgba(255,255,255,0.05);
