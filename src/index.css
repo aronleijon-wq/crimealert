@@ -292,6 +292,77 @@
   font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
 
+/* ==========================================================
+   Ljust läge — samma formspråk, vita ytor
+   ========================================================== */
+html:not(.dark) .ca-dark {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 0 72% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 26 80% 46%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 220 16% 96%;
+  --muted-foreground: 215 14% 42%;
+  --accent: 220 16% 96%;
+  --accent-foreground: 222 47% 11%;
+  --border: 220 13% 88%;
+  --input: 220 13% 88%;
+  --ring: 0 72% 48%;
+
+  --ca-base: 0 0% 100%;
+  --ca-base-2: 220 20% 99%;
+  --ca-base-3: 220 18% 97%;
+  --ca-panel: 0 0% 100%;
+  --ca-panel-2: 220 20% 98%;
+  --ca-panel-3: 220 16% 96%;
+  --ca-text: 222 47% 11%;
+  --ca-text-2: 215 16% 36%;
+  --ca-text-3: 215 14% 52%;
+  --ca-red: 0 72% 48%;
+  --ca-amber: 26 80% 44%;
+  --ca-blue: 223 82% 52%;
+  --ca-steel: 205 30% 40%;
+  --ca-line: 220 13% 12% / 0.1;
+  --ca-line-strong: 220 13% 12% / 0.18;
+
+  background-color: hsl(var(--ca-base));
+  color: hsl(var(--ca-text));
+}
+
+html:not(.dark) .ca-panel {
+  background: linear-gradient(180deg, hsla(220, 20%, 100%, 0.9) 0%, hsla(220, 18%, 97%, 0.8) 100%);
+  border: 1px solid hsl(var(--ca-line));
+}
+html:not(.dark) .ca-glass {
+  background: hsla(0, 0%, 100%, 0.72);
+  border: 1px solid hsl(var(--ca-line));
+}
+html:not(.dark) .ca-panel-hover:hover {
+  border-color: hsl(var(--ca-line-strong));
+  background-color: hsla(220, 20%, 98%, 0.9);
+}
+html:not(.dark) .ca-gridlines {
+  background-image:
+    linear-gradient(hsla(220, 20%, 20%, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(220, 20%, 20%, 0.045) 1px, transparent 1px);
+}
+html:not(.dark) .ca-vignette {
+  background: radial-gradient(115% 85% at 50% 0%, transparent 30%, hsla(220, 20%, 92%, 0.55) 78%, hsl(var(--ca-base)) 100%);
+}
+html:not(.dark) .ca-fog,
+html:not(.dark) .ca-scan {
+  opacity: 0.35;
+}
+html:not(.dark) .ca-tiles {
+  filter: saturate(0.85) contrast(1.02) brightness(1.02);
+}
+
+
 /* Glasartade, halvtransparenta ytor */
 .ca-panel {
   background: linear-gradient(180deg, hsla(215, 27%, 9%, 0.55) 0%, hsla(210, 30%, 5%, 0.4) 100%);
