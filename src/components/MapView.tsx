@@ -283,11 +283,27 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   return details;
 };
 
-const sanitizeHTML = (str: string): string => {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+const sanitizeHTML = (str: string): string =>
+  String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+// Only allow images served from our own public storage bucket.
+const safeImageUrl = (value?: string | null): string | null => {
+  if (!value) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.protocol !== 'https:') return null;
+    if (!url.pathname.includes('/storage/v1/object/public/community-reports/')) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 };
+
 
 const P_DARK = {
   text: '#eef1f5',
