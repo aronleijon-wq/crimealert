@@ -5,8 +5,10 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 interface IncidentCardProps {
   incident: Incident;
   selected: boolean;
+  index?: number;
   onClick: () => void;
 }
+
 
 const timeAgo = (dateStr: string) => {
   try {
@@ -35,7 +37,7 @@ const timeAgo = (dateStr: string) => {
   }
 };
 
-const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
+const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardProps) => {
   const typeConf = incidentTypeConfig[incident.type];
   const riskConf = riskConfig[incident.risk];
   const { isPremium } = useIsPremium();
@@ -43,52 +45,68 @@ const IncidentCard = ({ incident, selected, onClick }: IncidentCardProps) => {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-3 border-b border-border transition-all ${
-        selected ? 'bg-muted border-l-2 border-l-primary' : 'hover:bg-muted/50 border-l-2 border-l-transparent'
-      }`}
+      style={{ animationDelay: `${Math.min(index, 14) * 35}ms` }}
+      className={`group relative w-full text-left px-3 py-2.5 border-b border-[hsla(0,0%,100%,0.06)] overflow-hidden ca-rise
+        transition-[background-color,border-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${selected
+          ? 'bg-[hsla(0,68%,52%,0.07)]'
+          : 'hover:bg-[hsla(0,0%,100%,0.03)]'
+        }`}
     >
+      {/* vänsterkant / statusskena */}
+      <span
+        className={`absolute left-0 top-0 bottom-0 w-[2px] transition-all duration-500 ${
+          selected
+            ? 'bg-[hsl(var(--ca-red))] shadow-[0_0_12px_hsl(var(--ca-red)/0.8)]'
+            : 'bg-transparent group-hover:bg-[hsla(0,0%,100%,0.14)]'
+        }`}
+      />
+
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs">{typeConf.icon}</span>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[11px] leading-none">{typeConf.icon}</span>
+          <span className="ca-mono text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--ca-text-3))] truncate">
             {typeConf.label}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {incident.status === 'active' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-dot" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
           )}
           {isPremium ? (
-            <span className={`text-[10px] font-mono font-semibold ${riskConf.colorClass}`}>
+            <span className={`ca-mono text-[9px] uppercase tracking-[0.14em] font-semibold ${riskConf.colorClass}`}>
               {riskConf.label}
             </span>
           ) : (
-            <span className="text-[10px] font-mono text-muted-foreground/60 flex items-center gap-1 relative">
+            <span className="ca-mono text-[9px] uppercase tracking-[0.14em] text-[hsl(var(--ca-text-3))] flex items-center gap-1">
               <Lock className="w-2.5 h-2.5 text-destructive/60 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" />
-              <span>Risk</span>
+              Risk
             </span>
           )}
         </div>
       </div>
 
-      <h3 className="text-sm font-semibold text-foreground mb-1 leading-tight">{incident.title}</h3>
+      <h3 className="ca-display text-[13px] leading-[1.25] mb-1 text-[hsl(var(--ca-text))] transition-colors duration-300 group-hover:text-white">
+        {incident.title}
+      </h3>
 
       {isPremium && (
-        <p className="text-[10px] text-muted-foreground mb-1.5 line-clamp-2">{incident.description}</p>
+        <p className="text-[10.5px] leading-relaxed text-[hsl(var(--ca-text-3))] mb-1.5 line-clamp-2">{incident.description}</p>
       )}
 
-      <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-0.5">
-          <MapPin className="w-3 h-3" />
+      <div className="flex items-center gap-3 ca-mono text-[9px] tracking-[0.1em] text-[hsl(var(--ca-text-3))]">
+        <span className="flex items-center gap-1 truncate">
+          <MapPin className="w-2.5 h-2.5 shrink-0" />
           {incident.area}
         </span>
-        <span className="flex items-center gap-0.5">
-          <Clock className="w-3 h-3" />
+        <span className="flex items-center gap-1 shrink-0">
+          <Clock className="w-2.5 h-2.5" />
           {timeAgo(incident.time)}
         </span>
       </div>
     </button>
   );
 };
+
 
 export default IncidentCard;

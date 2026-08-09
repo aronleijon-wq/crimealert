@@ -97,7 +97,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   };
 
   return (
-    <div className="border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="border-b border-[hsla(0,0%,100%,0.07)] bg-[hsl(var(--ca-base-2))]/80 backdrop-blur-md">
       <div className="flex items-center gap-1.5 px-3 py-1.5 overflow-x-auto scrollbar-none">
         {/* Municipality search */}
         <div className="relative shrink-0" ref={dropdownRef}>
@@ -122,7 +122,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 whitespace-nowrap border border-transparent hover:border-border"
+            className="ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] text-[hsl(var(--ca-text-3))] hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text))] transition-all duration-300 whitespace-nowrap border border-transparent hover:border-[hsla(0,0%,100%,0.08)]"
             title="Sök kommun">
               <Search className="w-3 h-3" />
               <span className="hidden sm:inline">Sök kommun</span>
@@ -158,12 +158,13 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
         <button
           onClick={() => setFiltersVisible(!filtersVisible)}
           className={`
-            flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
-            transition-all duration-150 whitespace-nowrap select-none border
+            ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] shrink-0
+            transition-all duration-300 whitespace-nowrap select-none border
             ${filtersVisible ?
-          'bg-muted text-foreground border-border shadow-sm' :
-          'text-muted-foreground hover:bg-muted hover:text-foreground border-transparent hover:border-border'}
+          'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
+          'text-[hsl(var(--ca-text-3))] hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] border-transparent hover:border-[hsla(0,0%,100%,0.08)]'}
           `}>
+
           <SlidersHorizontal className="w-3.5 h-3.5" />
           <span>Filter</span>
           {!filtersVisible && activeFilterCount > 0 &&
@@ -192,14 +193,15 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                   onToggleFilter(type);
                 }}
                 className={`
-                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
-                    transition-all duration-150 whitespace-nowrap select-none border
+                    ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] shrink-0
+                    transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap select-none border
                     ${isLocked ?
                 'bg-primary/5 text-primary border-primary/15 hover:bg-primary/10' :
                 active ?
-                'bg-muted text-foreground border-border shadow-sm' :
-                'text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+                'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
+                'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsla(0,0%,100%,0.08)]'}
                   `}
+
                 title={isLocked ? 'Logga in gratis för att se Övrigt' : config.label}>
                   {isLocked ?
                 <Lock className="w-3 h-3 text-destructive/70 shrink-0 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> :
@@ -226,14 +228,15 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
               onToggleCommunityReports();
             }}
             className={`
-                flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium shrink-0
-                transition-all duration-150 whitespace-nowrap select-none border
+                ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] shrink-0
+                transition-all duration-300 whitespace-nowrap select-none border
                 ${!isPremium ?
             'bg-secondary/5 text-secondary border-secondary/15 hover:bg-secondary/10' :
             showCommunityReports ?
-            'bg-muted text-foreground border-border shadow-sm' :
-            'text-muted-foreground/50 border-transparent hover:bg-muted/40 hover:text-muted-foreground hover:border-border/50'}
+            'bg-white/[0.06] text-[hsl(var(--ca-text))] border-[hsla(0,0%,100%,0.12)]' :
+            'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-white/[0.03] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsla(0,0%,100%,0.08)]'}
               `}
+
             title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Medborgarrapporter'}>
               {!isPremium ?
             <Lock className="w-3 h-3 text-yellow-500 shrink-0 drop-shadow-[0_0_4px_rgba(234,179,8,0.5)]" /> :
