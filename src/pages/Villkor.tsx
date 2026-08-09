@@ -1,8 +1,10 @@
 import Header from '@/components/Header';
+import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Villkor = () => {
+  useSEO({ title: 'Användarvillkor | CrimeAlert', description: 'Villkoren för att använda CrimeAlert: tjänstens omfattning, ansvar, konto, betalning och uppsägning.', canonical: 'https://crimealert.se/villkor' });
   const navigate = useNavigate();
 
   return (

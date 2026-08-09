@@ -425,7 +425,7 @@ const Analysis = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-card border border-border rounded-lg p-4">
-                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per dag</h3>
+                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per dag</h2>
                     {stats?.trendData?.length ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <AreaChart data={stats.trendData}>
@@ -450,7 +450,7 @@ const Analysis = () => {
                   </div>
 
                   <div className="bg-card border border-border rounded-lg p-4">
-                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Fördelning per typ</h3>
+                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Fördelning per typ</h2>
                     {stats?.typeData?.length ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
@@ -482,7 +482,7 @@ const Analysis = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-card border border-border rounded-lg p-4">
-                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per timme</h3>
+                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per timme</h2>
                     {stats?.hourlyData?.some(h => h.antal > 0) ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={stats.hourlyData}>
@@ -518,9 +518,9 @@ const Analysis = () => {
 
                   {/* Time Profiles Chart */}
                   <div className="mb-6">
-                    <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
+                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
                       Tidsprofil – Brottstyp per timme
-                    </h3>
+                    </h2>
                     <p className="text-[10px] text-muted-foreground mb-3">Visar när på dygnet olika händelsetyper är vanligast</p>
                     {stats?.timeProfileData && stats.timeProfileTypes.length > 0 ? (
                       <ResponsiveContainer width="100%" height={260}>
@@ -547,7 +547,7 @@ const Analysis = () => {
                     <div>
                       <div className="flex items-center gap-2 mb-3">
                         <Lightbulb className="w-3.5 h-3.5 text-cr-orange" />
-                        <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Säsongsvarningar & insikter</h3>
+                        <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Säsongsvarningar &amp; insikter</h2>
                       </div>
                       <div className="space-y-3">
                         {stats.seasonalWarnings.map((w, i) => (

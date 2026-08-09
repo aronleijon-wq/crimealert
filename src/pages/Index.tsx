@@ -21,9 +21,9 @@ const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', '
 
 const Index = () => {
   useSEO({
-    title: 'CrimeAlert — Realtidskarta över brott och polishändelser i Sverige',
+    title: 'Livekarta över polishändelser | CrimeAlert',
     description: 'Se polishändelser, brand, trafikolyckor och brott i realtid på kartan. Trygghetskarta för hela Sverige med live-uppdateringar.',
-    canonical: 'https://crimealert.se/',
+    canonical: 'https://crimealert.se/karta',
   });
   const { isPremium } = useIsPremium();
   const { user } = useAuth();
@@ -132,6 +132,7 @@ const Index = () => {
 
   return (
     <div className="ca-dark h-[100dvh] flex flex-col overflow-hidden">
+      <h1 className="sr-only">Livekarta över polishändelser och olyckor i Sverige</h1>
       {!isFullscreen &&
       <>
           <Header />
@@ -171,6 +172,7 @@ const Index = () => {
                 onClick={refetch}
                 disabled={loading}
                 className="p-1 rounded hover:bg-white/5 text-muted-foreground transition disabled:opacity-50"
+                aria-label="Uppdatera händelser"
                 title="Uppdatera">
                 
                   <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
@@ -179,6 +181,7 @@ const Index = () => {
               <button
                 onClick={() => setMobileListOpen(false)}
                 className="p-1 rounded hover:bg-white/5 text-muted-foreground"
+                aria-label="Stäng händelselistan"
                 title="Stäng listan">
                 
                     <X className="w-4 h-4" />
@@ -237,6 +240,7 @@ const Index = () => {
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="absolute right-14 z-[1000] ca-glass rounded-md p-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors duration-300"
             style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}
+            aria-label={isFullscreen ? 'Avsluta fullskärm' : 'Visa kartan i fullskärm'}
             title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}>
             
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
