@@ -8,7 +8,7 @@ const Villkor = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="ca-dark h-screen flex flex-col bg-background">
       <Header />
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -17,8 +17,9 @@ const Villkor = () => {
 
             
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Användarvillkor</h1>
-              <p className="text-xs text-muted-foreground">Senast uppdaterad: 7 mars 2026</p>
+              <p className="ca-eyebrow">// användarvillkor</p>
+              <h1 className="ca-display text-xl sm:text-2xl text-foreground">Användarvillkor</h1>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
             </div>
           </div>
 
