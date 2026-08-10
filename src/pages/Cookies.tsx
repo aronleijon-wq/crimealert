@@ -8,17 +8,18 @@ const Cookies = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="ca-dark h-screen flex flex-col bg-background">
       <Header />
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-[2px] bg-primary/10 border border-border flex items-center justify-center">
               <Cookie className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Cookies</h1>
-              <p className="text-xs text-muted-foreground">Senast uppdaterad: 7 mars 2026</p>
+              <p className="ca-eyebrow">// cookies</p>
+              <h1 className="ca-display text-xl sm:text-2xl text-foreground">Cookies</h1>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
             </div>
           </div>
 
@@ -36,7 +37,7 @@ const Cookies = () => {
               <h2 className="text-base font-semibold text-foreground mb-2">Vilka typer av cookies använder vi?</h2>
 
               <div className="space-y-4">
-                <div className="bg-card border border-border rounded-lg p-4">
+                <div className="ca-tac ca-tac-top p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-1">Nödvändiga cookies</h3>
                   <p>
                     Dessa cookies krävs för att webbplatsen ska fungera och kan inte stängas av. De inkluderar t.ex. cookies
@@ -45,7 +46,7 @@ const Cookies = () => {
                   </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-4">
+                <div className="ca-tac ca-tac-top p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-1">Analyscookies</h3>
                   <p>
                     Vi använder analyskookies (bland annat Google Analytics) för att förstå hur besökare interagerar med vår
@@ -54,7 +55,7 @@ const Cookies = () => {
                   </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-4">
+                <div className="ca-tac ca-tac-top p-4">
                   <h3 className="text-sm font-semibold text-foreground mb-1">Marknadsföringscookies</h3>
                   <p>
                     CrimeAlert använder Google AdSense för att visa annonser. Google och dess annonsnätverk kan placera cookies

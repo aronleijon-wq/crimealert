@@ -8,17 +8,18 @@ const Sekretesspolicy = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="ca-dark h-screen flex flex-col bg-background">
       <Header />
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-[2px] bg-primary/10 border border-border flex items-center justify-center">
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Sekretesspolicy</h1>
-              <p className="text-xs text-muted-foreground">Senast uppdaterad: 7 mars 2026</p>
+              <p className="ca-eyebrow">// sekretesspolicy</p>
+              <h1 className="ca-display text-xl sm:text-2xl text-foreground">Sekretesspolicy</h1>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
             </div>
           </div>
 
