@@ -457,3 +457,52 @@ html:not(.dark) .ca-tiles {
   }
   .ca-panel-hover:hover { transform: none; }
 }
+
+/* ==========================================================
+   Tactical / HUD system — Gotham-inspired shared primitives
+   ========================================================== */
+.ca-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: hsl(var(--ca-red));
+}
+.ca-meta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: hsl(var(--ca-text-3));
+}
+.ca-tac {
+  border-radius: 2px;
+  border: 1px solid hsl(var(--ca-line));
+  background: hsla(215, 27%, 9%, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html:not(.dark) .ca-tac {
+  background: hsla(0, 0%, 100%, 0.7);
+}
+.ca-tac-top {
+  box-shadow: inset 0 2px 0 0 hsl(var(--ca-red));
+}
+.ca-hud {
+  background-image:
+    linear-gradient(hsla(0, 0%, 100%, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(0, 0%, 100%, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+html:not(.dark) .ca-hud {
+  background-image:
+    linear-gradient(hsla(220, 20%, 20%, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, hsla(220, 20%, 20%, 0.06) 1px, transparent 1px);
+}
+.ca-crosshair::before,
+.ca-crosshair::after {
+  content: '';
+  position: absolute;
+  background: hsl(var(--ca-line-strong));
+}
