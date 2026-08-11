@@ -113,13 +113,23 @@ const LandingNav = () => {
               {l.label}
             </Link>
           ))}
-          <Link
-            to="/auth?mode=signup"
-            onClick={() => setOpen(false)}
-            className="mt-2 text-center py-2.5 rounded-md bg-[hsl(var(--ca-red))] text-white text-sm font-medium"
-          >
-            Skapa konto
-          </Link>
+          {user ? (
+            <Link
+              to="/account"
+              onClick={() => setOpen(false)}
+              className="mt-2 text-center py-2.5 rounded-md bg-[hsl(var(--ca-red))] text-white text-sm font-medium"
+            >
+              Min profil
+            </Link>
+          ) : (
+            <Link
+              to="/auth?mode=signup"
+              onClick={() => setOpen(false)}
+              className="mt-2 text-center py-2.5 rounded-md bg-[hsl(var(--ca-red))] text-white text-sm font-medium"
+            >
+              Skapa konto
+            </Link>
+          )}
         </div>
       )}
     </header>

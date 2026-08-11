@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
-const FinalCTA = () => (
+const FinalCTA = () => {
+  const { user } = useAuth();
+  return (
   <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsl(var(--ca-line))] overflow-hidden">
     <div
       className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
