@@ -26,14 +26,15 @@ const FinalCTA = () => {
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Link>
         <Link
-          to="/auth?mode=signup"
+          to={user ? '/account' : '/auth?mode=signup'}
           className="inline-flex items-center px-7 py-4 rounded-md border border-[hsl(var(--ca-line-strong))] text-sm hover:bg-[hsl(var(--ca-panel-2))] transition"
         >
-          Skapa konto
+          {user ? 'Min profil' : 'Skapa konto'}
         </Link>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default FinalCTA;
