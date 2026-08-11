@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const links = [
   { to: '/karta', label: 'Karta' },
