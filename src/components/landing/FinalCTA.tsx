@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
-const FinalCTA = () => (
+const FinalCTA = () => {
+  const { user } = useAuth();
+  return (
   <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsl(var(--ca-line))] overflow-hidden">
     <div
       className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
@@ -23,14 +26,15 @@ const FinalCTA = () => (
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Link>
         <Link
-          to="/auth?mode=signup"
+          to={user ? '/account' : '/auth?mode=signup'}
           className="inline-flex items-center px-7 py-4 rounded-md border border-[hsl(var(--ca-line-strong))] text-sm hover:bg-[hsl(var(--ca-panel-2))] transition"
         >
-          Skapa konto
+          {user ? 'Min profil' : 'Skapa konto'}
         </Link>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default FinalCTA;
