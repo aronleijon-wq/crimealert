@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
-const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com"];
+const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com", "mykhailo@inphiz.com", "kcleijon@gmail.com"];
 const DELAY_MS = 15 * 60 * 1000; // 15 minutes
 
 // ─── In-memory caches (persist within isolate lifecycle) ───────────────────────
