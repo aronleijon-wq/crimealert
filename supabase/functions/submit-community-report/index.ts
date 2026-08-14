@@ -14,6 +14,7 @@ const FREE_PREMIUM_EMAILS = [
   "stefanlasse67@gmail.com",
   "kristensson91@hotmail.com",
   "mykhailo@inphiz.com",
+  "kcleijon@gmail.com",
 ];
 
 const CATEGORIES = [
