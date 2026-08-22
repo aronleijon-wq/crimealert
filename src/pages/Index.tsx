@@ -11,6 +11,7 @@ import MobileSignupBar from '@/components/MobileSignupBar';
 import { mockIncidents, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
+import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon } from 'lucide-react';
@@ -44,6 +45,7 @@ const Index = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
   const { reports: communityReports } = useCommunityReports();
+  const { incidents: trafikverketIncidents } = useTrafikverketEvents();
 
   // Update filters when premium/login status changes — activate all allowed filters
   useEffect(() => {
