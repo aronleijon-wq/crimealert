@@ -46,6 +46,11 @@ function translate(code?: string): string | null {
   return MESSAGE_LABELS[code] || code.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+const ACUTE_CODES = [
+  'accident', 'fire', 'brokendown', 'obstruction', 'animal', 'object',
+  'queue', 'slowtraffic', 'roadclosed', 'slippery', 'snow', 'flooding',
+];
+
 function riskFrom(severity?: string): 'low' | 'medium' | 'high' {
   const s = (severity || '').toLowerCase();
   if (s.includes('mycket stor') || s.includes('stor')) return 'high';
@@ -113,6 +118,15 @@ Deno.serve(async (req) => {
 
         const time = d?.StartTime || d?.CreationTime || sit?.PublicationTime;
         if (!time) continue;
+
+        const code = String(d?.MessageCodeValue || '');
+        // Skip permanent/irrelevant entries (färjelägen m.m.)
+        if (/ferry|bridgeSwing/i.test(code)) continue;
+
+        const startedAt = new Date(time).getTime();
+        const isAcute = ACUTE_CODES.some((c) => code.toLowerCase().includes(c));
+        // Långvariga vägarbeten filtreras bort — behåll akuta och det som startat senaste 7 dygnen
+        if (!isAcute && startedAt < Date.now() - 7 * 24 * 60 * 60 * 1000) continue;
 
         const road = d?.RoadNumber ? `${d.RoadNumber} — ` : '';
         const label = translate(d?.MessageCodeValue) || d?.MessageType || 'Trafikstörning';
