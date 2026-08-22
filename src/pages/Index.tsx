@@ -111,8 +111,8 @@ const Index = () => {
       if (isNaN(t)) return true;
       // Community reports: visible for 24 hours
       if (isCommunity) return t >= cutoff24h;
-      // Trafikverket: öppna data, realtid för alla, visas i 24h
-      if (isTrafikverket) return t >= cutoff24h;
+      // Trafikverket: pågående störningar visas alltid (öppna data, realtid för alla)
+      if (isTrafikverket) return true;
       // Hard 7-day cutoff for ALL incidents including severe crimes
       if (t < cutoff7d) return false;
       // Non-premium delay
