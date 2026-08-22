@@ -27,7 +27,7 @@ const TYPE_COLORS: Record<IncidentType, string> = {
 };
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, showCommunityReports, onToggleCommunityReports, onSearchLocation }: FilterBarProps) => {
-  const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
+  const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket'];
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const isLoggedIn = !!user;

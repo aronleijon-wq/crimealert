@@ -17,7 +17,7 @@ import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, Sh
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
-const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other'];
+const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket'];
 
 const Index = () => {
   useSEO({
