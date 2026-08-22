@@ -127,8 +127,10 @@ Deno.serve(async (req) => {
 
         const startedAt = new Date(time).getTime();
         const isAcute = ACUTE_CODES.some((c) => code.toLowerCase().includes(c));
-        // Långvariga vägarbeten filtreras bort — behåll akuta och det som startat senaste 7 dygnen
-        if (!isAcute && startedAt < Date.now() - 7 * 24 * 60 * 60 * 1000) continue;
+        // Akuta störningar: bara senaste dygnet. Övrigt (vägarbeten m.m.): senaste 7 dygnen.
+        // Fleråriga vägarbeten/avstängningar hör inte hemma på en realtidskarta.
+        const maxAge = (isAcute ? 24 : 7 * 24) * 60 * 60 * 1000;
+        if (startedAt < Date.now() - maxAge) continue;
 
         const road = d?.RoadNumber ? `${d.RoadNumber} — ` : '';
         const label = translate(d?.MessageCodeValue) || d?.MessageType || 'Trafikstörning';
