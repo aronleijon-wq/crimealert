@@ -17,6 +17,35 @@ function parsePoint(wkt?: string): { lat: number; lng: number } | null {
   return { lat, lng };
 }
 
+const MESSAGE_LABELS: Record<string, string> = {
+  roadworks: 'Vägarbete',
+  roadClosed: 'Vägen avstängd',
+  accident: 'Trafikolycka',
+  trafficAccident: 'Trafikolycka',
+  vehicleFire: 'Fordonsbrand',
+  brokenDownVehicle: 'Stillastående fordon',
+  obstruction: 'Hinder på vägen',
+  animalOnTheRoad: 'Djur på vägen',
+  objectOnTheRoad: 'Föremål på vägen',
+  queue: 'Kö',
+  slowTraffic: 'Långsam trafik',
+  speedRestrictionInOperation: 'Nedsatt hastighet',
+  laneClosures: 'Körfält avstängt',
+  laneClosed: 'Körfält avstängt',
+  followDiversionSigns: 'Omledning',
+  slipperyRoad: 'Halka',
+  snowOnTheRoad: 'Snö på vägen',
+  flooding: 'Översvämning',
+  restrictionsForVehicles: 'Fordonsrestriktioner',
+  ferryServiceSuspended: 'Färjetrafik inställd',
+  bridgeSwingInOperation: 'Broöppning',
+};
+
+function translate(code?: string): string | null {
+  if (!code) return null;
+  return MESSAGE_LABELS[code] || code.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 function riskFrom(severity?: string): 'low' | 'medium' | 'high' {
   const s = (severity || '').toLowerCase();
   if (s.includes('mycket stor') || s.includes('stor')) return 'high';
@@ -44,12 +73,19 @@ Deno.serve(async (req) => {
 
     const query = `<REQUEST>
   <LOGIN authenticationkey="${key}" />
-  <QUERY objecttype="Situation" namespace="road.trafficinfo" schemaversion="1.6" limit="600">
+  <QUERY objecttype="Situation" namespace="road.trafficinfo" schemaversion="1.6" limit="800">
     <FILTER>
-      <GT name="Deviation.CreationTime" value="$dateadd(-3.00:00:00)" />
+      <AND>
+        <LTE name="Deviation.StartTime" value="$now" />
+        <OR>
+          <GTE name="Deviation.EndTime" value="$now" />
+          <NOTEXISTS name="Deviation.EndTime" value="true" />
+        </OR>
+      </AND>
     </FILTER>
   </QUERY>
 </REQUEST>`;
+
 
     const res = await fetch(API_URL, {
       method: 'POST',
@@ -70,17 +106,17 @@ Deno.serve(async (req) => {
     for (const sit of situations) {
       const deviations = sit?.Deviation ?? [];
       for (const d of deviations) {
-        const point =
-          parsePoint(d?.Geometry?.WGS84) ||
-          parsePoint(d?.Geometry?.Point?.WGS84) ||
-          parsePoint(sit?.Deviation?.[0]?.Geometry?.WGS84);
+        const point = parsePoint(d?.Geometry?.WGS84) || parsePoint(d?.Geometry?.Point?.WGS84);
         if (!point) continue;
 
-        const time = d?.CreationTime || d?.StartTime || sit?.PublicationTime;
+        if (d?.EndTime && new Date(d.EndTime).getTime() < Date.now()) continue;
+
+        const time = d?.StartTime || d?.CreationTime || sit?.PublicationTime;
         if (!time) continue;
 
         const road = d?.RoadNumber ? `${d.RoadNumber} — ` : '';
-        const title = `${road}${d?.MessageCodeValue || d?.MessageType || 'Trafikstörning'}`;
+        const label = translate(d?.MessageCodeValue) || d?.MessageType || 'Trafikstörning';
+        const title = `${road}${label}`;
 
         events.push({
           id: `tv-${d?.Id || sit?.Id}`,
