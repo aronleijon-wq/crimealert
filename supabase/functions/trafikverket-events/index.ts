@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const query = `<REQUEST>
   <LOGIN authenticationkey="${key}" />
-  <QUERY objecttype="Situation" schemaversion="1.5" limit="600">
+  <QUERY objecttype="Situation" namespace="road.trafficinfo" schemaversion="1.5" limit="600">
     <FILTER>
       <GT name="Deviation.CreationTime" value="$dateadd(-3.00:00:00)" />
     </FILTER>
