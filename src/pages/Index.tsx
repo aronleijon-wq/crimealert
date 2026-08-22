@@ -77,12 +77,12 @@ const Index = () => {
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   // Community reports only visible for Pro members on the map/list
   const allIncidents = useMemo(() => {
-    const base = policeIncidents;
+    const base = [...policeIncidents, ...trafikverketIncidents];
     if (isPremium && showCommunityReports) {
       return [...base, ...communityReports];
     }
-    return [...base];
-  }, [policeIncidents, communityReports, isPremium, showCommunityReports]);
+    return base;
+  }, [policeIncidents, trafikverketIncidents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
   // Grova brott som alltid visas på kartan oavsett ålder
@@ -105,11 +105,14 @@ const Index = () => {
     const delayCutoff = isPremium ? Infinity : now - 15 * 60 * 1000;
     return allIncidents.filter((i) => {
       const isCommunity = i.source === 'Medborgarrapport';
+      const isTrafikverket = i.type === 'trafikverket';
       const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
       const t = new Date(normalizedTime).getTime();
       if (isNaN(t)) return true;
       // Community reports: visible for 24 hours
       if (isCommunity) return t >= cutoff24h;
+      // Trafikverket: öppna data, realtid för alla, visas i 24h
+      if (isTrafikverket) return t >= cutoff24h;
       // Hard 7-day cutoff for ALL incidents including severe crimes
       if (t < cutoff7d) return false;
       // Non-premium delay
