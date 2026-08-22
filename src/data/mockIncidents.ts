@@ -1,4 +1,4 @@
-export type IncidentType = 'police' | 'fire' | 'ambulance' | 'traffic' | 'other';
+export type IncidentType = 'police' | 'fire' | 'ambulance' | 'traffic' | 'other' | 'trafikverket';
 export type RiskLevel = 'low' | 'medium' | 'high';
 export type IncidentStatus = 'active' | 'resolved';
 
@@ -108,6 +108,7 @@ export const incidentTypeConfig: Record<IncidentType, { label: string; color: st
   ambulance: { label: 'Ambulans', color: 'hsl(142, 70%, 45%)', icon: '🟢' },
   traffic: { label: 'Trafikolycka', color: 'hsl(25, 100%, 63%)', icon: '🟠' },
   other: { label: 'Övrigt', color: 'hsl(0, 0%, 30%)', icon: '⚫' },
+  trafikverket: { label: 'Trafikverket', color: 'hsl(48, 100%, 55%)', icon: '🟡' },
 };
 
 export const riskConfig: Record<RiskLevel, { label: string; colorClass: string }> = {
