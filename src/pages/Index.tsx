@@ -112,7 +112,13 @@ const Index = () => {
       // Community reports: visible for 24 hours
       if (isCommunity) return t >= cutoff24h;
       // Trafikverket: pågående störningar visas alltid (öppna data, realtid för alla)
-      if (isTrafikverket) return true;
+      if (isTrafikverket) {
+        if (i.endTime) {
+          const end = new Date(i.endTime).getTime();
+          if (!isNaN(end) && end < now) return false;
+        }
+        return true;
+      }
       // Hard 7-day cutoff for ALL incidents including severe crimes
       if (t < cutoff7d) return false;
       // Non-premium delay
