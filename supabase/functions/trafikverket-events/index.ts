@@ -114,7 +114,9 @@ Deno.serve(async (req) => {
         const point = parsePoint(d?.Geometry?.WGS84) || parsePoint(d?.Geometry?.Point?.WGS84);
         if (!point) continue;
 
+        // Avslutade störningar ska aldrig visas
         if (d?.EndTime && new Date(d.EndTime).getTime() < Date.now()) continue;
+        if (sit?.Deleted === true || d?.Deleted === true) continue;
 
         const time = d?.StartTime || d?.CreationTime || sit?.PublicationTime;
         if (!time) continue;
@@ -141,7 +143,8 @@ Deno.serve(async (req) => {
           lng: point.lng,
           area: String(d?.LocationDescriptor || d?.CountyNo?.join?.(', ') || 'Sverige').slice(0, 160),
           time,
-          status: d?.EndTime && new Date(d.EndTime).getTime() < Date.now() ? 'resolved' : 'active',
+          endTime: d?.EndTime || null,
+          status: 'active',
           risk: riskFrom(d?.SeverityText),
           source: 'Trafikverket',
           originalType: d?.MessageType || null,

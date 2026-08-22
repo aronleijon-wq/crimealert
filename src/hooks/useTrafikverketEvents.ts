@@ -40,7 +40,13 @@ export function useTrafikverketEvents() {
           approximate: false,
           originalType: e.originalType || undefined,
           locationPrecision: e.location_precision || 'exact',
-        }));
+          endTime: e.endTime || null,
+        })).filter((i: Incident) => {
+          // Släpp störningar vars sluttid passerat (t.ex. avslutade vägarbeten)
+          if (!i.endTime) return true;
+          const end = new Date(i.endTime).getTime();
+          return isNaN(end) || end > Date.now();
+        });
         mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         setIncidents(mapped);
       } else {
