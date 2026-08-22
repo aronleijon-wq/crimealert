@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         <LTE name="Deviation.StartTime" value="$now" />
         <OR>
           <GTE name="Deviation.EndTime" value="$now" />
-          <NOTEXISTS name="Deviation.EndTime" value="true" />
+          <EXISTS name="Deviation.EndTime" value="false" />
         </OR>
       </AND>
     </FILTER>
