@@ -22,7 +22,8 @@ const TYPE_COLORS: Record<IncidentType, string> = {
   fire: 'hsl(var(--cr-red))',
   ambulance: 'hsl(var(--cr-green))',
   traffic: 'hsl(var(--cr-orange))',
-  other: 'hsl(var(--muted-foreground))'
+  other: 'hsl(var(--muted-foreground))',
+  trafikverket: 'hsl(48, 100%, 55%)'
 };
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, showCommunityReports, onToggleCommunityReports, onSearchLocation }: FilterBarProps) => {
