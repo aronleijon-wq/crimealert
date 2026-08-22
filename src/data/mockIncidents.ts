@@ -19,6 +19,7 @@ export interface Incident {
   originalType?: string;
   locationPrecision?: string;
   image_url?: string | null;
+  endTime?: string | null;
 }
 
 const now = new Date();
