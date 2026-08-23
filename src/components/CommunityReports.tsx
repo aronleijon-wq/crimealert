@@ -306,11 +306,11 @@ export default function CommunityReports() {
                 <Button
                   variant="outline"
                   onClick={() => setShowForm(true)}
-                  className="w-full border-dashed border-2 hover:border-primary/40 hover:bg-primary/5 group"
+                  className="w-full h-9 border-dashed border hover:border-primary/40 hover:bg-primary/5 group text-xs"
                 >
-                  <MessageSquarePlus className="w-4 h-4 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                    Skicka en ny rapport
+                  <MessageSquarePlus className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <span className="text-muted-foreground group-hover:text-primary transition-colors">
+                    Ny observation
                   </span>
                 </Button>
               ) : (
