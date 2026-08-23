@@ -59,10 +59,6 @@ const LandingNav = () => {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <span className="hidden lg:flex items-center gap-2 ca-mono text-[10px] tracking-[0.18em] text-[hsl(var(--ca-text-3))] pr-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
-            LIVE
-          </span>
           <Link
             to="/karta"
             className="hidden sm:grid place-items-center w-9 h-9 rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] hover:border-[hsl(var(--ca-line-strong))] transition"
