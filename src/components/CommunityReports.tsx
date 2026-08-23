@@ -245,9 +245,9 @@ export default function CommunityReports() {
             <div className="flex items-center gap-3">
 
               <div>
-                <CardTitle className="text-sm font-bold">&nbsp;Medborgarrapporter</CardTitle>
+                <CardTitle className="text-sm font-bold">Rapporter från området</CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Rapportera otrygghet och händelser i ditt område
+                  Observationer inrapporterade av användare · visas som orange markörer på kartan
                 </p>
               </div>
             </div>
