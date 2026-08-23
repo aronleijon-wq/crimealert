@@ -26,11 +26,11 @@ type Report = {
 };
 
 const CATEGORIES = [
-  { value: 'broken_lighting', label: 'Trasig belysning', icon: '💡', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-  { value: 'vandalism', label: 'Skadegörelse', icon: '🔨', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
-  { value: 'unsafe_area', label: 'Otrygg plats', icon: '⚠️', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-  { value: 'suspicious_activity', label: 'Misstänkt aktivitet', icon: '👁️', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
-  { value: 'other', label: 'Övrigt', icon: '📋', color: 'bg-muted text-muted-foreground border-border' },
+  { value: 'broken_lighting', label: 'Trasig belysning', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500' },
+  { value: 'vandalism', label: 'Skadegörelse', color: 'bg-red-500/10 text-red-500 border-red-500/20', dot: 'bg-red-500' },
+  { value: 'unsafe_area', label: 'Otrygg plats', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20', dot: 'bg-orange-500' },
+  { value: 'suspicious_activity', label: 'Misstänkt aktivitet', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', dot: 'bg-purple-500' },
+  { value: 'other', label: 'Övrigt', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground' },
 ] as const;
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));
@@ -238,16 +238,15 @@ export default function CommunityReports() {
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border ca-hud">
         {/* Header */}
         <CardHeader className="p-4 pb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-
               <div>
-                <CardTitle className="text-sm font-bold">Rapporter från området</CardTitle>
+                <CardTitle className="text-sm font-bold tracking-tight">Medborgarrapporter</CardTitle>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Observationer inrapporterade av användare · visas som orange markörer på kartan
+                  Lokal information från boende i området
                 </p>
               </div>
             </div>
@@ -288,13 +287,14 @@ export default function CommunityReports() {
                   <button
                     key={c.value}
                     onClick={() => setActiveFilter(activeFilter === c.value ? null : c.value)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all ${
                       activeFilter === c.value
                         ? c.color
                         : 'border-border text-muted-foreground hover:border-primary/20 hover:text-foreground'
                     }`}
                   >
-                    {c.icon} {c.label} {count > 0 && <span className="opacity-60">({count})</span>}
+                    <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                    {c.label} {count > 0 && <span className="opacity-60">{count}</span>}
                   </button>
                 );
               })}
@@ -306,17 +306,17 @@ export default function CommunityReports() {
                 <Button
                   variant="outline"
                   onClick={() => setShowForm(true)}
-                  className="w-full border-dashed border-2 hover:border-primary/40 hover:bg-primary/5 group"
+                  className="w-full h-9 border-dashed border hover:border-primary/40 hover:bg-primary/5 group text-xs"
                 >
-                  <MessageSquarePlus className="w-4 h-4 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                    Skicka en ny rapport
+                  <MessageSquarePlus className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <span className="text-muted-foreground group-hover:text-primary transition-colors">
+                    Ny observation
                   </span>
                 </Button>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-xl border border-primary/20 bg-primary/[0.02]">
+                <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-md border border-primary/20 bg-primary/[0.02]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-foreground">Ny rapport</h3>
+                    <h3 className="text-xs font-bold text-foreground tracking-tight">Ny observation</h3>
                     <button
                       type="button"
                       onClick={() => { setShowForm(false); resetForm(); }}
@@ -337,13 +337,13 @@ export default function CommunityReports() {
                           key={c.value}
                           type="button"
                           onClick={() => setCategory(c.value)}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-[11px] font-medium border transition-all ${
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-[11px] font-medium border transition-all ${
                             category === c.value
                               ? `${c.color} ring-1 ring-current/20`
                               : 'border-border text-muted-foreground hover:border-primary/30 hover:bg-muted/50'
                           }`}
                         >
-                          <span className="text-sm">{c.icon}</span>
+                          <span className={`w-2 h-2 rounded-full ${c.dot}`} />
                           {c.label}
                         </button>
                       ))}
@@ -626,7 +626,7 @@ export default function CommunityReports() {
                   <MessageSquarePlus className="w-5 h-5 text-muted-foreground/50" />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {activeFilter ? 'Inga rapporter i denna kategori' : 'Inga rapporter ännu — bli först!'}
+                  {activeFilter ? 'Inga rapporter i vald kategori' : 'Inga rapporter ännu'}
                 </p>
               </div>
             ) : (
@@ -637,20 +637,18 @@ export default function CommunityReports() {
                   return (
                     <div
                       key={r.id}
-                      className="group relative flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/15 hover:bg-muted/20 transition-all"
+                      className="group relative flex items-start gap-3 p-3 rounded-md border border-border hover:border-primary/20 hover:bg-muted/10 transition-all"
                     >
-                      {/* Category icon */}
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-base ${cat?.color ?? 'bg-muted text-muted-foreground'}`}>
-                        {cat?.icon ?? '📋'}
-                      </div>
+                      {/* Category marker */}
+                      <div className={`w-1 h-10 rounded-full shrink-0 mt-0.5 ${cat?.dot ?? 'bg-muted-foreground'}`} />
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-start gap-2 justify-between">
                           <span className="text-xs font-semibold text-foreground leading-tight">
                             {r.title}
                           </span>
-                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                             isOpen
                               ? 'bg-destructive/10 text-destructive'
                               : 'bg-green-500/10 text-green-600'
@@ -682,9 +680,6 @@ export default function CommunityReports() {
                         )}
 
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
-                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-border">
-                            {cat?.label ?? r.category}
-                          </Badge>
                           {r.area && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-2.5 h-2.5" />{r.area}
@@ -693,6 +688,8 @@ export default function CommunityReports() {
                           <span className="flex items-center gap-0.5">
                             <Clock className="w-2.5 h-2.5" />{timeAgo(r.created_at)}
                           </span>
+                          <span className="hidden sm:inline">·</span>
+                          <span className="hidden sm:inline text-[9px] uppercase tracking-wide">{cat?.label ?? r.category}</span>
                         </div>
                       </div>
 
