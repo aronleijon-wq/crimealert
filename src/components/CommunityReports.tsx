@@ -644,11 +644,11 @@ export default function CommunityReports() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-start gap-2 justify-between">
                           <span className="text-xs font-semibold text-foreground leading-tight">
                             {r.title}
                           </span>
-                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                             isOpen
                               ? 'bg-destructive/10 text-destructive'
                               : 'bg-green-500/10 text-green-600'
@@ -680,9 +680,6 @@ export default function CommunityReports() {
                         )}
 
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
-                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-border">
-                            {cat?.label ?? r.category}
-                          </Badge>
                           {r.area && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-2.5 h-2.5" />{r.area}
@@ -691,6 +688,8 @@ export default function CommunityReports() {
                           <span className="flex items-center gap-0.5">
                             <Clock className="w-2.5 h-2.5" />{timeAgo(r.created_at)}
                           </span>
+                          <span className="hidden sm:inline">·</span>
+                          <span className="hidden sm:inline text-[9px] uppercase tracking-wide">{cat?.label ?? r.category}</span>
                         </div>
                       </div>
 
