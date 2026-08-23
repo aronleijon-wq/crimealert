@@ -632,38 +632,24 @@ const Analysis = () => {
                 {/* Community Reports */}
                 <div className="space-y-3">
                   <div className="ca-hud border border-border rounded-lg p-4">
-                    <span className="text-[10px] font-mono text-primary tracking-widest">// MEDBORGARRAPPORTER</span>
-                    <h2 className="text-base font-bold text-foreground mt-1.5">
-                      Lokal information som polisen inte registrerar
-                    </h2>
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-3xl">
-                      Polisens händelserapporter täcker utryckningar och anmälda brott. De säger inget om trasig
-                      gatubelysning, återkommande skadegörelse eller platser som upplevs otrygga på kvällstid.
-                      Medborgarrapporter fyller den luckan med observationer från boende i området och visas
-                      på kartan som orange markörer parallellt med polisdata.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-                      <div className="border-l-2 border-primary/60 pl-3">
-                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Vad rapporteras</p>
-                        <p className="text-xs text-foreground mt-1">
-                          Trasig belysning, skadegörelse, otrygga platser och misstänkt aktivitet — med adress eller GPS-position.
-                        </p>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <span className="text-[10px] font-mono text-primary tracking-widest">// MEDBORGARRAPPORTER</span>
+                        <h2 className="text-base font-bold text-foreground mt-1 tracking-tight">
+                          Lokal information från boende
+                        </h2>
                       </div>
-                      <div className="border-l-2 border-primary/60 pl-3">
-                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Vem kan rapportera</p>
-                        <p className="text-xs text-foreground mt-1">
-                          Pro-användare skapar rapporter. Alla besökare kan läsa dem, både här och på kartan.
-                        </p>
-                      </div>
-                      <div className="border-l-2 border-primary/60 pl-3">
-                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Hantering</p>
-                        <p className="text-xs text-foreground mt-1">
-                          Rapporter är öppna tills de markeras åtgärdade. Inga personuppgifter publiceras.
-                        </p>
+                      <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Belysning</span>
+                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Skadegörelse</span>
+                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" />Aktivitet</span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground/70 mt-4 leading-relaxed">
-                      Rapportera inte pågående nödsituationer här. Ring 112 vid akut fara, 114 14 för övriga polisärenden.
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-3xl">
+                      Komplement till polisdata. Rapporteras av Pro-användare och läses av alla. Visas som orange markörer på kartan.
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-3 leading-relaxed">
+                      Vid akut fara: ring 112. För övriga polisärenden: 114 14.
                     </p>
                   </div>
                   <CommunityReports />
