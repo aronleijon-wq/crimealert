@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
+import RiskMeter from '@/components/RiskMeter';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 import MobileSignupBar from '@/components/MobileSignupBar';
