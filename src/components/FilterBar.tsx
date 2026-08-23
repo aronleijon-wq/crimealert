@@ -184,7 +184,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             const config = incidentTypeConfig[type];
             const active = activeFilters.includes(type);
             const color = TYPE_COLORS[type];
-            const isLocked = type === 'other' && !isLoggedIn;
+            const isLocked = false;
 
             return (
               <button

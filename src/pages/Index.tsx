@@ -36,8 +36,8 @@ const Index = () => {
   const [showCommunityReports, setShowCommunityReports] = useState(true);
 
   const getDefaultFilters = (): IncidentType[] => {
-    // Non-logged-in users can't see 'other' incidents
-    return isLoggedIn ? [...ALL_FILTERS] : ALL_FILTERS.filter((f) => f !== 'other');
+    // Alla användare, även utloggade, ser 'other'
+    return [...ALL_FILTERS];
   };
 
   const [activeFilters, setActiveFilters] = useState<IncidentType[]>(getDefaultFilters());
