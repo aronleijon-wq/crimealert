@@ -149,6 +149,8 @@ const Index = () => {
           <Header />
 
 
+          <RiskMeter incidents={filtered} />
+
           <div className="hidden md:block">
             <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
           </div>
