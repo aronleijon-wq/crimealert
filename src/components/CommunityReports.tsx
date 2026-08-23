@@ -638,12 +638,10 @@ export default function CommunityReports() {
                   return (
                     <div
                       key={r.id}
-                      className="group relative flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/15 hover:bg-muted/20 transition-all"
+                      className="group relative flex items-start gap-3 p-3 rounded-md border border-border hover:border-primary/20 hover:bg-muted/10 transition-all"
                     >
-                      {/* Category icon */}
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-base ${cat?.color ?? 'bg-muted text-muted-foreground'}`}>
-                        {cat?.icon ?? '📋'}
-                      </div>
+                      {/* Category marker */}
+                      <div className={`w-1 h-10 rounded-full shrink-0 mt-0.5 ${cat?.dot ?? 'bg-muted-foreground'}`} />
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
