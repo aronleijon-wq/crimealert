@@ -314,9 +314,9 @@ export default function CommunityReports() {
                   </span>
                 </Button>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-xl border border-primary/20 bg-primary/[0.02]">
+                <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-md border border-primary/20 bg-primary/[0.02]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-foreground">Ny rapport</h3>
+                    <h3 className="text-xs font-bold text-foreground tracking-tight">Ny observation</h3>
                     <button
                       type="button"
                       onClick={() => { setShowForm(false); resetForm(); }}
