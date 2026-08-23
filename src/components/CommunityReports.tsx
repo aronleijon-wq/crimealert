@@ -338,13 +338,13 @@ export default function CommunityReports() {
                           key={c.value}
                           type="button"
                           onClick={() => setCategory(c.value)}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-[11px] font-medium border transition-all ${
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-[11px] font-medium border transition-all ${
                             category === c.value
                               ? `${c.color} ring-1 ring-current/20`
                               : 'border-border text-muted-foreground hover:border-primary/30 hover:bg-muted/50'
                           }`}
                         >
-                          <span className="text-sm">{c.icon}</span>
+                          <span className={`w-2 h-2 rounded-full ${c.dot}`} />
                           {c.label}
                         </button>
                       ))}
