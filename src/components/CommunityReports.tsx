@@ -238,7 +238,7 @@ export default function CommunityReports() {
 
   return (
     <>
-      <Card className="overflow-hidden border-border ca-hud">
+      <Card className="overflow-hidden border-border bg-card">
         {/* Header */}
         <CardHeader className="p-4 pb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center justify-between">
