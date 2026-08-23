@@ -626,7 +626,7 @@ export default function CommunityReports() {
                   <MessageSquarePlus className="w-5 h-5 text-muted-foreground/50" />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {activeFilter ? 'Inga rapporter i denna kategori' : 'Inga rapporter ännu — bli först!'}
+                  {activeFilter ? 'Inga rapporter i vald kategori' : 'Inga rapporter ännu'}
                 </p>
               </div>
             ) : (
