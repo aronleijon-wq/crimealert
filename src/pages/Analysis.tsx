@@ -363,7 +363,7 @@ const Analysis = () => {
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
-        description="Uppgradera till Pro för att se detaljerad analys, heatmaps, trender och säkerhetsindex per område." /> :
+        description="Uppgradera till Pro för att se detaljerad analyser, trender och säkerhetsindex, m.m. per område." /> :
 
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
