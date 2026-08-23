@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import FilterBar from '@/components/FilterBar';
 import StatsBar from '@/components/StatsBar';
+import RiskMeter from '@/components/RiskMeter';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 import MobileSignupBar from '@/components/MobileSignupBar';
@@ -148,6 +149,8 @@ const Index = () => {
       <>
           <Header />
 
+
+          <RiskMeter incidents={filtered} />
 
           <div className="hidden md:block">
             <StatsBar incidents={filtered} onSelectIncident={(id) => setSelectedId(id)} />
