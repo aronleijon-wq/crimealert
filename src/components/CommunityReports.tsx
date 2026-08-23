@@ -26,11 +26,11 @@ type Report = {
 };
 
 const CATEGORIES = [
-  { value: 'broken_lighting', label: 'Trasig belysning', icon: '💡', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-  { value: 'vandalism', label: 'Skadegörelse', icon: '🔨', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
-  { value: 'unsafe_area', label: 'Otrygg plats', icon: '⚠️', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
-  { value: 'suspicious_activity', label: 'Misstänkt aktivitet', icon: '👁️', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
-  { value: 'other', label: 'Övrigt', icon: '📋', color: 'bg-muted text-muted-foreground border-border' },
+  { value: 'broken_lighting', label: 'Trasig belysning', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500' },
+  { value: 'vandalism', label: 'Skadegörelse', color: 'bg-red-500/10 text-red-500 border-red-500/20', dot: 'bg-red-500' },
+  { value: 'unsafe_area', label: 'Otrygg plats', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20', dot: 'bg-orange-500' },
+  { value: 'suspicious_activity', label: 'Misstänkt aktivitet', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', dot: 'bg-purple-500' },
+  { value: 'other', label: 'Övrigt', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground' },
 ] as const;
 
 const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));
