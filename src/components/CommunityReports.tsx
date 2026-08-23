@@ -288,13 +288,14 @@ export default function CommunityReports() {
                   <button
                     key={c.value}
                     onClick={() => setActiveFilter(activeFilter === c.value ? null : c.value)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all ${
                       activeFilter === c.value
                         ? c.color
                         : 'border-border text-muted-foreground hover:border-primary/20 hover:text-foreground'
                     }`}
                   >
-                    {c.icon} {c.label} {count > 0 && <span className="opacity-60">({count})</span>}
+                    <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                    {c.label} {count > 0 && <span className="opacity-60">{count}</span>}
                   </button>
                 );
               })}
