@@ -31,7 +31,7 @@ const Hero = () => {
           <div className="ca-rise flex items-center gap-3 mb-7" style={{ animationDelay: '0.1s' }}>
             <span className="flex items-center gap-2 ca-mono text-[10px] tracking-[0.22em] text-[hsl(var(--ca-text-3))] border border-[hsl(var(--ca-line))] rounded-full px-3 py-1.5 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
-              LIVE • SVERIGE
+              
             </span>
           </div>
 
