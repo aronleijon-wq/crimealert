@@ -15,7 +15,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     links: [
       { to: '/om-oss', label: 'Om oss' },
       { to: '/auth?mode=signup', label: 'Skapa konto' },
-      { to: 'mailto:aronleijon@icloud.com', label: 'Kontakta oss' },
+      { to: 'mailto:alvejon.staff@gmail.com', label: 'Kontakta oss' },
     ],
   },
   {
