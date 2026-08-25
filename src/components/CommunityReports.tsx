@@ -203,10 +203,15 @@ export default function CommunityReports() {
     if (!user || !category || !title.trim() || !description.trim()) return;
     setSubmitting(true);
 
-    const image_url = await uploadImage();
+    let image_url: string | null = null;
+    let imageFailed = false;
+    if (imageFile) {
+      image_url = await uploadImage();
+      imageFailed = !image_url;
+    }
 
     // Server-side function validates auth + Pro status before inserting.
-    const { error } = await supabase.functions.invoke('submit-community-report', {
+    const { data, error } = await supabase.functions.invoke('submit-community-report', {
       body: {
         category,
         title: stripHtml(title).slice(0, 200),
@@ -216,13 +221,33 @@ export default function CommunityReports() {
         image_url,
       },
     });
-    if (!error) {
+
+    const serverError = (data as any)?.error as string | undefined;
+
+    if (!error && !serverError) {
       resetForm();
       setShowForm(false);
       fetchReports();
+      if (imageFailed) {
+        toast.warning('Rapporten skickades, men bilden kunde inte laddas upp.');
+      } else {
+        toast.success('Rapporten är skickad.');
+      }
+    } else {
+      let message = serverError ?? 'Kunde inte skicka rapporten. Försök igen.';
+      const ctx = (error as any)?.context;
+      if (!serverError && ctx?.json) {
+        try {
+          const body = await ctx.json();
+          if (body?.error) message = body.error;
+        } catch { /* keep fallback */ }
+      }
+      setGeoError(message);
+      toast.error(message);
     }
     setSubmitting(false);
   };
+
 
   const handleDelete = async (id: string) => {
     await supabase.from('community_reports').delete().eq('id', id);
