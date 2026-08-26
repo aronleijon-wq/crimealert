@@ -96,8 +96,12 @@ async function sendWebPush(
       body: header,
     });
 
-    const expired = response.status === 404 || response.status === 410;
     const responseText = await response.text();
+    // 404/410 = gone. Apple returns 400 with VapidPkHashMismatch/BadJwtToken when the
+    // subscription was created with an older VAPID key — also unrecoverable, so prune it.
+    const invalidKey =
+      response.status === 400 && /VapidPkHashMismatch|BadJwtToken|InvalidJwt/i.test(responseText);
+    const expired = response.status === 404 || response.status === 410 || invalidKey;
 
     if (!response.ok) {
       console.warn('Push provider returned non-OK status', { endpoint: subscription.endpoint, status: response.status, expired, responseText });

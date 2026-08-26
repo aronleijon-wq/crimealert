@@ -57,16 +57,24 @@ const LandingFooter = () => (
             {g.title}
           </div>
           <ul className="space-y-2.5">
-            {g.links.map((l) => (
-              <li key={l.label}>
-                <Link
-                  to={l.to}
-                  className="text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition"
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            {g.links.map((l) => {
+              const cls =
+                'text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition';
+              const isExternal = /^(mailto:|tel:|https?:)/i.test(l.to);
+              return (
+                <li key={l.label}>
+                  {isExternal ? (
+                    <a href={l.to} className={cls}>
+                      {l.label}
+                    </a>
+                  ) : (
+                    <Link to={l.to} className={cls}>
+                      {l.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}
