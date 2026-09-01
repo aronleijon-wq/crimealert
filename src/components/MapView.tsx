@@ -504,25 +504,23 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
     if ((map as any).tap) (map as any).tap.disable();
 
-    const tiles = L.tileLayer(
-      isLightMode()
-        ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      {
-        maxZoom: 19,
-        attribution: '&copy; OSM &copy; CARTO',
-        className: 'ca-tiles',
-      }
-    ).addTo(map);
+    const ESRI_DARK =
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+    const ESRI_LIGHT =
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+
+    const tiles = L.tileLayer(isLightMode() ? ESRI_LIGHT : ESRI_DARK, {
+      maxZoom: 16,
+      maxNativeZoom: 16,
+      attribution: '&copy; Esri &copy; OpenStreetMap contributors',
+      className: 'ca-tiles',
+    }).addTo(map);
 
     // Byt basemap när användaren växlar mellan ljust och mörkt läge
     const themeObserver = new MutationObserver(() => {
-      tiles.setUrl(
-        isLightMode()
-          ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-          : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      );
+      tiles.setUrl(isLightMode() ? ESRI_LIGHT : ESRI_DARK);
     });
+
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
 
