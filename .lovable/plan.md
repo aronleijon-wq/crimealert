@@ -1,18 +1,24 @@
-# Ingen Google Maps-integration
+# Fixa "API KEY REQUIRED" över kartan
 
-## Beslut
-CrimeAlert fortsätter använda Leaflet med CARTO-tiles. Google Maps Platform aktiveras inte.
+## Vad som hänt
+Kartrutorna hämtas från CARTO:s gratisbasemaps (`basemaps.cartocdn.com`). CARTO har börjat kräva nyckel och lägger nu en diagonal "API KEY REQUIRED"-stämpel på varje ruta. Verifierat: en hämtad ruta returnerar 200 men med vattenstämpeln inbränd.
 
-## Vad du gör på Google Cloud
-- Slutför inte onboarding-flödet i skärmbilden.
-- Aktivera inte billing för projektet `crimealert-489719`.
-- Om en Maps-API-nyckel redan skapats: ta bort den så den inte kan användas av misstag.
+Det har inget med Google Maps att göra — ingen Google-nyckel behövs.
 
-## Varför
-- Kartan renderas av `leaflet` / `react-leaflet` med gratis CARTO-tiles (mörkt och ljust tema).
-- Geokodning sker via Nominatim.
-- Ingen kod i projektet anropar Google Maps.
-- Google Maps skulle kräva nyckel, billing och omskrivning av kartvyn, med rörlig kostnad per kartladdning.
+## Lösning
+Byt kartlager till Esri:s gråa baskartor, som är nyckelfria och matchar Gotham-stilen:
 
-## Kodändringar
-Inga.
+- Mörkt läge: `World_Dark_Gray_Base`
+- Ljust läge: `World_Light_Gray_Base`
+
+Verifierat: rutorna laddas utan nyckel och utan vattenstämpel.
+
+## Teknisk detalj
+- I `src/components/MapView.tsx` byts båda CARTO-URL:erna (initialt lager samt temaomkopplingen) mot Esri-URL:er.
+- Esri använder rutordningen `{z}/{y}/{x}` i stället för CARTO:s `{z}/{x}/{y}` — URL-mallen skrivs därefter.
+- `subdomains` tas bort (Esri har ingen `{s}`), `maxZoom` sätts till 16 för de gråa lagren.
+- Attributionstexten uppdateras till Esri/OSM-bidragsgivare.
+- Ingen ändring av markörer, popups, filter eller datalager.
+
+## Om du hellre vill behålla CARTO
+Alternativ: skaffa en gratis CARTO-nyckel och lägga in den. Det kräver konto och nyckelhantering. Esri-vägen kräver inget konto alls, så den föreslås först.
