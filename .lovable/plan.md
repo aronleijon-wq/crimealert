@@ -1,34 +1,18 @@
-## Mål
-Göra det enkelt att komma till `/admin`-sidan där alla användares e-postadresser kan laddas ner som CSV.
+# Ingen Google Maps-integration
 
-## Vad som händer just nu
-- Sidan **finns redan** på `/admin` med "Hämta användare" + "Ladda ner CSV"-knappar
-- Den är skyddad och visas bara för användare med rollen `admin` i `user_roles`-tabellen
-- Du står just nu i Cloud-dashboarden (backend-vyn), inte i själva appen — därför ser du inte sidan
+## Beslut
+CrimeAlert fortsätter använda Leaflet med CARTO-tiles. Google Maps Platform aktiveras inte.
 
-## Förslag på lösning
+## Vad du gör på Google Cloud
+- Slutför inte onboarding-flödet i skärmbilden.
+- Aktivera inte billing för projektet `crimealert-489719`.
+- Om en Maps-API-nyckel redan skapats: ta bort den så den inte kan användas av misstag.
 
-### 1. Lägg till en "Admin"-knapp på kontosidan
-På `/account`, om den inloggade användaren är admin, visa en tydlig knapp:
-> **Admin – Exportera användare** → går till `/admin`
+## Varför
+- Kartan renderas av `leaflet` / `react-leaflet` med gratis CARTO-tiles (mörkt och ljust tema).
+- Geokodning sker via Nominatim.
+- Ingen kod i projektet anropar Google Maps.
+- Google Maps skulle kräva nyckel, billing och omskrivning av kartvyn, med rörlig kostnad per kartladdning.
 
-Knappen är osynlig för vanliga användare (säkert via `user_roles`-kontroll).
-
-### 2. Verifiera att din användare är admin
-Innan vi går vidare behöver vi bekräfta att ditt användarkonto har `admin`-rollen i `user_roles`-tabellen. Om inte kommer `/admin` att redirecta dig till startsidan. Jag kontrollerar det och lägger till rollen om den saknas.
-
-### 3. Direktinstruktion (medan vi väntar)
-Öppna i en ny flik: **https://crimealert.se/admin**
-- Logga in om du inte redan är det
-- Klicka **"Hämta användare"**
-- Klicka **"Ladda ner CSV"**
-
-## Tekniska detaljer
-- Filändring: `src/pages/Account.tsx` — lägg till villkorlig admin-knapp som länkar till `/admin`
-- Kontrollera `user_roles` i databasen för din `auth.uid()` och lägg till `admin`-rad om saknas
-- Inga schema-ändringar krävs
-
-## Vad jag behöver från dig
-Bekräfta att du vill att jag:
-1. Lägger till admin-knappen på kontosidan, **och**
-2. Verifierar/lägger till admin-rollen för ditt konto (vilken e-post är inloggad?)
+## Kodändringar
+Inga.
