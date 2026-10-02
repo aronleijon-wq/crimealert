@@ -18,4 +18,7 @@ export interface ExternalEvent {
   ends_at: string | null;
   severity: Severity;
   category: string | null;
+  /** The source's own image for this item; only set for sources allowed in NEWS_IMAGES */
+  image_url?: string | null;
+  image_credit?: string | null;
 }

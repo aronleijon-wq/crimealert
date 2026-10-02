@@ -16,7 +16,7 @@ import {
   parseVmaAlerts,
   VMA_ALERTS_URL,
 } from '../_shared/sources/krisinformation.ts';
-import { enabledNewsFeeds, newsItemsToEvents } from '../_shared/sources/news.ts';
+import { enabledNewsFeeds, imageSources, newsItemsToEvents } from '../_shared/sources/news.ts';
 import { parseFeed } from '../_shared/sources/rss.ts';
 import type { ExternalEvent } from '../_shared/sources/types.ts';
 
@@ -75,12 +75,15 @@ async function collectTrafikverket(): Promise<ExternalEvent[]> {
   return parseSituations(data).filter((e) => e.acute).map(trafikverketToExternal);
 }
 
+// Sources whose article images may be shown (NEWS_IMAGES secret, e.g. "svt,svd")
+const allowedImages = imageSources(Deno.env.get('NEWS_IMAGES'));
+
 async function collectNews(): Promise<ExternalEvent[]> {
   const feeds = enabledNewsFeeds(Deno.env.get('NEWS_EXTRA_SOURCES'));
   const results = await Promise.allSettled(feeds.map(async (feed) => {
     const res = await fetchWithTimeout(feed.url, { headers: { Accept: 'application/rss+xml, application/xml, text/xml' } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return newsItemsToEvents(feed, parseFeed(await res.text()));
+    return newsItemsToEvents(feed, parseFeed(await res.text()), Date.now(), { withImages: allowedImages.has(feed.source) });
   }));
   const failed = results.filter((r) => r.status === 'rejected').length;
   if (failed > 0) console.warn(`[ingest-sources] ${failed}/${feeds.length} news feeds failed`);
@@ -162,7 +165,7 @@ Deno.serve(async (req) => {
     const [police, traffic, crisis, vma, news] = await Promise.allSettled([
       runPoliceEvents(),
       collectTrafikverket(),
-      fetchJson(KRISINFORMATION_NEWS_URL).then(parseKrisinformationNews),
+      fetchJson(KRISINFORMATION_NEWS_URL).then((data) => parseKrisinformationNews(data, { withImages: allowedImages.has('krisinformation') })),
       fetchJson(VMA_ALERTS_URL).then(parseVmaAlerts),
       collectNews(),
     ]);

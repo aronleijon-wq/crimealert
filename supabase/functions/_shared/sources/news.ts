@@ -61,6 +61,14 @@ export const EXTRA_FEEDS: NewsFeed[] = [
   { source: 'expressen', name: 'Expressen', url: 'https://feeds.expressen.se/nyheter/' },
 ];
 
+/**
+ * Sources whose own article images may be shown, from the NEWS_IMAGES secret
+ * (e.g. "svt,svd"). Empty by default: press photos need the publisher's permission.
+ */
+export function imageSources(setting: string | undefined): Set<string> {
+  return new Set((setting ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+}
+
 export function enabledNewsFeeds(extraSources: string | undefined): NewsFeed[] {
   const extra = new Set((extraSources ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
   return [...SVT_FEEDS, ...EXTRA_FEEDS.filter((feed) => extra.has(feed.source))];
@@ -72,7 +80,12 @@ const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
  * Safety-related articles from one feed as external events. Only the headline is kept
  * (plus a link); the article text is read once to find the place and topic, never stored.
  */
-export function newsItemsToEvents(feed: NewsFeed, items: FeedItem[], now = Date.now()): ExternalEvent[] {
+export function newsItemsToEvents(
+  feed: NewsFeed,
+  items: FeedItem[],
+  now = Date.now(),
+  { withImages = false }: { withImages?: boolean } = {},
+): ExternalEvent[] {
   const events: ExternalEvent[] = [];
   for (const item of items) {
     const text = `${item.title} ${item.description}`;
@@ -96,6 +109,7 @@ export function newsItemsToEvents(feed: NewsFeed, items: FeedItem[], now = Date.
       ends_at: null,
       severity: 'low',
       category: specificTopicsOf(text)[0] ?? null,
+      ...(withImages && item.image ? { image_url: item.image.url, image_credit: item.image.credit } : {}),
     });
   }
   return events;

@@ -29,6 +29,8 @@ export interface FeedItem {
   related: ExternalEvent[];
   /** Trafikverket's report of the same accident */
   alsoReported: Incident[];
+  /** The source's own image for a news or crisis post, with its credit */
+  image: { url: string; credit: string | null } | null;
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -136,6 +138,7 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
     mapLink: kind === 'police' ? `/karta?incident=${encodeURIComponent(incident.id)}` : null,
     related: [],
     alsoReported,
+    image: null,
   };
 }
 
@@ -162,6 +165,7 @@ function externalToItem(event: ExternalEvent, now: number): FeedItem {
     mapLink: null,
     related: [],
     alsoReported: [],
+    image: event.image_url ? { url: event.image_url, credit: event.image_credit ?? null } : null,
   };
 }
 
@@ -230,4 +234,37 @@ export function filterFeed(items: FeedItem[], filter: FeedFilter, watchedKommune
     }
     default: return items;
   }
+}
+
+export interface FeedSection {
+  key: string;
+  label: string;
+  items: FeedItem[];
+}
+
+const dayKey = (time: number) => {
+  const d = new Date(time);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+/** Splits the feed into "Viktigt just nu" (active VMA), "Idag", "Igår" and older days. */
+export function groupByDay(items: FeedItem[], now = Date.now()): FeedSection[] {
+  const today = dayKey(now);
+  const yesterday = dayKey(now - DAY);
+  const weekday = new Intl.DateTimeFormat('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const sections: FeedSection[] = [];
+  for (const item of items) {
+    const key = item.pinned ? 'pinned' : dayKey(item.timestamp);
+    let section = sections.find((s) => s.key === key);
+    if (!section) {
+      const label = key === 'pinned' ? 'Viktigt just nu'
+        : key === today ? 'Idag'
+        : key === yesterday ? 'Igår'
+        : weekday.format(new Date(item.timestamp)).replace(/^./, (c) => c.toUpperCase());
+      section = { key, label, items: [] };
+      sections.push(section);
+    }
+    section.items.push(item);
+  }
+  return sections;
 }
