@@ -75,6 +75,28 @@ describe('AuthProvider subscription checks', () => {
     expect(result.current.subscription.subscribed).toBe(true);
   });
 
+  it('reports when the subscription is known, so ads wait for it', async () => {
+    let answer: (r: Response) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise<Response>((resolve) => { answer = resolve; }));
+    const { AuthProvider, useAuth } = await loadAuth();
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await flush();
+    expect(result.current.user).not.toBeNull();
+    expect(result.current.subscriptionChecked).toBe(false);
+
+    answer(new Response(JSON.stringify({ subscribed: false })));
+    await flush();
+    expect(result.current.subscriptionChecked).toBe(true);
+  });
+
+  it('treats a failed check as unknown', async () => {
+    fetchMock.mockImplementation(async () => new Response('', { status: 503 }));
+    const { AuthProvider, useAuth } = await loadAuth();
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await flush();
+    expect(result.current.subscriptionChecked).toBe(false);
+  });
+
   it('skips the 30-minute refresh while hidden and refreshes when shown again', async () => {
     const { AuthProvider, useAuth } = await loadAuth();
     renderHook(() => useAuth(), { wrapper: AuthProvider });

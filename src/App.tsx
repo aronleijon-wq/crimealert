@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
+import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { lazy, Suspense } from "react";
 import Landing from "./pages/Landing";
@@ -64,6 +65,7 @@ const App = () => (
         </Suspense>
         <CookieConsent />
         <BackendStatusBanner />
+        <AdsController />
 
       </BrowserRouter>
     </TooltipProvider>
