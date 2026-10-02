@@ -128,6 +128,9 @@ describe('filterFeed', () => {
   it('filters by watched municipalities', () => {
     expect(filterFeed(items, 'mine', ['Malmö']).map((i) => i.id)).toEqual(['pol-malmo']);
     expect(filterFeed(items, 'mine', [])).toEqual([]);
+    // Whole names only: Sala is not Uppsala
+    expect(filterFeed(items, 'mine', ['Sala'])).toEqual([]);
+    expect(filterFeed(items, 'mine', ['Gävle']).map((i) => i.id)).toEqual([]);
   });
 });
 
