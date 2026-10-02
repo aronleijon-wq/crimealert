@@ -9,6 +9,7 @@ import LocalMonitoring from '@/components/landing/LocalMonitoring';
 import PlatformGrid from '@/components/landing/PlatformGrid';
 import FinalCTA from '@/components/landing/FinalCTA';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { useLandingLive } from '@/components/landing/useLandingLive';
 
 // Below the fold and the only user of framer-motion, so keep it out of the initial bundle
 const StickyStory = lazy(() => import('@/components/landing/StickyStory'));
@@ -27,6 +28,8 @@ const Landing = () => {
   });
 
   const location = useLocation();
+  // One source of live events for the hero and the map preview
+  const live = useLandingLive();
   const incident = new URLSearchParams(location.search).get('incident');
 
   useEffect(() => {
@@ -42,11 +45,11 @@ const Landing = () => {
     <div className="ca-dark min-h-screen antialiased">
       <LandingNav />
       <main>
-        <Hero />
+        <Hero live={live} />
         <Suspense fallback={<StickyStoryPlaceholder />}>
           <StickyStory />
         </Suspense>
-        <MapPreview />
+        <MapPreview live={live} />
         <Categories />
         <LocalMonitoring />
         <PlatformGrid />

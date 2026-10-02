@@ -512,3 +512,54 @@ html.no-ads ins.adsbygoogle,
 html.no-ads .google-auto-placed {
   display: none !important;
 }
+
+/* ==========================================================
+   Landing: operations picture
+   ========================================================== */
+/* Callout locking on to an event */
+@keyframes ca-lock {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.ca-lock { animation: ca-lock 0.55s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Map fading up out of the dark */
+@keyframes ca-map-in {
+  from { opacity: 0; transform: scale(1.04); filter: blur(10px); }
+}
+.ca-map-in { animation: ca-map-in 1.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Log rows typing in one after another */
+@keyframes ca-log-row {
+  from { opacity: 0; transform: translateX(-8px); clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+.ca-log-row { animation: ca-log-row 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes ca-caret { 50% { opacity: 0; } }
+.ca-caret { animation: ca-caret 1s steps(1) infinite; }
+
+/* Light passing over the main call to action */
+@keyframes ca-shine {
+  0%, 70% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+.ca-shine {
+  background: linear-gradient(100deg, transparent 30%, hsla(0, 0%, 100%, 0.28) 50%, transparent 70%);
+  animation: ca-shine 4.5s ease-in-out infinite;
+}
+
+/* Sections rising into view as they're scrolled to */
+.ca-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), filter 0.9s ease;
+  transition-delay: var(--ca-reveal-delay, 0s);
+}
+.ca-reveal.is-visible { opacity: 1; transform: none; filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-lock, .ca-map-in, .ca-log-row, .ca-caret, .ca-shine { animation: none !important; }
+  .ca-reveal { opacity: 1; transform: none; filter: none; transition: none; }
+}
