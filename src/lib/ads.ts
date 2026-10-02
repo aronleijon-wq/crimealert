@@ -22,12 +22,26 @@ export function adsDecision(auth: { loading: boolean; signedIn: boolean; subscri
   return auth.subscriptionChecked ? 'show' : 'wait';
 }
 
-export function showAds() {
-  document.documentElement.classList.remove(NO_ADS_CLASS);
-  const w = adsWindow();
-  w.adsbygoogle = w.adsbygoogle || [];
-  w.adsbygoogle.pauseAdRequests = 0;
-  if (document.getElementById(SCRIPT_ID)) return;
+let wanted = false;
+let scheduled = false;
+
+/**
+ * Runs `fn` once the page has loaded and the browser is idle, so the ad script (several
+ * hundred kB) doesn't compete with the app on a phone.
+ */
+function whenIdle(fn: () => void) {
+  const idle = () => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(fn, { timeout: 4000 });
+    else window.setTimeout(fn, 1200);
+  };
+  if (document.readyState === 'complete') window.setTimeout(idle, 1500);
+  else window.addEventListener('load', () => window.setTimeout(idle, 1500), { once: true });
+}
+
+function injectScript() {
+  scheduled = false;
+  if (!wanted || document.getElementById(SCRIPT_ID)) return;
   const script = document.createElement('script');
   script.id = SCRIPT_ID;
   script.async = true;
@@ -36,7 +50,19 @@ export function showAds() {
   document.head.appendChild(script);
 }
 
+export function showAds() {
+  wanted = true;
+  document.documentElement.classList.remove(NO_ADS_CLASS);
+  const w = adsWindow();
+  w.adsbygoogle = w.adsbygoogle || [];
+  w.adsbygoogle.pauseAdRequests = 0;
+  if (document.getElementById(SCRIPT_ID) || scheduled) return;
+  scheduled = true;
+  whenIdle(injectScript);
+}
+
 export function hideAds() {
+  wanted = false;
   document.documentElement.classList.add(NO_ADS_CLASS);
   const w = adsWindow();
   if (w.adsbygoogle) w.adsbygoogle.pauseAdRequests = 1;
