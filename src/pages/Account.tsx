@@ -4,7 +4,9 @@ import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Sh
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/hooks/useAuth';
+import type { User as AuthUser } from '@supabase/supabase-js';
+import { useAuth, type SubscriptionState } from '@/hooks/useAuth';
+import { getErrorMessage } from '@/lib/errors';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,7 +42,7 @@ const ContactSection = () => {
 };
 
 const UserProfileSection = ({ user, isPremium, subscription, signOut, handleManageSubscription }: {
-  user: any; isPremium: boolean; subscription: any; signOut: () => Promise<void>; handleManageSubscription: () => void;
+  user: AuthUser; isPremium: boolean; subscription: SubscriptionState; signOut: () => Promise<void>; handleManageSubscription: () => void;
 }) => {
   const [displayName, setDisplayName] = useState('');
   const [editingName, setEditingName] = useState(false);
@@ -195,8 +197,8 @@ const Account = () => {
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const isTransientFunctionError = (err: any) => {
-    const message = String(err?.message || '').toLowerCase();
+  const isTransientFunctionError = (err: unknown) => {
+    const message = getErrorMessage(err).toLowerCase();
     return (
       message.includes('non-2xx') ||
       message.includes('503') ||
@@ -208,7 +210,7 @@ const Account = () => {
   };
 
   const createCheckoutSession = async (priceId: string, attempts = 4) => {
-    let lastError: any = null;
+    let lastError: unknown = null;
 
     for (let i = 0; i < attempts; i++) {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -235,13 +237,13 @@ const Account = () => {
       const priceId = billingCycle === 'yearly' ? PREMIUM_PRICE_YEARLY : PREMIUM_PRICE_MONTHLY;
       const url = await createCheckoutSession(priceId);
       window.location.href = url;
-    } catch (err: any) {
+    } catch (err) {
       const transient = isTransientFunctionError(err);
       toast({
         title: 'Fel',
         description: transient ?
         'Tillfälligt backendfel vid checkout. Försök igen om en minut.' :
-        err?.message || 'Kunde inte starta checkout just nu.',
+        getErrorMessage(err) || 'Kunde inte starta checkout just nu.',
         variant: 'destructive'
       });
     } finally {

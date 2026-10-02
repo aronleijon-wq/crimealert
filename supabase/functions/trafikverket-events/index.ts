@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     const json = await res.json();
     const situations = json?.RESPONSE?.RESULT?.[0]?.Situation ?? [];
 
-    const events: unknown[] = [];
+    const events: { id: string; [key: string]: unknown }[] = [];
     for (const sit of situations) {
       const deviations = sit?.Deviation ?? [];
       for (const d of deviations) {
@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
 
     // Dedupe by id
     const seen = new Set<string>();
-    const unique = events.filter((e: any) => {
+    const unique = events.filter((e) => {
       if (seen.has(e.id)) return false;
       seen.add(e.id);
       return true;

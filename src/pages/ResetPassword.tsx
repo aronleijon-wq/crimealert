@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/lib/errors';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, ArrowRight } from 'lucide-react';
@@ -48,8 +49,8 @@ const ResetPassword = () => {
       if (error) throw error;
       toast({ title: 'Lösenordet har uppdaterats!' });
       navigate('/account');
-    } catch (err: any) {
-      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Fel', description: getErrorMessage(err), variant: 'destructive' });
     } finally {
       setLoading(false);
     }

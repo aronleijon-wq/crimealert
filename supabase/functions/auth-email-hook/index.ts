@@ -25,6 +25,8 @@ const EMAIL_SUBJECTS: Record<string, string> = {
 }
 
 // Template mapping
+// Templates take different prop subsets of templateProps below
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,
@@ -141,6 +143,8 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   // Verify signature + timestamp, then parse payload.
+  // Lovable's parser returns a union of webhook payloads; this hook only receives auth events
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload: any
   let run_id = ''
   try {

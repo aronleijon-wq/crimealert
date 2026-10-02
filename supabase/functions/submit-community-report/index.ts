@@ -25,6 +25,10 @@ const CATEGORIES = [
   "other",
 ];
 
+// current_period_end is not on the typed Subscription for this API version
+// (it lives on subscription items), so read it defensively.
+type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_end?: number | null };
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -52,7 +56,7 @@ const isPremiumUser = async (email: string): Promise<boolean> => {
     });
     for (const sub of subs.data) {
       if (!["active", "trialing", "past_due", "canceled"].includes(sub.status)) continue;
-      const rawEnd = (sub as any).current_period_end ?? (sub as any).cancel_at ?? (sub as any).trial_end;
+      const rawEnd = (sub as SubscriptionWithLegacyPeriodEnd).current_period_end ?? sub.cancel_at ?? sub.trial_end;
       const endSec = Number(rawEnd);
       if (Number.isFinite(endSec) && endSec > 0) {
         if (endSec > nowSec) return true;

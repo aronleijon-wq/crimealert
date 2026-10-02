@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/lib/errors";
 import { Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -65,8 +66,8 @@ export default function Admin() {
       setTotal(data.total);
       setCsv(data.csv);
       setFetched(true);
-    } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
+    } catch (err) {
+      toast.error(getErrorMessage(err) || "Något gick fel");
     } finally {
       setLoading(false);
     }

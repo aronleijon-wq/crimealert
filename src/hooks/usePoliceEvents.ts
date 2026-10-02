@@ -2,6 +2,31 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/lib/errors';
+
+// Shape of one event as returned by the police-events edge function
+interface PoliceEventDto {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  lat: number;
+  lng: number;
+  area: string;
+  time: string;
+  status?: string;
+  risk?: string;
+  source: string;
+  url?: string | null;
+  originalType?: string | null;
+  location_precision?: string | null;
+}
+
+interface PoliceEventsResponse {
+  success?: boolean;
+  data?: PoliceEventDto[];
+  error?: string;
+}
 
 export function usePoliceEvents() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -36,10 +61,10 @@ export function usePoliceEvents() {
       );
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
+      const data: PoliceEventsResponse = await response.json();
 
       if (data?.success && data.data) {
-        const mapped: Incident[] = data.data.map((e: any) => ({
+        const mapped: Incident[] = data.data.map((e) => ({
           id: e.id,
           type: e.type as IncidentType,
           title: e.title,
@@ -66,9 +91,9 @@ export function usePoliceEvents() {
       } else {
         throw new Error(data?.error || 'Failed to fetch events');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching police events:', err);
-      setError(err.message);
+      setError(getErrorMessage(err));
       if (!silent) {
         toastRef.current({
           title: 'Kunde inte hämta data',

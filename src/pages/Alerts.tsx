@@ -301,7 +301,7 @@ const Alerts = () => {
               onClick={() => navigate('/auth?mode=login')}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition">
               
-                ​Skapa Konto 
+                Skapa Konto 
               </button>
             </div>)
           }

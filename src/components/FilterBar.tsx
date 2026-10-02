@@ -214,7 +214,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                 }
                   <span className="leading-none">{config.label}</span>
                   {isLocked &&
-                <span className="text-[9px] font-semibold text-primary/70">​</span>
+                <span className="text-[9px] font-semibold text-primary/70">{'\u200B'}</span>
                 }
                 </button>);
 

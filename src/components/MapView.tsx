@@ -7,6 +7,16 @@ import PopupEngagement from './PopupEngagement';
 import { AuthProvider } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+declare global {
+  interface Window {
+    // Set by the onclick attribute on popup images (see createPopupContent)
+    __crimeAlertLightbox?: string | null;
+  }
+}
+
+// Popup containers keep a handle to the React root mounted inside them
+type PopupRootElement = HTMLElement & { __reactRoot?: Root };
+
 interface MapViewProps {
   incidents: Incident[];
   selectedId: string | null;
@@ -471,10 +481,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   // Listen for lightbox events from popup image clicks
   useEffect(() => {
     const handler = () => {
-      const url = (window as any).__crimeAlertLightbox;
+      const url = window.__crimeAlertLightbox;
       if (url) {
         setLightboxUrl(url);
-        (window as any).__crimeAlertLightbox = null;
+        window.__crimeAlertLightbox = null;
       }
     };
     window.addEventListener('crimealert-lightbox', handler);
@@ -502,7 +512,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     } as L.MapOptions & { tap?: boolean });
 
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
-    if ((map as any).tap) (map as any).tap.disable();
+    (map as L.Map & { tap?: L.Handler }).tap?.disable();
 
     const ESRI_DARK =
       'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
@@ -597,7 +607,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       marker.on('touchend', handleSelect);
       marker.on('popupopen', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const el = document.getElementById(`popup-engagement-${safeId}`);
+        const el = document.getElementById(`popup-engagement-${safeId}`) as PopupRootElement | null;
         if (el && !el.dataset.mounted) {
           el.dataset.mounted = 'true';
           const root = createRoot(el);
@@ -608,16 +618,16 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
               </QueryClientProvider>
             </AuthProvider>
           );
-          (el as any).__reactRoot = root;
+          el.__reactRoot = root;
         }
       });
       marker.on('popupclose', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const el = document.getElementById(`popup-engagement-${safeId}`);
-        if (el && (el as any).__reactRoot) {
-          const root = (el as any).__reactRoot as Root;
+        const el = document.getElementById(`popup-engagement-${safeId}`) as PopupRootElement | null;
+        if (el?.__reactRoot) {
+          const root = el.__reactRoot;
           setTimeout(() => root.unmount(), 0);
-          delete (el as any).__reactRoot;
+          delete el.__reactRoot;
         }
         prevSelectedRef.current = null;
         onSelectIncidentRef.current('');
@@ -626,7 +636,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
-  }, [incidents, isPremium, isTouch]);
+  }, [incidents, isPremium, isTouch, popupQueryClient]);
 
   const prevSelectedRef = useRef<string | null>(null);
   const focusRingRef = useRef<L.Marker | null>(null);

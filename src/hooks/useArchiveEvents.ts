@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+import { getErrorMessage } from '@/lib/errors';
 
 /**
  * Fetches events from police_events_archive for a given number of days.
@@ -22,7 +24,7 @@ export function useArchiveEvents(days: number, enabled: boolean) {
       const cutoffStr = cutoff.toISOString();
 
       const PAGE_SIZE = 1000;
-      let allRows: any[] = [];
+      let allRows: Tables<'police_events_archive'>[] = [];
       let from = 0;
       let hasMore = true;
 
@@ -64,9 +66,9 @@ export function useArchiveEvents(days: number, enabled: boolean) {
 
       mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
       setIncidents(mapped);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching archive events:', err);
-      setError(err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

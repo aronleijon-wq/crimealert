@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
@@ -17,13 +19,8 @@ const recordAttempt = () => { authAttempts.timestamps.push(Date.now()); };
 const sanitizeInput = (str: string) => str.replace(/<[^>]*>/g, '').trim();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const isTransientBackendError = (err: any) => {
-  const message = String(err?.message || '').toLowerCase();
-  const status = err?.status ?? err?.code;
-  return status === 503 || status === 504 || message.includes('timeout') || message.includes('upstream connect error') || message.includes('failed to fetch');
-};
-const withRetry = async (action: () => Promise<{ error: any }>, attempts = 3) => {
-  let lastError: any = null;
+const withRetry = async (action: () => Promise<{ error: AuthError | null }>, attempts = 3) => {
+  let lastError: AuthError | null = null;
   for (let i = 0; i < attempts; i++) {
     const { error } = await action();
     if (!error) return;
@@ -63,8 +60,8 @@ const Auth = () => {
       if (result?.error) {
         toast({ title: 'Inloggningsfel', description: String(result.error.message || result.error), variant: 'destructive' });
       }
-    } catch (err: any) {
-      toast({ title: 'Fel', description: err.message || 'Kunde inte logga in med Google.', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Fel', description: getErrorMessage(err) || 'Kunde inte logga in med Google.', variant: 'destructive' });
     } finally {
       setGoogleLoading(false);
     }
@@ -79,8 +76,8 @@ const Auth = () => {
       if (error) throw error;
       toast({ title: 'E-post skickad!', description: 'Kolla din inkorg (och skräppost) för att återställa lösenordet.' });
       setForgotPassword(false);
-    } catch (err: any) {
-      toast({ title: 'Fel', description: err.message, variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Fel', description: getErrorMessage(err), variant: 'destructive' });
     } finally { setLoading(false); }
   };
 
@@ -101,9 +98,9 @@ const Auth = () => {
         await withRetry(() => supabase.auth.signUp({ email: cleanEmail, password, options: { emailRedirectTo: window.location.origin } }));
         toast({ title: 'Konto skapat!', description: 'Kolla din e-post för att verifiera kontot.' });
       }
-    } catch (err: any) {
+    } catch (err) {
       const transient = isTransientBackendError(err);
-      toast({ title: 'Fel', description: transient ? 'Tillfälligt serverfel. Försök igen om en minut.' : err.message, variant: 'destructive' });
+      toast({ title: 'Fel', description: transient ? 'Tillfälligt serverfel. Försök igen om en minut.' : getErrorMessage(err), variant: 'destructive' });
     } finally { setLoading(false); }
   };
 

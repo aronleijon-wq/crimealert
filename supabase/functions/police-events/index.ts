@@ -16,9 +16,33 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com", "mykhailo@inphiz.com", "kcleijon@gmail.com"];
 const DELAY_MS = 15 * 60 * 1000; // 15 minutes
 
+// An incident as served to the client and stored in police_events_archive
+interface PoliceIncident {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  lat: number | null;
+  lng: number | null;
+  area: string;
+  time: string;
+  status: string;
+  risk: string;
+  source: string;
+  originalType?: string | null;
+  original_type?: string | null;
+  url?: string | null;
+  location_precision: string;
+}
+
+// Row shape of the police_events_archive table
+interface ArchiveRow extends Omit<PoliceIncident, 'originalType' | 'original_type'> {
+  original_type: string | null;
+}
+
 // ─── In-memory caches (persist within isolate lifecycle) ───────────────────────
 // Cache the full incidents array so multiple users share the same data
-let cachedIncidents: any[] | null = null;
+let cachedIncidents: PoliceIncident[] | null = null;
 let cachedIncidentsTs = 0;
 const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -344,7 +368,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'munkfors': { lat: 59.8310, lng: 13.5420, type: 'kommun' },
   'mönsterås': { lat: 57.0440, lng: 16.4480, type: 'kommun' },
   'mörbylånga': { lat: 56.5230, lng: 16.3750, type: 'kommun' },
-  'nacka': { lat: 59.3100, lng: 18.1650, type: 'kommun' },
   'nora': { lat: 59.5190, lng: 15.0340, type: 'kommun' },
   'norberg': { lat: 60.0700, lng: 15.9230, type: 'kommun' },
   'nordanstig': { lat: 62.0570, lng: 17.0350, type: 'kommun' },
@@ -371,7 +394,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'rättvik': { lat: 60.8830, lng: 15.1240, type: 'kommun' },
   'sala': { lat: 59.9210, lng: 16.6080, type: 'kommun' },
   'sandviken': { lat: 60.6190, lng: 16.7750, type: 'kommun' },
-  'sigtuna': { lat: 59.6170, lng: 17.7240, type: 'kommun' },
   'simrishamn': { lat: 55.5568, lng: 14.3503, type: 'kommun' },
   'sjöbo': { lat: 55.6300, lng: 13.7070, type: 'kommun' },
   'skara': { lat: 58.3867, lng: 13.4389, type: 'kommun' },
@@ -420,7 +442,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'uddevalla': { lat: 58.3489, lng: 11.9371, type: 'kommun' },
   'ulricehamn': { lat: 57.7910, lng: 13.4170, type: 'kommun' },
   'umeå': { lat: 63.8258, lng: 20.2630, type: 'kommun' },
-  'upplands väsby': { lat: 59.5180, lng: 17.9080, type: 'kommun' },
   'uppvidinge': { lat: 57.0970, lng: 15.4310, type: 'kommun' },
   'uppsala': { lat: 59.8586, lng: 17.6389, type: 'kommun' },
   'vadstena': { lat: 58.4497, lng: 14.8912, type: 'kommun' },
@@ -429,7 +450,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'vansbro': { lat: 60.8830, lng: 14.2670, type: 'kommun' },
   'vara': { lat: 58.2610, lng: 13.1190, type: 'kommun' },
   'varberg': { lat: 57.1060, lng: 12.2508, type: 'kommun' },
-  'vaxholm': { lat: 59.4020, lng: 18.3510, type: 'kommun' },
   'vellinge': { lat: 55.4710, lng: 13.0200, type: 'kommun' },
   'vetlanda': { lat: 57.4300, lng: 15.0781, type: 'kommun' },
   'vilhelmina': { lat: 64.6220, lng: 16.6550, type: 'kommun' },
@@ -439,7 +459,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'vårgårda': { lat: 58.0330, lng: 12.8090, type: 'kommun' },
   'vänersborg': { lat: 58.3807, lng: 12.3234, type: 'kommun' },
   'vännäs': { lat: 63.9060, lng: 19.7600, type: 'kommun' },
-  'värmdö': { lat: 59.3200, lng: 18.3800, type: 'kommun' },
   'värnamo': { lat: 57.1872, lng: 14.0395, type: 'kommun' },
   'västervik': { lat: 57.7584, lng: 16.6369, type: 'kommun' },
   'västerås': { lat: 59.6099, lng: 16.5448, type: 'kommun' },
@@ -500,7 +519,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'tanto': { lat: 59.3110, lng: 18.0530, type: 'ort' },
   'årsta': { lat: 59.2960, lng: 18.0510, type: 'stadsdel' },
   'lövholmen': { lat: 59.3120, lng: 18.0200, type: 'ort' },
-  'hägersten': { lat: 59.2980, lng: 17.9860, type: 'stadsdel' },
   'axelsberg': { lat: 59.3030, lng: 17.9690, type: 'ort' },
   'mariehäll': { lat: 59.3460, lng: 17.9370, type: 'ort' },
   'abrahamsberg': { lat: 59.3370, lng: 17.9190, type: 'ort' },
@@ -545,7 +563,6 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'skuru': { lat: 59.3370, lng: 18.2310, type: 'ort' },
   'bollmora': { lat: 59.2330, lng: 18.2380, type: 'ort' },
   'tyresö centrum': { lat: 59.2440, lng: 18.2270, type: 'ort' },
-  'nynäshamn': { lat: 58.9030, lng: 17.9480, type: 'ort' },
   'ösmo': { lat: 59.0170, lng: 17.8800, type: 'ort' },
 
   // Göteborgs-regionen
@@ -579,173 +596,35 @@ const SWEDISH_LOCATIONS: Record<string, LocationEntry> = {
   'floda': { lat: 57.8020, lng: 12.3490, type: 'ort' },
   'nol': { lat: 57.9150, lng: 12.0820, type: 'ort' },
   'älvängen': { lat: 57.9580, lng: 12.1110, type: 'ort' },
-  'lerum': { lat: 57.7710, lng: 12.2690, type: 'ort' },
   'kinna': { lat: 57.5100, lng: 12.6940, type: 'ort' },
   'skene': { lat: 57.4900, lng: 12.6480, type: 'ort' },
 
   // Malmö-regionen
   'arlöv': { lat: 55.6310, lng: 13.0730, type: 'ort' },
   'åkarp': { lat: 55.6370, lng: 13.1210, type: 'ort' },
-  'staffanstorp': { lat: 55.6440, lng: 13.2060, type: 'ort' },
-  'kävlinge': { lat: 55.7940, lng: 13.1120, type: 'ort' },
-  'lomma': { lat: 55.6740, lng: 13.0660, type: 'ort' },
   'bjärred': { lat: 55.7200, lng: 13.0230, type: 'ort' },
   'bunkeflostrand': { lat: 55.5660, lng: 12.9280, type: 'ort' },
   'bunkeflo': { lat: 55.5570, lng: 12.9380, type: 'ort' },
-  'vellinge': { lat: 55.4710, lng: 13.0200, type: 'ort' },
   'skanör': { lat: 55.4090, lng: 12.8390, type: 'ort' },
   'falsterbo': { lat: 55.3860, lng: 12.8480, type: 'ort' },
   'höllviken': { lat: 55.4150, lng: 12.9520, type: 'ort' },
   'dalby': { lat: 55.6680, lng: 13.3410, type: 'ort' },
   'södra sandby': { lat: 55.7120, lng: 13.3520, type: 'ort' },
-  'svedala': { lat: 55.5060, lng: 13.2280, type: 'ort' },
-  'trelleborg': { lat: 55.3755, lng: 13.1573, type: 'ort' },
-  'landskrona': { lat: 55.8706, lng: 12.8302, type: 'ort' },
-  'eslöv': { lat: 55.8380, lng: 13.3050, type: 'ort' },
-  'höör': { lat: 55.9380, lng: 13.5420, type: 'ort' },
 
   // Övriga tätorter i Sverige
-  'motala': { lat: 58.5363, lng: 15.0371, type: 'ort' },
-  'mjölby': { lat: 58.3268, lng: 15.1306, type: 'ort' },
-  'finspång': { lat: 58.7060, lng: 15.7690, type: 'ort' },
-  'katrineholm': { lat: 58.9963, lng: 16.2059, type: 'ort' },
-  'nyköping': { lat: 58.7530, lng: 17.0085, type: 'ort' },
-  'oxelösund': { lat: 58.6700, lng: 17.1020, type: 'ort' },
-  'strängnäs': { lat: 59.3770, lng: 17.0310, type: 'ort' },
   'mariefred': { lat: 59.2600, lng: 17.2240, type: 'ort' },
-  'gnesta': { lat: 59.0490, lng: 17.0100, type: 'ort' },
-  'flen': { lat: 59.0580, lng: 16.5920, type: 'ort' },
-  'enköping': { lat: 59.6367, lng: 17.0763, type: 'ort' },
-  'knivsta': { lat: 59.7210, lng: 17.7870, type: 'ort' },
   'bålsta': { lat: 59.5680, lng: 17.5270, type: 'ort' },
-  'tierp': { lat: 60.3400, lng: 17.5180, type: 'ort' },
   'skutskär': { lat: 60.6370, lng: 17.4060, type: 'ort' },
   'storvik': { lat: 60.5790, lng: 16.5450, type: 'ort' },
-  'hofors': { lat: 60.5530, lng: 16.2910, type: 'ort' },
-  'söderhamn': { lat: 61.3040, lng: 17.0590, type: 'ort' },
-  'hudiksvall': { lat: 61.7275, lng: 17.1055, type: 'ort' },
   'edsbyn': { lat: 61.3800, lng: 15.8170, type: 'ort' },
-  'bollnäs': { lat: 61.3480, lng: 16.3935, type: 'ort' },
-  'ljusdal': { lat: 61.8290, lng: 16.0910, type: 'ort' },
-  'ånge': { lat: 62.5250, lng: 15.6580, type: 'ort' },
-  'härnösand': { lat: 62.6323, lng: 17.9378, type: 'ort' },
-  'kramfors': { lat: 62.9309, lng: 17.7792, type: 'ort' },
-  'sollefteå': { lat: 63.1660, lng: 17.2660, type: 'ort' },
-  'timrå': { lat: 62.4870, lng: 17.3250, type: 'ort' },
-  'strömsund': { lat: 63.8490, lng: 15.5570, type: 'ort' },
   'sveg': { lat: 62.0350, lng: 14.3520, type: 'ort' },
   'funäsdalen': { lat: 62.5510, lng: 12.8540, type: 'ort' },
-  'krokom': { lat: 63.3290, lng: 14.4570, type: 'ort' },
-  'åre': { lat: 63.3990, lng: 13.0810, type: 'ort' },
-  'lycksele': { lat: 64.5967, lng: 18.6718, type: 'ort' },
-  'vindeln': { lat: 64.2010, lng: 19.7190, type: 'ort' },
-  'vännäs': { lat: 63.9060, lng: 19.7600, type: 'ort' },
-  'robertsfors': { lat: 64.1890, lng: 20.8410, type: 'ort' },
-  'norsjö': { lat: 64.9100, lng: 19.4760, type: 'ort' },
   'malå': { lat: 65.1830, lng: 18.7320, type: 'ort' },
-  'dorotea': { lat: 64.2640, lng: 16.4180, type: 'ort' },
-  'vilhelmina': { lat: 64.6220, lng: 16.6550, type: 'ort' },
-  'storuman': { lat: 64.9590, lng: 17.1110, type: 'ort' },
-  'sorsele': { lat: 65.5340, lng: 17.5340, type: 'ort' },
-  'jokkmokk': { lat: 66.6075, lng: 19.8264, type: 'ort' },
-  'gällivare': { lat: 67.1334, lng: 20.6519, type: 'ort' },
   'malmberget': { lat: 67.1760, lng: 20.6560, type: 'ort' },
   'porjus': { lat: 66.9590, lng: 19.8140, type: 'ort' },
-  'pajala': { lat: 66.9770, lng: 23.3660, type: 'ort' },
-  'haparanda': { lat: 65.8350, lng: 24.1370, type: 'ort' },
-  'kalix': { lat: 65.8547, lng: 23.1562, type: 'ort' },
-  'älvsbyn': { lat: 65.6770, lng: 20.9960, type: 'ort' },
-  'boden': { lat: 66.0000, lng: 21.6880, type: 'ort' },
   'råneå': { lat: 65.8470, lng: 22.2820, type: 'ort' },
   'gammelstad': { lat: 65.6370, lng: 22.0120, type: 'ort' },
-  'arvidsjaur': { lat: 65.5910, lng: 19.1759, type: 'ort' },
-  'arjeplog': { lat: 66.0517, lng: 17.8862, type: 'ort' },
-  'nässjö': { lat: 57.6523, lng: 14.6966, type: 'ort' },
-  'vetlanda': { lat: 57.4300, lng: 15.0781, type: 'ort' },
-  'värnamo': { lat: 57.1872, lng: 14.0395, type: 'ort' },
-  'gislaved': { lat: 57.3032, lng: 13.5412, type: 'ort' },
-  'tranås': { lat: 58.0370, lng: 14.9770, type: 'ort' },
-  'eksjö': { lat: 57.6663, lng: 14.9739, type: 'ort' },
-  'sävsjö': { lat: 57.4030, lng: 14.6660, type: 'ort' },
-  'vaggeryd': { lat: 57.4940, lng: 14.1320, type: 'ort' },
-  'ljungby': { lat: 56.8324, lng: 13.9405, type: 'ort' },
-  'älmhult': { lat: 56.5516, lng: 14.1387, type: 'ort' },
-  'lessebo': { lat: 56.7500, lng: 15.2700, type: 'ort' },
-  'nybro': { lat: 56.7444, lng: 15.9079, type: 'ort' },
-  'emmaboda': { lat: 56.6316, lng: 15.5372, type: 'ort' },
-  'torsås': { lat: 56.4110, lng: 16.0060, type: 'ort' },
-  'borgholm': { lat: 56.8796, lng: 16.6560, type: 'ort' },
-  'mörbylånga': { lat: 56.5230, lng: 16.3750, type: 'ort' },
-  'mönsterås': { lat: 57.0440, lng: 16.4480, type: 'ort' },
-  'oskarshamn': { lat: 57.2654, lng: 16.4488, type: 'ort' },
-  'västervik': { lat: 57.7584, lng: 16.6369, type: 'ort' },
-  'vimmerby': { lat: 57.6659, lng: 15.8555, type: 'ort' },
-  'hultsfred': { lat: 57.4880, lng: 15.8445, type: 'ort' },
-  'ronneby': { lat: 56.2096, lng: 15.2751, type: 'ort' },
-  'karlshamn': { lat: 56.1705, lng: 14.8616, type: 'ort' },
-  'olofström': { lat: 56.2770, lng: 14.5330, type: 'ort' },
-  'sölvesborg': { lat: 56.0530, lng: 14.5840, type: 'ort' },
-  'simrishamn': { lat: 55.5568, lng: 14.3503, type: 'ort' },
-  'tomelilla': { lat: 55.5430, lng: 13.9570, type: 'ort' },
-  'sjöbo': { lat: 55.6300, lng: 13.7070, type: 'ort' },
-  'ystad': { lat: 55.4295, lng: 13.8200, type: 'ort' },
-  'skurup': { lat: 55.4770, lng: 13.5000, type: 'ort' },
-  'hörby': { lat: 55.8531, lng: 13.6609, type: 'ort' },
-  'osby': { lat: 56.3780, lng: 13.9940, type: 'ort' },
-  'perstorp': { lat: 56.1390, lng: 13.3940, type: 'ort' },
-  'klippan': { lat: 56.1340, lng: 13.1310, type: 'ort' },
-  'åstorp': { lat: 56.1350, lng: 12.9440, type: 'ort' },
-  'bjuv': { lat: 56.0800, lng: 12.9210, type: 'ort' },
-  'båstad': { lat: 56.4310, lng: 12.8510, type: 'ort' },
-  'laholm': { lat: 56.5120, lng: 13.0430, type: 'ort' },
-  'falkenberg': { lat: 56.9055, lng: 12.4890, type: 'ort' },
-  'varberg': { lat: 57.1060, lng: 12.2508, type: 'ort' },
-  'kungsbacka': { lat: 57.4870, lng: 12.0764, type: 'ort' },
-  'uddevalla': { lat: 58.3489, lng: 11.9371, type: 'ort' },
-  'lysekil': { lat: 58.2745, lng: 11.4358, type: 'ort' },
-  'strömstad': { lat: 58.9390, lng: 11.1710, type: 'ort' },
-  'munkedal': { lat: 58.4620, lng: 11.6720, type: 'ort' },
   'tanumshede': { lat: 58.7230, lng: 11.3280, type: 'ort' },
-  'stenungsund': { lat: 58.0720, lng: 11.8210, type: 'ort' },
-  'vänersborg': { lat: 58.3807, lng: 12.3234, type: 'ort' },
-  'mariestad': { lat: 58.7094, lng: 13.8240, type: 'ort' },
-  'skövde': { lat: 58.3867, lng: 13.8458, type: 'ort' },
-  'lidköping': { lat: 58.5051, lng: 13.1580, type: 'ort' },
-  'falköping': { lat: 58.1733, lng: 13.5519, type: 'ort' },
-  'skara': { lat: 58.3867, lng: 13.4389, type: 'ort' },
-  'tidaholm': { lat: 58.1800, lng: 13.9580, type: 'ort' },
-  'tibro': { lat: 58.4230, lng: 14.1610, type: 'ort' },
-  'vara': { lat: 58.2610, lng: 13.1190, type: 'ort' },
-  'herrljunga': { lat: 58.0780, lng: 13.0250, type: 'ort' },
-  'ulricehamn': { lat: 57.7910, lng: 13.4170, type: 'ort' },
-  'alingsås': { lat: 57.9302, lng: 12.5334, type: 'ort' },
-  'arvika': { lat: 59.6546, lng: 12.5860, type: 'ort' },
-  'sunne': { lat: 59.8370, lng: 13.1370, type: 'ort' },
-  'torsby': { lat: 60.1370, lng: 12.9990, type: 'ort' },
-  'kristinehamn': { lat: 59.3100, lng: 14.1080, type: 'ort' },
-  'filipstad': { lat: 59.7120, lng: 14.1680, type: 'ort' },
-  'säffle': { lat: 59.1330, lng: 12.9260, type: 'ort' },
-  'karlskoga': { lat: 59.3266, lng: 14.5227, type: 'ort' },
-  'kumla': { lat: 59.1270, lng: 15.1400, type: 'ort' },
-  'hallsberg': { lat: 59.0660, lng: 15.0940, type: 'ort' },
-  'lindesberg': { lat: 59.5880, lng: 15.2260, type: 'ort' },
-  'nora': { lat: 59.5190, lng: 15.0340, type: 'ort' },
-  'köping': { lat: 59.5140, lng: 15.9930, type: 'ort' },
-  'arboga': { lat: 59.3937, lng: 15.8384, type: 'ort' },
-  'hallstahammar': { lat: 59.6120, lng: 16.2240, type: 'ort' },
-  'sala': { lat: 59.9210, lng: 16.6080, type: 'ort' },
-  'fagersta': { lat: 60.0040, lng: 15.7920, type: 'ort' },
-  'norberg': { lat: 60.0700, lng: 15.9230, type: 'ort' },
-  'avesta': { lat: 60.1452, lng: 16.1679, type: 'ort' },
-  'hedemora': { lat: 60.2780, lng: 15.9850, type: 'ort' },
-  'säter': { lat: 60.3510, lng: 15.7510, type: 'ort' },
-  'ludvika': { lat: 60.1490, lng: 15.1880, type: 'ort' },
-  'smedjebacken': { lat: 60.1430, lng: 15.4190, type: 'ort' },
-  'mora': { lat: 61.0050, lng: 14.5460, type: 'ort' },
-  'orsa': { lat: 61.1190, lng: 14.6240, type: 'ort' },
-  'rättvik': { lat: 60.8830, lng: 15.1240, type: 'ort' },
-  'leksand': { lat: 60.7300, lng: 14.9990, type: 'ort' },
-  'gagnef': { lat: 60.5940, lng: 15.0830, type: 'ort' },
   'malung': { lat: 60.6830, lng: 13.7150, type: 'ort' },
   'sälen': { lat: 61.1530, lng: 13.2630, type: 'ort' },
 
@@ -1011,7 +890,7 @@ async function scrapeEventDetail(eventUrl: string): Promise<string | null> {
     if (!match) return null;
 
     // Strip HTML tags and decode entities
-    let text = match[1]
+    const text = match[1]
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
       .replace(/<[^>]+>/g, '')
@@ -1062,7 +941,7 @@ function assessRisk(type: string): string {
 }
 
 // Helper: fetch and process all incidents (expensive — cached)
-async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
+async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIncident[]> {
   let apiUrl = 'https://polisen.se/api/events';
   if (locationParam) {
     apiUrl += `?locationname=${encodeURIComponent(locationParam)}`;
@@ -1081,7 +960,7 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
   const events = await response.json();
   console.log(`Received ${events.length} events from Polisen.se`);
 
-    const incidents = [];
+    const incidents: PoliceIncident[] = [];
     const geocodePromises: Promise<void>[] = [];
 
     for (const event of events) {
@@ -1089,7 +968,7 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
       const rawLng = event.location?.gps ? parseFloat(event.location.gps.split(',')[1]) : null;
       const locationName = event.location?.name || '';
       
-      const incident: any = {
+      const incident: PoliceIncident = {
         id: `pol-${event.id}`,
         type: classifyEvent(event.type),
         title: event.name || event.type,
@@ -1300,7 +1179,7 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
     // Only scrape events from the last 3 days to keep response time reasonable
     const now = Date.now();
     const scrape3dCutoff = now - 3 * 24 * 60 * 60 * 1000;
-    const scrapeTargets = incidents.filter((i: any) => {
+    const scrapeTargets = incidents.filter((i) => {
       try {
         const t = new Date(i.time).getTime();
         return !isNaN(t) && t >= scrape3dCutoff && i.url;
@@ -1313,7 +1192,8 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
     
     for (let b = 0; b < scrapeTargets.length; b += BATCH_SIZE) {
       const batch = scrapeTargets.slice(b, b + BATCH_SIZE);
-      const batchPromises = batch.map(async (inc: any) => {
+      const batchPromises = batch.map(async (inc) => {
+        if (!inc.url) return;
         const detail = await scrapeEventDetail(inc.url);
         if (detail && detail.length > (inc.description || '').length) {
           scrapeResults.set(inc.id, detail);
@@ -1334,9 +1214,9 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
     }
     console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
 
-    const validIncidents = incidents.filter((i: any) => i.lat && i.lng);
+    const validIncidents = incidents.filter((i) => i.lat && i.lng);
     
-    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i: any) => {
+    const precisionCounts = validIncidents.reduce((acc: Record<string, number>, i) => {
       acc[i.location_precision] = (acc[i.location_precision] || 0) + 1;
       return acc;
     }, {});
@@ -1346,10 +1226,10 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<any[]> {
 }
 
 // ─── Archive helpers ──────────────────────────────────────────────────────────
-async function archiveIncidents(incidents: any[]) {
+async function archiveIncidents(incidents: PoliceIncident[]) {
   if (!incidents.length) return;
   try {
-    const rows = incidents.map((i: any) => ({
+    const rows = incidents.map((i) => ({
       id: i.id,
       type: i.type,
       title: i.title,
@@ -1395,7 +1275,7 @@ async function archiveIncidents(incidents: any[]) {
   }
 }
 
-async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<any[]> {
+async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<PoliceIncident[]> {
   try {
     const cutoff = new Date(Date.now() - cutoffDays * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
@@ -1409,7 +1289,7 @@ async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<any[]> {
       return [];
     }
     // Map DB rows back to incident format
-    return (data || []).map((r: any) => ({
+    return (data || []).map((r: ArchiveRow) => ({
       id: r.id,
       type: r.type,
       title: r.title,
@@ -1489,7 +1369,7 @@ serve(async (req) => {
     const location = url.searchParams.get('location') || '';
 
     // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
-    let freshIncidents: any[];
+    let freshIncidents: PoliceIncident[];
     const now = Date.now();
     if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
       console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
@@ -1507,21 +1387,21 @@ serve(async (req) => {
     }
 
     // Merge fresh data with archived data (archived fills the 10-30 day gap)
-    const freshIds = new Set(freshIncidents.map((i: any) => i.id));
+    const freshIds = new Set(freshIncidents.map((i) => i.id));
     const archived = await fetchArchivedIncidents(30);
-    const olderArchived = archived.filter((a: any) => !freshIds.has(a.id));
+    const olderArchived = archived.filter((a) => !freshIds.has(a.id));
     let allIncidents = [...freshIncidents, ...olderArchived];
     console.log(`Combined: ${freshIncidents.length} fresh + ${olderArchived.length} archived = ${allIncidents.length} total`);
 
-    const isSummaryIncident = (incident: any) => {
+    const isSummaryIncident = (incident: PoliceIncident) => {
       const haystack = `${incident.originalType || incident.original_type || ''} ${incident.title || ''}`.toLowerCase();
       return haystack.includes('sammanfattning');
     };
 
     const summaryScrapeTargets = allIncidents
-      .filter((i: any) => isSummaryIncident(i) && i.url && isWithinLastDays(i.time, 7))
-      .filter((i: any) => hasSummaryPlaceholderDescription(i.description) || !i.description || i.description.length < 180)
-      .sort((a: any, b: any) => {
+      .filter((i) => isSummaryIncident(i) && i.url && isWithinLastDays(i.time, 7))
+      .filter((i) => hasSummaryPlaceholderDescription(i.description) || !i.description || i.description.length < 180)
+      .sort((a, b) => {
         const placeholderPriority = Number(hasSummaryPlaceholderDescription(b.description)) - Number(hasSummaryPlaceholderDescription(a.description));
         if (placeholderPriority !== 0) return placeholderPriority;
         return parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time);
@@ -1533,7 +1413,8 @@ serve(async (req) => {
 
       for (let b = 0; b < summaryScrapeTargets.length; b += SUMMARY_BATCH_SIZE) {
         const batch = summaryScrapeTargets.slice(b, b + SUMMARY_BATCH_SIZE);
-        const batchPromises = batch.map(async (incident: any) => {
+        const batchPromises = batch.map(async (incident) => {
+          if (!incident.url) return;
           const detail = await scrapeEventDetail(incident.url);
           if (detail && detail.length > (incident.description || '').length) {
             summaryScrapeResults.set(incident.id, detail);
@@ -1543,7 +1424,7 @@ serve(async (req) => {
       }
 
       if (summaryScrapeResults.size > 0) {
-        allIncidents = allIncidents.map((incident: any) => ({
+        allIncidents = allIncidents.map((incident) => ({
           ...incident,
           description: summaryScrapeResults.get(incident.id) || incident.description,
         }));
@@ -1559,13 +1440,13 @@ serve(async (req) => {
     if (!isPremium) {
       const delayCutoff = Date.now() - DELAY_MS;
       resultIncidents = allIncidents
-        .filter((i: any) => {
+        .filter((i) => {
           try {
             const t = new Date(i.time).getTime();
             return !isNaN(t) && t <= delayCutoff;
           } catch { return false; }
         })
-        .map((i: any) => ({
+        .map((i) => ({
           ...i,
           description: isSummaryIncident(i) ? (i.description || '') : '',
         }));
