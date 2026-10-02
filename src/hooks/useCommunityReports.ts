@@ -10,7 +10,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Medborgarrapport',
 };
 
-export function useCommunityReports() {
+// Community reports are a Pro feature, so callers only enable the query for Pro users
+export function useCommunityReports(enabled = true) {
   const [reports, setReports] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,7 +46,7 @@ export function useCommunityReports() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchReports(); }, [fetchReports]);
+  useEffect(() => { if (enabled) fetchReports(); }, [fetchReports, enabled]);
 
   return { reports, loading, refetch: fetchReports };
 }

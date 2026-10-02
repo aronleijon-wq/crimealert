@@ -33,6 +33,7 @@ const TYPE_ICONS: Record<string, string> = {
   ambulance: '🚑',
   traffic: '🚗',
   other: '⚠️',
+  crisis: '📢',
 };
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
@@ -319,6 +320,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
   const riskDesc = getRiskDescription(inc.risk, inc.type);
   const timeAgo = getTimeAgo(inc.time);
   const extractedDetails = extractDetails(inc.description, inc.title, inc.originalType);
+  // Official warnings (VMA, Krisinformation) and police summaries are shown in full to everyone
+  const descriptionIsFree = inc.type === 'crisis' || !!inc.originalType?.toLowerCase().includes('sammanfattning');
+  const sourceUrl = inc.type === 'crisis' && inc.url && /^https:\/\//.test(inc.url) ? sanitizeHTML(inc.url) : null;
 
   // Sanitize all dynamic incident data
   const safeTitle = sanitizeHTML(inc.title);
@@ -354,9 +358,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${(isPremium || (inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))) && inc.description
+      ${(isPremium || descriptionIsFree) && inc.description
         ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}</p>`
-        : !isPremium && !(inc.originalType && inc.originalType.toLowerCase().includes('sammanfattning'))
+        : !isPremium && !descriptionIsFree
           ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;">🔒 Detaljerad beskrivning kräver Pro</p>`
           : ''}
 
@@ -422,7 +426,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       ${inc.approximate ? `<div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.amber};background:${P.amber}12;border:1px solid ${P.amber}33;padding:${sz(5,3)}px ${sz(8,5)}px;border-radius:3px;">⊙ Positionen är approximerad</div>` : ''}
 
       <div style="margin-top:${sz(8,5)}px;padding-top:${sz(7,4)}px;border-top:1px solid ${P.line};font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.12em;text-transform:uppercase;color:${P.faint};display:flex;justify-content:space-between;">
-        <span>${safeSource.toLowerCase().includes('polisen') ? `<a href="https://polisen.se/aktuellt/polisens-nyheter/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">${safeSource}</a>` : safeSource}</span>
+        <span>${sourceUrl
+          ? `<a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">${safeSource} ↗</a>`
+          : safeSource.toLowerCase().includes('polisen') ? `<a href="https://polisen.se/aktuellt/polisens-nyheter/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">${safeSource}</a>` : safeSource}</span>
         <span>CrimeAlert</span>
       </div>
 
