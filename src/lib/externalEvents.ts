@@ -8,6 +8,7 @@ export const SOURCE_NAMES: Record<string, string> = {
   krisinformation: 'Krisinformation.se',
   trafikverket: 'Trafikverket',
   svt: 'SVT Nyheter',
+  svd: 'Svenska Dagbladet',
   aftonbladet: 'Aftonbladet',
   expressen: 'Expressen',
 };
