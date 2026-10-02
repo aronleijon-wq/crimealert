@@ -112,60 +112,6 @@ export type Database = {
         }
         Relationships: []
       }
-      external_events: {
-        Row: {
-          area: string | null
-          category: string | null
-          created_at: string
-          ends_at: string | null
-          id: string
-          kind: string
-          lat: number | null
-          lng: number | null
-          published_at: string
-          severity: string
-          source: string
-          summary: string
-          title: string
-          updated_at: string
-          url: string | null
-        }
-        Insert: {
-          area?: string | null
-          category?: string | null
-          created_at?: string
-          ends_at?: string | null
-          id: string
-          kind: string
-          lat?: number | null
-          lng?: number | null
-          published_at: string
-          severity?: string
-          source: string
-          summary?: string
-          title: string
-          updated_at?: string
-          url?: string | null
-        }
-        Update: {
-          area?: string | null
-          category?: string | null
-          created_at?: string
-          ends_at?: string | null
-          id?: string
-          kind?: string
-          lat?: number | null
-          lng?: number | null
-          published_at?: string
-          severity?: string
-          source?: string
-          summary?: string
-          title?: string
-          updated_at?: string
-          url?: string | null
-        }
-        Relationships: []
-      }
       geocode_cache: {
         Row: {
           created_at: string
@@ -238,21 +184,6 @@ export type Database = {
           incident_id?: string
           reaction_type?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      ingest_state: {
-        Row: {
-          key: string
-          last_run_at: string
-        }
-        Insert: {
-          key: string
-          last_run_at?: string
-        }
-        Update: {
-          key?: string
-          last_run_at?: string
         }
         Relationships: []
       }
