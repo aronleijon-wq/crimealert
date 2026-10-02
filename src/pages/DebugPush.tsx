@@ -50,7 +50,7 @@ const DebugPush = () => {
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 Uppdatera status
               </Button>
-              <Button size="sm" onClick={() => sendTestNotification()} disabled={loading || !isSubscribed}>
+              <Button size="sm" onClick={() => sendTestNotification('/debug-push')} disabled={loading || !isSubscribed}>
                 <BellRing className="h-4 w-4" />
                 Skicka testnotis
               </Button>

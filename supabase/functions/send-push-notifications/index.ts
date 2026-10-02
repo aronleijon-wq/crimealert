@@ -1,4 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  buildPushMessage,
+  safeAppPath,
+  settingsFromRow,
+  wantsEvent,
+  watchedKommunFor,
+  type NotifySettings,
+  type PushEvent,
+} from '../_shared/notifications.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,15 +22,7 @@ type PushSubscriptionRow = {
   auth: string;
 };
 
-type EventRow = {
-  id: string;
-  title: string;
-  area: string | null;
-  type: string;
-  risk: string | null;
-  time: string;
-  original_type: string | null;
-};
+type EventRow = PushEvent;
 
 async function sendWebPush(
   subscription: { endpoint: string; p256dh: string; auth: string },
@@ -327,12 +328,12 @@ Deno.serve(async (req) => {
       }
 
       const payload = JSON.stringify({
-        title: 'CrimeAlert testnotis',
-        body: 'Push-flödet fungerar — denna notis skickades via backend, VAPID och service worker.',
+        title: '✅ Notiser fungerar',
+        body: 'Så här ser det ut när något händer i dina bevakade områden.',
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
         tag: 'crimealert-test',
-        data: { url: '/debug-push' },
+        data: { url: safeAppPath(body.url) },
         requireInteraction: true,
       });
 
@@ -385,17 +386,27 @@ Deno.serve(async (req) => {
     const userKommuner: Record<string, string[]> = {};
     for (const pref of prefs) {
       if (!userKommuner[pref.user_id]) userKommuner[pref.user_id] = [];
-      userKommuner[pref.user_id].push(pref.kommun.toLowerCase());
+      userKommuner[pref.user_id].push(pref.kommun);
     }
+
+    // What each user wants to hear about. No row means everything; if the table can't be read
+    // (e.g. before its migration has run), everyone keeps getting everything.
+    const userSettings: Record<string, NotifySettings> = {};
+    const { data: settingsRows, error: settingsError } = await supabase
+      .from('notification_settings')
+      .select('user_id, types, min_risk');
+    if (settingsError) {
+      console.warn('Could not read notification settings, using defaults', settingsError.message);
+    }
+    for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
 
     const userNotifications: Record<string, EventRow[]> = {};
     for (const event of recentEvents as EventRow[]) {
-      const eventArea = (event.area || '').toLowerCase();
       for (const [userId, kommuner] of Object.entries(userKommuner)) {
-        if (kommuner.some((kommun) => eventArea.includes(kommun))) {
-          if (!userNotifications[userId]) userNotifications[userId] = [];
-          userNotifications[userId].push(event);
-        }
+        if (!watchedKommunFor(event.area, kommuner)) continue;
+        if (!wantsEvent(userSettings[userId] ?? settingsFromRow(null), event)) continue;
+        if (!userNotifications[userId]) userNotifications[userId] = [];
+        userNotifications[userId].push(event);
       }
     }
 
@@ -451,17 +462,14 @@ Deno.serve(async (req) => {
       const events = userNotifications[sub.user_id];
       if (!events?.length) continue;
 
-      const firstEvent = events[0];
-      const title = events.length === 1 ? `${firstEvent.type} — ${firstEvent.area}` : `${events.length} nya händelser i dina bevakade kommuner`;
-      const body = events.length === 1 ? firstEvent.title : events.slice(0, 3).map((event) => `${event.type}: ${event.area}`).join('\n');
-      const targetUrl = events.length === 1 ? `/?incident=${encodeURIComponent(firstEvent.id)}` : '/';
+      const message = buildPushMessage(events);
       const payload = JSON.stringify({
-        title,
-        body,
+        title: message.title,
+        body: message.body,
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
-        tag: `crimealert-incident-${firstEvent.id}`,
-        data: { url: targetUrl, incidentId: events.length === 1 ? firstEvent.id : null },
+        tag: message.tag,
+        data: { url: message.url, incidentId: message.incidentId },
         requireInteraction: true,
       });
 

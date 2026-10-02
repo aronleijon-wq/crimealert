@@ -67,6 +67,8 @@ export function usePushNotifications() {
   const [serviceWorkerMessages, setServiceWorkerMessages] = useState<string[]>([]);
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastTestResult, setLastTestResult] = useState<TestNotificationResult | null>(null);
+  // False until this device's subscription has been looked up, so pages don't flash "off"
+  const [checked, setChecked] = useState(false);
 
   const log = useCallback((message: string, details?: unknown) => {
     console.info(`[Push] ${message}`, details ?? '');
@@ -209,7 +211,7 @@ export function usePushNotifications() {
   }, [fetchBackendConfig, fetchDatabaseSubscriptions, log, syncSubscriptionToDatabase, user]);
 
   useEffect(() => {
-    refreshStatus();
+    refreshStatus().finally(() => setChecked(true));
   }, [refreshStatus]);
 
   useEffect(() => {
@@ -326,7 +328,8 @@ export function usePushNotifications() {
     }
   }, [isSupported, log, refreshStatus, user]);
 
-  const sendTestNotification = useCallback(async () => {
+  /** Sends a test notification to this user's devices; tapping it opens `url` in the app. */
+  const sendTestNotification = useCallback(async (url = '/alerts') => {
     if (!user) {
       const result = { error: 'Du måste vara inloggad för att skicka en testnotis.' };
       setLastTestResult(result);
@@ -349,7 +352,7 @@ export function usePushNotifications() {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ mode: 'test' }),
+        body: JSON.stringify({ mode: 'test', url }),
       });
 
       const result = await response.json();
@@ -374,6 +377,7 @@ export function usePushNotifications() {
   }, [log, user]);
 
   return {
+    checked,
     isSubscribed,
     isSupported,
     loading,

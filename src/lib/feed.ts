@@ -2,6 +2,7 @@ import type { Incident, IncidentType } from '@/data/mockIncidents';
 import { sourceName, type ExternalEvent } from '@/lib/externalEvents';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { CRISIS_DEFAULT_DURATION_MS, filterIncidentsForMap, linkTrafficDuplicates } from '@/lib/mapFilters';
+import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { specificTopicsOf } from '../../supabase/functions/_shared/sources/topics';
 
 export type FeedKind = 'police' | 'community' | 'traffic' | 'vma' | 'crisis' | 'news';
@@ -225,13 +226,7 @@ export function filterFeed(items: FeedItem[], filter: FeedFilter, watchedKommune
     case 'traffic': return items.filter((i) => i.kind === 'traffic');
     case 'crisis': return items.filter((i) => i.kind === 'vma' || i.kind === 'crisis');
     case 'news': return items.filter((i) => i.kind === 'news' || i.related.length > 0);
-    case 'mine': {
-      const watched = watchedKommuner.map(normalizeArea).filter(Boolean);
-      return items.filter((i) => {
-        const area = normalizeArea(i.area);
-        return !!area && watched.some((k) => area.includes(k) || k.includes(area));
-      });
-    }
+    case 'mine': return items.filter((i) => !!watchedKommunFor(i.area, watchedKommuner));
     default: return items;
   }
 }

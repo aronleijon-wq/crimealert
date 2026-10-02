@@ -283,6 +283,27 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_settings: {
+        Row: {
+          min_risk: string
+          types: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          min_risk?: string
+          types?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          min_risk?: string
+          types?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       police_events_archive: {
         Row: {
           area: string | null
