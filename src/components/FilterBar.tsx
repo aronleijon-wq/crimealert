@@ -23,11 +23,12 @@ const TYPE_COLORS: Record<IncidentType, string> = {
   ambulance: 'hsl(var(--cr-green))',
   traffic: 'hsl(var(--cr-orange))',
   other: 'hsl(var(--muted-foreground))',
-  trafikverket: 'hsl(48, 100%, 55%)'
+  trafikverket: 'hsl(48, 100%, 55%)',
+  crisis: 'hsl(280, 75%, 62%)'
 };
 
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, showCommunityReports, onToggleCommunityReports, onSearchLocation }: FilterBarProps) => {
-  const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket'];
+  const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const isLoggedIn = !!user;

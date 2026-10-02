@@ -6,6 +6,7 @@
 
 - [/](/): Realtidskarta med polishändelser, filter efter typ och kommun, push-notiser och detaljerad händelseinformation.
 - [/om-oss](/om-oss): Information om CrimeAlert, vårt syfte och kontaktvägar.
+- [/flode](/flode): Flöde med polisens händelser, VMA, krisinformation, trafikstörningar och lokala nyheter (rubrik och länk), med reaktioner och kommentarer.
 - [/analysis](/analysis): Statistik och analys över brott och händelser, filtrering på tidsperiod (24h/7d/30d), kommunranking och dataexport för Pro-användare.
 - [/alerts](/alerts): Inställningar för push-notiser — välj vilka kommuner du vill bevaka och vilka händelsetyper som ska trigga notiser.
 - [/konto](/konto): Användarkonto, profilinställningar, push-notispreferenser, betalningshantering och recensioner.

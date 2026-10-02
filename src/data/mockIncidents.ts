@@ -1,4 +1,4 @@
-export type IncidentType = 'police' | 'fire' | 'ambulance' | 'traffic' | 'other' | 'trafikverket';
+export type IncidentType = 'police' | 'fire' | 'ambulance' | 'traffic' | 'other' | 'trafikverket' | 'crisis';
 export type RiskLevel = 'low' | 'medium' | 'high';
 export type IncidentStatus = 'active' | 'resolved';
 
@@ -20,6 +20,8 @@ export interface Incident {
   locationPrecision?: string;
   image_url?: string | null;
   endTime?: string | null;
+  /** Trafikverket: an acute disruption (accident, closure, obstacle) rather than roadworks */
+  acute?: boolean;
 }
 
 const now = new Date();
@@ -110,6 +112,7 @@ export const incidentTypeConfig: Record<IncidentType, { label: string; color: st
   traffic: { label: 'Trafikolycka', color: 'hsl(25, 100%, 63%)', icon: '🟠' },
   other: { label: 'Övrigt', color: 'hsl(0, 0%, 30%)', icon: '⚫' },
   trafikverket: { label: 'Trafikverket', color: 'hsl(48, 100%, 55%)', icon: '🟡' },
+  crisis: { label: 'Kris & VMA', color: 'hsl(280, 75%, 62%)', icon: '🟣' },
 };
 
 export const riskConfig: Record<RiskLevel, { label: string; colorClass: string }> = {

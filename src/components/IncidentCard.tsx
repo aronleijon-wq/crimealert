@@ -79,7 +79,7 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
         {incident.title}
       </h3>
 
-      {isPremium && (
+      {(isPremium || incident.type === 'crisis') && (
         <p className="text-[10.5px] leading-relaxed text-[hsl(var(--ca-text-3))] mb-1.5 line-clamp-2">{incident.description}</p>
       )}
 

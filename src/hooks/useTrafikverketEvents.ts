@@ -18,6 +18,7 @@ interface TrafikverketEventDto {
   risk?: string;
   originalType?: string | null;
   location_precision?: string | null;
+  acute?: boolean;
 }
 
 interface TrafikverketEventsResponse {
@@ -59,6 +60,7 @@ async function requestTrafikverketEvents(): Promise<Incident[]> {
     originalType: e.originalType || undefined,
     locationPrecision: e.location_precision || 'exact',
     endTime: e.endTime || null,
+    acute: e.acute,
   })).filter((i: Incident) => {
     // Släpp störningar vars sluttid passerat (t.ex. avslutade vägarbeten)
     if (!i.endTime) return true;

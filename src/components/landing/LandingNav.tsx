@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const links = [
   { to: '/karta', label: 'Karta' },
+  { to: '/flode', label: 'Flöde' },
   { to: '/analysis', label: 'Analys' },
   { to: '/alerts', label: 'Notiser' },
 ];

@@ -9,7 +9,7 @@ import IncidentCard from '@/components/IncidentCard';
 import MobileSignupBar from '@/components/MobileSignupBar';
 
 
-import { mockIncidents, IncidentType } from '@/data/mockIncidents';
+import { mockIncidents, Incident, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
 import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
@@ -17,10 +17,12 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { filterIncidentsForMap, sortNewestFirst } from '@/lib/mapFilters';
+import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
+import { crisisToIncident } from '@/lib/externalEvents';
+import { useExternalEvents } from '@/hooks/useExternalEvents';
 
 
-const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket'];
+const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
 
 const Index = () => {
   useSEO({
@@ -46,8 +48,9 @@ const Index = () => {
   const [flyToLocation, setFlyToLocation] = useState<{lat: number;lng: number;zoom: number;_ts?: number;} | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
-  const { reports: communityReports } = useCommunityReports();
+  const { reports: communityReports } = useCommunityReports(isPremium);
   const { incidents: trafikverketIncidents } = useTrafikverketEvents();
+  const { events: externalEvents } = useExternalEvents();
 
   // Update filters when premium/login status changes — activate all allowed filters
   useEffect(() => {
@@ -79,12 +82,15 @@ const Index = () => {
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
   // Community reports only visible for Pro members on the map/list
   const allIncidents = useMemo(() => {
-    const base = [...policeIncidents, ...trafikverketIncidents];
+    // A Trafikverket accident that the police also reported gets no marker of its own
+    const { traffic } = linkTrafficDuplicates(policeIncidents, trafikverketIncidents);
+    const crisis = externalEvents.map(crisisToIncident).filter((i): i is Incident => i !== null);
+    const base = [...policeIncidents, ...traffic, ...crisis];
     if (isPremium && showCommunityReports) {
       return [...base, ...communityReports];
     }
     return base;
-  }, [policeIncidents, trafikverketIncidents, communityReports, isPremium, showCommunityReports]);
+  }, [policeIncidents, trafikverketIncidents, externalEvents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
   const timeFiltered = useMemo(

@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Radio, BarChart3, Bell, User, CreditCard } from 'lucide-react';
+import { Radio, Newspaper, BarChart3, Bell, User, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const baseNavItems = [
   { to: '/karta', label: 'Karta', icon: Radio },
+  { to: '/flode', label: 'Flöde', icon: Newspaper },
   { to: '/analysis', label: 'Analys', icon: BarChart3 },
   { to: '/alerts', label: 'Notiser', icon: Bell },
 ];
