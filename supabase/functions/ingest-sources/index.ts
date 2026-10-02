@@ -3,7 +3,7 @@
 // It also calls police-events, which archives new police events and sends push notifications,
 // so those keep running when nobody has the site open.
 
-import { createClient } from 'npm:@supabase/supabase-js@2.57.2';
+import { createClient } from 'npm:@supabase/supabase-js@2.97.0';
 import {
   parseSituations,
   situationQuery,

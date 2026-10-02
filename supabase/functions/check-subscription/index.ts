@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -131,11 +131,11 @@ serve(async (req) => {
         status: 'all',
         limit: 20,
       });
-      logStep("Subscriptions for customer", { customerId: customer.id, count: subscriptions.data.length, statuses: subscriptions.data.map(s => s.status) });
+      logStep("Subscriptions for customer", { customerId: customer.id, count: subscriptions.data.length, statuses: subscriptions.data.map((s: Stripe.Subscription) => s.status) });
 
       const customerBest = subscriptions.data
-        .filter((s) => eligibleStatuses.includes(s.status))
-        .filter((s) => {
+        .filter((s: Stripe.Subscription) => eligibleStatuses.includes(s.status))
+        .filter((s: Stripe.Subscription) => {
           const periodEndSec = getSubPeriodEndSec(s);
           const valid = isSubscriptionValidNow(s);
           if (!valid) {
@@ -148,7 +148,7 @@ serve(async (req) => {
           }
           return valid;
         })
-        .sort((a, b) => {
+        .sort((a: Stripe.Subscription, b: Stripe.Subscription) => {
           const byStatus = priorityOrder.indexOf(a.status) - priorityOrder.indexOf(b.status);
           if (byStatus !== 0) return byStatus;
           const aEnd = getSubPeriodEndSec(a) ?? 0;

@@ -1,7 +1,6 @@
 -- Events from sources other than Polisen.se: Trafikverket, Krisinformation.se, VMA (Sveriges Radio)
 -- and news headlines. Written only by the ingest-sources edge function (service role).
--- Safe to run again: Lovable applied the same schema as 20261002154807_aac2fa80-....sql.
-CREATE TABLE IF NOT EXISTS public.external_events (
+CREATE TABLE public.external_events (
   id text PRIMARY KEY,
   source text NOT NULL,
   kind text NOT NULL CHECK (kind IN ('vma', 'crisis', 'traffic', 'news')),
@@ -19,18 +18,17 @@ CREATE TABLE IF NOT EXISTS public.external_events (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS external_events_published_at_idx ON public.external_events (published_at DESC);
-CREATE INDEX IF NOT EXISTS external_events_kind_published_at_idx ON public.external_events (kind, published_at DESC);
+CREATE INDEX external_events_published_at_idx ON public.external_events (published_at DESC);
+CREATE INDEX external_events_kind_published_at_idx ON public.external_events (kind, published_at DESC);
 
 ALTER TABLE public.external_events ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Anyone can read external events" ON public.external_events;
 CREATE POLICY "Anyone can read external events" ON public.external_events
   FOR SELECT TO anon, authenticated USING (true);
 GRANT SELECT ON public.external_events TO anon, authenticated;
 GRANT ALL ON public.external_events TO service_role;
 
 -- When ingest-sources last ran, so overlapping or extra calls skip instead of repeating the work
-CREATE TABLE IF NOT EXISTS public.ingest_state (
+CREATE TABLE public.ingest_state (
   key text PRIMARY KEY,
   last_run_at timestamptz NOT NULL DEFAULT 'epoch'
 );
