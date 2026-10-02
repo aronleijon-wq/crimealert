@@ -374,7 +374,7 @@ const Analysis = () => {
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
-        description="Uppgradera till Pro för att se detaljerad analyser, trender och säkerhetsindex, m.m. per område." /> :
+        description="Med Pro ser du trender, mest aktiva tider, riskindex och säkerhetsindex per kommun, upp till 30 dagar bakåt, och kan exportera till PDF och CSV." /> :
 
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
