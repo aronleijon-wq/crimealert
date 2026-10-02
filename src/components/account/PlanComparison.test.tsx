@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PlanComparison from './PlanComparison';
-import { PRICES, PRO_FEATURES } from './plans';
+import { PRICES, PRO_FEATURES, YEARLY_DISCOUNT_PERCENT } from './plans';
 import { FREE_TIER_DELAY_MS } from '@/lib/mapFilters';
 
 const renderPlans = (props: Partial<React.ComponentProps<typeof PlanComparison>> = {}) => {
@@ -32,8 +32,9 @@ describe('PlanComparison', () => {
 
   it('switches between monthly and yearly prices', () => {
     const { onBillingCycle } = renderPlans({ billingCycle: 'yearly' });
-    expect(screen.getByText('119 kr')).toBeInTheDocument();
-    expect(screen.getByText('Spara 109 kr jämfört med månadsvis')).toBeInTheDocument();
+    expect(screen.getByText('159 kr')).toBeInTheDocument();
+    expect(screen.getByText('Spara 69 kr jämfört med månadsvis')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Årsvis −30%/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: 'Månadsvis' }));
     expect(onBillingCycle).toHaveBeenCalledWith('monthly');
   });
@@ -55,10 +56,10 @@ describe('plan texts match the code', () => {
     expect(PRO_FEATURES[0].text).toContain('15 minuters');
   });
 
-  it('keeps the yearly saving right', () => {
-    const monthly = parseInt(PRICES.monthly.price, 10);
-    const yearly = parseInt(PRICES.yearly.price, 10);
-    expect(PRICES.yearly.note).toContain(`${monthly * 12 - yearly} kr`);
-    expect(Math.round((1 - yearly / (monthly * 12)) * 100)).toBe(48);
+  it('gives 30 % off for a year', () => {
+    expect(PRICES.monthly.price).toBe('19 kr');
+    expect(PRICES.yearly.price).toBe('159 kr');
+    expect(YEARLY_DISCOUNT_PERCENT).toBe(30);
+    expect(PRICES.yearly.note).toBe('Spara 69 kr jämfört med månadsvis');
   });
 });

@@ -1,8 +1,15 @@
 import { BarChart3, EyeOff, FileDown, FileText, ListChecks, Users, Zap, type LucideIcon } from 'lucide-react';
 
+// Must match the active prices in Stripe (create-checkout charges whatever is active there)
+const MONTHLY_KR = 19;
+const YEARLY_KR = 159;
+
+/** How much cheaper a year is than twelve months, in percent */
+export const YEARLY_DISCOUNT_PERCENT = Math.round((1 - YEARLY_KR / (MONTHLY_KR * 12)) * 100);
+
 export const PRICES = {
-  monthly: { price: '19 kr', period: '/mån', note: null },
-  yearly: { price: '119 kr', period: '/år', note: 'Spara 109 kr jämfört med månadsvis' },
+  monthly: { amount: MONTHLY_KR, price: `${MONTHLY_KR} kr`, period: '/mån', note: null },
+  yearly: { amount: YEARLY_KR, price: `${YEARLY_KR} kr`, period: '/år', note: `Spara ${MONTHLY_KR * 12 - YEARLY_KR} kr jämfört med månadsvis` },
 } as const;
 export type BillingCycle = keyof typeof PRICES;
 
