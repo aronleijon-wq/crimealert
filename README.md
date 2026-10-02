@@ -1,6 +1,6 @@
 # CrimeAlert SWE
 
-Bygg en modern, skalbar webbsida + mobilapp med namnet CrimeRadar. Plattformen ska fungera som en realtidsbaserad säkerhets- och incidentkarta för Sverige, med fokus på trygghet, analys och datavisualisering – inte sensation.
+Bygg en modern, skalbar webbsida + mobilapp med namnet CrimeAlert. Plattformen ska fungera som en realtidsbaserad säkerhets- och incidentkarta för Sverige, med fokus på trygghet, analys och datavisualisering – inte sensation.
 
 Designen ska kännas:
 
