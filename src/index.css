@@ -563,3 +563,24 @@ html.no-ads .google-auto-placed {
   .ca-lock, .ca-map-in, .ca-log-row, .ca-caret, .ca-shine { animation: none !important; }
   .ca-reveal { opacity: 1; transform: none; filter: none; transition: none; }
 }
+
+/* ==========================================================
+   Phones and tablets: blur behind panels and large blur filters make the GPU redo work on
+   every scroll and pan frame, so touch screens get solid, slightly more opaque surfaces
+   ========================================================== */
+@media (max-width: 767px), (pointer: coarse) {
+  *, *::before, *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .ca-glass { background: hsla(210, 30%, 6%, 0.9); }
+  html:not(.dark) .ca-glass { background: hsla(0, 0%, 100%, 0.95); }
+  .ca-tac { background: hsla(215, 27%, 9%, 0.92); }
+  html:not(.dark) .ca-tac { background: hsla(0, 0%, 100%, 0.95); }
+  /* Bars that content scrolls under */
+  .ca-bar { background-color: hsl(var(--ca-base) / 0.97) !important; }
+  /* The fog's radial gradient is already soft; skip the blur and the drift */
+  .ca-fog { animation: none !important; filter: none !important; }
+  /* Map tiles without colour filters, on the live map and the feed's map banners */
+  .ca-tiles { filter: none !important; }
+}

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSEO } from '@/hooks/useSEO';
 import LandingNav from '@/components/landing/LandingNav';
@@ -9,6 +9,7 @@ import LocalMonitoring from '@/components/landing/LocalMonitoring';
 import PlatformGrid from '@/components/landing/PlatformGrid';
 import FinalCTA from '@/components/landing/FinalCTA';
 import LandingFooter from '@/components/landing/LandingFooter';
+import StoryStatic from '@/components/landing/StoryStatic';
 import { useLandingLive } from '@/components/landing/useLandingLive';
 
 // Below the fold and the only user of framer-motion, so keep it out of the initial bundle
@@ -28,6 +29,11 @@ const Landing = () => {
   });
 
   const location = useLocation();
+  // Phones and tablets get the story as a plain list: scroll-driven animation of a large map
+  // stutters there, and they skip downloading the animation library
+  const [touch] = useState(
+    () => typeof window !== 'undefined' && (window.matchMedia?.('(max-width: 767px), (pointer: coarse)').matches ?? false),
+  );
   // One source of live events for the hero and the map preview
   const live = useLandingLive();
   const incident = new URLSearchParams(location.search).get('incident');
@@ -46,9 +52,13 @@ const Landing = () => {
       <LandingNav />
       <main>
         <Hero live={live} />
-        <Suspense fallback={<StickyStoryPlaceholder />}>
-          <StickyStory />
-        </Suspense>
+        {touch ? (
+          <StoryStatic />
+        ) : (
+          <Suspense fallback={<StickyStoryPlaceholder />}>
+            <StickyStory />
+          </Suspense>
+        )}
         <MapPreview live={live} />
         <Categories />
         <LocalMonitoring />

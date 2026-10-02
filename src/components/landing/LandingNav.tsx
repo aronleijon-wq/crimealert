@@ -26,7 +26,7 @@ const LandingNav = () => {
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl border-b border-[hsl(var(--ca-line))]'
+          ? 'ca-bar bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl border-b border-[hsl(var(--ca-line))]'
           : 'bg-transparent border-b border-transparent'
       }`}
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
