@@ -237,6 +237,8 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
   const layoutRef = useRef<Layout | null>(null);
   const paletteRef = useRef<Palette | null>(null);
   const drawRef = useRef<(now: number) => void>(() => {});
+  // Restarts animation for a moment, e.g. to play a new target lock on a resting phone
+  const wakeRef = useRef<(ms: number) => void>(() => {});
   const eventsRef = useRef(events);
   const focusRef = useRef({ index: focus, since: 0 });
   const [layoutVersion, setLayoutVersion] = useState(0);
@@ -252,6 +254,7 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
   useEffect(() => {
     focusRef.current = { index: focus, since: performance.now() };
     if (prefersReducedMotion()) drawRef.current(performance.now());
+    else wakeRef.current(1200);
   }, [focus, events]);
 
   // Size the canvas to its box; rebuild the still layer on resize and theme change
@@ -507,6 +510,10 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
       return;
     }
 
+    // Phones animate fully for a while after the picture comes into view, then rest and only
+    // wake briefly for each new target lock, which saves their battery
+    const PHONE_ACTIVE_MS = 20000;
+    let activeUntil = 0;
     let last = 0;
     const loop = (now: number) => {
       // About 25 frames a second on phones and slower computers, full rate elsewhere
@@ -514,12 +521,14 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
         last = now;
         drawRef.current(now);
       }
-      if (visible) frame = requestAnimationFrame(loop);
+      if (visible && (!lite() || now < activeUntil)) frame = requestAnimationFrame(loop);
     };
-    const resume = () => {
+    const resume = (ms = PHONE_ACTIVE_MS) => {
       cancelAnimationFrame(frame);
+      activeUntil = Math.max(activeUntil, performance.now() + ms);
       if (visible) frame = requestAnimationFrame(loop);
     };
+    wakeRef.current = (ms: number) => resume(ms);
     let onScreen = true;
     let observer: IntersectionObserver | undefined;
     if (typeof IntersectionObserver !== 'undefined') {
@@ -538,6 +547,7 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
     resume();
     return () => {
       cancelAnimationFrame(frame);
+      wakeRef.current = () => {};
       observer?.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
