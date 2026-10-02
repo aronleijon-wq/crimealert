@@ -6,7 +6,7 @@ import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
-import { AuthProvider } from '@/hooks/useAuth';
+import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 declare global {
@@ -440,6 +440,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
   const popupQueryClient = useRef(new QueryClient()).current;
+  // Popups are separate React roots; give them the app's auth state instead of their own
+  // AuthProvider, which would call check-subscription again for every opened popup
+  const auth = useAuth();
+  const authRef = useRef(auth);
+  authRef.current = auth;
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Listen for lightbox events from popup image clicks
@@ -576,11 +581,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           el.dataset.mounted = 'true';
           const root = createRoot(el);
           root.render(
-            <AuthProvider>
+            <AuthValueProvider value={authRef.current}>
               <QueryClientProvider client={popupQueryClient}>
                 <PopupEngagement incidentId={inc.id} />
               </QueryClientProvider>
-            </AuthProvider>
+            </AuthValueProvider>
           );
           el.__reactRoot = root;
         }

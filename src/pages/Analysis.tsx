@@ -177,7 +177,7 @@ const Analysis = () => {
     description: 'Analysera brottsstatistik och polishändelser i Sverige. Trender, farligaste områden och datadriven trygghetsanalys.',
     canonical: 'https://crimealert.se/analysis',
   });
-  const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen } = usePoliceEvents();
+  const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen, updatedAt: liveUpdatedAt } = usePoliceEvents();
   const { isPremium } = useIsPremium();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -200,10 +200,13 @@ const Analysis = () => {
     return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
   }, [liveIncidents, archiveIncidents]);
 
-  // Track when data loads or changes
+  // Track when data loads or changes. Live data may come from another page's recent
+  // fetch, so show when it was actually fetched.
   useEffect(() => {
-    if (incidents.length > 0) setLastUpdated(new Date());
-  }, [dataVersion, incidents.length]);
+    if (incidents.length > 0) {
+      setLastUpdated(timeRange === '24h' && liveUpdatedAt ? new Date(liveUpdatedAt) : new Date());
+    }
+  }, [dataVersion, incidents.length, timeRange, liveUpdatedAt]);
 
   // Filter incidents based on selected area (time filtering already done by data source)
   const filteredIncidents = useMemo(() => {
