@@ -17,7 +17,11 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      // A new version installs in the background and is switched to when the page is hidden
+      // (see main.tsx), instead of reloading the page in the middle of a visit
+      registerType: "prompt",
+      // The install icons aren't needed offline; the browser fetches them when installing
+      includeManifestIcons: false,
       devOptions: {
         enabled: false,
       },
@@ -25,6 +29,8 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
+        // Not shown by the app: the 512 px install icon and two unused uploads (about 0.9 MB)
+        globIgnores: ["**/pwa-512x512.png", "**/lovable-uploads/442645a7-*.png", "**/lovable-uploads/f5451b06-*.png"],
         importScripts: ["/sw-push.js"],
       },
       manifest: {
