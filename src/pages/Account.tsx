@@ -1,6 +1,6 @@
 import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
-import { User, Zap, Building2, Check, X, Sun, Moon, LogOut, CreditCard, Send, Shield, BarChart3, MessageSquare, Clock, EyeOff, FileText, Pencil } from 'lucide-react';
+import { Zap, Sun, Moon, LogOut, CreditCard, Send, Pencil } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '@/hooks/useTheme';
@@ -11,6 +11,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import ReviewSection from '@/components/ReviewSection';
+import PlanComparison from '@/components/account/PlanComparison';
+import { PRO_FEATURES, type BillingCycle } from '@/components/account/plans';
 
 
 
@@ -140,8 +142,8 @@ const UserProfileSection = ({ user, isPremium, subscription, signOut, handleMana
 
 const Account = () => {
   useSEO({
-    title: 'Konto & Premium — CrimeAlert',
-    description: 'Hantera ditt CrimeAlert-konto. Uppgradera till Premium för avancerade funktioner, nattsammanfattningar och obegränsade filter.',
+    title: 'Gratis eller Pro — CrimeAlert',
+    description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik, export och ingen reklam.',
     canonical: 'https://crimealert.se/account',
   });
   const { theme, setTheme } = useTheme();
@@ -149,7 +151,7 @@ const Account = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -255,94 +257,8 @@ const Account = () => {
     window.location.href = 'https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00';
   };
 
-  const tiers = [
-  {
-    name: 'Gratis',
-    icon: User,
-    iconColor: 'text-muted-foreground',
-    price: '0 kr',
-    period: '',
-    border: !isPremium ? 'border-primary/30' : 'border-border',
-    badge: !isPremium && user ? 'DIN PLAN' : null,
-    features: [
-    { text: 'Karta med 15 min fördröjning', included: true },
-    { text: 'Alla filter ', included: true },
-    { text: 'Kommunbevakning & notiser', included: true },
-    { text: 'Senaste 7 dagars karta', included: true },
-    
-    { text: 'Ingen reklam', included: false },
-    { text: 'Realtidsdata', included: false },
-    { text: 'Riskanalys & statistik', included: false },
-    { text: 'Medborgarrapporter', included: false },
-    { text: 'Full historik', included: false }],
-
-    cta: !isPremium && user ? 'Nuvarande plan' : 'Gratis',
-    ctaStyle: 'bg-muted text-muted-foreground cursor-default',
-    action: undefined
-  },
-  {
-    name: 'Pro',
-    icon: Zap,
-    iconColor: 'text-primary',
-    price: billingCycle === 'monthly' ? '19 kr' : '119 kr',
-    period: billingCycle === 'monthly' ? '/mån' : '/år',
-    savings: billingCycle === 'yearly' ? 'Spara 109 kr' : null,
-    border: isPremium ? 'border-primary/30' : 'border-border',
-    badge: isPremium ? 'DIN PLAN' : 'POPULÄR',
-    features: [
-    { text: 'Realtidsdata – direkt', included: true },
-    { text: 'Prioriterad support', included: true },
-    { text: 'Riskanalys & statistik', included: true },
-    { text: 'Full historik (30+ dagar)', included: true },
-    
-    { text: 'Ingen reklam', included: true },
-    { text: 'Detaljerade brottsbeskrivningar', included: true },
-    { text: 'Medborgarrapporter', included: true },
-    { text: 'Export PDF/CSV', included: true },
-    { text: 'API-access', included: false },
-    { text: 'White-label', included: false }],
-
-    cta: isPremium ? 'Hantera prenumeration' : 'Uppgradera till Pro',
-    ctaStyle: isPremium ?
-    'bg-muted text-foreground hover:bg-muted/80' :
-    'bg-primary text-primary-foreground hover:bg-primary/90',
-    action: isPremium ? handleManageSubscription : handleCheckout
-  },
-  {
-    name: 'Företag',
-    icon: Building2,
-    iconColor: 'text-cr-blue',
-    price: 'Offert',
-    period: '',
-    border: 'border-border',
-    badge: 'B2B',
-    features: [
-    { text: 'Allt i Pro', included: true },
-    { text: 'API-access', included: true },
-    { text: 'Riskrapporter & statistik', included: true },
-    { text: 'Flera områden/städer', included: true },
-    { text: 'White-label vid behov', included: true },
-    { text: 'Dedikerad support', included: true },
-    { text: 'Avancerade notiser', included: true }],
-
-    cta: 'Kontakta oss',
-    ctaStyle: 'bg-muted text-foreground hover:bg-muted/80',
-    action: undefined
-  }];
-
-
-  const proFeatures = [
-  { icon: Shield, text: 'Realtidsdata – inga fördröjningar' },
-  { icon: BarChart3, text: 'Riskanalys & detaljerad statistik' },
-  { icon: MessageSquare, text: 'Medborgarrapporter' },
-  { icon: Clock, text: 'Full historik (30+ dagar)' },
-  { icon: FileText, text: 'Detaljerade brottsbeskrivningar' },
-  { icon: EyeOff, text: 'Ingen reklam' },
-  { icon: FileText, text: 'Export PDF/CSV' }];
-
-
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="ca-dark flex h-[100dvh] flex-col">
       <Header />
 
       {/* Welcome Pro dialog */}
@@ -359,10 +275,10 @@ const Account = () => {
           </div>
 
           <ul className="space-y-2.5 mb-5">
-            {proFeatures.map((f, i) => {
+            {PRO_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <li key={i} className="flex items-center gap-2.5">
+                <li key={f.text} className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon className="w-3.5 h-3.5 text-primary" />
                   </div>
@@ -382,6 +298,37 @@ const Account = () => {
       </Dialog>
       <div className="flex-1 overflow-y-auto p-6 grid-overlay">
         <div className="max-w-3xl mx-auto space-y-6">
+          <PlanComparison
+            signedIn={!!user}
+            isPremium={isPremium}
+            billingCycle={billingCycle}
+            onBillingCycle={setBillingCycle}
+            onCheckout={handleCheckout}
+            onManage={handleManageSubscription}
+            checkoutLoading={checkoutLoading}
+          />
+
+          {/* User section */}
+          {user ? <UserProfileSection user={user} isPremium={isPremium} subscription={subscription} signOut={signOut} handleManageSubscription={handleManageSubscription} /> :
+
+
+          <div className="bg-card border border-border rounded-lg p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
+              <button
+              onClick={() => navigate('/auth')}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2">
+              
+                Logga in
+              </button>
+              <button
+              onClick={() => navigate('/auth?mode=signup')}
+              className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition">
+              
+                Skapa konto
+              </button>
+            </div>
+          }
+
           {/* Theme toggle */}
           <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -410,127 +357,6 @@ const Account = () => {
               </button>
             </div>
           </div>
-
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Medlemskap</h1>
-            <p className="text-xs text-muted-foreground">Välj den plan som passar dig</p>
-          </div>
-
-          {/* Billing toggle */}
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              billingCycle === 'monthly' ?
-              'bg-primary/10 text-primary border border-primary/20' :
-              'text-muted-foreground hover:text-foreground'}`
-              }>
-              
-              Månad
-            </button>
-            <button
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              billingCycle === 'yearly' ?
-              'bg-primary/10 text-primary border border-primary/20' :
-              'text-muted-foreground hover:text-foreground'}`
-              }>
-              
-              År
-              <span className="ml-1.5 text-[9px] bg-cr-green/20 text-cr-green px-1.5 py-0.5 rounded-full font-bold">
-                -48%
-              </span>
-            </button>
-          </div>
-
-          {/* Pricing tiers */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {tiers.map((tier) => {
-              const Icon = tier.icon;
-              return (
-                <div
-                  key={tier.name}
-                  className={`bg-card border ${tier.border} rounded-lg p-4 relative flex flex-col ${
-                  tier.badge === 'DIN PLAN' || tier.badge === 'POPULÄR' ? 'glow-red' : ''}`
-                  }>
-                  
-                  {tier.badge &&
-                  <div className={`absolute -top-2 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                  tier.badge === 'DIN PLAN' ?
-                  'bg-cr-green text-white' :
-                  tier.badge === 'POPULÄR' ?
-                  'bg-primary text-primary-foreground' :
-                  'bg-cr-blue/20 text-cr-blue'}`
-                  }>
-                      {tier.badge}
-                    </div>
-                  }
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <Icon className={`w-4 h-4 ${tier.iconColor}`} />
-                    <span className={`text-xs font-bold ${tier.badge === 'POPULÄR' || tier.badge === 'DIN PLAN' ? 'text-primary' : 'text-foreground'}`}>
-                      {tier.name}
-                    </span>
-                  </div>
-
-                  <div className="mb-3">
-                    <span className="text-lg font-bold font-mono text-foreground">{tier.price}</span>
-                    {tier.period && <span className="text-xs text-muted-foreground">{tier.period}</span>}
-                    {tier.savings &&
-                    <div className="text-[10px] text-cr-green font-medium mt-0.5">{tier.savings}</div>
-                    }
-                  </div>
-
-                  <ul className="text-[11px] text-muted-foreground space-y-1.5 flex-1 mb-4">
-                    {tier.features.map((f, i) =>
-                    <li key={i} className="flex items-start gap-1.5">
-                        {f.included ?
-                      <Check className="w-3 h-3 text-cr-green shrink-0 mt-0.5" /> :
-
-                      <X className="w-3 h-3 text-muted-foreground/30 shrink-0 mt-0.5" />
-                      }
-                        <span className={f.included ? '' : 'text-muted-foreground/30'}>{f.text}</span>
-                      </li>
-                    )}
-                  </ul>
-
-                  <button
-                    onClick={tier.action}
-                    disabled={!tier.action || checkoutLoading}
-                    className={`w-full px-4 py-2 rounded-md text-xs font-semibold transition ${tier.ctaStyle} disabled:opacity-50`}>
-                    
-                    {checkoutLoading && tier.action === handleCheckout ? 'Laddar...' : tier.cta}
-                  </button>
-                </div>);
-
-            })}
-          </div>
-
-          {/* Reassurance line */}
-          <p className="text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
-            Avsluta när du vill · Löper ut efter betald period
-          </p>
-
-          {/* User section */}
-          {user ? <UserProfileSection user={user} isPremium={isPremium} subscription={subscription} signOut={signOut} handleManageSubscription={handleManageSubscription} /> :
-
-
-          <div className="bg-card border border-border rounded-lg p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-3">Logga in eller skapa konto för att komma igång</p>
-              <button
-              onClick={() => navigate('/auth')}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition mr-2">
-              
-                Logga in
-              </button>
-              <button
-              onClick={() => navigate('/auth?mode=signup')}
-              className="px-4 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition">
-              
-                Skapa konto
-              </button>
-            </div>
-          }
 
           {/* Contact form */}
           <ContactSection />
