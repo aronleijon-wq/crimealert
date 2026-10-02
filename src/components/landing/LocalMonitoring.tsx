@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Search, Bell, MapPin } from 'lucide-react';
+import Reveal from './Reveal';
 
 const chips = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Västerås', 'Linköping', 'Örebro', 'Helsingborg'];
 
@@ -7,7 +8,7 @@ const LocalMonitoring = () => (
   <section className="relative py-24 md:py-32 px-5 md:px-10 border-t border-[hsl(var(--ca-line))]">
     <div className="absolute inset-0 ca-gridlines opacity-20 pointer-events-none" />
     <div className="relative max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-14 items-center">
-      <div>
+      <Reveal>
         <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-4">
           LOKAL BEVAKNING
         </div>
@@ -42,14 +43,14 @@ const LocalMonitoring = () => (
           <MapPin className="w-4 h-4" />
           Sök kommun
         </Link>
-      </div>
+      </Reveal>
 
-      <div className="ca-panel rounded-xl p-5 md:p-6">
+      <Reveal delay={0.12} className="ca-panel rounded-xl p-5 md:p-6">
         <div className="flex items-center justify-between mb-5">
           <span className="ca-mono text-[10px] tracking-[0.2em] text-[hsl(var(--ca-text-3))]">
             BEVAKNING • STOCKHOLM
           </span>
-          <span className="ca-mono text-[10px] tracking-[0.2em] text-[hsl(var(--ca-red))]">ACTIVE</span>
+          <span className="ca-mono text-[10px] tracking-[0.2em] text-[hsl(var(--ca-red))]">EXEMPEL</span>
         </div>
 
         <div className="space-y-3">
@@ -79,7 +80,7 @@ const LocalMonitoring = () => (
             Notiser på för valda kategorier
           </span>
         </div>
-      </div>
+      </Reveal>
     </div>
   </section>
 );

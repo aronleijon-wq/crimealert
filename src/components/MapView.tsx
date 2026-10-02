@@ -441,7 +441,10 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
 const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
-  const markerMapRef = useRef<Map<string, L.Marker>>(new Map());
+  const markerMapRef = useRef<Map<string, L.Marker | L.CircleMarker>>(new Map());
+  // Quiet (non-pulsing) events are drawn on one canvas instead of one element each, which
+  // keeps panning smooth on phones with hundreds of events. Taps get a wider hit area.
+  const canvasRendererRef = useRef<L.Canvas | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isTouch = useRef(isTouchDevice()).current;
   const onSelectIncidentRef = useRef(onSelectIncident);
@@ -514,6 +517,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     mapRef.current = map;
     markersRef.current = L.layerGroup().addTo(map);
+    canvasRendererRef.current = L.canvas({ padding: 0.5, tolerance: isTouch ? 10 : 3 });
 
     // Update pulse size CSS variable based on zoom
     const updatePulseSize = () => {
@@ -521,9 +525,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       // Scale from 220% at zoom 5 to 500% at zoom 16
       const pulsePct = Math.round(220 + (zoom - 5) * (280 / 11));
       const clamped = Math.max(200, Math.min(550, pulsePct));
-      const offset = Math.round((clamped - 100) / 2);
-      containerRef.current?.style.setProperty('--pulse-size', `${clamped}%`);
-      containerRef.current?.style.setProperty('--pulse-offset', `-${offset}%`);
+      containerRef.current?.style.setProperty('--pulse-scale', String(clamped / 100));
     };
 
     updatePulseSize();
@@ -534,6 +536,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       map.remove();
       mapRef.current = null;
       markersRef.current = null;
+      canvasRendererRef.current = null;
     };
 
   }, [isTouch]);
@@ -564,12 +567,25 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
         markersRef.current!.addLayer(circle);
       }
 
-      const marker = L.marker([adjustedLat, adjustedLng], {
-        icon: createMarkerIcon(inc, isTouch),
-        keyboard: false,
-      });
+      // Pulsing (recent) events and citizen reports keep their animated markers; the rest
+      // are plain dots on the shared canvas, drawn the same: colour, white rim
+      const quiet = !isCommunityReport && !shouldIncidentPulse(inc);
+      const marker: L.Marker | L.CircleMarker = quiet
+        ? L.circleMarker([adjustedLat, adjustedLng], {
+          renderer: canvasRendererRef.current ?? undefined,
+          radius: isTouch ? 8 : 5,
+          color: 'rgba(255,255,255,0.9)',
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 1,
+        })
+        : L.marker([adjustedLat, adjustedLng], {
+          icon: createMarkerIcon(inc, isTouch),
+          keyboard: false,
+        });
 
-      marker.bindPopup(createPopupContent(inc, isPremium, isTouch), {
+      // Built when the popup opens rather than for every marker up front
+      marker.bindPopup(() => createPopupContent(inc, isPremium, isTouch), {
         className: 'incident-popup',
         maxWidth: isTouch ? 250 : 320,
         closeButton: true,
@@ -579,7 +595,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
       const handleSelect = () => onSelectIncidentRef.current(inc.id);
       marker.on('click', handleSelect);
-      marker.on('touchend', handleSelect);
+      if (!quiet) marker.on('touchend', handleSelect);
       marker.on('popupopen', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
         const el = document.getElementById(`popup-engagement-${safeId}`) as PopupRootElement | null;
@@ -713,21 +729,22 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           border: none !important;
           touch-action: manipulation;
         }
+        /* Pulses scale rather than resize, so they run on the GPU without layout or repaint */
         .marker-pulse {
           position: absolute;
           border-radius: 50%;
           pointer-events: none;
           -webkit-animation: marker-pulse-anim 2s ease-in-out infinite;
           animation: marker-pulse-anim 2s ease-in-out infinite;
-          will-change: opacity, width, height, top, left;
+          will-change: transform, opacity;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
+          0%, 100% { opacity: 0.4; -webkit-transform: scale(1); transform: scale(1); }
+          50% { opacity: 0; -webkit-transform: scale(var(--pulse-scale, 3.5)); transform: scale(var(--pulse-scale, 3.5)); }
         }
         @keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.4; width: 100%; height: 100%; top: 0; left: 0; }
-          50% { opacity: 0; width: var(--pulse-size, 350%); height: var(--pulse-size, 350%); top: var(--pulse-offset, -125%); left: var(--pulse-offset, -125%); }
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0; transform: scale(var(--pulse-scale, 3.5)); }
         }
         .marker-pulse-community {
           position: absolute;
@@ -735,15 +752,15 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           pointer-events: none;
           -webkit-animation: marker-pulse-community-anim 2s ease-in-out infinite;
           animation: marker-pulse-community-anim 2s ease-in-out infinite;
-          will-change: opacity, width, height, top, left;
+          will-change: transform, opacity;
         }
         @-webkit-keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
-          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+          0%, 100% { opacity: 0.3; -webkit-transform: rotate(45deg) scale(1); transform: rotate(45deg) scale(1); }
+          50% { opacity: 0; -webkit-transform: rotate(45deg) scale(2.8); transform: rotate(45deg) scale(2.8); }
         }
         @keyframes marker-pulse-community-anim {
-          0%, 100% { opacity: 0.3; width: 100%; height: 100%; top: 0; left: 0; transform: rotate(45deg); }
-          50% { opacity: 0; width: 280%; height: 280%; top: -90%; left: -90%; transform: rotate(45deg); }
+          0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(1); }
+          50% { opacity: 0; transform: rotate(45deg) scale(2.8); }
         }
         .leaflet-control-zoom a {
           background: hsla(213, 27%, 7%, 0.85) !important;

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import Reveal from './Reveal';
 
 const FinalCTA = () => {
   const { user } = useAuth();
@@ -10,7 +11,7 @@ const FinalCTA = () => {
       className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
       style={{ background: 'radial-gradient(circle at 50% 50%, hsl(var(--ca-red)) 0%, transparent 65%)' }}
     />
-    <div className="relative max-w-[1400px] mx-auto text-center">
+    <Reveal className="relative max-w-[1400px] mx-auto text-center">
       <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-text-3))] mb-6">
         LIVE • SVERIGE
       </div>
@@ -32,7 +33,7 @@ const FinalCTA = () => {
           {user ? 'Min profil' : 'Skapa konto'}
         </Link>
       </div>
-    </div>
+    </Reveal>
   </section>
   );
 };

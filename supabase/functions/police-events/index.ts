@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '../_shared/archiveDiff.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -948,7 +949,11 @@ function assessRisk(type: string): string {
 }
 
 // Helper: fetch and process all incidents (expensive — cached)
-async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIncident[]> {
+// When this instance last fetched each event's page on polisen.se
+const detailScrapedAt = new Map<string, number>();
+
+/** `archived` is what the archive holds now; its full texts save fetching unchanged pages again. */
+async function fetchAndProcessIncidents(locationParam: string, archived: PoliceIncident[] = []): Promise<PoliceIncident[]> {
   let apiUrl = 'https://polisen.se/api/events';
   if (locationParam) {
     apiUrl += `?locationname=${encodeURIComponent(locationParam)}`;
@@ -1183,15 +1188,21 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIn
     }
 
     // ── Scrape detail pages for full descriptions with updates ──
-    // Only scrape events from the last 3 days to keep response time reasonable
+    // Events from the last 6 hours every time; older ones (up to 3 days) every 30 minutes or
+    // every 2 hours, with the archived full text in between (see needsDetailScrape)
     const now = Date.now();
-    const scrape3dCutoff = now - 3 * 24 * 60 * 60 * 1000;
-    const scrapeTargets = incidents.filter((i) => {
-      try {
-        const t = new Date(i.time).getTime();
-        return !isNaN(t) && t >= scrape3dCutoff && i.url;
-      } catch { return false; }
-    });
+    const archivedText = new Map(archived.map((a) => [a.id, a.description ?? '']));
+    const scrapeTargets = incidents.filter((i) =>
+      needsDetailScrape(i, archivedText.get(i.id), detailScrapedAt.get(i.id), now)
+    );
+    // A new instance counts archived full texts as fetched now, so it refreshes them on schedule
+    const targetIds = new Set(scrapeTargets.map((i) => i.id));
+    for (const i of incidents) {
+      const kept = archivedText.get(i.id);
+      if (!targetIds.has(i.id) && !detailScrapedAt.has(i.id) && kept && kept.length > (i.description || '').length) {
+        detailScrapedAt.set(i.id, now);
+      }
+    }
 
     // Scrape in batches of 10 to avoid overwhelming polisen.se
     const BATCH_SIZE = 10;
@@ -1201,6 +1212,7 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIn
       const batch = scrapeTargets.slice(b, b + BATCH_SIZE);
       const batchPromises = batch.map(async (inc) => {
         if (!inc.url) return;
+        detailScrapedAt.set(inc.id, now);
         const detail = await scrapeEventDetail(inc.url);
         if (detail && detail.length > (inc.description || '').length) {
           scrapeResults.set(inc.id, detail);
@@ -1212,14 +1224,21 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIn
       ]);
     }
 
-    // Apply scraped descriptions
+    // Apply scraped descriptions, or the full text archived earlier for pages not fetched now
     for (const inc of incidents) {
       const scraped = scrapeResults.get(inc.id);
+      const kept = archivedText.get(inc.id);
       if (scraped) {
         inc.description = scraped;
+      } else if (!targetIds.has(inc.id) && kept && kept.length > (inc.description || '').length) {
+        inc.description = kept;
       }
     }
-    console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets`);
+    // Forget events that are past the 3-day window
+    for (const [id, at] of detailScrapedAt) {
+      if (now - at > 4 * 24 * 60 * 60 * 1000) detailScrapedAt.delete(id);
+    }
+    console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets (${incidents.length - scrapeTargets.length} skipped)`);
 
     const validIncidents = incidents.filter((i) => i.lat && i.lng);
     
@@ -1233,10 +1252,18 @@ async function fetchAndProcessIncidents(locationParam: string): Promise<PoliceIn
 }
 
 // ─── Archive helpers ──────────────────────────────────────────────────────────
-async function archiveIncidents(incidents: PoliceIncident[]) {
+/**
+ * Writes new and changed events to the archive and leaves unchanged ones alone (rewriting
+ * all ~500 every few minutes only churned the database). `archived` is what it holds now.
+ */
+async function archiveIncidents(incidents: PoliceIncident[], archived: PoliceIncident[]) {
   if (!incidents.length) return;
-  try {
-    const rows = incidents.map((i) => ({
+  const { inserts, updates } = planArchiveWrites(incidents, archived);
+  if (!inserts.length && !updates.length) {
+    console.log(`Archive up to date (${incidents.length} unchanged)`);
+    return;
+  }
+  const toRow = (i: PoliceIncident) => ({
       id: i.id,
       type: i.type,
       title: i.title,
@@ -1251,18 +1278,34 @@ async function archiveIncidents(incidents: PoliceIncident[]) {
       original_type: i.originalType || null,
       url: i.url || null,
       location_precision: i.location_precision || 'area',
-    }));
-    // Upsert in batches of 50
-    for (let b = 0; b < rows.length; b += 50) {
-      const batch = rows.slice(b, b + 50);
+  });
+  try {
+    // New events: insert, and do nothing if another instance archived them first
+    for (let b = 0; b < inserts.length; b += 50) {
       const { error } = await supabase
         .from('police_events_archive')
-        .upsert(batch, { onConflict: 'id', ignoreDuplicates: false });
-      if (error) console.warn('Archive upsert error:', error.message);
+        .upsert(inserts.slice(b, b + 50).map(toRow), { onConflict: 'id', ignoreDuplicates: true });
+      if (error) console.warn('Archive insert error:', error.message);
     }
-    console.log(`Archived ${rows.length} incidents to DB`);
+    for (let b = 0; b < updates.length; b += 50) {
+      const { error } = await supabase
+        .from('police_events_archive')
+        .upsert(updates.slice(b, b + 50).map(toRow), { onConflict: 'id', ignoreDuplicates: false });
+      if (error) console.warn('Archive update error:', error.message);
+    }
+    console.log(`Archive: ${inserts.length} new, ${updates.length} changed, ${incidents.length - inserts.length - updates.length} unchanged`);
 
-    // Trigger push notifications immediately after archiving
+    // Keep the in-memory archive in step, so the next fetch compares against what is stored
+    if (cachedArchive) {
+      const written = new Map([...inserts, ...updates].map((i) => [i.id, i]));
+      cachedArchive = [
+        ...cachedArchive.map((a) => written.get(a.id) ?? a),
+        ...inserts.filter((i) => !cachedArchive!.some((a) => a.id === i.id)),
+      ];
+    }
+
+    // Push notifications only concern events that are new to the archive
+    if (!inserts.length) return;
     try {
       const pushUrl = `${supabaseUrl}/functions/v1/send-push-notifications`;
       const pushRes = await fetch(pushUrl, {
@@ -1394,13 +1437,17 @@ serve(async (req) => {
       freshIncidents = cachedIncidents;
     } else {
       console.log('Cache miss or expired, fetching fresh data...');
-      freshIncidents = await fetchAndProcessIncidents(location);
+      // What the archive holds now: saves fetching unchanged pages, summaries keep their
+      // scraped full text, and only new or changed events are written
+      const archivedNow = await getArchivedIncidents();
+      freshIncidents = await fetchAndProcessIncidents(location, archivedNow);
       // Only cache default (no location filter) requests
       if (!location) {
+        freshIncidents = keepBackfilledSummaries(freshIncidents, archivedNow);
         cachedIncidents = freshIncidents;
         cachedIncidentsTs = Date.now();
         // Archive fresh incidents to DB (fire and forget)
-        archiveIncidents(freshIncidents);
+        archiveIncidents(freshIncidents, archivedNow);
       }
     }
 

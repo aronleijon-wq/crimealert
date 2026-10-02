@@ -70,7 +70,8 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
   return mapped;
 }
 
-export function usePoliceEvents() {
+/** `quiet` skips the error toast, for pages where the data is only decoration (the landing page). */
+export function usePoliceEvents({ quiet = false }: { quiet?: boolean } = {}) {
   const { user } = useAuth();
   // Data another page fetched less than one poll interval ago
   const [initial] = useState(() => policeEventsCache.fresh(user?.id ?? ANON_KEY, POLL_INTERVAL_MS));
@@ -84,6 +85,8 @@ export function usePoliceEvents() {
   const { toast } = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
+  const quietRef = useRef(quiet);
+  quietRef.current = quiet;
   const lastFetch = useRef(initial?.fetchedAt ?? 0);
 
   const fetchEvents = useCallback(async (silent = false, force = false) => {
@@ -108,7 +111,7 @@ export function usePoliceEvents() {
     } catch (err) {
       console.error('Error fetching police events:', err);
       setError(getErrorMessage(err));
-      if (!silent) {
+      if (!silent && !quietRef.current) {
         toastRef.current({
           title: 'Kunde inte hämta data',
           description: 'Använder demo-data. Försök igen senare.',

@@ -54,7 +54,8 @@ const EXTRA_COORDINATES: Record<string, [number, number]> = {
   'Östra Göinge': [56.254, 14.077],
 };
 
-const COORDINATES: { name: string; lat: number; lng: number }[] = [
+/** Seat of every municipality */
+export const KOMMUN_COORDINATES: { name: string; lat: number; lng: number }[] = [
   ...SWEDISH_MUNICIPALITIES.map(({ name, lat, lng }) => ({ name, lat, lng })),
   ...Object.entries(EXTRA_COORDINATES).map(([name, [lat, lng]]) => ({ name, lat, lng })),
 ];
@@ -88,5 +89,5 @@ export function nearestKommuner(lat: number, lng: number, count = 3): string[] {
     const dLng = (p.lng - lng) * rad;
     return Math.sin(dLat / 2) ** 2 + Math.cos(lat * rad) * Math.cos(p.lat * rad) * Math.sin(dLng / 2) ** 2;
   };
-  return [...COORDINATES].sort((a, b) => distance(a) - distance(b)).slice(0, count).map((p) => p.name);
+  return [...KOMMUN_COORDINATES].sort((a, b) => distance(a) - distance(b)).slice(0, count).map((p) => p.name);
 }
