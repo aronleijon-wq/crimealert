@@ -14,7 +14,7 @@ export function useNotificationPreferences() {
       .from('notification_preferences')
       .select('kommun')
       .eq('user_id', user.id);
-    setKommuner(data?.map((d: any) => d.kommun) ?? []);
+    setKommuner(data?.map((d) => d.kommun) ?? []);
     setLoading(false);
   }, [user]);
 

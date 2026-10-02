@@ -4,10 +4,11 @@ import { useSEO } from '@/hooks/useSEO';
 
 import PremiumGate from '@/components/PremiumGate';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info, type LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
+import type { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
@@ -34,7 +35,7 @@ const STAT_TOOLTIPS: Record<string, string> = {
   'Mest aktiv tid': 'Den timme på dygnet med flest rapporterade händelser under vald period.',
 };
 
-const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: any;colorClass: string;}) =>
+const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: LucideIcon;colorClass: string;}) =>
 <div className="bg-card border border-border rounded-lg p-4">
     <div className="flex items-center justify-between mb-2">
       <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
@@ -57,12 +58,19 @@ const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;
   </div>;
 
 
-const ChartTooltip = ({ active, payload, label }: any) => {
+// Recharts injects these props when the element is passed as `content`
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: { name?: string; value?: number | string; color?: string }[];
+  label?: string;
+}
+
+const ChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-md px-3 py-2 shadow-lg text-xs">
       <p className="text-foreground font-medium mb-1">{label}</p>
-      {payload.map((p: any, i: number) =>
+      {payload.map((p, i) =>
       <p key={i} style={{ color: p.color }} className="font-mono">
           {p.name}: {p.value}
         </p>
@@ -199,7 +207,7 @@ const Analysis = () => {
 
   // Filter incidents based on selected area (time filtering already done by data source)
   const filteredIncidents = useMemo(() => {
-    const isSummary = (i: any) =>
+    const isSummary = (i: Incident) =>
       (i.originalType || '').toLowerCase().includes('sammanfattning');
 
     if (timeRange === '24h') {
@@ -217,7 +225,7 @@ const Analysis = () => {
       const inArea = !selectedArea || i.area === selectedArea;
       return inArea && !isSummary(i);
     });
-  }, [incidents, timeRange, selectedArea, dataVersion]);
+  }, [incidents, timeRange, selectedArea]);
 
   const stats = useMemo(() => {
     if (!filteredIncidents.length) return null;
@@ -234,7 +242,7 @@ const Analysis = () => {
 
     const hourlyCounts = Array.from({ length: 24 }, () => 0);
     filteredIncidents.forEach((i) => {
-      try {const h = parseTime(i.time).getHours();if (!isNaN(h)) hourlyCounts[h]++;} catch {}
+      try {const h = parseTime(i.time).getHours();if (!isNaN(h)) hourlyCounts[h]++;} catch {/* skip unparsable time */}
     });
     const hourlyData = hourlyCounts.map((antal, i) => ({ timme: String(i).padStart(2, '0'), antal }));
 
@@ -248,7 +256,7 @@ const Analysis = () => {
     const dayCounts: Record<string, number> = {};
     const dayNames = ['Sön', 'Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör'];
     filteredIncidents.forEach((i) => {
-      try {const d = parseTime(i.time);dayCounts[d.toISOString().slice(0, 10)] = (dayCounts[d.toISOString().slice(0, 10)] || 0) + 1;} catch {}
+      try {const d = parseTime(i.time);dayCounts[d.toISOString().slice(0, 10)] = (dayCounts[d.toISOString().slice(0, 10)] || 0) + 1;} catch {/* skip unparsable time */}
     });
     const trendData = Object.entries(dayCounts).
     sort((a, b) => a[0].localeCompare(b[0])).
@@ -287,10 +295,10 @@ const Analysis = () => {
           if (!typeHourly[i.type]) typeHourly[i.type] = Array.from({ length: 24 }, () => 0);
           typeHourly[i.type][h]++;
         }
-      } catch {}
+      } catch {/* skip unparsable time */}
     });
     const timeProfileData = Array.from({ length: 24 }, (_, h) => {
-      const row: any = { timme: String(h).padStart(2, '0') + ':00' };
+      const row: Record<string, string | number> = { timme: String(h).padStart(2, '0') + ':00' };
       Object.keys(typeHourly).forEach((type) => {
         row[TYPE_LABELS[type] || type] = typeHourly[type][h];
       });
@@ -354,7 +362,7 @@ const Analysis = () => {
     }
 
     return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length, timeProfileData, timeProfileTypes, seasonalWarnings };
-  }, [filteredIncidents, dataVersion]);
+  }, [filteredIncidents, selectedArea]);
 
   return (
     <div className="h-screen flex flex-col bg-background">

@@ -24,7 +24,7 @@ export function useCommunityReports() {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    const mapped: Incident[] = (data ?? []).map((r: any) => ({
+    const mapped: Incident[] = (data ?? []).map((r) => ({
       id: `cr-${r.id}`,
       type: 'other' as const,
       title: r.title,

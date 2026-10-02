@@ -115,7 +115,7 @@ const ReviewSection = () => {
         .from('reviews')
         .select('id')
         .eq('user_id', user.id);
-      ownIds = (ownData ?? []).map((r: any) => r.id);
+      ownIds = (ownData ?? []).map((r) => r.id);
     }
     
     setReviews((publicData as Review[])?.map(r => ({ ...r, isOwn: ownIds.includes(r.id) })) || []);

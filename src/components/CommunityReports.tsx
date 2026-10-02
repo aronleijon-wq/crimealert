@@ -184,7 +184,7 @@ export default function CommunityReports() {
         .from('community_reports')
         .select('id')
         .eq('user_id', user.id);
-      ownIds = (ownData ?? []).map((r: any) => r.id);
+      ownIds = (ownData ?? []).map((r) => r.id);
     }
 
     setReports((publicData as Report[])?.map((r) => ({ ...r, isOwn: ownIds.includes(r.id) })) ?? []);
@@ -213,7 +213,7 @@ export default function CommunityReports() {
     }
 
     // Server-side function validates auth + Pro status before inserting.
-    const { data, error } = await supabase.functions.invoke('submit-community-report', {
+    const { data, error } = await supabase.functions.invoke<{ id?: string; error?: string }>('submit-community-report', {
       body: {
         category,
         title: stripHtml(title).slice(0, 200),
@@ -224,7 +224,7 @@ export default function CommunityReports() {
       },
     });
 
-    const serverError = (data as any)?.error as string | undefined;
+    const serverError = data?.error;
 
     if (!error && !serverError) {
       resetForm();
@@ -237,7 +237,7 @@ export default function CommunityReports() {
       }
     } else {
       let message = serverError ?? 'Kunde inte skicka rapporten. Försök igen.';
-      const ctx = (error as any)?.context;
+      const ctx = error?.context;
       if (!serverError && ctx?.json) {
         try {
           const body = await ctx.json();

@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
+import type { AuthError, User, Session } from '@supabase/supabase-js';
+import { isTransientBackendError } from '@/lib/errors';
 
-interface SubscriptionState {
+export interface SubscriptionState {
   subscribed: boolean;
   productId: string | null;
   subscriptionEnd: string | null;
@@ -98,19 +99,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const isTransientBackendError = (err: any) => {
-      const message = String(err?.message || '').toLowerCase();
-      const status = err?.status ?? err?.code;
-      return (
-        status === 503 ||
-        status === 504 ||
-        message.includes('timeout') ||
-        message.includes('upstream connect error') ||
-        message.includes('failed to fetch')
-      );
-    };
 
-    let lastError: any = null;
+    let lastError: AuthError | null = null;
 
     for (let i = 0; i < 3; i++) {
       const { error } = await supabase.auth.signOut();

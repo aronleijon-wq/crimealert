@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const logStep = (step: string, details?: any) => {
+// current_period_end is not on the typed Subscription for this API version
+// (it lives on subscription items), so read it defensively.
+type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_end?: number | null };
+
+const logStep = (step: string, details?: unknown) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
@@ -44,8 +48,8 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     
     // Retry getUser up to 2 times on transient failures
-    let userData: any = null;
-    let userError: any = null;
+    let userData: { user: User | null } | null = null;
+    let userError: AuthError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       const result = await supabaseClient.auth.getUser(token);
       userData = result.data;
@@ -58,7 +62,8 @@ serve(async (req) => {
       if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
     }
     
-    if (userError || !userData?.user?.email) {
+    const user = userData?.user;
+    if (userError || !user?.email) {
       logStep("Auth failed, returning unsubscribed gracefully", {
         message: userError?.message || "No user/email",
       });
@@ -67,7 +72,6 @@ serve(async (req) => {
         status: 200,
       });
     }
-    const user = userData.user;
     logStep("User authenticated", { email: user.email });
 
     // Check whitelist first
@@ -105,7 +109,7 @@ serve(async (req) => {
     const nowSec = Math.floor(Date.now() / 1000);
 
     const getSubPeriodEndSec = (sub: Stripe.Subscription): number | null => {
-      const rawPeriodEnd = (sub as any).current_period_end ?? (sub as any).cancel_at ?? (sub as any).trial_end;
+      const rawPeriodEnd = (sub as SubscriptionWithLegacyPeriodEnd).current_period_end ?? sub.cancel_at ?? sub.trial_end;
       const periodEndSec = Number(rawPeriodEnd);
       return Number.isFinite(periodEndSec) && periodEndSec > 0 ? periodEndSec : null;
     };

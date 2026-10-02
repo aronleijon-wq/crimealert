@@ -1,13 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
@@ -29,9 +29,10 @@ serve(async (req) => {
     );
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const isTransientAuthError = (err: any) => {
-      const message = String(err?.message || err?.msg || "").toLowerCase();
-      const status = err?.status;
+    const isTransientAuthError = (err: unknown) => {
+      const e = (err ?? {}) as { message?: string; msg?: string; status?: number };
+      const message = String(e.message || e.msg || "").toLowerCase();
+      const status = e.status;
       return (
         status === 503 ||
         status === 504 ||
@@ -44,8 +45,8 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
 
-    let user: any = null;
-    let userError: any = null;
+    let user: User | null = null;
+    let userError: AuthError | null = null;
 
     for (let attempt = 0; attempt < 4; attempt++) {
       const result = await supabaseClient.auth.getUser(token);

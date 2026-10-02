@@ -1,5 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
+import { getErrorMessage } from '@/lib/errors';
+
+// Shape of one event as returned by the trafikverket-events edge function
+interface TrafikverketEventDto {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  lat: number;
+  lng: number;
+  area: string;
+  time: string;
+  endTime?: string | null;
+  status?: string;
+  risk?: string;
+  originalType?: string | null;
+  location_precision?: string | null;
+}
+
+interface TrafikverketEventsResponse {
+  success?: boolean;
+  data?: TrafikverketEventDto[];
+}
 
 export function useTrafikverketEvents() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -22,10 +45,10 @@ export function useTrafikverketEvents() {
         }
       );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
+      const data: TrafikverketEventsResponse = await response.json();
 
       if (data?.success && Array.isArray(data.data)) {
-        const mapped: Incident[] = data.data.map((e: any) => ({
+        const mapped: Incident[] = data.data.map((e) => ({
           id: e.id,
           type: e.type as IncidentType,
           title: e.title,
@@ -52,9 +75,9 @@ export function useTrafikverketEvents() {
       } else {
         setIncidents([]);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching Trafikverket events:', err);
-      setError(err.message);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

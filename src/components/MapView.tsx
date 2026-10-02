@@ -3,9 +3,21 @@ import { createRoot, Root } from 'react-dom/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import { parseIncidentTime } from '@/lib/incidentTime';
+import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
 import { AuthProvider } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+declare global {
+  interface Window {
+    // Set by the onclick attribute on popup images (see createPopupContent)
+    __crimeAlertLightbox?: string | null;
+  }
+}
+
+// Popup containers keep a handle to the React root mounted inside them
+type PopupRootElement = HTMLElement & { __reactRoot?: Root };
 
 interface MapViewProps {
   incidents: Incident[];
@@ -28,32 +40,15 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const parseSwedishDate = (dateStr: string): Date | null => {
-  try {
-    if (!dateStr) return null;
-    let s = dateStr.trim();
-    s = s.replace(
-      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
-      (_, d, h, m, sec, tz) => {
-        const hh = h.padStart(2, '0');
-        const tzClean = tz ? tz.replace(/\s/g, '') : '';
-        return `${d}T${hh}:${m}:${sec}${tzClean}`;
-      }
-    );
-    const date = new Date(s);
-    return isNaN(date.getTime()) ? null : date;
-  } catch { return null; }
-};
-
 const isWithinHours = (timeStr: string, hours: number) => {
-  const d = parseSwedishDate(timeStr);
+  const d = parseIncidentTime(timeStr);
   if (!d) return false;
   const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
 const isWithinDays = (timeStr: string, days: number) => {
-  const d = parseSwedishDate(timeStr);
+  const d = parseIncidentTime(timeStr);
   if (!d) return false;
   const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
@@ -152,13 +147,13 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
 };
 
 const formatTime = (time: string) => {
-  const d = parseSwedishDate(time);
+  const d = parseIncidentTime(time);
   if (!d) return time;
   return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const getTimeAgo = (time: string): string => {
-  const d = parseSwedishDate(time);
+  const d = parseIncidentTime(time);
   if (!d) return '';
   const diff = Date.now() - d.getTime();
   const mins = Math.floor(diff / 60000);
@@ -281,27 +276,6 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   }
 
   return details;
-};
-
-const sanitizeHTML = (str: string): string =>
-  String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-// Only allow images served from our own public storage bucket.
-const safeImageUrl = (value?: string | null): string | null => {
-  if (!value) return null;
-  try {
-    const url = new URL(value, window.location.origin);
-    if (url.protocol !== 'https:') return null;
-    if (!url.pathname.includes('/storage/v1/object/public/community-reports/')) return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
 };
 
 
@@ -471,10 +445,10 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   // Listen for lightbox events from popup image clicks
   useEffect(() => {
     const handler = () => {
-      const url = (window as any).__crimeAlertLightbox;
+      const url = window.__crimeAlertLightbox;
       if (url) {
         setLightboxUrl(url);
-        (window as any).__crimeAlertLightbox = null;
+        window.__crimeAlertLightbox = null;
       }
     };
     window.addEventListener('crimealert-lightbox', handler);
@@ -502,7 +476,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     } as L.MapOptions & { tap?: boolean });
 
     // Disable Leaflet's built-in tap handler to avoid 200ms delay & ghost clicks on mobile
-    if ((map as any).tap) (map as any).tap.disable();
+    (map as L.Map & { tap?: L.Handler }).tap?.disable();
 
     const ESRI_DARK =
       'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
@@ -569,7 +543,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const adjustedLng = positions[idx].lng;
 
       // Skip heavy radius effects on touch devices for smoother panning/tapping
-      const parsedTime = parseSwedishDate(inc.time);
+      const parsedTime = parseIncidentTime(inc.time);
       const ageMs = parsedTime ? Date.now() - parsedTime.getTime() : Number.POSITIVE_INFINITY;
       if (!isTouch && (isCommunityReport || ageMs < 3 * 60 * 60 * 1000)) {
         const circleOptions = isCommunityReport
@@ -597,7 +571,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       marker.on('touchend', handleSelect);
       marker.on('popupopen', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const el = document.getElementById(`popup-engagement-${safeId}`);
+        const el = document.getElementById(`popup-engagement-${safeId}`) as PopupRootElement | null;
         if (el && !el.dataset.mounted) {
           el.dataset.mounted = 'true';
           const root = createRoot(el);
@@ -608,16 +582,16 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
               </QueryClientProvider>
             </AuthProvider>
           );
-          (el as any).__reactRoot = root;
+          el.__reactRoot = root;
         }
       });
       marker.on('popupclose', () => {
         const safeId = inc.id.replace(/[^a-zA-Z0-9_-]/g, '_');
-        const el = document.getElementById(`popup-engagement-${safeId}`);
-        if (el && (el as any).__reactRoot) {
-          const root = (el as any).__reactRoot as Root;
+        const el = document.getElementById(`popup-engagement-${safeId}`) as PopupRootElement | null;
+        if (el?.__reactRoot) {
+          const root = el.__reactRoot;
           setTimeout(() => root.unmount(), 0);
-          delete (el as any).__reactRoot;
+          delete el.__reactRoot;
         }
         prevSelectedRef.current = null;
         onSelectIncidentRef.current('');
@@ -626,7 +600,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
     });
-  }, [incidents, isPremium, isTouch]);
+  }, [incidents, isPremium, isTouch, popupQueryClient]);
 
   const prevSelectedRef = useRef<string | null>(null);
   const focusRingRef = useRef<L.Marker | null>(null);
