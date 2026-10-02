@@ -1,15 +1,22 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSEO } from '@/hooks/useSEO';
 import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
-import StickyStory from '@/components/landing/StickyStory';
 import MapPreview from '@/components/landing/MapPreview';
 import Categories from '@/components/landing/Categories';
 import LocalMonitoring from '@/components/landing/LocalMonitoring';
 import PlatformGrid from '@/components/landing/PlatformGrid';
 import FinalCTA from '@/components/landing/FinalCTA';
 import LandingFooter from '@/components/landing/LandingFooter';
+
+// Below the fold and the only user of framer-motion, so keep it out of the initial bundle
+const StickyStory = lazy(() => import('@/components/landing/StickyStory'));
+
+// Keeps the Hero's #hur-det-fungerar link working while StickyStory loads
+const StickyStoryPlaceholder = () => (
+  <section id="hur-det-fungerar" className="relative min-h-[100svh] border-t border-[hsl(var(--ca-line))]" />
+);
 
 const Landing = () => {
   useSEO({
@@ -36,7 +43,9 @@ const Landing = () => {
       <LandingNav />
       <main>
         <Hero />
-        <StickyStory />
+        <Suspense fallback={<StickyStoryPlaceholder />}>
+          <StickyStory />
+        </Suspense>
         <MapPreview />
         <Categories />
         <LocalMonitoring />
