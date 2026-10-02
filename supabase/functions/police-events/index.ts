@@ -46,6 +46,13 @@ let cachedIncidents: PoliceIncident[] | null = null;
 let cachedIncidentsTs = 0;
 const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Cache the archive read (up to 2000 rows) the same way
+let cachedArchive: PoliceIncident[] | null = null;
+let cachedArchiveTs = 0;
+
+// Summary pages scraped without getting longer text are retried at most once per cache TTL
+const summaryScrapeAttempts = new Map<string, number>();
+
 // Cache premium status per token (short-lived)
 const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
 const PREMIUM_CACHE_TTL = 60 * 1000; // 1 minute
@@ -1275,7 +1282,7 @@ async function archiveIncidents(incidents: PoliceIncident[]) {
   }
 }
 
-async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<PoliceIncident[]> {
+async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<PoliceIncident[] | null> {
   try {
     const cutoff = new Date(Date.now() - cutoffDays * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
@@ -1286,7 +1293,7 @@ async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<PoliceIn
       .limit(2000);
     if (error) {
       console.warn('Archive fetch error:', error.message);
-      return [];
+      return null;
     }
     // Map DB rows back to incident format
     return (data || []).map((r: ArchiveRow) => ({
@@ -1307,8 +1314,19 @@ async function fetchArchivedIncidents(cutoffDays: number = 30): Promise<PoliceIn
     }));
   } catch (e) {
     console.warn('Archive fetch failed:', e);
-    return [];
+    return null;
   }
+}
+
+// Read the 30-day archive at most once per cache TTL, like the fresh incidents.
+// A failed read is not cached, so the next request tries again.
+async function getArchivedIncidents(): Promise<PoliceIncident[]> {
+  if (cachedArchive && Date.now() - cachedArchiveTs < INCIDENTS_CACHE_TTL) return cachedArchive;
+  const archived = await fetchArchivedIncidents(30);
+  if (!archived) return [];
+  cachedArchive = archived;
+  cachedArchiveTs = Date.now();
+  return archived;
 }
 
 function parseIncidentTimestamp(time: string | null | undefined): number {
@@ -1388,7 +1406,7 @@ serve(async (req) => {
 
     // Merge fresh data with archived data (archived fills the 10-30 day gap)
     const freshIds = new Set(freshIncidents.map((i) => i.id));
-    const archived = await fetchArchivedIncidents(30);
+    const archived = await getArchivedIncidents();
     const olderArchived = archived.filter((a) => !freshIds.has(a.id));
     let allIncidents = [...freshIncidents, ...olderArchived];
     console.log(`Combined: ${freshIncidents.length} fresh + ${olderArchived.length} archived = ${allIncidents.length} total`);
@@ -1401,6 +1419,7 @@ serve(async (req) => {
     const summaryScrapeTargets = allIncidents
       .filter((i) => isSummaryIncident(i) && i.url && isWithinLastDays(i.time, 7))
       .filter((i) => hasSummaryPlaceholderDescription(i.description) || !i.description || i.description.length < 180)
+      .filter((i) => Date.now() - (summaryScrapeAttempts.get(i.id) ?? 0) >= INCIDENTS_CACHE_TTL)
       .sort((a, b) => {
         const placeholderPriority = Number(hasSummaryPlaceholderDescription(b.description)) - Number(hasSummaryPlaceholderDescription(a.description));
         if (placeholderPriority !== 0) return placeholderPriority;
@@ -1415,6 +1434,7 @@ serve(async (req) => {
         const batch = summaryScrapeTargets.slice(b, b + SUMMARY_BATCH_SIZE);
         const batchPromises = batch.map(async (incident) => {
           if (!incident.url) return;
+          summaryScrapeAttempts.set(incident.id, Date.now());
           const detail = await scrapeEventDetail(incident.url);
           if (detail && detail.length > (incident.description || '').length) {
             summaryScrapeResults.set(incident.id, detail);
@@ -1429,7 +1449,22 @@ serve(async (req) => {
           description: summaryScrapeResults.get(incident.id) || incident.description,
         }));
 
+        // Keep the backfilled text in the caches too, so it isn't scraped again on the next request
+        for (const cached of [cachedIncidents, cachedArchive]) {
+          cached?.forEach((incident) => {
+            const description = summaryScrapeResults.get(incident.id);
+            if (description) incident.description = description;
+          });
+        }
+
         await persistBackfilledSummaryDescriptions(summaryScrapeResults);
+      }
+
+      // Forget old attempts so the map stays small
+      if (summaryScrapeAttempts.size > 500) {
+        for (const [id, at] of summaryScrapeAttempts) {
+          if (Date.now() - at >= INCIDENTS_CACHE_TTL) summaryScrapeAttempts.delete(id);
+        }
       }
 
       console.log(`Backfilled ${summaryScrapeResults.size} summary descriptions`);

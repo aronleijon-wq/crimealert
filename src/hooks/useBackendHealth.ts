@@ -64,7 +64,8 @@ export function useBackendHealth() {
       // Healthy: check every 2 min. Down: backoff 5s → 60s max.
       const delay = failures === 0 ? 120000 : Math.min(5000 * 2 ** (failures - 1), 60000);
       timeoutRef.current = window.setTimeout(async () => {
-        await check();
+        // Skip while the tab is hidden; onVisibility checks as soon as it is shown again
+        if (document.visibilityState !== 'hidden') await check();
         if (mountedRef.current) schedule();
       }, delay);
     };
