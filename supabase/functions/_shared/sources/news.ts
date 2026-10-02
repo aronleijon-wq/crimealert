@@ -4,7 +4,7 @@ import { hashString, toIso, truncate } from './text.ts';
 import { isSafetyRelated, specificTopicsOf } from './topics.ts';
 import type { ExternalEvent } from './types.ts';
 
-export type NewsSource = 'svt' | 'aftonbladet' | 'expressen';
+export type NewsSource = 'svt' | 'svd' | 'aftonbladet' | 'expressen';
 
 export interface NewsFeed {
   source: NewsSource;
@@ -46,9 +46,10 @@ export const SVT_FEEDS: NewsFeed[] = SVT_REGIONS.map(([slug, name, region]) => (
   region,
 }));
 
-// National feeds. Off unless listed in the NEWS_EXTRA_SOURCES secret (e.g. "aftonbladet,expressen"),
+// National feeds. Off unless listed in the NEWS_EXTRA_SOURCES secret (e.g. "svd,aftonbladet,expressen"),
 // so they are only turned on after their terms for commercial use have been checked.
 export const EXTRA_FEEDS: NewsFeed[] = [
+  { source: 'svd', name: 'Svenska Dagbladet', url: 'https://www.svd.se/rss.xml' },
   { source: 'aftonbladet', name: 'Aftonbladet', url: 'https://rss.aftonbladet.se/rss2/small/pages/sections/senastenytt/' },
   { source: 'expressen', name: 'Expressen', url: 'https://feeds.expressen.se/nyheter/' },
 ];
