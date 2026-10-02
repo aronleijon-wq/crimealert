@@ -1,6 +1,6 @@
 import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PRICES, PRO_FEATURES, type BillingCycle } from './plans';
+import { PRICES, PRO_FEATURES, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
@@ -87,7 +87,7 @@ const PlanComparison = ({ signedIn, isPremium, billingCycle, onBillingCycle, onC
             className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${billingCycle === cycle ? 'bg-primary text-primary-foreground shadow' : 'text-[hsl(var(--ca-text-2))] hover:text-foreground'}`}
           >
             {cycle === 'monthly' ? 'Månadsvis' : 'Årsvis'}
-            {cycle === 'yearly' && <span className="ml-1.5 rounded-full bg-[hsl(var(--cr-green)/0.2)] px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--cr-green))]">−48%</span>}
+            {cycle === 'yearly' && <span className="ml-1.5 rounded-full bg-[hsl(var(--cr-green)/0.2)] px-1.5 py-0.5 text-[9px] font-bold text-[hsl(var(--cr-green))]">−{YEARLY_DISCOUNT_PERCENT}%</span>}
           </button>
         ))}
       </div>

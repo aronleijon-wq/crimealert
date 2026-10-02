@@ -17,8 +17,12 @@ import { PRO_FEATURES, type BillingCycle } from '@/components/account/plans';
 
 
 
-const PREMIUM_PRICE_MONTHLY = 'price_1T2caOC5T1wZbLBJxntsUCrz';
-const PREMIUM_PRICE_YEARLY = 'price_1T2cciC5T1wZbLBJfPgzHr4v';
+// Sent alongside the plan for create-checkout versions that still expect a price id;
+// newer versions ignore them and charge the plan's active price in Stripe
+const LEGACY_PRICE_IDS: Record<BillingCycle, string> = {
+  monthly: 'price_1T2caOC5T1wZbLBJxntsUCrz',
+  yearly: 'price_1T2cciC5T1wZbLBJfPgzHr4v',
+};
 const PREMIUM_PRODUCT_ID = 'prod_U0dsMg8IZZKY7c';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 
@@ -211,12 +215,12 @@ const Account = () => {
 
   };
 
-  const createCheckoutSession = async (priceId: string, attempts = 4) => {
+  const createCheckoutSession = async (plan: BillingCycle, attempts = 4) => {
     let lastError: unknown = null;
 
     for (let i = 0; i < attempts; i++) {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId }
+        body: { plan, priceId: LEGACY_PRICE_IDS[plan] }
       });
 
       if (!error && data?.url) return data.url as string;
@@ -236,8 +240,7 @@ const Account = () => {
     }
     setCheckoutLoading(true);
     try {
-      const priceId = billingCycle === 'yearly' ? PREMIUM_PRICE_YEARLY : PREMIUM_PRICE_MONTHLY;
-      const url = await createCheckoutSession(priceId);
+      const url = await createCheckoutSession(billingCycle);
       window.location.href = url;
     } catch (err) {
       const transient = isTransientFunctionError(err);

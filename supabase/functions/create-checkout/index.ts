@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
+import { PLANS, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,10 +74,16 @@ serve(async (req) => {
     const email = user.email;
     logStep("User authenticated", { email });
 
-    const { priceId } = await req.json();
-    if (!priceId) throw new Error("No priceId provided");
+    // The app names the plan; the price comes from Stripe, so only our own plans can be bought
+    const plan = planFromRequest(await req.json().catch(() => null));
+    if (!plan) throw new Error("Unknown plan");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+
+    const { data: prices } = await stripe.prices.list({ product: PLANS[plan].product, active: true, type: "recurring", limit: 100 });
+    const price = pickPrice(prices, plan);
+    if (!price) throw new Error(`No active ${plan} price in Stripe`);
+    logStep("Price chosen", { plan, priceId: price.id, amount: price.unit_amount, currency: price.currency });
 
     const customers = await stripe.customers.list({ email, limit: 1 });
     let customerId;
@@ -87,7 +94,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: price.id, quantity: 1 }],
       mode: "subscription",
       success_url: `${req.headers.get("origin")}/account?success=true`,
       cancel_url: `${req.headers.get("origin")}/account?canceled=true`,
