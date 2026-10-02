@@ -141,7 +141,7 @@ const Feed = () => {
             </p>
 
             <div className="mt-6 grid grid-cols-3 gap-2">
-              <Stat icon={Activity} label="Senaste 24 h" value={stats.lastDay} />
+              <Stat icon={Activity} label="24 timmar" value={stats.lastDay} />
               <Stat icon={Radio} label="Pågående" value={stats.ongoing} />
               <Stat icon={Clock} label="Uppdaterad" value={updatedLabel} />
             </div>
