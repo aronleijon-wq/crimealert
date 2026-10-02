@@ -12,6 +12,7 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
 import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
+import { sourceName } from '@/lib/externalEvents';
 import { buildFeed, filterFeed, type FeedFilter } from '@/lib/feed';
 
 const PAGE_SIZE = 20;
@@ -66,6 +67,12 @@ const Feed = () => {
   }, [hasMore, visible.length]);
 
   const loading = (policeLoading || externalLoading) && items.length === 0;
+  // Newspapers can be switched on and off in the backend, so list the ones actually in use
+  const sources = useMemo(() => {
+    const news = [...new Set(external.filter((e) => e.kind === 'news').map((e) => sourceName(e.source)))].sort();
+    const all = ['Polisen', 'Trafikverket', 'Krisinformation.se (Myndigheten för civilt försvar)', 'Sveriges Radio (VMA)', ...(news.length ? news : ['SVT Nyheter'])];
+    return `${all.slice(0, -1).join(', ')} och ${all[all.length - 1]}`;
+  }, [external]);
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background">
@@ -148,8 +155,7 @@ const Feed = () => {
           )}
 
           <footer className="border-t border-border pt-4 text-[11px] leading-relaxed text-muted-foreground">
-            Källor: Polisen, Trafikverket, Krisinformation.se (Myndigheten för civilt försvar),
-            Sveriges Radio (VMA) och SVT Nyheter. Nyheter visas med rubrik och länk till originalartikeln.
+            Källor: {sources}. Nyheter visas med rubrik och länk till originalartikeln.
             Platser är ungefärliga.
           </footer>
         </div>

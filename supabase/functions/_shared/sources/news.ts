@@ -4,7 +4,7 @@ import { hashString, toIso, truncate } from './text.ts';
 import { isSafetyRelated, specificTopicsOf } from './topics.ts';
 import type { ExternalEvent } from './types.ts';
 
-export type NewsSource = 'svt' | 'aftonbladet' | 'expressen';
+export type NewsSource = 'svt' | 'svd' | 'aftonbladet' | 'expressen';
 
 export interface NewsFeed {
   source: NewsSource;
@@ -39,17 +39,25 @@ const SVT_REGIONS: [slug: string, name: string, region: string][] = [
   ['ost', 'Öst', 'Östergötlands län'],
 ];
 
-export const SVT_FEEDS: NewsFeed[] = SVT_REGIONS.map(([slug, name, region]) => ({
-  source: 'svt',
-  name: `SVT Nyheter ${name}`,
-  url: `https://www.svt.se/nyheter/lokalt/${slug}/rss.xml`,
-  region,
-}));
+export const SVT_FEEDS: NewsFeed[] = [
+  // National news; articles that are also in a local feed share their link and id
+  { source: 'svt', name: 'SVT Nyheter', url: 'https://www.svt.se/rss.xml' },
+  ...SVT_REGIONS.map(([slug, name, region]): NewsFeed => ({
+    source: 'svt',
+    name: `SVT Nyheter ${name}`,
+    url: `https://www.svt.se/nyheter/lokalt/${slug}/rss.xml`,
+    region,
+  })),
+];
 
-// National feeds. Off unless listed in the NEWS_EXTRA_SOURCES secret (e.g. "aftonbladet,expressen"),
-// so they are only turned on after their terms for commercial use have been checked.
+// National newspapers. Off unless listed in the NEWS_EXTRA_SOURCES secret
+// (e.g. "svd,aftonbladet,expressen"), so they are only turned on after their terms for
+// commercial use have been checked.
 export const EXTRA_FEEDS: NewsFeed[] = [
+  { source: 'svd', name: 'Svenska Dagbladet', url: 'https://www.svd.se/feed/articles.rss' },
   { source: 'aftonbladet', name: 'Aftonbladet', url: 'https://rss.aftonbladet.se/rss2/small/pages/sections/senastenytt/' },
+  // Older address, kept in case the one above stops working; duplicates share an id
+  { source: 'aftonbladet', name: 'Aftonbladet', url: 'https://www.aftonbladet.se/rss.xml' },
   { source: 'expressen', name: 'Expressen', url: 'https://feeds.expressen.se/nyheter/' },
 ];
 

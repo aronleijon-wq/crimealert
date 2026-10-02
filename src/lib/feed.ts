@@ -39,6 +39,7 @@ const RELATED_BEFORE_MS = 6 * HOUR;
 const RELATED_AFTER_MS = 2 * DAY;
 const RELATED_DISTANCE_KM = 20;
 const MAX_RELATED = 3;
+const SAME_STORY_WINDOW_MS = 12 * HOUR;
 
 /** "02 oktober 14.05, Trafikolycka, Malmö" → "Trafikolycka, Malmö" */
 export function cleanPoliceTitle(title: string): string {
@@ -86,6 +87,26 @@ export function findRelatedNews(
     })
     .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))
     .slice(0, MAX_RELATED);
+}
+
+/**
+ * Groups news about the same story from different outlets: same topic, same place and
+ * published within 12 hours. The newest article leads; the others become its related news.
+ */
+export function groupNewsStories(news: ExternalEvent[]): { lead: ExternalEvent; others: ExternalEvent[] }[] {
+  const groups: { lead: ExternalEvent; others: ExternalEvent[] }[] = [];
+  const newestFirst = [...news].sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
+  for (const article of newestFirst) {
+    const group = article.category
+      ? groups.find(({ lead }) =>
+        lead.category === article.category
+        && Date.parse(lead.published_at) - Date.parse(article.published_at) <= SAME_STORY_WINDOW_MS
+        && samePlace({ area: lead.area ?? '', lat: lead.lat, lng: lead.lng }, article))
+      : undefined;
+    if (group) group.others.push(article);
+    else groups.push({ lead: article, others: [] });
+  }
+  return groups;
 }
 
 function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: Incident[]): FeedItem {
@@ -185,8 +206,8 @@ export function buildFeed({ police, traffic, community, external, isPremium, now
     item.related = findRelatedNews({ ...item, category }, news);
     item.related.forEach((n) => usedNews.add(n.id));
   }
-  for (const n of news) {
-    if (!usedNews.has(n.id)) items.push(externalToItem(n, now));
+  for (const { lead, others } of groupNewsStories(news.filter((n) => !usedNews.has(n.id)))) {
+    items.push({ ...externalToItem(lead, now), related: others.slice(0, MAX_RELATED) });
   }
 
   return items.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.timestamp - a.timestamp);

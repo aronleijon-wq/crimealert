@@ -6,7 +6,7 @@ export type Topic =
   | 'våldtäkt' | 'inbrott' | 'stöld' | 'narkotika' | 'försvunnen' | 'drunkning' | 'hot' | 'polis' | 'räddning';
 
 const TOPIC_PATTERNS: Record<Topic, RegExp> = {
-  brand: /\b(brand|bränder|brann|brinner|brinnande|eldsvåda|lägenhetsbrand|skogsbrand|gräsbrand|bilbrand|anlagd|rökutveckling)/i,
+  brand: /\b(brand|bränder|brann|brinner|brinnande|eldsvåda|lägenhetsbrand|skogsbrand|gräsbrand|bilbrand|rökutveckling)/i,
   trafik: /\b(trafikolycka|krock|kollision|kolliderade|singelolycka|avåkning|frontalkrock|viltolycka|påkörd|körde av vägen|olycka på (e|rv|väg)\s?\d)/i,
   skjutning: /\b(skottlossning|skjuten|skjutning|skjutits|skott avlossade|skottskadad)/i,
   explosion: /\b(explosion|sprängning|detonation|sprängladdning)/i,
@@ -14,15 +14,18 @@ const TOPIC_PATTERNS: Record<Topic, RegExp> = {
   kniv: /\b(knivhuggen|knivskuren|knivdåd|knivattack|huggen|kniv(?!sta))/i,
   rån: /\b(rån|rånad|rånare|personrån|butiksrån)/i,
   mord: /\b(mord|mördad|dråp|dödligt våld|hittad död|avliden efter)/i,
-  misshandel: /\b(misshandel|misshandlad|slagen|överfallen|våldsbrott)/i,
+  // Not "slagen": sports headlines ("Sverige slagen av Norge")
+  misshandel: /\b(misshandel|misshandlad|nedslagen|överfallen|våldsbrott)/i,
   våldtäkt: /\b(våldtäkt|sexuellt ofredande|sexbrott)/i,
   inbrott: /\b(inbrott|inbrottstjuv)/i,
   stöld: /\b(stöld|stulen|stulna|tillgrepp|bedrägeri)/i,
   narkotika: /\b(narkotika|knark|langning)/i,
-  försvunnen: /\b(försvunnen|saknad|efterlyst|eftersökt|letas)/i,
+  // Not "saknad"/"letas", which national news uses about anything ("ny tränare letas")
+  försvunnen: /\b(försvunnen|försvunna|efterlyst|eftersökt)/i,
   drunkning: /\b(drunkn|drunkning|vattenolycka)/i,
   hot: /\b(bombhot|hot mot|olaga hot|hotfull|beväpnad)/i,
-  polis: /\b(polis|polisen|gripen|gripna|anhållen|häktad|insats|larm)/i,
+  // Not "insats" or "larmar": a strong "insats" in sport, researchers "larmar" about climate
+  polis: /\b(polis|gripen|gripna|anhållen|häktad|polisinsats|larmades|larmade|larmet)/i,
   räddning: /\b(räddningstjänst|räddningsinsats|brandkår|ambulans|evakuer|vma|varning)/i,
 };
 

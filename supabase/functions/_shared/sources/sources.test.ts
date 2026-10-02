@@ -48,6 +48,14 @@ describe('topics', () => {
     expect(isSafetyRelated('Från och med i dag är det sommartid')).toBe(false);
     expect(specificTopicsOf('Trafikolycka på E4 – två till sjukhus')).toEqual(['trafik']);
   });
+
+  it('ignores sport, research and other national headlines that only sound alarming', () => {
+    expect(isSafetyRelated('Sverige slagen av Norge i VM-premiären')).toBe(false);
+    expect(isSafetyRelated('Stark insats av Forsberg när Nashville vann')).toBe(false);
+    expect(isSafetyRelated('Forskare larmar om havsnivåerna')).toBe(false);
+    expect(isSafetyRelated('Ny förbundskapten letas efter fiaskot')).toBe(false);
+    expect(isSafetyRelated('Polisen larmades till skolan')).toBe(true);
+  });
 });
 
 describe('parseFeed', () => {
@@ -104,8 +112,10 @@ describe('newsItemsToEvents', () => {
 });
 
 describe('enabledNewsFeeds', () => {
-  it('uses SVT by default and adds tabloids only when configured', () => {
+  it('uses SVT by default and adds newspapers only when configured', () => {
     expect(enabledNewsFeeds(undefined).every((f) => f.source === 'svt')).toBe(true);
+    expect(enabledNewsFeeds(undefined).map((f) => f.url)).toContain('https://www.svt.se/rss.xml');
+    expect(enabledNewsFeeds('svd').map((f) => f.url)).toContain('https://www.svd.se/feed/articles.rss');
     expect(enabledNewsFeeds('aftonbladet').map((f) => f.source)).toContain('aftonbladet');
     expect(enabledNewsFeeds('aftonbladet').map((f) => f.source)).not.toContain('expressen');
   });
