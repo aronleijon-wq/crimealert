@@ -125,11 +125,11 @@ async function sendWebPush(
 }
 
 async function deriveIKM(
-  sharedSecret: Uint8Array,
-  authSecret: Uint8Array,
-  localPublicKey: Uint8Array,
-  subscriberPublicKey: Uint8Array
-): Promise<Uint8Array> {
+  sharedSecret: Uint8Array<ArrayBuffer>,
+  authSecret: Uint8Array<ArrayBuffer>,
+  localPublicKey: Uint8Array<ArrayBuffer>,
+  subscriberPublicKey: Uint8Array<ArrayBuffer>
+): Promise<Uint8Array<ArrayBuffer>> {
   const keyInfo = concatBuffers(
     new TextEncoder().encode('WebPush: info\0'),
     subscriberPublicKey,
@@ -138,28 +138,28 @@ async function deriveIKM(
 
   const prk = await hmacSha256(authSecret, sharedSecret);
   const result = await hmacSha256(prk, concatBuffers(keyInfo, new Uint8Array([1])));
-  return result.slice(0, 32);
+  return new Uint8Array(result.slice(0, 32));
 }
 
 async function deriveKey(
-  ikm: Uint8Array,
-  salt: Uint8Array,
+  ikm: Uint8Array<ArrayBuffer>,
+  salt: Uint8Array<ArrayBuffer>,
   info: string,
   length: number
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const prk = await hmacSha256(salt, ikm);
   const infoBytes = new TextEncoder().encode(info);
   const result = await hmacSha256(prk, concatBuffers(infoBytes, new Uint8Array([1])));
-  return result.slice(0, length);
+  return new Uint8Array(result.slice(0, length));
 }
 
-async function hmacSha256(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
+async function hmacSha256(key: Uint8Array<ArrayBuffer>, data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
   const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', cryptoKey, data);
   return new Uint8Array(sig);
 }
 
-function concatBuffers(...buffers: Uint8Array[]): Uint8Array {
+function concatBuffers(...buffers: Uint8Array[]): Uint8Array<ArrayBuffer> {
   const totalLength = buffers.reduce((sum, b) => sum + b.length, 0);
   const result = new Uint8Array(totalLength);
   let offset = 0;
@@ -228,7 +228,7 @@ function derToRaw(der: Uint8Array): Uint8Array {
   return raw;
 }
 
-function base64urlToUint8Array(base64url: string): Uint8Array {
+function base64urlToUint8Array(base64url: string): Uint8Array<ArrayBuffer> {
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
   const pad = base64.length % 4;
   const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
