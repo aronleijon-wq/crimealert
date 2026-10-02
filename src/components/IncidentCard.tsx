@@ -1,4 +1,5 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import { parseIncidentTime } from '@/lib/incidentTime';
 import { Clock, MapPin, Lock } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 
@@ -12,20 +13,8 @@ interface IncidentCardProps {
 
 const timeAgo = (dateStr: string) => {
   try {
-    if (!dateStr) return '';
-    // Normalize "2026-02-20 8:05:52 +01:00" → "2026-02-20T08:05:52+01:00"
-    let s = dateStr.trim();
-    // Replace first space between date and time with T, collapse timezone spaces
-    s = s.replace(
-      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
-      (_, d, h, m, sec, tz) => {
-        const hh = h.padStart(2, '0');
-        const tzClean = tz ? tz.replace(/\s/g, '') : '';
-        return `${d}T${hh}:${m}:${sec}${tzClean}`;
-      }
-    );
-    const date = new Date(s);
-    if (isNaN(date.getTime())) return '';
+    const date = parseIncidentTime(dateStr);
+    if (!date) return '';
     const diff = Math.floor((Date.now() - date.getTime()) / 1000);
     if (diff < 0) return 'Just nu';
     if (diff < 60) return 'Just nu';

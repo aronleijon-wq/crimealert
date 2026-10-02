@@ -17,6 +17,7 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { filterIncidentsForMap, sortNewestFirst } from '@/lib/mapFilters';
 
 
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket'];
@@ -86,56 +87,13 @@ const Index = () => {
   }, [policeIncidents, trafikverketIncidents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
-  // Grova brott som alltid visas på kartan oavsett ålder
-  const SEVERE_CRIME_KEYWORDS = [
-  'mord', 'dråp', 'skottlossning', 'skjutning', 'rån',
-  'våldtäkt', 'mordförsök', 'knivdåd', 'grov misshandel',
-  'sprängning', 'explosion', 'bombhot', 'kidnappning',
-  'dödligt våld', 'vapenbrott', 'terror'];
-
-
-  const isSevereCrime = (title: string) =>
-  SEVERE_CRIME_KEYWORDS.some((kw) => title.toLowerCase().includes(kw));
-
-  // Free users: 15 min delay on new incidents
-  // Map: hide incidents older than 3 days UNLESS severe crime
-  const timeFiltered = useMemo(() => {
-    const now = Date.now();
-    const cutoff7d = now - 7 * 24 * 60 * 60 * 1000;
-    const cutoff24h = now - 24 * 60 * 60 * 1000;
-    const delayCutoff = isPremium ? Infinity : now - 15 * 60 * 1000;
-    return allIncidents.filter((i) => {
-      const isCommunity = i.source === 'Medborgarrapport';
-      const isTrafikverket = i.type === 'trafikverket';
-      const normalizedTime = i.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T');
-      const t = new Date(normalizedTime).getTime();
-      if (isNaN(t)) return true;
-      // Community reports: visible for 24 hours
-      if (isCommunity) return t >= cutoff24h;
-      // Trafikverket: pågående störningar visas alltid (öppna data, realtid för alla)
-      if (isTrafikverket) {
-        if (i.endTime) {
-          const end = new Date(i.endTime).getTime();
-          if (!isNaN(end) && end < now) return false;
-        }
-        return true;
-      }
-      // Hard 7-day cutoff for ALL incidents including severe crimes
-      if (t < cutoff7d) return false;
-      // Non-premium delay
-      return t <= delayCutoff;
-    });
-  }, [allIncidents, isPremium]);
+  const timeFiltered = useMemo(
+    () => filterIncidentsForMap(allIncidents, { isPremium }),
+    [allIncidents, isPremium]
+  );
 
   const filtered = useMemo(
-    () =>
-    timeFiltered.
-    filter((i) => activeFilters.includes(i.type)).
-    sort((a, b) => {
-      const tA = new Date(a.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
-      const tB = new Date(b.time.replace(/\s(?=\+|-)/, 'T').replace(' ', 'T')).getTime();
-      return tB - tA;
-    }),
+    () => sortNewestFirst(timeFiltered.filter((i) => activeFilters.includes(i.type))),
     [activeFilters, timeFiltered]
   );
 

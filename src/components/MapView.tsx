@@ -3,6 +3,8 @@ import { createRoot, Root } from 'react-dom/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import { parseIncidentTime } from '@/lib/incidentTime';
+import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
 import { AuthProvider } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,32 +40,15 @@ const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const parseSwedishDate = (dateStr: string): Date | null => {
-  try {
-    if (!dateStr) return null;
-    let s = dateStr.trim();
-    s = s.replace(
-      /^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2}):(\d{2})\s*([+-]\s*\d{2}:\d{2})?$/,
-      (_, d, h, m, sec, tz) => {
-        const hh = h.padStart(2, '0');
-        const tzClean = tz ? tz.replace(/\s/g, '') : '';
-        return `${d}T${hh}:${m}:${sec}${tzClean}`;
-      }
-    );
-    const date = new Date(s);
-    return isNaN(date.getTime()) ? null : date;
-  } catch { return null; }
-};
-
 const isWithinHours = (timeStr: string, hours: number) => {
-  const d = parseSwedishDate(timeStr);
+  const d = parseIncidentTime(timeStr);
   if (!d) return false;
   const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= hours * 60 * 60 * 1000;
 };
 
 const isWithinDays = (timeStr: string, days: number) => {
-  const d = parseSwedishDate(timeStr);
+  const d = parseIncidentTime(timeStr);
   if (!d) return false;
   const diff = Date.now() - d.getTime();
   return diff >= 0 && diff <= days * 24 * 60 * 60 * 1000;
@@ -162,13 +147,13 @@ const createMarkerIcon = (incident: Incident, touch: boolean) => {
 };
 
 const formatTime = (time: string) => {
-  const d = parseSwedishDate(time);
+  const d = parseIncidentTime(time);
   if (!d) return time;
   return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const getTimeAgo = (time: string): string => {
-  const d = parseSwedishDate(time);
+  const d = parseIncidentTime(time);
   if (!d) return '';
   const diff = Date.now() - d.getTime();
   const mins = Math.floor(diff / 60000);
@@ -291,27 +276,6 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   }
 
   return details;
-};
-
-const sanitizeHTML = (str: string): string =>
-  String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-// Only allow images served from our own public storage bucket.
-const safeImageUrl = (value?: string | null): string | null => {
-  if (!value) return null;
-  try {
-    const url = new URL(value, window.location.origin);
-    if (url.protocol !== 'https:') return null;
-    if (!url.pathname.includes('/storage/v1/object/public/community-reports/')) return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
 };
 
 
@@ -579,7 +543,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       const adjustedLng = positions[idx].lng;
 
       // Skip heavy radius effects on touch devices for smoother panning/tapping
-      const parsedTime = parseSwedishDate(inc.time);
+      const parsedTime = parseIncidentTime(inc.time);
       const ageMs = parsedTime ? Date.now() - parsedTime.getTime() : Number.POSITIVE_INFINITY;
       if (!isTouch && (isCommunityReport || ageMs < 3 * 60 * 60 * 1000)) {
         const circleOptions = isCommunityReport
