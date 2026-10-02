@@ -506,3 +506,9 @@ html:not(.dark) .ca-hud {
   position: absolute;
   background: hsl(var(--ca-line-strong));
 }
+
+/* Pro has no ads: hide anything AdSense placed before the subscription was known */
+html.no-ads ins.adsbygoogle,
+html.no-ads .google-auto-placed {
+  display: none !important;
+}

@@ -14,6 +14,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   subscription: SubscriptionState;
+  /** True once check-subscription has answered for the signed-in user; false while unknown */
+  subscriptionChecked: boolean;
   checkSubscription: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -68,19 +70,19 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
  * Asks check-subscription for the signed-in user. With `reuse`, a running check or a
  * successful one from the last minute for the same user is used instead of a new call.
  */
-async function loadSubscription(reuse: boolean): Promise<SubscriptionState> {
+async function loadSubscription(reuse: boolean): Promise<SubscriptionResult> {
   const { data: { session }, error } = await supabase.auth.getSession();
-  if (error || !session?.access_token) return UNSUBSCRIBED;
+  if (error || !session?.access_token) return { state: UNSUBSCRIBED, ok: false };
 
   const previous = lastSubscriptionCheck;
   if (reuse && previous?.userId === session.user.id && Date.now() - previous.startedAt < SUBSCRIPTION_REUSE_MS) {
     const result = await previous.promise;
-    if (result.ok) return result.state;
+    if (result.ok) return result;
   }
 
   const check = { userId: session.user.id, startedAt: Date.now(), promise: requestSubscription(session.access_token) };
   lastSubscriptionCheck = check;
-  return (await check.promise).state;
+  return check.promise;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -88,14 +90,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionState>(UNSUBSCRIBED);
+  const [subscriptionChecked, setSubscriptionChecked] = useState(false);
 
   // Automatic checks may reuse a recent result; an explicit checkSubscription() always asks the server
   const refreshSubscription = async (reuse: boolean) => {
     try {
-      setSubscription(await loadSubscription(reuse));
+      const result = await loadSubscription(reuse);
+      setSubscription(result.state);
+      setSubscriptionChecked(result.ok);
     } catch (err) {
       console.error('Error checking subscription:', err);
       setSubscription(UNSUBSCRIBED);
+      setSubscriptionChecked(false);
     }
   };
 
@@ -110,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => refreshSubscription(true), 0);
       } else {
         setSubscription(UNSUBSCRIBED);
+        setSubscriptionChecked(false);
       }
     });
 
@@ -165,7 +172,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, subscription, checkSubscription, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, subscription, subscriptionChecked, checkSubscription, signOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -190,6 +197,7 @@ export const useAuth = () => {
         productId: null,
         subscriptionEnd: null,
       },
+      subscriptionChecked: false,
       checkSubscription: async () => {},
       signOut: async () => {},
     };
