@@ -18,6 +18,7 @@ const vma: ExternalEvent = {
 const news: ExternalEvent = {
   id: 'news-svt-1', source: 'svt', kind: 'news', title: 'Rån mot butik i Lund', summary: '', url: 'https://www.svt.se/rån',
   area: 'Lund', lat: 55.7, lng: 13.19, published_at: minutesAgo(30), ends_at: null, severity: 'low', category: 'rån',
+  image_url: 'https://img.svt.se/ran.jpg', image_credit: 'Anna Andersson/TT',
 };
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
@@ -55,18 +56,25 @@ describe('Feed page', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
+  it("shows the article's own image with the photographer's credit", async () => {
+    await renderFeed();
+    const newsCard = screen.getAllByRole('article')[1];
+    expect(newsCard.querySelector('img[src="https://img.svt.se/ran.jpg"]')).not.toBeNull();
+    expect(within(newsCard).getByText('Foto: Anna Andersson/TT')).toBeInTheDocument();
+  });
+
   it('marks the police description as Pro for free users and links to the map', async () => {
     await renderFeed();
     const policeCard = screen.getAllByRole('article')[2];
-    expect(within(policeCard).getByText('Hela beskrivningen ingår i Pro')).toBeInTheDocument();
+    expect(within(policeCard).getByRole('link', { name: /Hela beskrivningen ingår i Pro/ })).toHaveAttribute('href', '/account');
     expect(within(policeCard).getByRole('link', { name: /Visa på kartan/ })).toHaveAttribute('href', '/karta?incident=pol-1');
   });
 
   it('filters the feed', async () => {
     await renderFeed();
-    fireEvent.click(screen.getByRole('tab', { name: 'Kris & VMA' }));
+    fireEvent.click(screen.getByRole('tab', { name: /Kris & VMA/ }));
     expect(screen.getAllByRole('article')).toHaveLength(1);
-    fireEvent.click(screen.getByRole('tab', { name: 'Mina kommuner' }));
+    fireEvent.click(screen.getByRole('tab', { name: /Mitt område/ }));
     expect(screen.getAllByRole('article').map((a) => within(a).getByRole('heading').textContent)).toEqual(['Rån mot butik i Lund']);
   });
 

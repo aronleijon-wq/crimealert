@@ -29,6 +29,8 @@ export interface FeedItem {
   related: ExternalEvent[];
   /** Trafikverket's report of the same accident */
   alsoReported: Incident[];
+  /** The source's own image for a news or crisis post, with its credit */
+  image: { url: string; credit: string | null } | null;
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -39,6 +41,7 @@ const RELATED_BEFORE_MS = 6 * HOUR;
 const RELATED_AFTER_MS = 2 * DAY;
 const RELATED_DISTANCE_KM = 20;
 const MAX_RELATED = 3;
+const SAME_STORY_WINDOW_MS = 12 * HOUR;
 
 /** "02 oktober 14.05, Trafikolycka, Malmö" → "Trafikolycka, Malmö" */
 export function cleanPoliceTitle(title: string): string {
@@ -88,6 +91,26 @@ export function findRelatedNews(
     .slice(0, MAX_RELATED);
 }
 
+/**
+ * Groups news about the same story from different outlets: same topic, same place and
+ * published within 12 hours. The newest article leads; the others become its related news.
+ */
+export function groupNewsStories(news: ExternalEvent[]): { lead: ExternalEvent; others: ExternalEvent[] }[] {
+  const groups: { lead: ExternalEvent; others: ExternalEvent[] }[] = [];
+  const newestFirst = [...news].sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
+  for (const article of newestFirst) {
+    const group = article.category
+      ? groups.find(({ lead }) =>
+        lead.category === article.category
+        && Date.parse(lead.published_at) - Date.parse(article.published_at) <= SAME_STORY_WINDOW_MS
+        && samePlace({ area: lead.area ?? '', lat: lead.lat, lng: lead.lng }, article))
+      : undefined;
+    if (group) group.others.push(article);
+    else groups.push({ lead: article, others: [] });
+  }
+  return groups;
+}
+
 function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: Incident[]): FeedItem {
   const kind: FeedKind = incident.type === 'trafikverket' ? 'traffic'
     : incident.source === 'Medborgarrapport' ? 'community' : 'police';
@@ -115,6 +138,7 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
     mapLink: kind === 'police' ? `/karta?incident=${encodeURIComponent(incident.id)}` : null,
     related: [],
     alsoReported,
+    image: null,
   };
 }
 
@@ -141,6 +165,7 @@ function externalToItem(event: ExternalEvent, now: number): FeedItem {
     mapLink: null,
     related: [],
     alsoReported: [],
+    image: event.image_url ? { url: event.image_url, credit: event.image_credit ?? null } : null,
   };
 }
 
@@ -185,8 +210,8 @@ export function buildFeed({ police, traffic, community, external, isPremium, now
     item.related = findRelatedNews({ ...item, category }, news);
     item.related.forEach((n) => usedNews.add(n.id));
   }
-  for (const n of news) {
-    if (!usedNews.has(n.id)) items.push(externalToItem(n, now));
+  for (const { lead, others } of groupNewsStories(news.filter((n) => !usedNews.has(n.id)))) {
+    items.push({ ...externalToItem(lead, now), related: others.slice(0, MAX_RELATED) });
   }
 
   return items.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.timestamp - a.timestamp);
@@ -209,4 +234,37 @@ export function filterFeed(items: FeedItem[], filter: FeedFilter, watchedKommune
     }
     default: return items;
   }
+}
+
+export interface FeedSection {
+  key: string;
+  label: string;
+  items: FeedItem[];
+}
+
+const dayKey = (time: number) => {
+  const d = new Date(time);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+/** Splits the feed into "Viktigt just nu" (active VMA), "Idag", "Igår" and older days. */
+export function groupByDay(items: FeedItem[], now = Date.now()): FeedSection[] {
+  const today = dayKey(now);
+  const yesterday = dayKey(now - DAY);
+  const weekday = new Intl.DateTimeFormat('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+  const sections: FeedSection[] = [];
+  for (const item of items) {
+    const key = item.pinned ? 'pinned' : dayKey(item.timestamp);
+    let section = sections.find((s) => s.key === key);
+    if (!section) {
+      const label = key === 'pinned' ? 'Viktigt just nu'
+        : key === today ? 'Idag'
+        : key === yesterday ? 'Igår'
+        : weekday.format(new Date(item.timestamp)).replace(/^./, (c) => c.toUpperCase());
+      section = { key, label, items: [] };
+      sections.push(section);
+    }
+    section.items.push(item);
+  }
+  return sections;
 }

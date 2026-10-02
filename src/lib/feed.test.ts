@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Incident } from '@/data/mockIncidents';
 import type { ExternalEvent } from '@/lib/externalEvents';
-import { buildFeed, cleanPoliceTitle, filterFeed, findRelatedNews } from './feed';
+import { buildFeed, cleanPoliceTitle, filterFeed, findRelatedNews, groupByDay, groupNewsStories } from './feed';
 
 const NOW = Date.parse('2026-02-18T12:00:00Z');
 const minutesAgo = (m: number) => new Date(NOW - m * 60 * 1000).toISOString();
@@ -128,5 +128,61 @@ describe('filterFeed', () => {
   it('filters by watched municipalities', () => {
     expect(filterFeed(items, 'mine', ['Malmö']).map((i) => i.id)).toEqual(['pol-malmo']);
     expect(filterFeed(items, 'mine', [])).toEqual([]);
+  });
+});
+
+describe('groupNewsStories', () => {
+  it('folds the same story from several outlets into one post', () => {
+    const svt = external({ id: 'svt', source: 'svt', title: 'Man skjuten i Malmö', area: 'Malmö', lat: 55.6, lng: 13.0, category: 'skjutning', published_at: minutesAgo(30) });
+    const svd = external({ id: 'svd', source: 'svd', title: 'Skottlossning i Malmö – en skadad', area: 'Malmö', lat: 55.6, lng: 13.0, category: 'skjutning', published_at: minutesAgo(10) });
+    const otherCity = external({ id: 'ab', source: 'aftonbladet', title: 'Man skjuten i Umeå', area: 'Umeå', lat: 63.8, lng: 20.3, category: 'skjutning', published_at: minutesAgo(5) });
+    const dayLater = external({ id: 'old', source: 'svt', title: 'Skjuten i Malmö i går', area: 'Malmö', lat: 55.6, lng: 13.0, category: 'skjutning', published_at: minutesAgo(60 * 20) });
+
+    expect(groupNewsStories([svt, svd, otherCity, dayLater]).map((g) => [g.lead.id, g.others.map((o) => o.id)])).toEqual([
+      ['ab', []],
+      ['svd', ['svt']],
+      ['old', []],
+    ]);
+  });
+
+  it('shows the other outlets as related news in the feed', () => {
+    const items = buildFeed({
+      police: [], traffic: [], community: [], isPremium: true, now: NOW,
+      external: [
+        external({ id: 'svt', source: 'svt', category: 'rån', title: 'Rån i Lund', area: 'Lund', lat: 55.7, lng: 13.19, published_at: minutesAgo(40) }),
+        external({ id: 'svd', source: 'svd', category: 'rån', title: 'Butik rånad i Lund', area: 'Lund', lat: 55.7, lng: 13.19, published_at: minutesAgo(20) }),
+      ],
+    });
+    expect(items.map((i) => [i.id, i.related.map((r) => r.id)])).toEqual([['svd', ['svt']]]);
+  });
+});
+
+describe('groupByDay', () => {
+  it('puts active VMA first, then today, yesterday and older days', () => {
+    const now = Date.parse('2026-02-18T12:00:00');
+    const at = (iso: string) => Date.parse(iso);
+    const items = buildFeed({
+      police: [], traffic: [], community: [], isPremium: true, now,
+      external: [
+        external({ id: 'vma', kind: 'vma', source: 'sr-vma', category: null, title: 'VMA', published_at: new Date(at('2026-02-18T09:00:00')).toISOString(), ends_at: new Date(at('2026-02-18T18:00:00')).toISOString() }),
+        external({ id: 'today', title: 'Rån i Lund', category: 'rån', area: 'Lund', lat: 55.7, lng: 13.2, published_at: new Date(at('2026-02-18T08:00:00')).toISOString() }),
+        external({ id: 'yesterday', title: 'Brand i Umeå', area: 'Umeå', lat: 63.8, lng: 20.3, published_at: new Date(at('2026-02-17T20:00:00')).toISOString() }),
+        external({ id: 'older', title: 'Explosion i Malmö', category: 'explosion', area: 'Malmö', lat: 55.6, lng: 13.0, published_at: new Date(at('2026-02-16T10:00:00')).toISOString() }),
+      ],
+    });
+    expect(groupByDay(items, now).map((s) => [s.label, s.items.map((i) => i.id)])).toEqual([
+      ['Viktigt just nu', ['vma']],
+      ['Idag', ['today']],
+      ['Igår', ['yesterday']],
+      ['Måndag 16 februari', ['older']],
+    ]);
+  });
+
+  it('carries the source image and credit for news', () => {
+    const [item] = buildFeed({
+      police: [], traffic: [], community: [], isPremium: true, now: NOW,
+      external: [external({ image_url: 'https://img.svt.se/a.jpg', image_credit: 'Anna Andersson/TT' })],
+    });
+    expect(item.image).toEqual({ url: 'https://img.svt.se/a.jpg', credit: 'Anna Andersson/TT' });
   });
 });

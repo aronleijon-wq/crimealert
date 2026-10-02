@@ -39,20 +39,35 @@ const SVT_REGIONS: [slug: string, name: string, region: string][] = [
   ['ost', 'Öst', 'Östergötlands län'],
 ];
 
-export const SVT_FEEDS: NewsFeed[] = SVT_REGIONS.map(([slug, name, region]) => ({
-  source: 'svt',
-  name: `SVT Nyheter ${name}`,
-  url: `https://www.svt.se/nyheter/lokalt/${slug}/rss.xml`,
-  region,
-}));
+export const SVT_FEEDS: NewsFeed[] = [
+  // National news; articles that are also in a local feed share their link and id
+  { source: 'svt', name: 'SVT Nyheter', url: 'https://www.svt.se/rss.xml' },
+  ...SVT_REGIONS.map(([slug, name, region]): NewsFeed => ({
+    source: 'svt',
+    name: `SVT Nyheter ${name}`,
+    url: `https://www.svt.se/nyheter/lokalt/${slug}/rss.xml`,
+    region,
+  })),
+];
 
-// National feeds. Off unless listed in the NEWS_EXTRA_SOURCES secret (e.g. "svd,aftonbladet,expressen"),
-// so they are only turned on after their terms for commercial use have been checked.
+// National newspapers. Off unless listed in the NEWS_EXTRA_SOURCES secret
+// (e.g. "svd,aftonbladet,expressen"), so they are only turned on after their terms for
+// commercial use have been checked.
 export const EXTRA_FEEDS: NewsFeed[] = [
   { source: 'svd', name: 'Svenska Dagbladet', url: 'https://www.svd.se/feed/articles.rss' },
   { source: 'aftonbladet', name: 'Aftonbladet', url: 'https://rss.aftonbladet.se/rss2/small/pages/sections/senastenytt/' },
+  // Older address, kept in case the one above stops working; duplicates share an id
+  { source: 'aftonbladet', name: 'Aftonbladet', url: 'https://www.aftonbladet.se/rss.xml' },
   { source: 'expressen', name: 'Expressen', url: 'https://feeds.expressen.se/nyheter/' },
 ];
+
+/**
+ * Sources whose own article images may be shown, from the NEWS_IMAGES secret
+ * (e.g. "svt,svd"). Empty by default: press photos need the publisher's permission.
+ */
+export function imageSources(setting: string | undefined): Set<string> {
+  return new Set((setting ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+}
 
 export function enabledNewsFeeds(extraSources: string | undefined): NewsFeed[] {
   const extra = new Set((extraSources ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
@@ -65,7 +80,12 @@ const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
  * Safety-related articles from one feed as external events. Only the headline is kept
  * (plus a link); the article text is read once to find the place and topic, never stored.
  */
-export function newsItemsToEvents(feed: NewsFeed, items: FeedItem[], now = Date.now()): ExternalEvent[] {
+export function newsItemsToEvents(
+  feed: NewsFeed,
+  items: FeedItem[],
+  now = Date.now(),
+  { withImages = false }: { withImages?: boolean } = {},
+): ExternalEvent[] {
   const events: ExternalEvent[] = [];
   for (const item of items) {
     const text = `${item.title} ${item.description}`;
@@ -89,6 +109,7 @@ export function newsItemsToEvents(feed: NewsFeed, items: FeedItem[], now = Date.
       ends_at: null,
       severity: 'low',
       category: specificTopicsOf(text)[0] ?? null,
+      ...(withImages && item.image ? { image_url: item.image.url, image_credit: item.image.credit } : {}),
     });
   }
   return events;

@@ -20,7 +20,7 @@ const placeFields = (place: Place | null) => ({
 });
 
 /** Krisinformation.se news items (test items skipped). */
-export function parseKrisinformationNews(json: unknown): ExternalEvent[] {
+export function parseKrisinformationNews(json: unknown, { withImages = false }: { withImages?: boolean } = {}): ExternalEvent[] {
   const events: ExternalEvent[] = [];
   for (const raw of asArray(json)) {
     const item = asRecord(raw);
@@ -48,6 +48,7 @@ export function parseKrisinformationNews(json: unknown): ExternalEvent[] {
       ends_at: null,
       severity: item.Push === true ? 'high' : 'medium',
       category: item.Event ? String(item.Event) : null,
+      ...(withImages && /^https:\/\//.test(String(item.ImageLink ?? '')) ? { image_url: String(item.ImageLink), image_credit: null } : {}),
     });
   }
   return events;

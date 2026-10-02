@@ -14,7 +14,8 @@ const externalEventsCache = createSnapshotCache<ExternalEvent[]>();
 async function requestExternalEvents(): Promise<ExternalEvent[]> {
   const { data, error } = await supabase
     .from('external_events')
-    .select('id, source, kind, title, summary, url, area, lat, lng, published_at, ends_at, severity, category')
+    // All columns, so this keeps working whether or not the image columns have been added yet
+    .select('*')
     .in('kind', ['vma', 'crisis', 'news'])
     .gte('published_at', new Date(Date.now() - MAX_AGE_MS).toISOString())
     .order('published_at', { ascending: false })

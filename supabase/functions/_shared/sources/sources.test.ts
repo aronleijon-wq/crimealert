@@ -48,6 +48,14 @@ describe('topics', () => {
     expect(isSafetyRelated('Från och med i dag är det sommartid')).toBe(false);
     expect(specificTopicsOf('Trafikolycka på E4 – två till sjukhus')).toEqual(['trafik']);
   });
+
+  it('ignores sport, research and other national headlines that only sound alarming', () => {
+    expect(isSafetyRelated('Sverige slagen av Norge i VM-premiären')).toBe(false);
+    expect(isSafetyRelated('Stark insats av Forsberg när Nashville vann')).toBe(false);
+    expect(isSafetyRelated('Forskare larmar om havsnivåerna')).toBe(false);
+    expect(isSafetyRelated('Ny förbundskapten letas efter fiaskot')).toBe(false);
+    expect(isSafetyRelated('Polisen larmades till skolan')).toBe(true);
+  });
 });
 
 describe('parseFeed', () => {
@@ -63,7 +71,27 @@ describe('parseFeed', () => {
       description: 'Räddningstjänsten är på plats & arbetar.',
       published: 'Wed, 18 Feb 2026 10:00:00 +0100',
       guid: null,
+      image: null,
     }]);
+  });
+
+  it("takes the article's own image and the photographer's credit", () => {
+    const media = `<rss xmlns:media="http://search.yahoo.com/mrss/"><channel><item><title>Brand i Lund</title><link>https://ex.se/a</link>
+      <media:content url="https://img.ex.se/brand.jpg" medium="image"><media:credit role="photographer">Anna Andersson/TT</media:credit></media:content>
+    </item></channel></rss>`;
+    expect(parseFeed(media)[0].image).toEqual({ url: 'https://img.ex.se/brand.jpg', credit: 'Anna Andersson/TT' });
+
+    const enclosure = `<rss><channel><item><title>Rån</title><link>https://ex.se/b</link><enclosure url="https://img.ex.se/r.jpg" type="image/jpeg" length="1"/></item></channel></rss>`;
+    expect(parseFeed(enclosure)[0].image).toEqual({ url: 'https://img.ex.se/r.jpg', credit: null });
+
+    const inDescription = `<rss><channel><item><title>Olycka</title><link>https://ex.se/c</link><description>&lt;img src="https://img.ex.se/o.webp"&gt;Text</description></item></channel></rss>`;
+    expect(parseFeed(inDescription)[0].image?.url).toBe('https://img.ex.se/o.webp');
+  });
+
+  it('ignores non-https images and enclosures that are not images', () => {
+    const xml = `<rss><channel><item><title>Ljud</title><link>https://ex.se/d</link>
+      <enclosure url="https://ex.se/pod.mp3" type="audio/mpeg"/><media:thumbnail url="http://img.ex.se/t.jpg"/></item></channel></rss>`;
+    expect(parseFeed(xml)[0].image).toBeNull();
   });
 
   it('reads Atom entries', () => {
@@ -75,7 +103,7 @@ describe('parseFeed', () => {
 describe('newsItemsToEvents', () => {
   const feed = SVT_FEEDS.find((f) => f.url.includes('/uppsala/'))!;
   const item = (title: string, published = 'Wed, 18 Feb 2026 10:00:00 +0100', description = '') =>
-    ({ title, link: `https://www.svt.se/${encodeURIComponent(title)}`, description, published, guid: null });
+    ({ title, link: `https://www.svt.se/${encodeURIComponent(title)}`, description, published, guid: null, image: null });
 
   it('keeps safety news with headline, link, place and topic only', () => {
     const [event] = newsItemsToEvents(feed, [item('Brand i radhus i Enköping', undefined, 'Lång brödtext som inte ska sparas.')], NOW);
@@ -95,6 +123,12 @@ describe('newsItemsToEvents', () => {
     expect(events.map((e) => [e.title, e.area, e.lat])).toEqual([['Polisen larmades till skola', 'Uppsala län', null]]);
   });
 
+  it('keeps the article image only for sources allowed to show images', () => {
+    const withImage = { ...item('Brand i radhus i Enköping'), image: { url: 'https://img.svt.se/b.jpg', credit: 'Foto: SVT' } };
+    expect(newsItemsToEvents(feed, [withImage], NOW)[0]).not.toHaveProperty('image_url');
+    expect(newsItemsToEvents(feed, [withImage], NOW, { withImages: true })[0]).toMatchObject({ image_url: 'https://img.svt.se/b.jpg', image_credit: 'Foto: SVT' });
+  });
+
   it('gives each article a stable id', () => {
     const a = newsItemsToEvents(feed, [item('Rån i butik')], NOW)[0];
     const b = newsItemsToEvents(feed, [item('Rån i butik')], NOW)[0];
@@ -104,8 +138,10 @@ describe('newsItemsToEvents', () => {
 });
 
 describe('enabledNewsFeeds', () => {
-  it('uses SVT by default and adds tabloids only when configured', () => {
+  it('uses SVT by default and adds newspapers only when configured', () => {
     expect(enabledNewsFeeds(undefined).every((f) => f.source === 'svt')).toBe(true);
+    expect(enabledNewsFeeds(undefined).map((f) => f.url)).toContain('https://www.svt.se/rss.xml');
+    expect(enabledNewsFeeds('svd').map((f) => f.url)).toContain('https://www.svd.se/feed/articles.rss');
     expect(enabledNewsFeeds('aftonbladet').map((f) => f.source)).toContain('aftonbladet');
     expect(enabledNewsFeeds('aftonbladet').map((f) => f.source)).not.toContain('expressen');
   });
