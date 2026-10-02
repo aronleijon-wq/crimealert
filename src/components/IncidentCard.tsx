@@ -26,7 +26,11 @@ const timeAgo = (dateStr: string) => {
   }
 };
 
+// Only the top of the list animates; hundreds of running animations make phones sluggish
+const ANIMATED_ROWS = 12;
+
 const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardProps) => {
+  const animated = index < ANIMATED_ROWS;
   const typeConf = incidentTypeConfig[incident.type];
   const riskConf = riskConfig[incident.risk];
   const { isPremium } = useIsPremium();
@@ -34,8 +38,8 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
   return (
     <button
       onClick={onClick}
-      style={{ animationDelay: `${Math.min(index, 14) * 35}ms` }}
-      className={`group relative w-full text-left px-3 py-2.5 border-b border-[hsl(var(--ca-line))] overflow-hidden ca-rise
+      style={animated ? { animationDelay: `${index * 35}ms` } : undefined}
+      className={`group relative w-full text-left px-3 py-2.5 border-b border-[hsl(var(--ca-line))] overflow-hidden ${animated ? 'ca-rise' : ''}
         transition-[background-color,border-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${selected
           ? 'bg-[hsla(0,68%,52%,0.07)]'
@@ -60,7 +64,7 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {incident.status === 'active' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
+            <span className={`w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))] ${animated ? 'animate-pulse-dot' : ''}`} />
           )}
           {isPremium ? (
             <span className={`ca-mono text-[9px] uppercase tracking-[0.14em] font-semibold ${riskConf.colorClass}`}>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import FilterBar from '@/components/FilterBar';
@@ -23,6 +23,8 @@ import { useExternalEvents } from '@/hooks/useExternalEvents';
 
 
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
+
+const LIST_PAGE = 60;
 
 const Index = () => {
   useSEO({
@@ -104,6 +106,29 @@ const Index = () => {
   );
 
   const activeCount = filtered.filter((i) => i.status === 'active').length;
+
+  // The list renders a page at a time; all of a week's events at once overwhelm phones
+  const [listCount, setListCount] = useState(LIST_PAGE);
+  const listRef = useRef<HTMLDivElement>(null);
+  const listEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => setListCount(LIST_PAGE), [activeFilters]);
+  const hasMoreInList = listCount < filtered.length;
+  useEffect(() => {
+    const end = listEndRef.current;
+    if (!end || !hasMoreInList || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setListCount((c) => c + LIST_PAGE); },
+      { root: listRef.current, rootMargin: '600px' },
+    );
+    observer.observe(end);
+    return () => observer.disconnect();
+  }, [hasMoreInList, listCount, mobileListOpen, isFullscreen]);
+  // An event picked on the map is always in the rendered part of the list
+  useEffect(() => {
+    if (!selectedId) return;
+    const index = filtered.findIndex((i) => i.id === selectedId);
+    if (index >= listCount) setListCount(Math.ceil((index + 1) / LIST_PAGE) * LIST_PAGE);
+  }, [selectedId, filtered, listCount]);
   
 
   return (
@@ -127,7 +152,7 @@ const Index = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Incident sidebar */}
         {!isFullscreen && (!isMobile || mobileListOpen) &&
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))] overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
+        <div ref={listRef} className="w-full md:w-80 border-b md:border-b-0 md:border-r border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))] overflow-y-auto flex-shrink-0 max-h-[25vh] md:max-h-none relative">
             <div className="sticky top-0 z-10 px-3 py-2 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base-2))]/95 backdrop-blur-md flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isPremium ?
@@ -173,15 +198,22 @@ const Index = () => {
                 <span className="ca-mono text-[10px] text-[hsl(var(--ca-text-3))] tracking-[0.14em] uppercase">Hämtar data från Polisen.se</span>
               </div> :
 
-          filtered.map((inc, idx) =>
-          <IncidentCard
-            key={inc.id}
-            incident={inc}
-            index={idx}
-            selected={selectedId === inc.id}
-            onClick={() => setSelectedId(selectedId === inc.id ? null : inc.id)} />
+          <>
+              {filtered.slice(0, listCount).map((inc, idx) =>
+            <IncidentCard
+              key={inc.id}
+              incident={inc}
+              index={idx}
+              selected={selectedId === inc.id}
+              onClick={() => setSelectedId(selectedId === inc.id ? null : inc.id)} />
 
-          )
+            )}
+              {hasMoreInList &&
+            <div ref={listEndRef} className="px-3 py-3 text-center ca-mono text-[9px] uppercase tracking-[0.18em] text-[hsl(var(--ca-text-3))]">
+                  Visar {listCount} av {filtered.length}
+                </div>
+            }
+            </>
           }
           </div>
         }
