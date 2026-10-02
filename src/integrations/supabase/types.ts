@@ -119,8 +119,6 @@ export type Database = {
           created_at: string
           ends_at: string | null
           id: string
-          image_credit: string | null
-          image_url: string | null
           kind: string
           lat: number | null
           lng: number | null
@@ -138,8 +136,6 @@ export type Database = {
           created_at?: string
           ends_at?: string | null
           id: string
-          image_credit?: string | null
-          image_url?: string | null
           kind: string
           lat?: number | null
           lng?: number | null
@@ -157,8 +153,6 @@ export type Database = {
           created_at?: string
           ends_at?: string | null
           id?: string
-          image_credit?: string | null
-          image_url?: string | null
           kind?: string
           lat?: number | null
           lng?: number | null
