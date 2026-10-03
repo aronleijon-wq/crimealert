@@ -10,13 +10,16 @@ import MobileSignupBar from '@/components/MobileSignupBar';
 
 
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
+import HistoryPanel from '@/components/HistoryPanel';
+import { useArchiveEvents } from '@/hooks/useArchiveEvents';
+import { firstEnd, historyEvents, historyLabel, HISTORY_RANGES, type HistoryRange } from '@/lib/history';
 import { mockIncidents, Incident, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
 import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
-import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon } from 'lucide-react';
+import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
@@ -26,6 +29,8 @@ import { useExternalEvents } from '@/hooks/useExternalEvents';
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
 
 const LIST_PAGE = 60;
+// The heat view hides the markers; a constant keeps MapView from redrawing for nothing
+const NO_INCIDENTS: Incident[] = [];
 
 const Index = () => {
   useSEO({
@@ -34,7 +39,7 @@ const Index = () => {
     canonical: 'https://crimealert.se/karta',
   });
   const { isPremium } = useIsPremium();
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const isMobile = useIsMobile();
   const isLoggedIn = !!user;
   const [mobileListOpen, setMobileListOpen] = useState(true);
@@ -107,15 +112,56 @@ const Index = () => {
   }, [policeIncidents, trafikverketIncidents, externalEvents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
+  // Timeline (Pro): a day, week or month back, as a whole, a window being played, or a heatmap
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyRange, setHistoryRange] = useState<HistoryRange>('7d');
+  const [historyEnd, setHistoryEnd] = useState<number | null>(null);
+  const [historyPlaying, setHistoryPlaying] = useState(false);
+  const [historyHeat, setHistoryHeat] = useState(false);
+  const [historyNow, setHistoryNow] = useState(() => Date.now());
+  const historyActive = historyOpen && isPremium;
+  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(30, historyActive && historyRange === '30d');
+  const historyIncidents = useMemo(
+    () => (historyActive ? historyEvents(historyRange === '30d' ? archiveIncidents : liveIncidents, historyRange, historyEnd, historyNow) : null),
+    [historyActive, historyRange, archiveIncidents, liveIncidents, historyEnd, historyNow],
+  );
+  const chooseHistoryRange = (range: HistoryRange) => {
+    setHistoryRange(range);
+    setHistoryEnd(null);
+    setHistoryPlaying(false);
+    setHistoryNow(Date.now());
+    // A month of events is easiest to read, and lightest to draw, as heat
+    if (range === '30d') setHistoryHeat(true);
+  };
+  const playHistory = (play: boolean) => {
+    if (play && (historyEnd === null || historyEnd >= historyNow)) setHistoryEnd(firstEnd(historyRange, historyNow));
+    setHistoryPlaying(play);
+  };
+  // About 20 seconds from start to end, whatever the range
+  useEffect(() => {
+    if (!historyPlaying) return;
+    const { span, window, step } = HISTORY_RANGES[historyRange];
+    const tick = Math.max(120, 20000 / ((span - window) / step));
+    const id = setInterval(() => setHistoryEnd((end) => (end === null ? null : end + step)), tick);
+    return () => clearInterval(id);
+  }, [historyPlaying, historyRange]);
+  useEffect(() => {
+    if (historyPlaying && historyEnd !== null && historyEnd >= historyNow) {
+      setHistoryPlaying(false);
+      setHistoryEnd(null);
+    }
+  }, [historyPlaying, historyEnd, historyNow]);
+
   const timeFiltered = useMemo(
     () => filterIncidentsForMap(allIncidents, { isPremium }),
     [allIncidents, isPremium]
   );
 
   const filtered = useMemo(
-    () => sortNewestFirst(timeFiltered.filter((i) => activeFilters.includes(i.type))),
-    [activeFilters, timeFiltered]
+    () => sortNewestFirst((historyIncidents ?? timeFiltered).filter((i) => activeFilters.includes(i.type))),
+    [activeFilters, timeFiltered, historyIncidents]
   );
+  const showHeat = historyActive && historyHeat;
 
   const activeCount = filtered.filter((i) => i.status === 'active').length;
 
@@ -175,7 +221,9 @@ const Index = () => {
               <WifiOff className="w-3 h-3 text-muted-foreground" />
               }
                 <span className="ca-mono text-[9px] text-[hsl(var(--ca-text-3))] uppercase tracking-[0.2em]">
-                  {isPremium ?
+                  {historyActive ?
+                `Tidslinje — ${filtered.length} händelser` :
+                isPremium ?
                 'Realtid — Polisen.se' :
                 isLive ?
                 '15 min fördröjning' :
@@ -234,11 +282,12 @@ const Index = () => {
         {/* Map */}
         <div className="flex-1 relative">
           <MapView
-            incidents={filtered}
+            incidents={showHeat ? NO_INCIDENTS : filtered}
             selectedId={selectedId}
             onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
-            flyToLocation={flyToLocation} />
+            flyToLocation={flyToLocation}
+            heatPoints={showHeat ? filtered : null} />
 
           {/* Vinjett för nattkänsla över kartan */}
           <div
@@ -268,7 +317,7 @@ const Index = () => {
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
-          <div className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex items-center gap-2 ca-rise" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
+          <div className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex max-w-[calc(100%-8rem)] items-center gap-2 ca-rise" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
             {isPremium ?
             <div className="w-1.5 h-1.5 rounded-full bg-cr-green animate-pulse-dot" /> :
             isLive ?
@@ -276,10 +325,49 @@ const Index = () => {
 
             <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
             }
-            <span className="ca-mono text-[9px] tracking-[0.18em] uppercase text-[hsl(var(--ca-text-3))]">
-              {isPremium ? 'Realtid' : isLive ? '15 min delay' : 'Demo'} <span className="text-[hsl(var(--ca-text-3))]/50">/</span> 7 dagar <span className="text-[hsl(var(--ca-text-3))]/50">/</span> <span className="text-[hsl(var(--ca-red))]">{activeCount} aktiva</span>
+            <span className="ca-mono min-w-0 truncate text-[9px] tracking-[0.18em] uppercase text-[hsl(var(--ca-text-3))]">
+              {historyActive ? (
+                <>Tidslinje <span className="text-[hsl(var(--ca-text-3))]/50">/</span> {historyLabel(historyRange, historyEnd)}</>
+              ) : (
+                <>{isPremium ? 'Realtid' : isLive ? '15 min delay' : 'Demo'} <span className="text-[hsl(var(--ca-text-3))]/50">/</span> 7 dagar <span className="text-[hsl(var(--ca-text-3))]/50">/</span> <span className="text-[hsl(var(--ca-red))]">{activeCount} aktiva</span></>
+              )}
             </span>
           </div>
+
+          {!historyOpen && (
+            <button
+              type="button"
+              onClick={() => { setHistoryOpen(true); setHistoryNow(Date.now()); }}
+              className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex items-center gap-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+              style={{ top: isFullscreen ? 'calc(3.1rem + env(safe-area-inset-top, 0px))' : '3.1rem' }}
+            >
+              <History className="w-3.5 h-3.5" />
+              <span className="ca-mono text-[9px] tracking-[0.18em] uppercase">Tidslinje</span>
+              {!isPremium && <span className="rounded bg-primary/20 px-1 text-[8px] font-bold text-primary">PRO</span>}
+            </button>
+          )}
+
+          {historyOpen && (
+            <div className={`absolute left-1/2 z-[1000] -translate-x-1/2 ${isMobile && !mobileListOpen ? 'bottom-16' : 'bottom-4'}`}>
+              <HistoryPanel
+                isPremium={isPremium}
+                offerTrial={!isLoggedIn || subscription.trialEligible === true}
+                range={historyRange}
+                end={historyEnd}
+                start={firstEnd(historyRange, historyNow)}
+                now={historyNow}
+                playing={historyPlaying}
+                heat={historyHeat}
+                count={filtered.length}
+                loading={historyRange === '30d' && archiveLoading}
+                onRange={chooseHistoryRange}
+                onEnd={setHistoryEnd}
+                onPlay={playHistory}
+                onHeat={setHistoryHeat}
+                onClose={() => { setHistoryOpen(false); setHistoryPlaying(false); setHistoryEnd(null); }}
+              />
+            </div>
+          )}
         </div>
 
       </div>
