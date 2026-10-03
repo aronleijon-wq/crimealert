@@ -11,6 +11,16 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     ],
   },
   {
+    title: 'KOMMUNER',
+    links: [
+      { to: '/kommun/stockholm', label: 'Stockholm' },
+      { to: '/kommun/goteborg', label: 'Göteborg' },
+      { to: '/kommun/malmo', label: 'Malmö' },
+      { to: '/kommun/uppsala', label: 'Uppsala' },
+      { to: '/kommun', label: 'Alla kommuner' },
+    ],
+  },
+  {
     title: 'OM',
     links: [
       { to: '/om-oss', label: 'Om oss' },
@@ -30,7 +40,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
 
 const LandingFooter = () => (
   <footer className="border-t border-[hsl(var(--ca-line))] px-5 md:px-10 py-14">
-    <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-[1.4fr_repeat(4,1fr)]">
       <div>
         <div className="flex items-center gap-2.5">
           <img

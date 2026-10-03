@@ -58,12 +58,20 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$
  * Whole names only, so Sala does not match Uppsala and Berg does not match Falkenberg.
  */
 export function areaMatchesKommun(area: string | null | undefined, kommun: string): boolean {
-  const text = (area ?? '').toLocaleLowerCase('sv-SE');
+  return kommunMatcher(kommun)(area);
+}
+
+/** areaMatchesKommun for one kommun, built once, for matching many areas. */
+export function kommunMatcher(kommun: string): (area: string | null | undefined) => boolean {
   const name = kommun.trim().toLocaleLowerCase('sv-SE');
-  if (!text || !name) return false;
+  if (!name) return () => false;
   // Allow the genitive ("Stockholms län") unless the name already ends in s
   const genitive = name.endsWith('s') ? '' : 's?';
-  return new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(name)}${genitive}(?![\\p{L}\\p{N}])`, 'u').test(text);
+  const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(name)}${genitive}(?![\\p{L}\\p{N}])`, 'u');
+  return (area) => {
+    const text = (area ?? '').toLocaleLowerCase('sv-SE');
+    return !!text && pattern.test(text);
+  };
 }
 
 /** The first watched kommun an area lies in, or null. */

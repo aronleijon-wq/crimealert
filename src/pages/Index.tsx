@@ -9,6 +9,7 @@ import IncidentCard from '@/components/IncidentCard';
 import MobileSignupBar from '@/components/MobileSignupBar';
 
 
+import { KOMMUN_COORDINATES } from '@/data/kommuner';
 import { mockIncidents, Incident, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
@@ -58,6 +59,17 @@ const Index = () => {
   useEffect(() => {
     setActiveFilters(getDefaultFilters());
   }, [isPremium, isLoggedIn]);
+
+  // ?kommun=Malmö from a kommun page: start over that kommun
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const name = url.searchParams.get('kommun');
+    if (!name) return;
+    const seat = KOMMUN_COORDINATES.find((k) => k.name === name);
+    if (seat) setFlyToLocation({ lat: seat.lat, lng: seat.lng, zoom: 11, _ts: Date.now() });
+    url.searchParams.delete('kommun');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
 
   // Handle ?incident=ID from push notifications — focus and zoom to that event
   useEffect(() => {

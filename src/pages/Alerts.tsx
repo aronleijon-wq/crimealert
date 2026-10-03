@@ -6,6 +6,7 @@ import AreaPicker from '@/components/alerts/AreaPicker';
 import DeviceCard, { DeviceBadge, type DeviceState } from '@/components/alerts/DeviceCard';
 import NotificationPreview from '@/components/alerts/NotificationPreview';
 import TopicSettings from '@/components/alerts/TopicSettings';
+import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -99,6 +100,8 @@ const SetupStep = ({ done, href, title, detail }: { done: boolean; href: string;
 const listNames = (names: string[]) =>
   names.length <= 2 ? names.join(' och ') : `${names.slice(0, 2).join(', ')} och ${names.length - 2} till`;
 
+const PENDING_KOMMUN_KEY = 'crimealert_pending_kommun';
+
 const Alerts = () => {
   useSEO({
     title: 'Notiser & bevakningar — CrimeAlert',
@@ -150,7 +153,24 @@ const Alerts = () => {
     toast(error
       ? { title: 'Kunde inte lägga till', description: `${kommun} kunde inte sparas. Försök igen.`, variant: 'destructive' }
       : { title: `Du bevakar nu ${kommun}`, description: deviceState === 'on' ? 'Du får notiser för händelser där.' : 'Slå på notiser nedan för att få dem i den här enheten.' });
+    return error;
   };
+
+  // "Bevaka Malmö" on a kommun page leads here; the suggestion waits through sign-up and login
+  const [suggested, setSuggested] = useState<string | null>(() => {
+    const fromUrl = SWEDISH_KOMMUNER.find((k) => k === new URLSearchParams(window.location.search).get('kommun')) ?? null;
+    try {
+      if (fromUrl) localStorage.setItem(PENDING_KOMMUN_KEY, fromUrl);
+      return fromUrl ?? SWEDISH_KOMMUNER.find((k) => k === localStorage.getItem(PENDING_KOMMUN_KEY)) ?? null;
+    } catch {
+      return fromUrl;
+    }
+  });
+  const dismissSuggestion = () => {
+    setSuggested(null);
+    try { localStorage.removeItem(PENDING_KOMMUN_KEY); } catch { /* private mode */ }
+  };
+  const showSuggestion = !!user && !areasLoading && !!suggested && !kommuner.includes(suggested);
 
   const handleRemove = async (kommun: string) => {
     const error = await removeKommun(kommun);
@@ -238,6 +258,24 @@ const Alerts = () => {
             </section>
           ) : (
             <>
+              {showSuggestion && (
+                <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4" aria-live="polite">
+                  <MapPin className="h-5 w-5 shrink-0 text-primary" />
+                  <p className="min-w-0 flex-1 text-sm font-medium text-foreground">Vill du bevaka {suggested}?</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => { if (suggested && !(await handleAdd(suggested))) dismissSuggestion(); }}
+                      className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Lägg till
+                    </button>
+                    <button type="button" onClick={dismissSuggestion} className="h-9 rounded-lg px-3 text-sm text-muted-foreground hover:text-foreground">
+                      Nej tack
+                    </button>
+                  </div>
+                </section>
+              )}
               {deviceState === 'checking' || areasLoading ? (
                 <div className="h-[84px] animate-pulse rounded-2xl bg-[hsl(var(--ca-panel-3))]" aria-hidden />
               ) : (

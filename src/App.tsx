@@ -25,6 +25,8 @@ const Admin = lazy(() => import("./pages/Admin"));
 const DebugPush = lazy(() => import("./pages/DebugPush"));
 const OmOss = lazy(() => import("./pages/OmOss"));
 const Feed = lazy(() => import("./pages/Feed"));
+const Kommun = lazy(() => import("./pages/Kommun"));
+const Kommuner = lazy(() => import("./pages/Kommuner"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -48,6 +50,8 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/karta" element={<Index />} />
           <Route path="/flode" element={<Feed />} />
+          <Route path="/kommun" element={<Kommuner />} />
+          <Route path="/kommun/:slug" element={<Kommun />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />

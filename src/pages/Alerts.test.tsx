@@ -119,6 +119,16 @@ describe('Alerts page', () => {
     expect(screen.getByText(/Med gratiskonto kommer notisen 15 minuter efter händelsen/)).toBeInTheDocument();
   });
 
+  it('offers to watch the kommun a kommun page sent the user from', async () => {
+    window.history.pushState({}, '', '/alerts?kommun=Malmö');
+    await renderAlerts();
+    expect(screen.getByText('Vill du bevaka Malmö?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Lägg till' }));
+    await vi.waitFor(() => expect(addKommun).toHaveBeenCalledWith('Malmö'));
+    await vi.waitFor(() => expect(screen.queryByText('Vill du bevaka Malmö?')).toBeNull());
+    window.history.pushState({}, '', '/');
+  });
+
   it('does not mention the free delay to Pro', async () => {
     state.isPremium = true;
     state.kommuner = ['Uppsala'];
