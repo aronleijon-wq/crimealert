@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          device: string
+          id: number
+          kind: string
+          name: string
+          page: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          device: string
+          id?: never
+          kind: string
+          name: string
+          page: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          device?: string
+          id?: never
+          kind?: string
+          name?: string
+          page?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -301,6 +334,27 @@ export type Database = {
         }
         Relationships: []
       }
+      page_stats: {
+        Row: {
+          day: string
+          device: string
+          page: string
+          views: number
+        }
+        Insert: {
+          day: string
+          device: string
+          page: string
+          views?: number
+        }
+        Update: {
+          day?: string
+          device?: string
+          page?: string
+          views?: number
+        }
+        Relationships: []
+      }
       police_events_archive: {
         Row: {
           area: string | null
@@ -575,41 +629,30 @@ export type Database = {
       }
     }
     Functions: {
-      log_client_event: {
-        Args: {
-          _detail: string | null
-          _device: string
-          _kind: string
-          _name: string
-          _page: string
-          _value: number | null
-        }
-        Returns: undefined
-      }
-      monitoring_summary: {
-        Args: { _days?: number }
-        Returns: Json
-      }
-      police_fetch_status: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      track_page_view: {
-        Args: { _device: string; _page: string }
-        Returns: undefined
-      }
-      has_pro: {
-        Args: {
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      log_client_event: {
+        Args: {
+          _detail: string
+          _device: string
+          _kind: string
+          _name: string
+          _page: string
+          _value: number
+        }
+        Returns: undefined
+      }
+      monitoring_summary: { Args: { _days?: number }; Returns: Json }
+      police_fetch_status: { Args: never; Returns: Json }
+      track_page_view: {
+        Args: { _device: string; _page: string }
+        Returns: undefined
       }
     }
     Enums: {
