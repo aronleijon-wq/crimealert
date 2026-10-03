@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Activity, BellRing, CalendarDays, ChevronRight, Clock, Map as MapIcon, TrendingUp } from 'lucide-react';
 import Header from '@/components/Header';
-import { fitSweden, SWEDEN_SHAPES } from '@/components/landing/swedenGeo';
+import SwedenLocator from '@/components/SwedenLocator';
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -11,32 +11,10 @@ import { useSEO } from '@/hooks/useSEO';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { kommunFromSlug, kommunLongName, kommunPath, kommunStats, neighbourKommuner } from '@/lib/kommunPages';
+import { eventPath } from '@/lib/share';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
 const PAGE = 25;
-
-// Sweden's outline in a 120×260 box, for the locator
-const { toPixel } = fitSweden(120, 260, 6);
-const SWEDEN_PATH = SWEDEN_SHAPES.map(
-  (shape) => `M${shape.map(([lat, lng]) => toPixel(lat, lng).map((n) => n.toFixed(1)).join(' ')).join(' L')} Z`,
-).join(' ');
-
-/** Sweden with the kommun marked. */
-const Locator = ({ name }: { name: string }) => {
-  const seat = KOMMUN_COORDINATES.find((k) => k.name === name);
-  const [x, y] = seat ? toPixel(seat.lat, seat.lng) : [-10, -10];
-  return (
-    <svg viewBox="0 0 120 260" className="h-40 w-auto shrink-0 sm:h-48" role="img" aria-label={`${name} på Sverigekartan`}>
-      <path d={SWEDEN_PATH} fill="hsl(var(--ca-steel) / 0.14)" stroke="hsl(var(--ca-steel) / 0.45)" strokeWidth="0.8" />
-      {seat && (
-        <>
-          <circle cx={x} cy={y} r="9" fill="hsl(var(--ca-red) / 0.18)" className="ca-breathe" />
-          <circle cx={x} cy={y} r="3.2" fill="hsl(var(--ca-red))" stroke="white" strokeWidth="1" />
-        </>
-      )}
-    </svg>
-  );
-};
 
 const Stat = ({ icon: Icon, label, value }: { icon: typeof Activity; label: string; value: string | number }) => (
   <div className="rounded-xl border border-[hsl(var(--ca-line-strong))] bg-card px-3 py-2.5">
@@ -58,7 +36,7 @@ const EventRow = ({ incident }: { incident: Incident }) => {
   return (
     <li>
       <Link
-        to={`/karta?incident=${encodeURIComponent(incident.id)}`}
+        to={eventPath(incident.id)}
         className="group flex items-start gap-3 rounded-xl px-3 py-3 transition hover:bg-[hsl(var(--ca-panel-2))]"
       >
         <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/10" style={{ background: config.color }} aria-hidden />
@@ -109,6 +87,7 @@ const Kommun = () => {
 
   const stats = useMemo(() => (name ? kommunStats(incidents, name) : null), [incidents, name]);
   const neighbours = useMemo(() => (name ? neighbourKommuner(name) : []), [name]);
+  const seat = KOMMUN_COORDINATES.find((k) => k.name === name);
 
   if (!name || !stats) {
     return (
@@ -151,7 +130,7 @@ const Kommun = () => {
                 Det senaste som Polisen rapporterat i {kommunLongName(name)}: brott, bränder, olyckor och andra insatser, uppdaterat var femte minut.
               </p>
             </div>
-            <Locator name={name} />
+            <SwedenLocator lat={seat?.lat} lng={seat?.lng} label={`${name} på Sverigekartan`} />
           </section>
 
           <div className="grid grid-cols-3 gap-2">

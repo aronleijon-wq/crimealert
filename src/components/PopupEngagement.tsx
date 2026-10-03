@@ -4,9 +4,12 @@ import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { supabase } from '@/integrations/supabase/client';
+import { shareEvent, type ShareResult } from '@/lib/share';
 
 interface Props {
   incidentId: string;
+  /** Police events can be shared: they have a page of their own */
+  share?: { title: string; area?: string };
 }
 
 const AUTH_NUDGE_STYLE: React.CSSProperties = {
@@ -26,7 +29,8 @@ const formatTimeAgo = (dateStr: string): string => {
   return `${Math.floor(hours / 24)}d`;
 };
 
-const PopupEngagement = ({ incidentId }: Props) => {
+const PopupEngagement = ({ incidentId, share }: Props) => {
+  const [shared, setShared] = useState<ShareResult | null>(null);
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -142,6 +146,35 @@ const PopupEngagement = ({ incidentId }: Props) => {
           <span style={{ fontSize: 13 }}>💬</span>
           <span>{commentCount ?? 0}</span>
         </button>
+
+        {share && (
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              const result = await shareEvent({ id: incidentId, ...share });
+              setShared(result);
+              setTimeout(() => setShared(null), 2500);
+            }}
+            aria-label="Dela händelsen"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 3,
+              padding: '3px 8px',
+              borderRadius: 12,
+              border: '1px solid #e5e7eb',
+              background: '#f8f8f8',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 500,
+              color: shared === 'copied' ? '#16a34a' : '#888',
+              lineHeight: 1,
+            }}
+          >
+            <span style={{ fontSize: 12 }}>{shared === 'copied' ? '✓' : '↗'}</span>
+            <span>{shared === 'copied' ? 'Kopierad' : shared === 'failed' ? 'Gick inte' : 'Dela'}</span>
+          </button>
+        )}
       </div>
 
       {/* Auth nudge */}

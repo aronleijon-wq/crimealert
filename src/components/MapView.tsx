@@ -6,6 +6,7 @@ import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
+import { isPoliceEvent } from '@/lib/share';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -605,7 +606,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           root.render(
             <AuthValueProvider value={authRef.current}>
               <QueryClientProvider client={popupQueryClient}>
-                <PopupEngagement incidentId={inc.id} />
+                <PopupEngagement incidentId={inc.id} share={isPoliceEvent(inc) ? { title: inc.title, area: inc.area } : undefined} />
               </QueryClientProvider>
             </AuthValueProvider>
           );

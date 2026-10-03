@@ -50,7 +50,7 @@ describe('Kommun page', () => {
     expect(screen.getByText('Senaste 7 dagarna').parentElement).toHaveTextContent('3');
     const list = screen.getByRole('heading', { name: 'Senaste händelserna i Malmö' }).nextElementSibling as HTMLElement;
     const links = within(list).getAllByRole('link');
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/karta?incident=a', '/karta?incident=b', '/karta?incident=c']);
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/handelse/a', '/handelse/b', '/handelse/c']);
     expect(within(list).getByText('Brand, Malmö')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Visa Malmö på kartan/ })).toHaveAttribute('href', '/karta?kommun=Malm%C3%B6');
     expect(screen.getByRole('link', { name: /Bevaka Malmö/ })).toHaveAttribute('href', '/alerts?kommun=Malm%C3%B6');

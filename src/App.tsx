@@ -27,6 +27,7 @@ const OmOss = lazy(() => import("./pages/OmOss"));
 const Feed = lazy(() => import("./pages/Feed"));
 const Kommun = lazy(() => import("./pages/Kommun"));
 const Kommuner = lazy(() => import("./pages/Kommuner"));
+const Handelse = lazy(() => import("./pages/Handelse"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/flode" element={<Feed />} />
           <Route path="/kommun" element={<Kommuner />} />
           <Route path="/kommun/:slug" element={<Kommun />} />
+          <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />

@@ -4,6 +4,7 @@ import { ArrowUpRight, Lock, MapPin, MessageCircle, Newspaper } from 'lucide-rea
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import type { Engagement } from '@/hooks/useEngagementCounts';
+import ShareButton from '@/components/ShareButton';
 import { REACTION_TYPES } from '@/hooks/useIncidentReactions';
 import type { FeedItem } from '@/lib/feed';
 import { sourceName } from '@/lib/externalEvents';
@@ -223,6 +224,13 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
             <MessageCircle className="h-4 w-4" />
             {user ? <span className="tabular-nums">{engagement?.commentCount ?? 0}</span> : 'Kommentera'}
           </button>
+          {item.kind === 'police' && (
+            <ShareButton
+              event={item}
+              compact
+              className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs text-muted-foreground transition hover:bg-[hsl(var(--ca-panel-3))]"
+            />
+          )}
         </div>
 
         {showLoginNudge && !user && (
