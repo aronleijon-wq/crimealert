@@ -56,6 +56,11 @@ const Villkor = () => {
                 framgår vid köptillfället. Prenumerationer hanteras via Stripe och du kan när som helst
                 avsluta din prenumeration via ditt konto. Återbetalning sker enligt gällande konsumentlagstiftning.
               </p>
+              <p className="mt-2">
+                Den som aldrig haft Pro kan börja med en gratis provperiod på 7 dagar. Kortet registreras när
+                provperioden startar och den första betalningen dras när den slutar. Avslutar du prenumerationen
+                under provperioden dras ingenting. Provperioden gäller en gång per person.
+              </p>
             </section>
 
             <section>

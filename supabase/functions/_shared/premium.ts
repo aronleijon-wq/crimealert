@@ -134,3 +134,24 @@ export async function readProStatus(db: ServiceClient, userIds: string[]): Promi
 
 /** Whether a remembered answer is recent enough to use without asking Stripe. */
 export const isFresh = (row: ProStatusRow, nowMs: number) => nowMs - Date.parse(row.checked_at) < PRO_STATUS_TTL_MS;
+
+/** Days of Pro a first-time subscriber gets before the first payment. */
+export const TRIAL_DAYS = 7;
+
+// Statuses of a subscription that actually gave Pro; incomplete ones were never paid or started
+const HELD = ['active', 'trialing', 'past_due', 'canceled', 'unpaid', 'paused'];
+
+/** Whether any of these subscriptions ever gave Pro, so the free trial has been used. */
+export const hadPro = (subs: SubscriptionLike[]) =>
+  subs.some((s) => HELD.includes(s.status) && PRO_PRODUCT_IDS.includes(productOf(s) ?? ''));
+
+/** Whether an account may start Pro with the free trial: never had Pro, and not on the free list. */
+export async function trialEligible(stripe: StripeLike, email: string): Promise<boolean> {
+  if (isFreePremiumEmail(email)) return false;
+  const customers = await stripe.customers.list({ email, limit: 10 });
+  for (const customer of customers.data) {
+    const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'all', limit: 20 });
+    if (hadPro(subs.data)) return false;
+  }
+  return true;
+}

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
 import { PLANS, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
+import { TRIAL_DAYS, trialEligible } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,11 +92,16 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // First-time subscribers start with a free trial; the card is taken now and charged after it
+    const trial = await trialEligible(stripe, email);
+    logStep("Trial", { eligible: trial });
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
       line_items: [{ price: price.id, quantity: 1 }],
       mode: "subscription",
+      ...(trial ? { subscription_data: { trial_period_days: TRIAL_DAYS } } : {}),
       success_url: `${req.headers.get("origin")}/account?success=true`,
       cancel_url: `${req.headers.get("origin")}/account?canceled=true`,
     });

@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
-import { proUntilFor, rememberProStatus } from "../_shared/premium.ts";
+import { hadPro, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,7 +100,7 @@ serve(async (req) => {
     if (customers.data.length === 0) {
       logStep("No customer found");
       await rememberProStatus(supabaseClient, user.id, null);
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ subscribed: false, trial_eligible: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -126,6 +126,8 @@ serve(async (req) => {
     };
 
     let validSub: Stripe.Subscription | null = null;
+    // A free trial is for accounts that never had Pro
+    let usedTrial = false;
 
     for (const customer of customers.data) {
       logStep("Checking customer", { customerId: customer.id });
@@ -135,6 +137,7 @@ serve(async (req) => {
         limit: 20,
       });
       logStep("Subscriptions for customer", { customerId: customer.id, count: subscriptions.data.length, statuses: subscriptions.data.map((s: Stripe.Subscription) => s.status) });
+      if (hadPro(subscriptions.data)) usedTrial = true;
 
       const customerBest = subscriptions.data
         .filter((s: Stripe.Subscription) => eligibleStatuses.includes(s.status))
@@ -197,6 +200,8 @@ serve(async (req) => {
         subscribed: hasActiveSub,
         product_id: productId,
         subscription_end: subscriptionEnd,
+        trialing: validSub?.status === "trialing",
+        trial_eligible: !usedTrial,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

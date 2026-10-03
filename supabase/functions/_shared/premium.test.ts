@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bestValidSubscription, findSubscription, isFresh, lookupProUntil, proUntilActive, proUntilFor, type SubscriptionLike } from './premium';
+import { bestValidSubscription, findSubscription, hadPro, isFresh, lookupProUntil, proUntilActive, proUntilFor, trialEligible, type SubscriptionLike } from './premium';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
 const sec = (iso: string) => Date.parse(iso) / 1000;
@@ -61,5 +61,28 @@ describe('lookupProUntil', () => {
     expect((await findSubscription(client, 'x@example.com', NOW))?.status).toBe('trialing');
     expect(await lookupProUntil(client, 'x@example.com', NOW)).toBe('2026-10-09T00:00:00.000Z');
     expect(await lookupProUntil(stripe({}), 'x@example.com', NOW)).toBeNull();
+  });
+});
+
+describe('free trial', () => {
+  const stripe = (byCustomer: Record<string, SubscriptionLike[]>) => ({
+    customers: { list: async () => ({ data: Object.keys(byCustomer).map((id) => ({ id })) }) },
+    subscriptions: { list: async ({ customer }: { customer: string }) => ({ data: byCustomer[customer] }) },
+  });
+
+  it('is for accounts that never had Pro', async () => {
+    expect(await trialEligible(stripe({}), 'ny@example.com')).toBe(true);
+    // A checkout that was never completed doesn't count
+    expect(await trialEligible(stripe({ cus_a: [sub('incomplete_expired', null)] }), 'x@example.com')).toBe(true);
+    expect(await trialEligible(stripe({ cus_a: [sub('active', null, 'prod_other')] }), 'x@example.com')).toBe(true);
+  });
+
+  it('is used once, also after cancelling', async () => {
+    expect(await trialEligible(stripe({ cus_a: [], cus_b: [sub('canceled', '2026-01-01T00:00:00Z')] }), 'x@example.com')).toBe(false);
+    expect(hadPro([sub('trialing', '2026-10-09T00:00:00Z', 'prod_U0duDYNoEp8JXS')])).toBe(true);
+  });
+
+  it('is not offered to accounts with free Pro', async () => {
+    expect(await trialEligible(stripe({}), 'kcleijon@gmail.com')).toBe(false);
   });
 });

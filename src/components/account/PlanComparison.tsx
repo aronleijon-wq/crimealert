@@ -1,6 +1,6 @@
 import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PRICES, PRO_FEATURES, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
+import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
@@ -55,6 +55,8 @@ const CellValue = ({ value, pro }: { value: Cell; pro?: boolean }) => {
 interface PlanComparisonProps {
   signedIn: boolean;
   isPremium: boolean;
+  /** Pro starts with the free trial (signed out, or never had Pro) */
+  trialEligible: boolean;
   billingCycle: BillingCycle;
   onBillingCycle: (cycle: BillingCycle) => void;
   onCheckout: () => void;
@@ -63,8 +65,9 @@ interface PlanComparisonProps {
 }
 
 /** Gratis and Pro side by side, then everything compared row by row. */
-const PlanComparison = ({ signedIn, isPremium, billingCycle, onBillingCycle, onCheckout, onManage, checkoutLoading }: PlanComparisonProps) => {
+const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBillingCycle, onCheckout, onManage, checkoutLoading }: PlanComparisonProps) => {
   const price = PRICES[billingCycle];
+  const offerTrial = !isPremium && trialEligible;
 
   return (
     <section aria-labelledby="planer-rubrik" className="space-y-5">
@@ -124,7 +127,7 @@ const PlanComparison = ({ signedIn, isPremium, billingCycle, onBillingCycle, onC
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 font-['Archivo',Inter,sans-serif] text-lg font-extrabold text-primary"><Zap className="h-4 w-4" /> Pro</h2>
             <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${isPremium ? 'bg-[hsl(var(--cr-green))] text-white' : 'bg-primary text-primary-foreground'}`}>
-              {isPremium ? 'DIN PLAN' : 'POPULÄR'}
+              {isPremium ? 'DIN PLAN' : offerTrial ? `${TRIAL_DAYS} DAGAR GRATIS` : 'POPULÄR'}
             </span>
           </div>
           <p className="mt-1">
@@ -148,9 +151,13 @@ const PlanComparison = ({ signedIn, isPremium, billingCycle, onBillingCycle, onC
               isPremium ? 'border border-[hsl(var(--ca-line-strong))] text-foreground hover:border-primary/50' : 'bg-primary text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--ca-red))] hover:bg-primary/90'
             }`}
           >
-            {checkoutLoading ? 'Laddar…' : isPremium ? 'Hantera prenumeration' : 'Uppgradera till Pro'}
+            {checkoutLoading ? 'Laddar…' : isPremium ? 'Hantera prenumeration' : offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
           </button>
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">Avsluta när du vill. Pro gäller perioden ut.</p>
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            {offerTrial
+              ? `Gratis i ${TRIAL_DAYS} dagar, sedan ${price.price}${price.period}. Avsluta under provperioden så dras inget.`
+              : 'Avsluta när du vill. Pro gäller perioden ut.'}
+          </p>
         </div>
       </div>
 

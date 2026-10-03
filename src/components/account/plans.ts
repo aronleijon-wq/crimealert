@@ -13,6 +13,9 @@ export const PRICES = {
 } as const;
 export type BillingCycle = keyof typeof PRICES;
 
+/** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
+export const TRIAL_DAYS = 7;
+
 /** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads). */
 export const PRO_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning' },
