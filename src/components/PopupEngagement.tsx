@@ -4,7 +4,7 @@ import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { supabase } from '@/integrations/supabase/client';
-import { shareEvent, type ShareResult } from '@/lib/share';
+import ShareButton from '@/components/ShareButton';
 
 interface Props {
   incidentId: string;
@@ -30,7 +30,6 @@ const formatTimeAgo = (dateStr: string): string => {
 };
 
 const PopupEngagement = ({ incidentId, share }: Props) => {
-  const [shared, setShared] = useState<ShareResult | null>(null);
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -148,32 +147,10 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
         </button>
 
         {share && (
-          <button
-            onClick={async (e) => {
-              e.stopPropagation();
-              const result = await shareEvent({ id: incidentId, ...share });
-              setShared(result);
-              setTimeout(() => setShared(null), 2500);
-            }}
-            aria-label="Dela händelsen"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 3,
-              padding: '3px 8px',
-              borderRadius: 12,
-              border: '1px solid #e5e7eb',
-              background: '#f8f8f8',
-              cursor: 'pointer',
-              fontSize: 11,
-              fontWeight: 500,
-              color: shared === 'copied' ? '#16a34a' : '#888',
-              lineHeight: 1,
-            }}
-          >
-            <span style={{ fontSize: 12 }}>{shared === 'copied' ? '✓' : '↗'}</span>
-            <span>{shared === 'copied' ? 'Kopierad' : shared === 'failed' ? 'Gick inte' : 'Dela'}</span>
-          </button>
+          <ShareButton
+            event={{ id: incidentId, title: share.title }}
+            className="inline-flex items-center gap-1 rounded-xl border border-[#e5e7eb] bg-[#f8f8f8] px-2 py-[3px] text-[11px] font-medium leading-none text-[#888] [&_svg]:h-3 [&_svg]:w-3"
+          />
         )}
       </div>
 

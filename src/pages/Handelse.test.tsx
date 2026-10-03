@@ -38,9 +38,13 @@ describe('event page', () => {
     expect(screen.getByRole('link', { name: 'Rån, Malmö 3 tim sedan' })).toHaveAttribute('href', '/handelse/e2');
     expect(screen.queryByText('Brand, Lund')).toBeNull();
 
+    // Without a share sheet (as in this browser), our own menu opens
     const writeText = vi.fn(async () => {});
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     fireEvent.click(screen.getByRole('button', { name: /Dela/ }));
+    expect(await screen.findByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', expect.stringContaining('https://wa.me/?text='));
+    expect(screen.getByRole('link', { name: /Mail/ })).toHaveAttribute('href', expect.stringContaining('mailto:'));
+    fireEvent.click(screen.getByRole('button', { name: 'Kopiera länk' }));
     expect(await screen.findByText('Länken är kopierad')).toBeInTheDocument();
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/handelse/e1`);
   });
