@@ -8,29 +8,30 @@ import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
 import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { trackPageView } from "@/lib/monitoring";
+import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
-const Index = lazy(() => import("./pages/Index"));
+const Index = lazyPage(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
-const Analysis = lazy(() => import("./pages/Analysis"));
-const Alerts = lazy(() => import("./pages/Alerts"));
-const Account = lazy(() => import("./pages/Account"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Cookies = lazy(() => import("./pages/Cookies"));
-const Sekretesspolicy = lazy(() => import("./pages/Sekretesspolicy"));
-const Villkor = lazy(() => import("./pages/Villkor"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Admin = lazy(() => import("./pages/Admin"));
-const DebugPush = lazy(() => import("./pages/DebugPush"));
-const OmOss = lazy(() => import("./pages/OmOss"));
-const Feed = lazy(() => import("./pages/Feed"));
-const Kommun = lazy(() => import("./pages/Kommun"));
-const Kommuner = lazy(() => import("./pages/Kommuner"));
-const Handelse = lazy(() => import("./pages/Handelse"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Analysis = lazyPage(() => import("./pages/Analysis"));
+const Alerts = lazyPage(() => import("./pages/Alerts"));
+const Account = lazyPage(() => import("./pages/Account"));
+const Auth = lazyPage(() => import("./pages/Auth"));
+const Cookies = lazyPage(() => import("./pages/Cookies"));
+const Sekretesspolicy = lazyPage(() => import("./pages/Sekretesspolicy"));
+const Villkor = lazyPage(() => import("./pages/Villkor"));
+const ResetPassword = lazyPage(() => import("./pages/ResetPassword"));
+const Admin = lazyPage(() => import("./pages/Admin"));
+const DebugPush = lazyPage(() => import("./pages/DebugPush"));
+const OmOss = lazyPage(() => import("./pages/OmOss"));
+const Feed = lazyPage(() => import("./pages/Feed"));
+const Kommun = lazyPage(() => import("./pages/Kommun"));
+const Kommuner = lazyPage(() => import("./pages/Kommuner"));
+const Handelse = lazyPage(() => import("./pages/Handelse"));
+const NotFound = lazyPage(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
