@@ -67,7 +67,7 @@ const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest 
       {state === 'off' && (
         <>
           <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-            Slå på för att få en notis direkt när Polisen rapporterar något i dina områden, även när sidan är stängd.
+            Slå på för att få en notis när Polisen rapporterar något i dina områden, även när sidan är stängd.
           </p>
           <button type="button" onClick={onEnable} disabled={busy} className={`${primaryButton} mt-4 w-full sm:w-auto`}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />} Slå på notiser

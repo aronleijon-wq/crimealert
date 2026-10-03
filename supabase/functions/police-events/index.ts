@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '../_shared/archiveDiff.ts';
+import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
+import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -12,10 +14,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
-const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
-const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com", "mykhailo@inphiz.com", "kcleijon@gmail.com"];
-const DELAY_MS = 15 * 60 * 1000; // 15 minutes
+const DELAY_MS = FREE_DELAY_MS; // 15 minutes
 
 // An incident as served to the client and stored in police_events_archive
 interface PoliceIncident {
@@ -58,68 +57,52 @@ const summaryScrapeAttempts = new Map<string, number>();
 const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
 const PREMIUM_CACHE_TTL = 60 * 1000; // 1 minute
 
-// Check if user has premium subscription (server-side) — with caching
+/**
+ * Whether the request comes from a Pro account. Uses the answer check-subscription last stored
+ * in pro_status (the app checks on load and every 30 minutes), and asks Stripe only when there
+ * is no recent answer, with the same rules as check-subscription (so trials and cancelled
+ * subscriptions keep Pro until their period ends, as the app shows).
+ */
 async function checkPremiumStatus(req: Request): Promise<boolean> {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) return false;
     const token = authHeader.replace('Bearer ', '');
-    
+
     // Skip anon key — it's not a user token
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     if (token === anonKey) return false;
 
-    // Check in-memory cache first
+    const now = Date.now();
     const cached = premiumCache.get(token);
-    if (cached && Date.now() - cached.ts < PREMIUM_CACHE_TTL) {
-      console.log('Premium status from cache');
-      return cached.isPremium;
-    }
-
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data?.user?.email) {
-      premiumCache.set(token, { isPremium: false, ts: Date.now() });
-      return false;
-    }
-
-    const email = data.user.email.toLowerCase();
-    if (FREE_PREMIUM_EMAILS.includes(email)) {
-      premiumCache.set(token, { isPremium: true, ts: Date.now() });
-      return true;
-    }
-
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) {
-      premiumCache.set(token, { isPremium: false, ts: Date.now() });
-      return false;
-    }
-
-    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-    const customers = await stripe.customers.list({ email, limit: 5 });
-    
-    let result = false;
-    for (const customer of customers.data) {
-      const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
-      for (const sub of subs.data) {
-        const productId = typeof sub.items?.data?.[0]?.price?.product === 'string'
-          ? sub.items.data[0].price.product
-          : sub.items?.data?.[0]?.price?.product?.id;
-        if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
-          result = true;
-          break;
-        }
-      }
-      if (result) break;
-    }
-    
-    premiumCache.set(token, { isPremium: result, ts: Date.now() });
-    // Evict old entries to prevent memory leak
+    if (cached && now - cached.ts < PREMIUM_CACHE_TTL) return cached.isPremium;
+    // Forget old entries so the map stays small
     if (premiumCache.size > 200) {
-      const now = Date.now();
       for (const [k, v] of premiumCache) {
         if (now - v.ts > PREMIUM_CACHE_TTL) premiumCache.delete(k);
       }
     }
+
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.email) {
+      premiumCache.set(token, { isPremium: false, ts: now });
+      return false;
+    }
+
+    const userId = data.user.id;
+    const stored = (await readProStatus(supabase, [userId])).get(userId);
+    let proUntil: string | null;
+    if (stored && isFresh(stored, now)) {
+      proUntil = stored.pro_until;
+    } else {
+      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+      const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' }) : null;
+      proUntil = await lookupProUntil(stripe, data.user.email, now);
+      await rememberProStatus(supabase, userId, proUntil);
+    }
+
+    const result = proUntilActive(proUntil, now);
+    premiumCache.set(token, { isPremium: result, ts: now });
     return result;
   } catch (e) {
     console.warn('Premium check failed, defaulting to free:', e);
@@ -1304,8 +1287,12 @@ async function archiveIncidents(incidents: PoliceIncident[], archived: PoliceInc
       ];
     }
 
-    // Push notifications only concern events that are new to the archive
-    if (!inserts.length) return;
+    // Push runs when there are new events (Pro accounts hear at once), and when events have just
+    // passed the free delay (free accounts hear then, as the events appear on their map). The
+    // window spans more than one fetch cycle; the push log stops anything being sent twice.
+    const now = Date.now();
+    const freeDue = incidents.some((i) => reachedFreeWithin(i.time, now, 12 * 60 * 1000));
+    if (!inserts.length && !freeDue) return;
     try {
       const pushUrl = `${supabaseUrl}/functions/v1/send-push-notifications`;
       const pushRes = await fetch(pushUrl, {

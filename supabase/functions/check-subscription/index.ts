@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
+import { proUntilFor, rememberProStatus } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,7 @@ serve(async (req) => {
     // Check whitelist first
     if (FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) {
       logStep("User is on free premium whitelist");
+      await rememberProStatus(supabaseClient, user.id, "infinity");
       return new Response(
         JSON.stringify({
           subscribed: true,
@@ -97,6 +99,7 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No customer found");
+      await rememberProStatus(supabaseClient, user.id, null);
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -185,6 +188,9 @@ serve(async (req) => {
 
       logStep("Active subscription window found", { status: validSub.status, productId, subscriptionEnd });
     }
+
+    // What the archive's access rule and the push sender go by
+    await rememberProStatus(supabaseClient, user.id, proUntilFor(validSub, Date.now()));
 
     return new Response(
       JSON.stringify({

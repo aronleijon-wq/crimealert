@@ -139,3 +139,21 @@ export function buildPushMessage(events: PushEvent[]): PushMessage {
 export function safeAppPath(value: unknown, fallback = '/alerts'): string {
   return typeof value === 'string' && /^\/(?!\/)[\w\-/?=&%.]*$/.test(value) ? value : fallback;
 }
+
+/** Free accounts get Polisen's events, on the map and as notifications, 15 minutes after they happened. */
+export const FREE_DELAY_MS = 15 * 60 * 1000;
+
+// "2026-10-02 14:05:00 +02:00" from Polisen or "2026-10-02T12:05:00+00:00" from the database
+const eventTimeMs = (time: string) => Date.parse(time.replace(' ', 'T').replace(/\s+([+-]\d{2}:\d{2})$/, '$1'));
+
+/** Whether a free account may be told about the event now (it is on their map). */
+export function freeMayNotify(time: string, now: number): boolean {
+  const at = eventTimeMs(time);
+  return !Number.isNaN(at) && at + FREE_DELAY_MS <= now;
+}
+
+/** Whether the event reached free accounts within the last `windowMs`, so a push run is due for them. */
+export function reachedFreeWithin(time: string, now: number, windowMs: number): boolean {
+  const at = eventTimeMs(time);
+  return !Number.isNaN(at) && at + FREE_DELAY_MS <= now && at + FREE_DELAY_MS > now - windowMs;
+}

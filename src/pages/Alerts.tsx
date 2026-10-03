@@ -8,6 +8,7 @@ import NotificationPreview from '@/components/alerts/NotificationPreview';
 import TopicSettings from '@/components/alerts/TopicSettings';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsPremium } from '@/hooks/useIsPremium';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
@@ -105,6 +106,7 @@ const Alerts = () => {
     canonical: 'https://crimealert.se/alerts',
   });
   const { user, loading: authLoading } = useAuth();
+  const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
   const { settings, available: settingsAvailable, saving, save } = useNotificationSettings();
@@ -220,7 +222,7 @@ const Alerts = () => {
               <div className="p-5 sm:p-6">
                 <h2 className="font-['Archivo',Inter,sans-serif] text-xl font-extrabold tracking-[-0.01em] text-foreground">Bevaka ditt område – gratis</h2>
                 <ul className="mt-3 space-y-2 text-[13px] text-[hsl(var(--ca-text-2))]">
-                  {['Välj de kommuner du bryr dig om', 'Välj vilka händelser du vill veta om', 'Få en notis i mobilen eller datorn direkt när det händer'].map((t) => (
+                  {['Välj de kommuner du bryr dig om', 'Välj vilka händelser du vill veta om', 'Få en notis i mobilen eller datorn när det händer, direkt med Pro'].map((t) => (
                     <li key={t} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--cr-green))]" />{t}</li>
                   ))}
                 </ul>
@@ -252,8 +254,14 @@ const Alerts = () => {
                     <p className="text-[13px] text-[hsl(var(--ca-text-2))]">
                       {allSet
                         ? `Du får en notis när något händer i ${listNames(kommuner)}.`
-                        : `${stepsLeft} steg kvar, sedan får du notiser direkt.`}
+                        : `${stepsLeft} steg kvar, sedan får du notiser.`}
                     </p>
+                    {!isPremium && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Med gratiskonto kommer notisen 15 minuter efter händelsen, samtidigt som den syns på kartan.{' '}
+                        <Link to="/account" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
+                      </p>
+                    )}
                   </div>
                 </div>
                 {!allSet && (

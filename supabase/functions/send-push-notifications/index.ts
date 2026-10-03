@@ -1,6 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus, type ServiceClient } from '../_shared/premium.ts';
 import {
   buildPushMessage,
+  freeMayNotify,
   safeAppPath,
   settingsFromRow,
   wantsEvent,
@@ -255,6 +258,47 @@ function getBearerToken(req: Request): string | null {
   return authHeader.replace('Bearer ', '');
 }
 
+type AdminClient = ServiceClient & {
+  auth: { admin: { getUserById(id: string): Promise<{ data: { user: { email?: string } | null }; error: unknown }> } };
+};
+
+// Stripe lookups per run for accounts without a recent stored answer; the rest wait for the next run
+const MAX_STRIPE_LOOKUPS = 20;
+
+/** Which of these users have Pro now. */
+async function findProUsers(supabase: AdminClient, userIds: string[], now: number): Promise<Set<string>> {
+  const pro = new Set<string>();
+  if (!userIds.length) return pro;
+  const stored = await readProStatus(supabase, userIds);
+  const stale: string[] = [];
+  for (const userId of userIds) {
+    const row = stored.get(userId);
+    if (row && isFresh(row, now)) {
+      if (proUntilActive(row.pro_until, now)) pro.add(userId);
+    } else {
+      // Until Stripe has been asked, an older stored answer is better than none
+      if (row && proUntilActive(row.pro_until, now)) pro.add(userId);
+      stale.push(userId);
+    }
+  }
+
+  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+  const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' }) : null;
+  for (const userId of stale.slice(0, MAX_STRIPE_LOOKUPS)) {
+    try {
+      const { data, error } = await supabase.auth.admin.getUserById(userId);
+      if (error || !data.user?.email) continue;
+      const proUntil = await lookupProUntil(stripe, data.user.email, now);
+      await rememberProStatus(supabase, userId, proUntil);
+      if (proUntilActive(proUntil, now)) pro.add(userId);
+      else pro.delete(userId);
+    } catch (error) {
+      console.warn('Pro lookup failed for', userId, error);
+    }
+  }
+  return pro;
+}
+
 async function getRequestBody(req: Request) {
   const raw = await req.text();
   if (!raw) return {} as Record<string, unknown>;
@@ -358,11 +402,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // Events archived in the last hour: new ones for Pro, and ones free accounts get after the delay
+    const now = Date.now();
+    const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
     const { data: recentEvents, error: eventsError } = await supabase
       .from('police_events_archive')
       .select('id, title, area, type, risk, time, original_type')
-      .gte('created_at', thirtyMinAgo)
+      .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 
     if (eventsError) throw eventsError;
@@ -428,6 +474,18 @@ Deno.serve(async (req) => {
 
     for (const [userId, events] of Object.entries(userNotifications)) {
       userNotifications[userId] = events.filter((event) => !sentSet.has(`${event.id}:${userId}`));
+    }
+
+    // Free accounts hear about an event when it reaches their map, 15 minutes after it happened;
+    // Pro at once. Pro status comes from what check-subscription stored, or Stripe if that is old.
+    const waitingUsers = Object.entries(userNotifications)
+      .filter(([, events]) => events.some((event) => !freeMayNotify(event.time, now)))
+      .map(([userId]) => userId);
+    const proUsers = await findProUsers(supabase, waitingUsers, now);
+    for (const userId of waitingUsers) {
+      if (!proUsers.has(userId)) {
+        userNotifications[userId] = userNotifications[userId].filter((event) => freeMayNotify(event.time, now));
+      }
     }
 
     for (const userId of Object.keys(userNotifications)) {

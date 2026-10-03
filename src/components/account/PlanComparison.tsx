@@ -6,7 +6,7 @@ const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
   { icon: Megaphone, text: 'VMA, krisinformation och trafikstörningar direkt' },
   { icon: Newspaper, text: 'Flöde med händelser och nyheter från SVT med flera' },
-  { icon: Bell, text: 'Pushnotiser för dina kommuner (med gratis konto)' },
+  { icon: Bell, text: 'Pushnotiser för dina kommuner (med gratis konto, 15 min fördröjning)' },
   { icon: MessageCircle, text: 'Gilla och kommentera (med gratis konto)' },
 ];
 
@@ -30,7 +30,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
   {
     group: 'Konto',
     rows: [
-      { feature: 'Pushnotiser för dina kommuner', free: 'Med konto', pro: true },
+      { feature: 'Pushnotiser för dina kommuner', free: 'Med konto, efter 15 min', pro: 'Direkt' },
       { feature: 'Välj vilka händelser du får notiser om', free: 'Med konto', pro: true },
       { feature: 'Gilla och kommentera', free: 'Med konto', pro: true },
     ],
