@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          device: string
+          id: number
+          kind: string
+          name: string
+          page: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          device: string
+          id?: never
+          kind: string
+          name: string
+          page: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          device?: string
+          id?: never
+          kind?: string
+          name?: string
+          page?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -283,18 +316,42 @@ export type Database = {
           types: string[]
           updated_at: string
           user_id: string
+          weekly_summary: boolean
         }
         Insert: {
           min_risk?: string
           types?: string[]
           updated_at?: string
           user_id: string
+          weekly_summary?: boolean
         }
         Update: {
           min_risk?: string
           types?: string[]
           updated_at?: string
           user_id?: string
+          weekly_summary?: boolean
+        }
+        Relationships: []
+      }
+      page_stats: {
+        Row: {
+          day: string
+          device: string
+          page: string
+          views: number
+        }
+        Insert: {
+          day: string
+          device: string
+          page: string
+          views?: number
+        }
+        Update: {
+          day?: string
+          device?: string
+          page?: string
+          views?: number
         }
         Relationships: []
       }
@@ -349,6 +406,24 @@ export type Database = {
           title?: string
           type?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      pro_status: {
+        Row: {
+          checked_at: string
+          pro_until: string | null
+          user_id: string
+        }
+        Insert: {
+          checked_at?: string
+          pro_until?: string | null
+          user_id: string
+        }
+        Update: {
+          checked_at?: string
+          pro_until?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -469,6 +544,24 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_summary_log: {
+        Row: {
+          sent_at: string
+          user_id: string
+          week: string
+        }
+        Insert: {
+          sent_at?: string
+          user_id: string
+          week: string
+        }
+        Update: {
+          sent_at?: string
+          user_id?: string
+          week?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       community_reports_public: {
@@ -536,12 +629,30 @@ export type Database = {
       }
     }
     Functions: {
+      has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      log_client_event: {
+        Args: {
+          _detail: string
+          _device: string
+          _kind: string
+          _name: string
+          _page: string
+          _value: number
+        }
+        Returns: undefined
+      }
+      monitoring_summary: { Args: { _days?: number }; Returns: Json }
+      police_fetch_status: { Args: never; Returns: Json }
+      track_page_view: {
+        Args: { _device: string; _page: string }
+        Returns: undefined
       }
     }
     Enums: {
