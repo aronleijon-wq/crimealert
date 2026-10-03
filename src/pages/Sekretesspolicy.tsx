@@ -46,8 +46,9 @@ const Sekretesspolicy = () => {
                   kortnummer eller bankuppgifter.
                 </li>
                 <li>
-                  <strong>Användningsdata:</strong> Anonymiserad statistik om hur du använder tjänsten (t.ex. vilka sidor
-                  du besöker och vilka filter du använder).
+                  <strong>Användningsdata:</strong> Anonym statistik om hur tjänsten används: antal sidvisningar per dag,
+                  sida och typ av enhet (mobil eller dator), hur snabbt sidorna laddar och felmeddelanden när något går
+                  fel. Den samlas in utan cookies, kopplas inte till dig eller ditt konto och raderas efter 30 dagar.
                 </li>
                 <li>
                   <strong>Kommunbevakning:</strong> Vilka kommuner du väljer att bevaka lagras kopplat till ditt konto.

@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
+import { startMonitoring } from './lib/monitoring';
 import './index.css';
 
 const isInIframe = (() => {
@@ -88,4 +89,5 @@ if ('serviceWorker' in navigator) {
   }
 }
 
+startMonitoring();
 createRoot(document.getElementById('root')!).render(<App />);

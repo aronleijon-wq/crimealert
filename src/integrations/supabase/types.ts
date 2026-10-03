@@ -575,6 +575,25 @@ export type Database = {
       }
     }
     Functions: {
+      log_client_event: {
+        Args: {
+          _detail: string | null
+          _device: string
+          _kind: string
+          _name: string
+          _page: string
+          _value: number | null
+        }
+        Returns: undefined
+      }
+      monitoring_summary: {
+        Args: { _days?: number }
+        Returns: Json
+      }
+      track_page_view: {
+        Args: { _device: string; _page: string }
+        Returns: undefined
+      }
       has_pro: {
         Args: {
           _user_id: string
