@@ -88,9 +88,11 @@ const UserProfileSection = ({ user, isPremium, subscription, signOut, handleMana
             {isPremium
               ? subscription.subscriptionEnd === 'lifetime'
                 ? 'Pro livstid'
-                : subscription.subscriptionEnd
-                  ? `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}`
-                  : 'Pro aktiv'
+                : subscription.trialing && subscription.subscriptionEnd
+                  ? `Provperiod t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}, sedan betalar du`
+                  : subscription.subscriptionEnd
+                    ? `Pro aktiv t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}`
+                    : 'Pro aktiv'
               : 'Gratisplan'}
           </p>
         </div>
@@ -273,7 +275,9 @@ const Account = () => {
             </div>
             <h2 className="text-lg font-bold text-foreground">Välkommen till Pro! 🎉</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Tack för att du uppgraderat. Här är allt du nu har tillgång till:
+              {subscription.trialing && subscription.subscriptionEnd
+                ? `Din provperiod gäller t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}. Här är allt du nu har tillgång till:`
+                : 'Tack för att du uppgraderat. Här är allt du nu har tillgång till:'}
             </p>
           </div>
 
@@ -304,6 +308,7 @@ const Account = () => {
           <PlanComparison
             signedIn={!!user}
             isPremium={isPremium}
+            trialEligible={!user || subscription.trialEligible === true}
             billingCycle={billingCycle}
             onBillingCycle={setBillingCycle}
             onCheckout={handleCheckout}

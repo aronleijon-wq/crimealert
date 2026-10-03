@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BellRing, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
+import { ArrowRight, BellRing, CalendarDays, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import Header from '@/components/Header';
 import AreaPicker from '@/components/alerts/AreaPicker';
 import DeviceCard, { DeviceBadge, type DeviceState } from '@/components/alerts/DeviceCard';
 import NotificationPreview from '@/components/alerts/NotificationPreview';
 import TopicSettings from '@/components/alerts/TopicSettings';
+import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsPremium } from '@/hooks/useIsPremium';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
@@ -98,6 +101,8 @@ const SetupStep = ({ done, href, title, detail }: { done: boolean; href: string;
 const listNames = (names: string[]) =>
   names.length <= 2 ? names.join(' och ') : `${names.slice(0, 2).join(', ')} och ${names.length - 2} till`;
 
+const PENDING_KOMMUN_KEY = 'crimealert_pending_kommun';
+
 const Alerts = () => {
   useSEO({
     title: 'Notiser & bevakningar — CrimeAlert',
@@ -105,9 +110,10 @@ const Alerts = () => {
     canonical: 'https://crimealert.se/alerts',
   });
   const { user, loading: authLoading } = useAuth();
+  const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available: settingsAvailable, saving, save } = useNotificationSettings();
+  const { settings, available: settingsAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
   const push = usePushNotifications();
   const { toast } = useToast();
   const [attempted, setAttempted] = useState(false);
@@ -148,7 +154,24 @@ const Alerts = () => {
     toast(error
       ? { title: 'Kunde inte lägga till', description: `${kommun} kunde inte sparas. Försök igen.`, variant: 'destructive' }
       : { title: `Du bevakar nu ${kommun}`, description: deviceState === 'on' ? 'Du får notiser för händelser där.' : 'Slå på notiser nedan för att få dem i den här enheten.' });
+    return error;
   };
+
+  // "Bevaka Malmö" on a kommun page leads here; the suggestion waits through sign-up and login
+  const [suggested, setSuggested] = useState<string | null>(() => {
+    const fromUrl = SWEDISH_KOMMUNER.find((k) => k === new URLSearchParams(window.location.search).get('kommun')) ?? null;
+    try {
+      if (fromUrl) localStorage.setItem(PENDING_KOMMUN_KEY, fromUrl);
+      return fromUrl ?? SWEDISH_KOMMUNER.find((k) => k === localStorage.getItem(PENDING_KOMMUN_KEY)) ?? null;
+    } catch {
+      return fromUrl;
+    }
+  });
+  const dismissSuggestion = () => {
+    setSuggested(null);
+    try { localStorage.removeItem(PENDING_KOMMUN_KEY); } catch { /* private mode */ }
+  };
+  const showSuggestion = !!user && !areasLoading && !!suggested && !kommuner.includes(suggested);
 
   const handleRemove = async (kommun: string) => {
     const error = await removeKommun(kommun);
@@ -179,6 +202,11 @@ const Alerts = () => {
   const handleSettings = async (next: NotifySettings) => {
     const ok = await save(next);
     if (!ok) toast({ title: 'Kunde inte spara', description: 'Dina val är oförändrade. Försök igen.', variant: 'destructive' });
+  };
+
+  const handleWeekly = async (next: boolean) => {
+    const ok = await saveWeekly(next);
+    if (!ok) toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
   };
 
   const allSet = kommuner.length > 0 && deviceState === 'on';
@@ -220,7 +248,7 @@ const Alerts = () => {
               <div className="p-5 sm:p-6">
                 <h2 className="font-['Archivo',Inter,sans-serif] text-xl font-extrabold tracking-[-0.01em] text-foreground">Bevaka ditt område – gratis</h2>
                 <ul className="mt-3 space-y-2 text-[13px] text-[hsl(var(--ca-text-2))]">
-                  {['Välj de kommuner du bryr dig om', 'Välj vilka händelser du vill veta om', 'Få en notis i mobilen eller datorn direkt när det händer'].map((t) => (
+                  {['Välj de kommuner du bryr dig om', 'Välj vilka händelser du vill veta om', 'Få en notis i mobilen eller datorn när det händer, direkt med Pro'].map((t) => (
                     <li key={t} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--cr-green))]" />{t}</li>
                   ))}
                 </ul>
@@ -236,6 +264,24 @@ const Alerts = () => {
             </section>
           ) : (
             <>
+              {showSuggestion && (
+                <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4" aria-live="polite">
+                  <MapPin className="h-5 w-5 shrink-0 text-primary" />
+                  <p className="min-w-0 flex-1 text-sm font-medium text-foreground">Vill du bevaka {suggested}?</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => { if (suggested && !(await handleAdd(suggested))) dismissSuggestion(); }}
+                      className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                    >
+                      Lägg till
+                    </button>
+                    <button type="button" onClick={dismissSuggestion} className="h-9 rounded-lg px-3 text-sm text-muted-foreground hover:text-foreground">
+                      Nej tack
+                    </button>
+                  </div>
+                </section>
+              )}
               {deviceState === 'checking' || areasLoading ? (
                 <div className="h-[84px] animate-pulse rounded-2xl bg-[hsl(var(--ca-panel-3))]" aria-hidden />
               ) : (
@@ -252,8 +298,14 @@ const Alerts = () => {
                     <p className="text-[13px] text-[hsl(var(--ca-text-2))]">
                       {allSet
                         ? `Du får en notis när något händer i ${listNames(kommuner)}.`
-                        : `${stepsLeft} steg kvar, sedan får du notiser direkt.`}
+                        : `${stepsLeft} steg kvar, sedan får du notiser.`}
                     </p>
+                    {!isPremium && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Med gratiskonto kommer notisen 15 minuter efter händelsen, samtidigt som den syns på kartan.{' '}
+                        <Link to="/account" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
+                      </p>
+                    )}
                   </div>
                 </div>
                 {!allSet && (
@@ -298,6 +350,15 @@ const Alerts = () => {
               {settingsAvailable && (
                 <Section id="amnen" icon={Settings2} title="Vad vill du få notiser om?" description="Gäller alla dina områden och enheter.">
                   <TopicSettings settings={settings} saving={saving} onChange={handleSettings} />
+                </Section>
+              )}
+
+              {weeklyAvailable && (
+                <Section id="vecka" icon={CalendarDays} title="Veckosammanfattning" description="Söndag kväll: veckans händelser i dina områden, jämfört med veckan innan.">
+                  <label className="flex cursor-pointer items-center justify-between gap-4">
+                    <span className="text-sm text-foreground">Skicka en sammanfattning varje söndag</span>
+                    <Switch checked={weeklySummary} disabled={saving} onCheckedChange={handleWeekly} aria-label="Veckosammanfattning" />
+                  </label>
                 </Section>
               )}
 

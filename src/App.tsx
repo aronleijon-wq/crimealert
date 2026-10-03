@@ -2,13 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import CookieConsent from "@/components/CookieConsent";
 import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { trackPageView } from "@/lib/monitoring";
 import Landing from "./pages/Landing";
 const Index = lazy(() => import("./pages/Index"));
 
@@ -25,9 +27,19 @@ const Admin = lazy(() => import("./pages/Admin"));
 const DebugPush = lazy(() => import("./pages/DebugPush"));
 const OmOss = lazy(() => import("./pages/OmOss"));
 const Feed = lazy(() => import("./pages/Feed"));
+const Kommun = lazy(() => import("./pages/Kommun"));
+const Kommuner = lazy(() => import("./pages/Kommuner"));
+const Handelse = lazy(() => import("./pages/Handelse"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+/** Counts page views as the visitor moves around the app. */
+const PageViews = () => {
+  const { pathname } = useLocation();
+  useEffect(() => trackPageView(pathname), [pathname]);
+  return null;
+};
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -43,11 +55,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <PageViews />
+        <ErrorBoundary>
         <Suspense fallback={<LazyFallback />}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/karta" element={<Index />} />
           <Route path="/flode" element={<Feed />} />
+          <Route path="/kommun" element={<Kommuner />} />
+          <Route path="/kommun/:slug" element={<Kommun />} />
+          <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />
@@ -63,6 +80,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
         <CookieConsent />
         <BackendStatusBanner />
         <AdsController />

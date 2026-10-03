@@ -8,6 +8,7 @@ const links = [
   { to: '/flode', label: 'Flöde' },
   { to: '/analysis', label: 'Analys' },
   { to: '/alerts', label: 'Notiser' },
+  { to: '/kommun', label: 'Kommuner' },
 ];
 
 const LandingNav = () => {

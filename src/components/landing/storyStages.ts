@@ -18,6 +18,6 @@ export const stages = [
   {
     tag: 'UPPFÖLJNING',
     heading: 'Notiser när något händer',
-    text: 'Spara en bevakning och få en notis direkt i mobilen när en ny händelse dyker upp i ditt område.',
+    text: 'Spara en bevakning och få en notis i mobilen när en ny händelse dyker upp i ditt område, direkt med Pro.',
   },
 ];

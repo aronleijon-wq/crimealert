@@ -15,17 +15,20 @@ const state = {
   device: { isIos: false, isStandalone: false },
   push: { checked: true, isSubscribed: false, permission: 'default' as NotificationPermission },
   settingsAvailable: true,
+  isPremium: false,
 };
 const addKommun = vi.fn(async () => null);
 const removeKommun = vi.fn(async () => null);
 const subscribe = vi.fn(async () => true);
 const save = vi.fn(async () => true);
+const saveWeekly = vi.fn(async () => true);
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
 vi.mock('@/hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: state.user, loading: false }) }));
+vi.mock('@/hooks/useIsPremium', () => ({ useIsPremium: () => ({ isPremium: state.isPremium, isLoggedIn: !!state.user }) }));
 vi.mock('@/hooks/usePoliceEvents', () => ({
   usePoliceEvents: () => ({
     incidents: [
@@ -43,6 +46,9 @@ vi.mock('@/hooks/useNotificationSettings', () => ({
     available: state.settingsAvailable,
     saving: false,
     save,
+    weeklySummary: true,
+    weeklyAvailable: state.settingsAvailable,
+    saveWeekly,
   }),
 }));
 vi.mock('@/hooks/usePushNotifications', () => ({
@@ -65,6 +71,7 @@ beforeEach(() => {
     device: { isIos: false, isStandalone: false },
     push: { checked: true, isSubscribed: false, permission: 'default' },
     settingsAvailable: true,
+    isPremium: false,
   });
   Object.defineProperty(navigator, 'serviceWorker', { value: {}, configurable: true });
   Object.assign(window, { PushManager: function PushManager() {}, Notification: function Notification() {} });
@@ -101,7 +108,7 @@ describe('Alerts page', () => {
   it('walks through the setup and turns notifications on', async () => {
     await renderAlerts();
     expect(screen.getByText('Kom igång med notiser')).toBeInTheDocument();
-    expect(screen.getByText('2 steg kvar, sedan får du notiser direkt.')).toBeInTheDocument();
+    expect(screen.getByText('2 steg kvar, sedan får du notiser.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Slå på notiser/ }));
     expect(subscribe).toHaveBeenCalled();
   });
@@ -113,6 +120,34 @@ describe('Alerts page', () => {
     expect(screen.getByText('Notiser är på')).toBeInTheDocument();
     expect(screen.getByText('Du får en notis när något händer i Uppsala, Lund och 1 till.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Skicka testnotis/ })).toBeInTheDocument();
+    expect(screen.getByText(/Med gratiskonto kommer notisen 15 minuter efter händelsen/)).toBeInTheDocument();
+  });
+
+  it('offers to watch the kommun a kommun page sent the user from', async () => {
+    window.history.pushState({}, '', '/alerts?kommun=Malmö');
+    await renderAlerts();
+    expect(screen.getByText('Vill du bevaka Malmö?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Lägg till' }));
+    await vi.waitFor(() => expect(addKommun).toHaveBeenCalledWith('Malmö'));
+    await vi.waitFor(() => expect(screen.queryByText('Vill du bevaka Malmö?')).toBeNull());
+    window.history.pushState({}, '', '/');
+  });
+
+  it('turns the Sunday summary off', async () => {
+    await renderAlerts();
+    const toggle = screen.getByRole('switch', { name: 'Veckosammanfattning' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    await vi.waitFor(() => expect(saveWeekly).toHaveBeenCalledWith(false));
+  });
+
+  it('does not mention the free delay to Pro', async () => {
+    state.isPremium = true;
+    state.kommuner = ['Uppsala'];
+    state.push.isSubscribed = true;
+    await renderAlerts();
+    expect(screen.getByText('Notiser är på')).toBeInTheDocument();
+    expect(screen.queryByText(/Med gratiskonto/)).toBeNull();
   });
 
   it('explains how to install on iPhone first', async () => {

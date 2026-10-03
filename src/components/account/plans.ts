@@ -1,4 +1,4 @@
-import { BarChart3, EyeOff, FileDown, FileText, ListChecks, Users, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Users, Zap, type LucideIcon } from 'lucide-react';
 
 // Must match the active prices in Stripe (create-checkout charges whatever is active there)
 const MONTHLY_KR = 19;
@@ -13,9 +13,13 @@ export const PRICES = {
 } as const;
 export type BillingCycle = keyof typeof PRICES;
 
-/** What Pro adds, as the code gates it (police-events, IncidentDetail, Analysis, ExportData, CommunityReports, ads). */
+/** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
+export const TRIAL_DAYS = 7;
+
+/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads). */
 export const PRO_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning' },
+  { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner' },
   { icon: FileText, text: 'Hela beskrivningen av varje händelse' },
   { icon: ListChecks, text: 'Risknivå, status, Polisens kategori och platsens precision' },
   { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 30 dagar bakåt' },

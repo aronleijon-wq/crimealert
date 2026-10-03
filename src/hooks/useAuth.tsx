@@ -7,6 +7,10 @@ export interface SubscriptionState {
   subscribed: boolean;
   productId: string | null;
   subscriptionEnd: string | null;
+  /** In the free trial */
+  trialing?: boolean;
+  /** May start Pro with the free trial (never had Pro) */
+  trialEligible?: boolean;
 }
 
 interface AuthContextType {
@@ -57,6 +61,8 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
         subscribed: data.subscribed || false,
         productId: data.product_id || null,
         subscriptionEnd: data.subscription_end || null,
+        trialing: data.trialing === true,
+        trialEligible: data.trial_eligible === true,
       },
       ok: true,
     };

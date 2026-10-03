@@ -3,6 +3,8 @@ import {
   areaMatchesKommun,
   buildPushMessage,
   DEFAULT_NOTIFY_SETTINGS,
+  freeMayNotify,
+  reachedFreeWithin,
   safeAppPath,
   settingsFromRow,
   wantsEvent,
@@ -89,5 +91,22 @@ describe('safeAppPath', () => {
     expect(safeAppPath('https://evil.example')).toBe('/alerts');
     expect(safeAppPath('//evil.example')).toBe('/alerts');
     expect(safeAppPath(undefined)).toBe('/alerts');
+  });
+});
+
+describe('free delay', () => {
+  const now = Date.parse('2026-10-03T12:00:00Z');
+
+  it('lets free accounts hear about an event 15 minutes after it happened, as on the map', () => {
+    expect(freeMayNotify('2026-10-03 13:44:00 +02:00', now)).toBe(true);
+    expect(freeMayNotify('2026-10-03T11:46:00+00:00', now)).toBe(false);
+    expect(freeMayNotify('inte en tid', now)).toBe(false);
+  });
+
+  it('notices events that just reached free accounts', () => {
+    const window = 12 * 60 * 1000;
+    expect(reachedFreeWithin('2026-10-03T11:40:00+00:00', now, window)).toBe(true);
+    expect(reachedFreeWithin('2026-10-03T11:30:00+00:00', now, window)).toBe(false);
+    expect(reachedFreeWithin('2026-10-03T11:50:00+00:00', now, window)).toBe(false);
   });
 });

@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '../_shared/archiveDiff.ts';
+import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
+import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -12,10 +14,7 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const PREMIUM_PRODUCT_ID_MONTHLY = 'prod_U0dsMg8IZZKY7c';
-const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
-const FREE_PREMIUM_EMAILS = ["aronleijon@icloud.com", "oscaralvenius@outlook.com", "carlmrski@gmail.com", "stefanlasse67@gmail.com", "kristensson91@hotmail.com", "mykhailo@inphiz.com", "kcleijon@gmail.com"];
-const DELAY_MS = 15 * 60 * 1000; // 15 minutes
+const DELAY_MS = FREE_DELAY_MS; // 15 minutes
 
 // An incident as served to the client and stored in police_events_archive
 interface PoliceIncident {
@@ -47,6 +46,28 @@ let cachedIncidents: PoliceIncident[] | null = null;
 let cachedIncidentsTs = 0;
 const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// When Polisen's API last answered: kept here, and in ingest_state for other instances, the
+// app's "not updated since" notice and the admin alert
+let lastPolisenFetchAt: number | null = null;
+let polisenRetryAt = 0;
+const POLISEN_RETRY_MS = 60 * 1000;
+
+function markPolisenFetched() {
+  lastPolisenFetchAt = Date.now();
+  supabase
+    .from('ingest_state')
+    .upsert({ key: 'police', last_run_at: new Date(lastPolisenFetchAt).toISOString() }, { onConflict: 'key' })
+    .then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('Could not store fetch time:', error.message); });
+}
+
+/** When Polisen last answered, as an ISO time, or null if never seen. */
+async function polisenFetchedAt(): Promise<string | null> {
+  if (lastPolisenFetchAt) return new Date(lastPolisenFetchAt).toISOString();
+  const { data } = await supabase.from('ingest_state').select('last_run_at').eq('key', 'police').maybeSingle();
+  if (data?.last_run_at) lastPolisenFetchAt = Date.parse(data.last_run_at);
+  return data?.last_run_at ?? null;
+}
+
 // Cache the archive read (up to 2000 rows) the same way
 let cachedArchive: PoliceIncident[] | null = null;
 let cachedArchiveTs = 0;
@@ -58,68 +79,52 @@ const summaryScrapeAttempts = new Map<string, number>();
 const premiumCache = new Map<string, { isPremium: boolean; ts: number }>();
 const PREMIUM_CACHE_TTL = 60 * 1000; // 1 minute
 
-// Check if user has premium subscription (server-side) — with caching
+/**
+ * Whether the request comes from a Pro account. Uses the answer check-subscription last stored
+ * in pro_status (the app checks on load and every 30 minutes), and asks Stripe only when there
+ * is no recent answer, with the same rules as check-subscription (so trials and cancelled
+ * subscriptions keep Pro until their period ends, as the app shows).
+ */
 async function checkPremiumStatus(req: Request): Promise<boolean> {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) return false;
     const token = authHeader.replace('Bearer ', '');
-    
+
     // Skip anon key — it's not a user token
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     if (token === anonKey) return false;
 
-    // Check in-memory cache first
+    const now = Date.now();
     const cached = premiumCache.get(token);
-    if (cached && Date.now() - cached.ts < PREMIUM_CACHE_TTL) {
-      console.log('Premium status from cache');
-      return cached.isPremium;
-    }
-
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data?.user?.email) {
-      premiumCache.set(token, { isPremium: false, ts: Date.now() });
-      return false;
-    }
-
-    const email = data.user.email.toLowerCase();
-    if (FREE_PREMIUM_EMAILS.includes(email)) {
-      premiumCache.set(token, { isPremium: true, ts: Date.now() });
-      return true;
-    }
-
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) {
-      premiumCache.set(token, { isPremium: false, ts: Date.now() });
-      return false;
-    }
-
-    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-    const customers = await stripe.customers.list({ email, limit: 5 });
-    
-    let result = false;
-    for (const customer of customers.data) {
-      const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 });
-      for (const sub of subs.data) {
-        const productId = typeof sub.items?.data?.[0]?.price?.product === 'string'
-          ? sub.items.data[0].price.product
-          : sub.items?.data?.[0]?.price?.product?.id;
-        if (productId === PREMIUM_PRODUCT_ID_MONTHLY || productId === PREMIUM_PRODUCT_ID_YEARLY) {
-          result = true;
-          break;
-        }
-      }
-      if (result) break;
-    }
-    
-    premiumCache.set(token, { isPremium: result, ts: Date.now() });
-    // Evict old entries to prevent memory leak
+    if (cached && now - cached.ts < PREMIUM_CACHE_TTL) return cached.isPremium;
+    // Forget old entries so the map stays small
     if (premiumCache.size > 200) {
-      const now = Date.now();
       for (const [k, v] of premiumCache) {
         if (now - v.ts > PREMIUM_CACHE_TTL) premiumCache.delete(k);
       }
     }
+
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user?.email) {
+      premiumCache.set(token, { isPremium: false, ts: now });
+      return false;
+    }
+
+    const userId = data.user.id;
+    const stored = (await readProStatus(supabase, [userId])).get(userId);
+    let proUntil: string | null;
+    if (stored && isFresh(stored, now)) {
+      proUntil = stored.pro_until;
+    } else {
+      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+      const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' }) : null;
+      proUntil = await lookupProUntil(stripe, data.user.email, now);
+      await rememberProStatus(supabase, userId, proUntil);
+    }
+
+    const result = proUntilActive(proUntil, now);
+    premiumCache.set(token, { isPremium: result, ts: now });
     return result;
   } catch (e) {
     console.warn('Premium check failed, defaulting to free:', e);
@@ -1304,8 +1309,12 @@ async function archiveIncidents(incidents: PoliceIncident[], archived: PoliceInc
       ];
     }
 
-    // Push notifications only concern events that are new to the archive
-    if (!inserts.length) return;
+    // Push runs when there are new events (Pro accounts hear at once), and when events have just
+    // passed the free delay (free accounts hear then, as the events appear on their map). The
+    // window spans more than one fetch cycle; the push log stops anything being sent twice.
+    const now = Date.now();
+    const freeDue = incidents.some((i) => reachedFreeWithin(i.time, now, 12 * 60 * 1000));
+    if (!inserts.length && !freeDue) return;
     try {
       const pushUrl = `${supabaseUrl}/functions/v1/send-push-notifications`;
       const pushRes = await fetch(pushUrl, {
@@ -1431,18 +1440,35 @@ serve(async (req) => {
 
     // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
     let freshIncidents: PoliceIncident[];
+    // Set when Polisen's API couldn't be reached: the last known events are served instead
+    let stale = false;
     const now = Date.now();
     if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
       console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
       freshIncidents = cachedIncidents;
+    } else if (!location && now < polisenRetryAt) {
+      // Polisen failed a moment ago; don't make every visitor wait for it again
+      stale = true;
+      freshIncidents = cachedIncidents ?? [];
     } else {
       console.log('Cache miss or expired, fetching fresh data...');
       // What the archive holds now: saves fetching unchanged pages, summaries keep their
       // scraped full text, and only new or changed events are written
       const archivedNow = await getArchivedIncidents();
-      freshIncidents = await fetchAndProcessIncidents(location, archivedNow);
+      try {
+        freshIncidents = await fetchAndProcessIncidents(location, archivedNow);
+      } catch (fetchError) {
+        if (location) throw fetchError;
+        // Polisen's API is down or slow: the map keeps the last known events (from this
+        // instance, or the archive below) and says they are not being updated
+        console.warn('Polisen fetch failed, serving last known events:', fetchError);
+        stale = true;
+        polisenRetryAt = now + POLISEN_RETRY_MS;
+        freshIncidents = cachedIncidents ?? [];
+      }
       // Only cache default (no location filter) requests
-      if (!location) {
+      if (!location && !stale) {
+        markPolisenFetched();
         freshIncidents = keepBackfilledSummaries(freshIncidents, archivedNow);
         cachedIncidents = freshIncidents;
         cachedIncidentsTs = Date.now();
@@ -1473,7 +1499,8 @@ serve(async (req) => {
         return parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time);
       });
 
-    if (summaryScrapeTargets.length > 0) {
+    // polisen.se is not answering when stale; the summaries are fetched once it is back
+    if (!stale && summaryScrapeTargets.length > 0) {
       const summaryScrapeResults = new Map<string, string>();
       const SUMMARY_BATCH_SIZE = 8;
 
@@ -1535,7 +1562,7 @@ serve(async (req) => {
       console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
 
-    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium }), {
+    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium, fetchedAt: await polisenFetchedAt(), stale }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

@@ -16,11 +16,15 @@ export function useNotificationSettings() {
   const [settings, setSettings] = useState<NotifySettings>(DEFAULT_NOTIFY_SETTINGS);
   const [available, setAvailable] = useState(false);
   const [saving, setSaving] = useState(false);
+  // The Sunday summary has its own column; hidden until its migration has run
+  const [weeklySummary, setWeeklySummary] = useState(true);
+  const [weeklyAvailable, setWeeklyAvailable] = useState(false);
 
   useEffect(() => {
     if (!user) {
       setSettings(DEFAULT_NOTIFY_SETTINGS);
       setAvailable(false);
+      setWeeklyAvailable(false);
       return;
     }
     let cancelled = false;
@@ -33,6 +37,16 @@ export function useNotificationSettings() {
         if (cancelled) return;
         setAvailable(!error);
         setSettings(settingsFromRow(data));
+      });
+    supabase
+      .from('notification_settings')
+      .select('weekly_summary')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setWeeklyAvailable(!error);
+        setWeeklySummary(data?.weekly_summary !== false);
       });
     return () => { cancelled = true; };
   }, [user]);
@@ -54,5 +68,18 @@ export function useNotificationSettings() {
     return !error;
   }, [settings, user]);
 
-  return { settings, available, saving, save };
+  /** Turns the Sunday summary on or off; returns false (and restores it) if that failed. */
+  const saveWeekly = useCallback(async (next: boolean) => {
+    if (!user) return false;
+    setWeeklySummary(next);
+    setSaving(true);
+    const { error } = await supabase
+      .from('notification_settings')
+      .upsert({ user_id: user.id, weekly_summary: next, updated_at: new Date().toISOString() });
+    setSaving(false);
+    if (error) setWeeklySummary(!next);
+    return !error;
+  }, [user]);
+
+  return { settings, available, saving, save, weeklySummary, weeklyAvailable, saveWeekly };
 }

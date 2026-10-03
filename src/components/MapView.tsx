@@ -6,6 +6,8 @@ import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
+import { isPoliceEvent } from '@/lib/share';
+import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -25,6 +27,8 @@ interface MapViewProps {
   onSelectIncident: (id: string) => void;
   isPremium?: boolean;
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
+  /** Shown as a heatmap (the timeline's heat view); null for none */
+  heatPoints?: HeatPoint[] | null;
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -438,7 +442,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
 };
 
 
-const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation, heatPoints = null }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker | L.CircleMarker>>(new Map());
@@ -605,7 +609,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           root.render(
             <AuthValueProvider value={authRef.current}>
               <QueryClientProvider client={popupQueryClient}>
-                <PopupEngagement incidentId={inc.id} />
+                <PopupEngagement incidentId={inc.id} share={isPoliceEvent(inc) ? { title: inc.title, area: inc.area } : undefined} />
               </QueryClientProvider>
             </AuthValueProvider>
           );
@@ -672,6 +676,20 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
 
   // Fly to searched location
+  // The timeline's heat view: one layer, given new points as the window moves
+  const heatLayerRef = useRef<HeatLayer | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!heatPoints) {
+      heatLayerRef.current?.remove();
+      heatLayerRef.current = null;
+      return;
+    }
+    if (!heatLayerRef.current) heatLayerRef.current = new HeatLayer().addTo(map);
+    heatLayerRef.current.setPoints(heatPoints);
+  }, [heatPoints]);
+
   useEffect(() => {
     if (!mapRef.current || !flyToLocation) return;
     mapRef.current.flyTo([flyToLocation.lat, flyToLocation.lng], flyToLocation.zoom, { duration: 1.2 });

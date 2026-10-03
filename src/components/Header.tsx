@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import { Radio, Newspaper, BarChart3, Bell, User, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,6 +25,7 @@ const Header = () => {
   ];
 
   return (
+    <>
     <header className="border-b border-border bg-card/80 backdrop-blur-md flex items-center px-2 md:px-4 justify-between z-50 relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }}>
       <Link to="/" className="flex items-center gap-2 group shrink-0">
         <img
@@ -67,6 +69,8 @@ const Header = () => {
         })}
       </nav>
     </header>
+    <PoliceStaleNotice />
+    </>
   );
 };
 

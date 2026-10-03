@@ -1,6 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus, type ServiceClient } from '../_shared/premium.ts';
+import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey, type SummaryEvent } from '../_shared/weeklySummary.ts';
 import {
   buildPushMessage,
+  freeMayNotify,
   safeAppPath,
   settingsFromRow,
   wantsEvent,
@@ -255,6 +259,181 @@ function getBearerToken(req: Request): string | null {
   return authHeader.replace('Bearer ', '');
 }
 
+type AdminClient = ServiceClient & {
+  auth: { admin: { getUserById(id: string): Promise<{ data: { user: { email?: string } | null }; error: unknown }> } };
+};
+
+// Stripe lookups per run for accounts without a recent stored answer; the rest wait for the next run
+const MAX_STRIPE_LOOKUPS = 20;
+
+/** Which of these users have Pro now. */
+async function findProUsers(supabase: AdminClient, userIds: string[], now: number): Promise<Set<string>> {
+  const pro = new Set<string>();
+  if (!userIds.length) return pro;
+  const stored = await readProStatus(supabase, userIds);
+  const stale: string[] = [];
+  for (const userId of userIds) {
+    const row = stored.get(userId);
+    if (row && isFresh(row, now)) {
+      if (proUntilActive(row.pro_until, now)) pro.add(userId);
+    } else {
+      // Until Stripe has been asked, an older stored answer is better than none
+      if (row && proUntilActive(row.pro_until, now)) pro.add(userId);
+      stale.push(userId);
+    }
+  }
+
+  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+  const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' }) : null;
+  for (const userId of stale.slice(0, MAX_STRIPE_LOOKUPS)) {
+    try {
+      const { data, error } = await supabase.auth.admin.getUserById(userId);
+      if (error || !data.user?.email) continue;
+      const proUntil = await lookupProUntil(stripe, data.user.email, now);
+      await rememberProStatus(supabase, userId, proUntil);
+      if (proUntilActive(proUntil, now)) pro.add(userId);
+      else pro.delete(userId);
+    } catch (error) {
+      console.warn('Pro lookup failed for', userId, error);
+    }
+  }
+  return pro;
+}
+
+const STALE_AFTER_MS = 30 * 60 * 1000;
+const ALERT_AGAIN_AFTER_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Tells the admins when fetching from Polisen has stopped (no answer for 30 minutes, again at
+ * most every 6 hours) and when it works again. It decides from ingest_state itself, so it is
+ * safe for anyone to call.
+ */
+async function sendHealthAlert(supabase: ServiceClient, vapidPublicKey: string, vapidPrivateKey: string, now: number) {
+  const { data: rows, error } = await supabase.from('ingest_state').select('key, last_run_at').in('key', ['police', 'police-alert', 'police-recovered']);
+  if (error) return { sent: 0, reason: 'not_ready' };
+  const at = (key: string) => {
+    const row = (rows ?? []).find((r: { key: string }) => r.key === key) as { last_run_at: string } | undefined;
+    return row ? Date.parse(row.last_run_at) : null;
+  };
+  const fetched = at('police');
+  const alerted = at('police-alert');
+  const recovered = at('police-recovered');
+  if (fetched === null) return { sent: 0, reason: 'never_fetched' };
+
+  const stale = now - fetched > STALE_AFTER_MS;
+  const alertOpen = alerted !== null && (recovered === null || recovered < alerted);
+  let message: { title: string; body: string; key: string } | null = null;
+  const clock = new Date(fetched).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' });
+  if (stale && (alerted === null || now - alerted > ALERT_AGAIN_AFTER_MS)) {
+    const minutes = Math.round((now - fetched) / 60000);
+    message = {
+      title: '⚠️ Hämtningen från Polisen har stannat',
+      body: `Inget svar sedan ${clock} (${minutes} min). Kartan visar senast kända händelser.`,
+      key: 'police-alert',
+    };
+  } else if (!stale && alertOpen) {
+    message = { title: '✅ Hämtningen från Polisen fungerar igen', body: `Senast hämtat ${clock}.`, key: 'police-recovered' };
+  }
+  if (!message) return { sent: 0, reason: stale ? 'already_alerted' : 'healthy' };
+
+  // Recorded first, so overlapping runs send it once
+  await supabase.from('ingest_state').upsert({ key: message.key, last_run_at: new Date(now).toISOString() }, { onConflict: 'key' });
+
+  const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+  const adminIds = (admins ?? []).map((a: { user_id: string }) => a.user_id);
+  if (!adminIds.length) return { sent: 0, reason: 'no_admins' };
+  const { data: subs } = await supabase.from('push_subscriptions').select('*').in('user_id', adminIds);
+  const payload = JSON.stringify({ title: message.title, body: message.body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png', tag: 'crimealert-health', data: { url: '/admin' }, requireInteraction: true });
+  let sent = 0;
+  for (const sub of (subs ?? []) as PushSubscriptionRow[]) {
+    const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+    if (result.ok) sent++;
+  }
+  console.log('Health alert', JSON.stringify({ kind: message.key, sent }));
+  return { sent, kind: message.key };
+}
+
+/** Reads every row of a query, a thousand at a time. */
+async function readAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error) throw new Error(error.message);
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) return rows;
+  }
+}
+
+/** The Sunday evening summary of the last week in each user's kommuner. */
+async function sendWeeklySummaries(supabase: ServiceClient, vapidPublicKey: string, vapidPrivateKey: string, now: number) {
+  if (!inSummaryWindow(now)) return { sent: 0, reason: 'outside_window' };
+  const week = weekKey(now);
+
+  const subscriptions = await readAll<PushSubscriptionRow>((from, to) => supabase.from('push_subscriptions').select('*').range(from, to));
+  const withPush = [...new Set(subscriptions.map((s) => s.user_id))];
+  if (!withPush.length) return { sent: 0, reason: 'no_push_subs' };
+
+  // Both need this feature's migration; without it nothing can be sent safely
+  const { data: settingsRows, error: settingsError } = await supabase
+    .from('notification_settings')
+    .select('user_id, weekly_summary')
+    .in('user_id', withPush);
+  const { data: sentRows, error: logError } = await supabase.from('weekly_summary_log').select('user_id').eq('week', week);
+  if (settingsError || logError) {
+    console.warn('Weekly summary not ready', settingsError?.message, logError?.message);
+    return { sent: 0, reason: 'not_ready' };
+  }
+  const optedOut = new Set((settingsRows ?? []).filter((r: { weekly_summary: boolean }) => r.weekly_summary === false).map((r: { user_id: string }) => r.user_id));
+  const alreadySent = new Set((sentRows ?? []).map((r: { user_id: string }) => r.user_id));
+
+  const prefs = await readAll<{ user_id: string; kommun: string }>((from, to) =>
+    supabase.from('notification_preferences').select('user_id, kommun').in('user_id', withPush).range(from, to));
+  const kommunerOf = new Map<string, string[]>();
+  for (const pref of prefs) {
+    if (optedOut.has(pref.user_id) || alreadySent.has(pref.user_id)) continue;
+    kommunerOf.set(pref.user_id, [...(kommunerOf.get(pref.user_id) ?? []), pref.kommun]);
+  }
+  if (!kommunerOf.size) return { sent: 0, reason: 'nothing_due', week };
+
+  // Claim the users first, so a second run at the same time can't send them a summary too
+  const { data: claimed, error: claimError } = await supabase
+    .from('weekly_summary_log')
+    .upsert([...kommunerOf.keys()].map((user_id) => ({ user_id, week })), { onConflict: 'user_id,week', ignoreDuplicates: true })
+    .select('user_id');
+  if (claimError) throw claimError;
+  const claimedUsers = new Set((claimed ?? []).map((r: { user_id: string }) => r.user_id));
+
+  const since = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const events = await readAll<SummaryEvent>((from, to) =>
+    supabase.from('police_events_archive').select('area, original_type, time').gte('time', since).order('time', { ascending: false }).range(from, to));
+
+  let sent = 0;
+  const expiredEndpoints: string[] = [];
+  for (const [userId, kommuner] of kommunerOf) {
+    if (!claimedUsers.has(userId)) continue;
+    const message = buildWeeklyMessage([...new Set(kommuner)].map((k) => summarizeKommun(events, k, now)));
+    const payload = JSON.stringify({
+      title: message.title,
+      body: message.body,
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      tag: message.tag,
+      data: { url: message.url },
+      requireInteraction: false,
+    });
+    for (const sub of subscriptions.filter((s) => s.user_id === userId)) {
+      const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+      if (result.ok) sent++;
+      else if (result.expired) expiredEndpoints.push(sub.endpoint);
+    }
+  }
+  if (expiredEndpoints.length > 0) {
+    await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints);
+  }
+  console.log('Weekly summary', JSON.stringify({ week, users: claimedUsers.size, sent }));
+  return { sent, users: claimedUsers.size, week, expired_cleaned: expiredEndpoints.length };
+}
+
 async function getRequestBody(req: Request) {
   const raw = await req.text();
   if (!raw) return {} as Record<string, unknown>;
@@ -282,9 +461,25 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const body = await getRequestBody(req);
-    const mode = body.mode === 'test' ? 'test' : 'live';
+    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : 'live';
     const token = getBearerToken(req);
     const isInternalCall = token === serviceRoleKey;
+
+    // The weekly summary is started by the Sunday schedule with the public key. Anyone could call
+    // it, but it only sends on Sunday evenings and to each user once a week.
+    // The fetch-health check is started by a schedule when Polisen has gone quiet, or is back
+    if (mode === 'health') {
+      const result = await sendHealthAlert(supabase, vapidPublicKey, vapidPrivateKey, Date.now());
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (mode === 'weekly') {
+      const result = await sendWeeklySummaries(supabase, vapidPublicKey, vapidPrivateKey, Date.now());
+      return new Response(JSON.stringify(result), {
+        status: result.reason === 'not_ready' ? 503 : 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let requestUserId: string | null = null;
     if (!isInternalCall && token) {
@@ -358,11 +553,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // Events archived in the last hour: new ones for Pro, and ones free accounts get after the delay
+    const now = Date.now();
+    const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
     const { data: recentEvents, error: eventsError } = await supabase
       .from('police_events_archive')
       .select('id, title, area, type, risk, time, original_type')
-      .gte('created_at', thirtyMinAgo)
+      .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 
     if (eventsError) throw eventsError;
@@ -428,6 +625,18 @@ Deno.serve(async (req) => {
 
     for (const [userId, events] of Object.entries(userNotifications)) {
       userNotifications[userId] = events.filter((event) => !sentSet.has(`${event.id}:${userId}`));
+    }
+
+    // Free accounts hear about an event when it reaches their map, 15 minutes after it happened;
+    // Pro at once. Pro status comes from what check-subscription stored, or Stripe if that is old.
+    const waitingUsers = Object.entries(userNotifications)
+      .filter(([, events]) => events.some((event) => !freeMayNotify(event.time, now)))
+      .map(([userId]) => userId);
+    const proUsers = await findProUsers(supabase, waitingUsers, now);
+    for (const userId of waitingUsers) {
+      if (!proUsers.has(userId)) {
+        userNotifications[userId] = userNotifications[userId].filter((event) => freeMayNotify(event.time, now));
+      }
     }
 
     for (const userId of Object.keys(userNotifications)) {
