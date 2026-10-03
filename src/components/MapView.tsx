@@ -111,11 +111,27 @@ const shouldIncidentPulse = (incident: Incident) => {
   return isWithinHours(incident.time, 3);
 };
 
-const createMarkerIcon = (incident: Incident, touch: boolean) => {
+// On phones: at most this many pulsing markers, the newest from the last hour
+const TOUCH_MAX_PULSING = 8;
+const TOUCH_PULSE_HOURS = 1;
+
+/** The events that pulse on a phone: the newest few within the hour, citizen reports included. */
+function touchPulseIds(incidents: Incident[], now = Date.now()): Set<string> {
+  return new Set(
+    incidents
+      .map((incident) => ({ incident, at: parseIncidentTime(incident.time)?.getTime() ?? NaN }))
+      .filter(({ incident, at }) => shouldIncidentPulse(incident) && now - at <= TOUCH_PULSE_HOURS * 3600e3)
+      .sort((a, b) => b.at - a.at)
+      .slice(0, TOUCH_MAX_PULSING)
+      .map(({ incident }) => incident.id),
+  );
+}
+
+const createMarkerIcon = (incident: Incident, touch: boolean, pulse = shouldIncidentPulse(incident)) => {
   const isCommunityReport = incident.source === 'Medborgarrapport';
   const config = incidentTypeConfig[incident.type];
   const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
-  const shouldPulse = shouldIncidentPulse(incident);
+  const shouldPulse = pulse;
   const mobilePad = touch ? 10 : 0;
 
   if (isCommunityReport) {
@@ -552,8 +568,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     const recentIncidents = incidents.filter((inc) => isWithinDays(inc.time, 7));
     const positions = getJitteredPositions(recentIncidents);
+    // Phones animate only the newest few events: every pulsing marker is an element of its own
+    // that the phone redraws each frame while panning. The rest are dots on the shared canvas.
+    const pulsing = isTouch ? touchPulseIds(recentIncidents) : null;
 
-    recentIncidents.forEach((inc, idx) => {
+    const addMarker = (inc: Incident, idx: number) => {
       const isCommunityReport = inc.source === 'Medborgarrapport';
       const config = incidentTypeConfig[inc.type];
       const color = isCommunityReport ? COMMUNITY_REPORT_COLOR : config.color;
@@ -573,7 +592,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
       // Pulsing (recent) events and citizen reports keep their animated markers; the rest
       // are plain dots on the shared canvas, drawn the same: colour, white rim
-      const quiet = !isCommunityReport && !shouldIncidentPulse(inc);
+      const quiet = pulsing ? !pulsing.has(inc.id) : !isCommunityReport && !shouldIncidentPulse(inc);
       const marker: L.Marker | L.CircleMarker = quiet
         ? L.circleMarker([adjustedLat, adjustedLng], {
           renderer: canvasRendererRef.current ?? undefined,
@@ -584,7 +603,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           fillOpacity: 1,
         })
         : L.marker([adjustedLat, adjustedLng], {
-          icon: createMarkerIcon(inc, isTouch),
+          icon: createMarkerIcon(inc, isTouch, pulsing ? pulsing.has(inc.id) : undefined),
           keyboard: false,
         });
 
@@ -630,7 +649,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
       markersRef.current!.addLayer(marker);
       markerMapRef.current.set(inc.id, marker);
-    });
+    };
+
+    recentIncidents.forEach(addMarker);
   }, [incidents, isPremium, isTouch, popupQueryClient]);
 
   const prevSelectedRef = useRef<string | null>(null);

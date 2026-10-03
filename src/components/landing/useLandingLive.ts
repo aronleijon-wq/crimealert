@@ -8,6 +8,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_EVENTS = 36;
 const FOCUS_COUNT = 8;
 const FOCUS_MS = 4200;
+// Phones move to the next event less often; each move wakes the resting animation
+const PHONE_FOCUS_MS = 7000;
 
 const TONES: Partial<Record<Incident['type'], OpsTone>> = {
   police: 'red',
@@ -66,7 +68,8 @@ export function useLandingLive(): LandingLive {
   const cycle = Math.min(FOCUS_COUNT, events.length);
   useEffect(() => {
     if (cycle < 2) return;
-    const id = setInterval(() => setStep((s) => s + 1), FOCUS_MS);
+    const phone = window.matchMedia?.('(max-width: 767px), (pointer: coarse)').matches ?? false;
+    const id = setInterval(() => setStep((s) => s + 1), phone ? PHONE_FOCUS_MS : FOCUS_MS);
     return () => clearInterval(id);
   }, [cycle]);
 
