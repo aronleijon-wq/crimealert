@@ -41,8 +41,6 @@ if ('serviceWorker' in navigator) {
     const updateSW = registerSW({
       // Register after the page has loaded, so the service worker's downloads don't compete with it
       immediate: false,
-      // The reload is done above, also when this page was the one that installed the first version
-      onNeedReload() {},
       onRegisteredSW(swUrl, registration) {
         console.info('[PWA] Service worker registrerad', {
           swUrl,
