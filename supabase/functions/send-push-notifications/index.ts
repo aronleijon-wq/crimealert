@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus, type ServiceClient } from '../_shared/premium.ts';
+import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey, type SummaryEvent } from '../_shared/weeklySummary.ts';
 import {
   buildPushMessage,
   freeMayNotify,
@@ -299,6 +300,87 @@ async function findProUsers(supabase: AdminClient, userIds: string[], now: numbe
   return pro;
 }
 
+/** Reads every row of a query, a thousand at a time. */
+async function readAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error) throw new Error(error.message);
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) return rows;
+  }
+}
+
+/** The Sunday evening summary of the last week in each user's kommuner. */
+async function sendWeeklySummaries(supabase: ServiceClient, vapidPublicKey: string, vapidPrivateKey: string, now: number) {
+  if (!inSummaryWindow(now)) return { sent: 0, reason: 'outside_window' };
+  const week = weekKey(now);
+
+  const subscriptions = await readAll<PushSubscriptionRow>((from, to) => supabase.from('push_subscriptions').select('*').range(from, to));
+  const withPush = [...new Set(subscriptions.map((s) => s.user_id))];
+  if (!withPush.length) return { sent: 0, reason: 'no_push_subs' };
+
+  // Both need this feature's migration; without it nothing can be sent safely
+  const { data: settingsRows, error: settingsError } = await supabase
+    .from('notification_settings')
+    .select('user_id, weekly_summary')
+    .in('user_id', withPush);
+  const { data: sentRows, error: logError } = await supabase.from('weekly_summary_log').select('user_id').eq('week', week);
+  if (settingsError || logError) {
+    console.warn('Weekly summary not ready', settingsError?.message, logError?.message);
+    return { sent: 0, reason: 'not_ready' };
+  }
+  const optedOut = new Set((settingsRows ?? []).filter((r: { weekly_summary: boolean }) => r.weekly_summary === false).map((r: { user_id: string }) => r.user_id));
+  const alreadySent = new Set((sentRows ?? []).map((r: { user_id: string }) => r.user_id));
+
+  const prefs = await readAll<{ user_id: string; kommun: string }>((from, to) =>
+    supabase.from('notification_preferences').select('user_id, kommun').in('user_id', withPush).range(from, to));
+  const kommunerOf = new Map<string, string[]>();
+  for (const pref of prefs) {
+    if (optedOut.has(pref.user_id) || alreadySent.has(pref.user_id)) continue;
+    kommunerOf.set(pref.user_id, [...(kommunerOf.get(pref.user_id) ?? []), pref.kommun]);
+  }
+  if (!kommunerOf.size) return { sent: 0, reason: 'nothing_due', week };
+
+  // Claim the users first, so a second run at the same time can't send them a summary too
+  const { data: claimed, error: claimError } = await supabase
+    .from('weekly_summary_log')
+    .upsert([...kommunerOf.keys()].map((user_id) => ({ user_id, week })), { onConflict: 'user_id,week', ignoreDuplicates: true })
+    .select('user_id');
+  if (claimError) throw claimError;
+  const claimedUsers = new Set((claimed ?? []).map((r: { user_id: string }) => r.user_id));
+
+  const since = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const events = await readAll<SummaryEvent>((from, to) =>
+    supabase.from('police_events_archive').select('area, original_type, time').gte('time', since).order('time', { ascending: false }).range(from, to));
+
+  let sent = 0;
+  const expiredEndpoints: string[] = [];
+  for (const [userId, kommuner] of kommunerOf) {
+    if (!claimedUsers.has(userId)) continue;
+    const message = buildWeeklyMessage([...new Set(kommuner)].map((k) => summarizeKommun(events, k, now)));
+    const payload = JSON.stringify({
+      title: message.title,
+      body: message.body,
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      tag: message.tag,
+      data: { url: message.url },
+      requireInteraction: false,
+    });
+    for (const sub of subscriptions.filter((s) => s.user_id === userId)) {
+      const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+      if (result.ok) sent++;
+      else if (result.expired) expiredEndpoints.push(sub.endpoint);
+    }
+  }
+  if (expiredEndpoints.length > 0) {
+    await supabase.from('push_subscriptions').delete().in('endpoint', expiredEndpoints);
+  }
+  console.log('Weekly summary', JSON.stringify({ week, users: claimedUsers.size, sent }));
+  return { sent, users: claimedUsers.size, week, expired_cleaned: expiredEndpoints.length };
+}
+
 async function getRequestBody(req: Request) {
   const raw = await req.text();
   if (!raw) return {} as Record<string, unknown>;
@@ -326,9 +408,19 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const body = await getRequestBody(req);
-    const mode = body.mode === 'test' ? 'test' : 'live';
+    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : 'live';
     const token = getBearerToken(req);
     const isInternalCall = token === serviceRoleKey;
+
+    // The weekly summary is started by the Sunday schedule with the public key. Anyone could call
+    // it, but it only sends on Sunday evenings and to each user once a week.
+    if (mode === 'weekly') {
+      const result = await sendWeeklySummaries(supabase, vapidPublicKey, vapidPrivateKey, Date.now());
+      return new Response(JSON.stringify(result), {
+        status: result.reason === 'not_ready' ? 503 : 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     let requestUserId: string | null = null;
     if (!isInternalCall && token) {

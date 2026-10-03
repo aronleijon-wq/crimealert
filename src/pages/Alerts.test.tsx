@@ -21,6 +21,7 @@ const addKommun = vi.fn(async () => null);
 const removeKommun = vi.fn(async () => null);
 const subscribe = vi.fn(async () => true);
 const save = vi.fn(async () => true);
+const saveWeekly = vi.fn(async () => true);
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
@@ -45,6 +46,9 @@ vi.mock('@/hooks/useNotificationSettings', () => ({
     available: state.settingsAvailable,
     saving: false,
     save,
+    weeklySummary: true,
+    weeklyAvailable: state.settingsAvailable,
+    saveWeekly,
   }),
 }));
 vi.mock('@/hooks/usePushNotifications', () => ({
@@ -127,6 +131,14 @@ describe('Alerts page', () => {
     await vi.waitFor(() => expect(addKommun).toHaveBeenCalledWith('Malmö'));
     await vi.waitFor(() => expect(screen.queryByText('Vill du bevaka Malmö?')).toBeNull());
     window.history.pushState({}, '', '/');
+  });
+
+  it('turns the Sunday summary off', async () => {
+    await renderAlerts();
+    const toggle = screen.getByRole('switch', { name: 'Veckosammanfattning' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    await vi.waitFor(() => expect(saveWeekly).toHaveBeenCalledWith(false));
   });
 
   it('does not mention the free delay to Pro', async () => {

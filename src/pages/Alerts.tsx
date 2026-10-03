@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BellRing, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
+import { ArrowRight, BellRing, CalendarDays, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import Header from '@/components/Header';
 import AreaPicker from '@/components/alerts/AreaPicker';
 import DeviceCard, { DeviceBadge, type DeviceState } from '@/components/alerts/DeviceCard';
@@ -112,7 +113,7 @@ const Alerts = () => {
   const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available: settingsAvailable, saving, save } = useNotificationSettings();
+  const { settings, available: settingsAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
   const push = usePushNotifications();
   const { toast } = useToast();
   const [attempted, setAttempted] = useState(false);
@@ -201,6 +202,11 @@ const Alerts = () => {
   const handleSettings = async (next: NotifySettings) => {
     const ok = await save(next);
     if (!ok) toast({ title: 'Kunde inte spara', description: 'Dina val är oförändrade. Försök igen.', variant: 'destructive' });
+  };
+
+  const handleWeekly = async (next: boolean) => {
+    const ok = await saveWeekly(next);
+    if (!ok) toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
   };
 
   const allSet = kommuner.length > 0 && deviceState === 'on';
@@ -344,6 +350,15 @@ const Alerts = () => {
               {settingsAvailable && (
                 <Section id="amnen" icon={Settings2} title="Vad vill du få notiser om?" description="Gäller alla dina områden och enheter.">
                   <TopicSettings settings={settings} saving={saving} onChange={handleSettings} />
+                </Section>
+              )}
+
+              {weeklyAvailable && (
+                <Section id="vecka" icon={CalendarDays} title="Veckosammanfattning" description="Söndag kväll: veckans händelser i dina områden, jämfört med veckan innan.">
+                  <label className="flex cursor-pointer items-center justify-between gap-4">
+                    <span className="text-sm text-foreground">Skicka en sammanfattning varje söndag</span>
+                    <Switch checked={weeklySummary} disabled={saving} onCheckedChange={handleWeekly} aria-label="Veckosammanfattning" />
+                  </label>
                 </Section>
               )}
 
