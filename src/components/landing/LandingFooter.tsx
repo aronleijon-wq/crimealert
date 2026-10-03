@@ -24,6 +24,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     title: 'OM',
     links: [
       { to: '/om-oss', label: 'Om oss' },
+      { to: '#vanliga-fragor', label: 'Vanliga frågor' },
       { to: '/auth?mode=signup', label: 'Skapa konto' },
       { to: 'mailto:alvejon.staff@gmail.com', label: 'Kontakta oss' },
     ],
@@ -70,7 +71,8 @@ const LandingFooter = () => (
             {g.links.map((l) => {
               const cls =
                 'text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition';
-              const isExternal = /^(mailto:|tel:|https?:)/i.test(l.to);
+              // Plain links for other sites, mail and this page's own sections
+              const isExternal = /^(mailto:|tel:|https?:|#)/i.test(l.to);
               return (
                 <li key={l.label}>
                   {isExternal ? (

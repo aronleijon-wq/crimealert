@@ -7,6 +7,7 @@ import MapPreview from '@/components/landing/MapPreview';
 import Categories from '@/components/landing/Categories';
 import LocalMonitoring from '@/components/landing/LocalMonitoring';
 import PlatformGrid from '@/components/landing/PlatformGrid';
+import FAQ from '@/components/landing/FAQ';
 import FinalCTA from '@/components/landing/FinalCTA';
 import LandingFooter from '@/components/landing/LandingFooter';
 import StoryStatic from '@/components/landing/StoryStatic';
@@ -63,6 +64,7 @@ const Landing = () => {
         <Categories />
         <LocalMonitoring />
         <PlatformGrid />
+        <FAQ />
         <FinalCTA />
       </main>
       <LandingFooter />
