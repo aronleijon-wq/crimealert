@@ -42,7 +42,8 @@ const Index = () => {
   const { user, subscription } = useAuth();
   const isMobile = useIsMobile();
   const isLoggedIn = !!user;
-  const [mobileListOpen, setMobileListOpen] = useState(true);
+  // Phones start with the whole screen for the map; the list opens from the button at the bottom
+  const [mobileListOpen, setMobileListOpen] = useState(false);
   const [heroDismissed, setHeroDismissed] = useState(false);
   const [showCommunityReports, setShowCommunityReports] = useState(true);
 
@@ -372,6 +373,9 @@ const Index = () => {
 
       </div>
 
+      {/* The sign-up bar sits over the bottom of the screen; the map ends above it, so the list
+          button and the timeline stay reachable */}
+      {!isLoggedIn && <div className="h-[calc(3.6rem+env(safe-area-inset-bottom,0px))] shrink-0 md:hidden" aria-hidden />}
       {!isLoggedIn && <MobileSignupBar />}
       
     </div>);

@@ -583,4 +583,18 @@ html.no-ads .google-auto-placed {
   .ca-fog { animation: none !important; filter: none !important; }
   /* Map tiles without colour filters, on the live map and the feed's map banners */
   .ca-tiles { filter: none !important; }
+  /* Sections and the hero rise in without blur, which the phone would redraw while scrolling */
+  .ca-reveal { filter: none !important; transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+  .ca-rise { animation-name: ca-rise-lite; }
+  /* Decorative loops that keep the phone drawing all the time: light sweeps, the button's
+     shine and breathing backgrounds stand still; small live dots keep pulsing */
+  .ca-scan, .ca-sweep, .ca-shine { animation: none !important; opacity: 0 !important; }
+  .ca-breathe { animation: none !important; opacity: 0.5; }
+  /* Every card in Flöde has a pulsing place marker; on phones they keep a still halo */
+  .ca-card-ping { animation: none !important; opacity: 0.25; }
+}
+
+@keyframes ca-rise-lite {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }

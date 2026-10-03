@@ -253,7 +253,10 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
   eventsRef.current = events;
   useEffect(() => {
     focusRef.current = { index: focus, since: performance.now() };
-    if (prefersReducedMotion()) drawRef.current(performance.now());
+    // Phones show the new target as a still frame (the lock already closed), so the picture
+    // changes without waking the animation; computers play the lock
+    const phone = window.matchMedia?.('(max-width: 767px), (pointer: coarse)').matches ?? false;
+    if (prefersReducedMotion() || phone) drawRef.current(performance.now() + 1000);
     else wakeRef.current(1200);
   }, [focus, events]);
 
@@ -510,45 +513,67 @@ const OpsMap = ({ events, focus, className = '', callout = true, alignX = 0.5, r
       return;
     }
 
-    // Phones animate fully for a while after the picture comes into view, then rest and only
-    // wake briefly for each new target lock, which saves their battery
-    const PHONE_ACTIVE_MS = 20000;
+    // Phones animate for a few seconds when the picture comes into view, then rest on the last
+    // frame and only wake briefly for each new target lock. They also stand still while the page
+    // scrolls, so scrolling gets the whole phone.
+    const PHONE_INTRO_MS = 3000;
     let activeUntil = 0;
     let last = 0;
+    let scrolling = false;
+    let scrollTimer = 0;
+    const running = () => visible && !scrolling;
     const loop = (now: number) => {
       // About 25 frames a second on phones and slower computers, full rate elsewhere
       if (!lite() || now - last >= 40) {
         last = now;
         drawRef.current(now);
       }
-      if (visible && (!lite() || now < activeUntil)) frame = requestAnimationFrame(loop);
+      if (running() && (!lite() || now < activeUntil)) frame = requestAnimationFrame(loop);
     };
-    const resume = (ms = PHONE_ACTIVE_MS) => {
+    const resume = (ms: number) => {
       cancelAnimationFrame(frame);
       activeUntil = Math.max(activeUntil, performance.now() + ms);
-      if (visible) frame = requestAnimationFrame(loop);
+      if (running()) frame = requestAnimationFrame(loop);
     };
     wakeRef.current = (ms: number) => resume(ms);
+    const onScroll = () => {
+      if (!lite()) return;
+      if (!scrolling) {
+        scrolling = true;
+        cancelAnimationFrame(frame);
+      }
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        scrolling = false;
+        // Finish a target lock that was cut short; otherwise stay at rest
+        if (performance.now() < activeUntil) resume(0);
+      }, 200);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
     let onScreen = true;
     let observer: IntersectionObserver | undefined;
     if (typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(([entry]) => {
+        const entering = entry.isIntersecting && !onScreen;
         onScreen = entry.isIntersecting;
         visible = onScreen && document.visibilityState === 'visible';
-        resume();
+        // Back in view: the full intro on computers, a moment's movement on phones
+        resume(entering && lite() ? 1200 : PHONE_INTRO_MS);
       });
       observer.observe(wrap);
     }
     const onVisibility = () => {
       visible = onScreen && document.visibilityState === 'visible';
-      resume();
+      resume(1200);
     };
     document.addEventListener('visibilitychange', onVisibility);
-    resume();
+    resume(PHONE_INTRO_MS);
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(scrollTimer);
       wakeRef.current = () => {};
       observer?.disconnect();
+      window.removeEventListener('scroll', onScroll, { capture: true });
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);

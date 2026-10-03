@@ -44,7 +44,7 @@ const LocationMap = ({ lat, lng, accent }: { lat: number; lng: number; accent: s
       {/* Area marker: positions are approximate, so a soft circle rather than a pin */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
         <span className="absolute -inset-10 rounded-full opacity-20" style={{ background: accent }} />
-        <span className="absolute -inset-3 rounded-full opacity-40 animate-ping" style={{ background: accent }} />
+        <span className="ca-card-ping absolute -inset-3 rounded-full opacity-40 animate-ping" style={{ background: accent }} />
         <span className="relative block h-3 w-3 rounded-full ring-2 ring-white/90" style={{ background: accent }} />
       </div>
     </div>
