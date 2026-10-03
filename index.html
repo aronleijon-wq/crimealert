@@ -24,6 +24,28 @@
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), payment=()" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://www.googletagservices.com https://partner.googleadservices.com https://adservice.google.com https://www.google.com https://www.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://polisen.se https://nominatim.openstreetmap.org https://*.googlesyndication.com https://*.doubleclick.net https://adservice.google.com https://www.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; frame-src https://accounts.google.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; object-src 'none'; base-uri 'self';" />
     <title>CrimeAlert — Livekarta över polishändelser i Sverige</title>
+    <script>
+      // If the app's own files can't load (an old copy of the page from the offline cache, after
+      // a new version was published), drop the offline copy and load the site fresh, at most once
+      // a minute. The same as src/lib/staleBuild.ts, for when the app itself can't start.
+      window.addEventListener('error', function (event) {
+        var el = event.target;
+        if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+        var url = el.src || el.href;
+        if (!url || !/\/assets\//.test(url)) return;
+        var key = 'crimealert_stale_build_reload';
+        try {
+          if (Date.now() - Number(sessionStorage.getItem(key) || 0) < 60000) return;
+          sessionStorage.setItem(key, String(Date.now()));
+        } catch (e) {}
+        var sw = navigator.serviceWorker;
+        var reload = function () { location.reload(); };
+        Promise.all([
+          sw ? sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : null,
+          window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : null,
+        ]).then(reload, reload);
+      }, true);
+    </script>
     <meta name="description" content="Se polishändelser, brand, trafikolyckor och brott i realtid på kartan. Trygghetskarta för hela Sverige!">
     <!-- Each page sets its own canonical address (useSEO); a fixed one here would point every page at the start page -->
     

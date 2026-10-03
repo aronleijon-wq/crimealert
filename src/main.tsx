@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import { startMonitoring } from './lib/monitoring';
+import { watchForStaleBuild } from './lib/staleBuild';
 import './index.css';
 
 const isInIframe = (() => {
@@ -23,22 +24,11 @@ if ('serviceWorker' in navigator) {
       console.info('[PWA] Service workers avregistrerade i preview/iframe');
     });
   } else {
-    // A new version is downloaded in the background and switched to while the page is hidden
-    // (the visitor has left the app or tab), so a visit is never reloaded halfway through
-    let updateReady = false;
-    let switching = false;
-    const applyUpdateIfHidden = () => {
-      if (!updateReady || switching || document.visibilityState !== 'hidden') return;
-      switching = true;
-      updateSW(true);
-    };
-    // Reload onto the new version once it has taken over (here or from another tab); the first
-    // install, which only starts controlling the page, needs no reload
-    const hadController = Boolean(navigator.serviceWorker.controller);
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (switching || hadController) window.location.reload();
-    });
-    const updateSW = registerSW({
+    // A new version is downloaded in the background and waits. The browser switches to it once
+    // every tab and the installed app are closed, so a page never mixes two versions; switching
+    // while a page loads used to delete files it still needed. A page that runs into missing
+    // files anyway loads the site fresh (lib/staleBuild).
+    registerSW({
       // Register after the page has loaded, so the service worker's downloads don't compete with it
       immediate: false,
       onRegisteredSW(swUrl, registration) {
@@ -53,9 +43,7 @@ if ('serviceWorker' in navigator) {
         setInterval(() => registration?.update?.(), 30 * 60 * 1000);
       },
       onNeedRefresh() {
-        console.info('[PWA] Ny version nedladdad – byter när sidan är dold');
-        updateReady = true;
-        applyUpdateIfHidden();
+        console.info('[PWA] Ny version nedladdad – används nästa gång appen öppnas');
       },
       onOfflineReady() {
         console.info('[PWA] Offline-stöd klart');
@@ -64,7 +52,6 @@ if ('serviceWorker' in navigator) {
         console.error('[PWA] Service worker kunde inte registreras', error);
       },
     });
-    document.addEventListener('visibilitychange', applyUpdateIfHidden);
 
     navigator.serviceWorker.ready
       .then((registration) => {
@@ -88,4 +75,5 @@ if ('serviceWorker' in navigator) {
 }
 
 startMonitoring();
+watchForStaleBuild();
 createRoot(document.getElementById('root')!).render(<App />);

@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { reportError } from '@/lib/monitoring';
+import { reloadFresh } from '@/lib/staleBuild';
 
 /** Instead of a blank page when something breaks: a way back, and a report to us. */
 export default class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -21,7 +22,7 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, { 
           <h1 className="text-xl font-bold text-foreground">Något gick fel</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sidan kunde inte visas. Vi har fått en felrapport. Ladda om, så brukar det fungera igen.</p>
           <div className="mt-5 flex justify-center gap-2">
-            <button type="button" onClick={() => window.location.reload()} className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
+            <button type="button" onClick={() => void reloadFresh()} className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
               Ladda om
             </button>
             <a href="/" className="flex h-10 items-center rounded-lg border border-border px-4 text-sm text-foreground">Till startsidan</a>
