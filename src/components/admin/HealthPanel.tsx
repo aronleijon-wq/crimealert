@@ -31,13 +31,20 @@ const formatVital = (name: string, value: number) => (name === 'CLS' ? value.toF
 const HealthPanel = () => {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [police, setPolice] = useState<{ fetched_at: string | null; alerted_at: string | null; latest_event_at: string | null } | null>(null);
 
   useEffect(() => {
     supabase.rpc('monitoring_summary', { _days: 7 }).then(({ data, error: rpcError }) => {
       if (rpcError) setError('Statistiken finns inte än. Kör databasmigreringen för övervakningen.');
       else setSummary(data as unknown as Summary);
     });
+    supabase.rpc('police_fetch_status').then(({ data }) => {
+      if (data) setPolice(data as unknown as typeof police);
+    });
   }, []);
+
+  const ago = (iso: string | null) => (iso ? `${Math.round((Date.now() - Date.parse(iso)) / 60000)} min sedan` : 'aldrig');
+  const policeStale = !police?.fetched_at || Date.now() - Date.parse(police.fetched_at) > 30 * 60 * 1000;
 
   const totalViews = summary?.views_by_day.reduce((n, d) => n + (d.mobile ?? 0) + (d.desktop ?? 0), 0) ?? 0;
   const maxDay = Math.max(1, ...(summary?.views_by_day.map((d) => (d.mobile ?? 0) + (d.desktop ?? 0)) ?? [1]));
@@ -54,6 +61,12 @@ const HealthPanel = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {police && (
+          <p className={`rounded-md border px-3 py-2 text-sm ${policeStale ? 'border-destructive/50 text-destructive' : 'border-border text-foreground'}`}>
+            Polisen: senast hämtat {ago(police.fetched_at)} · senaste nya händelse {ago(police.latest_event_at)}
+            {policeStale && ' · hämtningen har stannat, admin får en pushnotis'}
+          </p>
+        )}
         {error ? (
           <p className="text-sm text-muted-foreground">{error}</p>
         ) : !summary ? (

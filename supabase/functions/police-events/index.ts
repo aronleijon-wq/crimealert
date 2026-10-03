@@ -46,6 +46,28 @@ let cachedIncidents: PoliceIncident[] | null = null;
 let cachedIncidentsTs = 0;
 const INCIDENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// When Polisen's API last answered: kept here, and in ingest_state for other instances, the
+// app's "not updated since" notice and the admin alert
+let lastPolisenFetchAt: number | null = null;
+let polisenRetryAt = 0;
+const POLISEN_RETRY_MS = 60 * 1000;
+
+function markPolisenFetched() {
+  lastPolisenFetchAt = Date.now();
+  supabase
+    .from('ingest_state')
+    .upsert({ key: 'police', last_run_at: new Date(lastPolisenFetchAt).toISOString() }, { onConflict: 'key' })
+    .then(({ error }: { error: { message: string } | null }) => { if (error) console.warn('Could not store fetch time:', error.message); });
+}
+
+/** When Polisen last answered, as an ISO time, or null if never seen. */
+async function polisenFetchedAt(): Promise<string | null> {
+  if (lastPolisenFetchAt) return new Date(lastPolisenFetchAt).toISOString();
+  const { data } = await supabase.from('ingest_state').select('last_run_at').eq('key', 'police').maybeSingle();
+  if (data?.last_run_at) lastPolisenFetchAt = Date.parse(data.last_run_at);
+  return data?.last_run_at ?? null;
+}
+
 // Cache the archive read (up to 2000 rows) the same way
 let cachedArchive: PoliceIncident[] | null = null;
 let cachedArchiveTs = 0;
@@ -1418,18 +1440,35 @@ serve(async (req) => {
 
     // Use cached incidents if still fresh (avoids re-scraping polisen.se for every user)
     let freshIncidents: PoliceIncident[];
+    // Set when Polisen's API couldn't be reached: the last known events are served instead
+    let stale = false;
     const now = Date.now();
     if (cachedIncidents && (now - cachedIncidentsTs) < INCIDENTS_CACHE_TTL && !location) {
       console.log(`Serving ${cachedIncidents.length} incidents from cache (age: ${Math.round((now - cachedIncidentsTs) / 1000)}s)`);
       freshIncidents = cachedIncidents;
+    } else if (!location && now < polisenRetryAt) {
+      // Polisen failed a moment ago; don't make every visitor wait for it again
+      stale = true;
+      freshIncidents = cachedIncidents ?? [];
     } else {
       console.log('Cache miss or expired, fetching fresh data...');
       // What the archive holds now: saves fetching unchanged pages, summaries keep their
       // scraped full text, and only new or changed events are written
       const archivedNow = await getArchivedIncidents();
-      freshIncidents = await fetchAndProcessIncidents(location, archivedNow);
+      try {
+        freshIncidents = await fetchAndProcessIncidents(location, archivedNow);
+      } catch (fetchError) {
+        if (location) throw fetchError;
+        // Polisen's API is down or slow: the map keeps the last known events (from this
+        // instance, or the archive below) and says they are not being updated
+        console.warn('Polisen fetch failed, serving last known events:', fetchError);
+        stale = true;
+        polisenRetryAt = now + POLISEN_RETRY_MS;
+        freshIncidents = cachedIncidents ?? [];
+      }
       // Only cache default (no location filter) requests
-      if (!location) {
+      if (!location && !stale) {
+        markPolisenFetched();
         freshIncidents = keepBackfilledSummaries(freshIncidents, archivedNow);
         cachedIncidents = freshIncidents;
         cachedIncidentsTs = Date.now();
@@ -1460,7 +1499,8 @@ serve(async (req) => {
         return parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time);
       });
 
-    if (summaryScrapeTargets.length > 0) {
+    // polisen.se is not answering when stale; the summaries are fetched once it is back
+    if (!stale && summaryScrapeTargets.length > 0) {
       const summaryScrapeResults = new Map<string, string>();
       const SUMMARY_BATCH_SIZE = 8;
 
@@ -1522,7 +1562,7 @@ serve(async (req) => {
       console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
 
-    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium }), {
+    return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium, fetchedAt: await polisenFetchedAt(), stale }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

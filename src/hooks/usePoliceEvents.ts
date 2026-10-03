@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import { Incident, IncidentType, RiskLevel } from '@/data/mockIncidents';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,6 +28,29 @@ interface PoliceEventsResponse {
   success?: boolean;
   data?: PoliceEventDto[];
   error?: string;
+  /** When the server last got an answer from Polisen */
+  fetchedAt?: string | null;
+  /** Polisen didn't answer; these are the last known events */
+  stale?: boolean;
+}
+
+// Whether the police data is being updated, from the latest response, for the notice under the header
+export interface PoliceSourceStatus {
+  fetchedAt: number | null;
+  stale: boolean;
+}
+let sourceStatus: PoliceSourceStatus = { fetchedAt: null, stale: false };
+const sourceListeners = new Set<() => void>();
+const setSourceStatus = (next: PoliceSourceStatus) => {
+  if (next.fetchedAt === sourceStatus.fetchedAt && next.stale === sourceStatus.stale) return;
+  sourceStatus = next;
+  sourceListeners.forEach((listener) => listener());
+};
+export function usePoliceSourceStatus(): PoliceSourceStatus {
+  return useSyncExternalStore(
+    (listener) => { sourceListeners.add(listener); return () => sourceListeners.delete(listener); },
+    () => sourceStatus,
+  );
 }
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
@@ -47,6 +70,8 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data: PoliceEventsResponse = await response.json();
   if (!data?.success || !data.data) throw new Error(data?.error || 'Failed to fetch events');
+  const fetchedAt = data.fetchedAt ? Date.parse(data.fetchedAt) : NaN;
+  setSourceStatus({ fetchedAt: Number.isNaN(fetchedAt) ? null : fetchedAt, stale: data.stale === true });
 
   const mapped: Incident[] = data.data.map((e) => ({
     id: e.id,

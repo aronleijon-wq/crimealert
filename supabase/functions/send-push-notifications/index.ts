@@ -300,6 +300,59 @@ async function findProUsers(supabase: AdminClient, userIds: string[], now: numbe
   return pro;
 }
 
+const STALE_AFTER_MS = 30 * 60 * 1000;
+const ALERT_AGAIN_AFTER_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Tells the admins when fetching from Polisen has stopped (no answer for 30 minutes, again at
+ * most every 6 hours) and when it works again. It decides from ingest_state itself, so it is
+ * safe for anyone to call.
+ */
+async function sendHealthAlert(supabase: ServiceClient, vapidPublicKey: string, vapidPrivateKey: string, now: number) {
+  const { data: rows, error } = await supabase.from('ingest_state').select('key, last_run_at').in('key', ['police', 'police-alert', 'police-recovered']);
+  if (error) return { sent: 0, reason: 'not_ready' };
+  const at = (key: string) => {
+    const row = (rows ?? []).find((r: { key: string }) => r.key === key) as { last_run_at: string } | undefined;
+    return row ? Date.parse(row.last_run_at) : null;
+  };
+  const fetched = at('police');
+  const alerted = at('police-alert');
+  const recovered = at('police-recovered');
+  if (fetched === null) return { sent: 0, reason: 'never_fetched' };
+
+  const stale = now - fetched > STALE_AFTER_MS;
+  const alertOpen = alerted !== null && (recovered === null || recovered < alerted);
+  let message: { title: string; body: string; key: string } | null = null;
+  const clock = new Date(fetched).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' });
+  if (stale && (alerted === null || now - alerted > ALERT_AGAIN_AFTER_MS)) {
+    const minutes = Math.round((now - fetched) / 60000);
+    message = {
+      title: '⚠️ Hämtningen från Polisen har stannat',
+      body: `Inget svar sedan ${clock} (${minutes} min). Kartan visar senast kända händelser.`,
+      key: 'police-alert',
+    };
+  } else if (!stale && alertOpen) {
+    message = { title: '✅ Hämtningen från Polisen fungerar igen', body: `Senast hämtat ${clock}.`, key: 'police-recovered' };
+  }
+  if (!message) return { sent: 0, reason: stale ? 'already_alerted' : 'healthy' };
+
+  // Recorded first, so overlapping runs send it once
+  await supabase.from('ingest_state').upsert({ key: message.key, last_run_at: new Date(now).toISOString() }, { onConflict: 'key' });
+
+  const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+  const adminIds = (admins ?? []).map((a: { user_id: string }) => a.user_id);
+  if (!adminIds.length) return { sent: 0, reason: 'no_admins' };
+  const { data: subs } = await supabase.from('push_subscriptions').select('*').in('user_id', adminIds);
+  const payload = JSON.stringify({ title: message.title, body: message.body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png', tag: 'crimealert-health', data: { url: '/admin' }, requireInteraction: true });
+  let sent = 0;
+  for (const sub of (subs ?? []) as PushSubscriptionRow[]) {
+    const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+    if (result.ok) sent++;
+  }
+  console.log('Health alert', JSON.stringify({ kind: message.key, sent }));
+  return { sent, kind: message.key };
+}
+
 /** Reads every row of a query, a thousand at a time. */
 async function readAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
   const rows: T[] = [];
@@ -408,12 +461,18 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const body = await getRequestBody(req);
-    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : 'live';
+    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : 'live';
     const token = getBearerToken(req);
     const isInternalCall = token === serviceRoleKey;
 
     // The weekly summary is started by the Sunday schedule with the public key. Anyone could call
     // it, but it only sends on Sunday evenings and to each user once a week.
+    // The fetch-health check is started by a schedule when Polisen has gone quiet, or is back
+    if (mode === 'health') {
+      const result = await sendHealthAlert(supabase, vapidPublicKey, vapidPrivateKey, Date.now());
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (mode === 'weekly') {
       const result = await sendWeeklySummaries(supabase, vapidPublicKey, vapidPrivateKey, Date.now());
       return new Response(JSON.stringify(result), {

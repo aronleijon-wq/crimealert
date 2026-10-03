@@ -590,6 +590,10 @@ export type Database = {
         Args: { _days?: number }
         Returns: Json
       }
+      police_fetch_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       track_page_view: {
         Args: { _device: string; _page: string }
         Returns: undefined
