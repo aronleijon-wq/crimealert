@@ -15,7 +15,7 @@ const PoliceStaleNotice = () => {
   return (
     <div role="status" className="flex items-center gap-2 border-b border-[hsl(var(--cr-orange)/0.4)] bg-[hsl(var(--cr-orange)/0.12)] px-3 py-1.5 text-[12px] text-foreground">
       <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--cr-orange))]" />
-      <span>Polisens händelser har inte kunnat uppdateras{since}. Du ser det senast kända, och vi har fått en varning.</span>
+      <span>Polisens händelser har inte uppdaterats{since}. Vi vet om det och visar det senast kända.</span>
     </div>
   );
 };

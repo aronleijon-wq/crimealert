@@ -18,7 +18,7 @@ describe('PoliceStaleNotice', () => {
     status.fetchedAt = Date.parse('2026-10-03T12:05:00Z');
     status.stale = true;
     render(<PoliceStaleNotice />);
-    expect(screen.getByRole('status')).toHaveTextContent('Polisens händelser har inte kunnat uppdateras sedan 14:05.');
+    expect(screen.getByRole('status')).toHaveTextContent('Polisens händelser har inte uppdaterats sedan 14:05. Vi vet om det och visar det senast kända.');
   });
 
   it('also notices data that has quietly grown old', () => {
