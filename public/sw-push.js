@@ -35,7 +35,8 @@ function buildNotification(data = {}) {
 self.addEventListener('install', (event) => {
   console.info('[sw-push] install');
   event.waitUntil(broadcastToClients('SW_INSTALL', { state: 'install' }));
-  self.skipWaiting();
+  // A new version waits until the app asks for it (when the page is hidden), so an open
+  // visit is never reloaded. The first install has nothing to wait for and activates at once.
 });
 
 self.addEventListener('activate', (event) => {

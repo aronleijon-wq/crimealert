@@ -155,7 +155,7 @@ const Feed = () => {
             )}
           </section>
 
-          <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base)/0.8)] px-4 py-3 backdrop-blur-xl">
+          <div className="ca-bar sticky top-0 z-20 -mx-4 mb-4 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base)/0.8)] px-4 py-3 backdrop-blur-xl">
             <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:justify-between sm:px-0" role="tablist" aria-label="Filtrera flödet">
               {FILTERS.map((f) => {
                 const active = filter === f.value;

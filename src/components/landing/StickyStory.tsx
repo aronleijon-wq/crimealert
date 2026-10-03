@@ -3,29 +3,9 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion, MotionValue } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import SwedenMap from './SwedenMap';
+import StoryStatic from './StoryStatic';
+import { stages } from './storyStages';
 
-const stages = [
-  {
-    tag: 'ÖVERBLICK',
-    heading: 'Allt som händer, på samma karta',
-    text: 'Polisärenden, olyckor och räddningsinsatser hämtas löpande från Polisen.se och placeras där de inträffat.',
-  },
-  {
-    tag: 'FILTER',
-    heading: 'Visa bara det du bryr dig om',
-    text: 'Slå av och på polisinsats, brand, ambulans eller trafikolycka. Kartan uppdateras direkt.',
-  },
-  {
-    tag: 'LOKALT',
-    heading: 'Zooma in på din kommun',
-    text: 'Sök på kommun eller adress och se vad som hänt i närheten de senaste dygnen.',
-  },
-  {
-    tag: 'UPPFÖLJNING',
-    heading: 'Notiser när något händer',
-    text: 'Spara en bevakning och få en notis direkt i mobilen när en ny händelse dyker upp i ditt område.',
-  },
-];
 
 const StageText = ({
   progress,
@@ -75,23 +55,7 @@ const StickyStory = () => {
   const ctaOpacity = useTransform(scrollYProgress, [0.86, 0.97], [0, 1]);
   const barWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-  if (reduced) {
-    return (
-      <section id="hur-det-fungerar" className="relative py-24 px-5 md:px-10 border-t border-[hsl(var(--ca-line))]">
-        <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-2">
-          {stages.map((s, i) => (
-            <div key={s.heading}>
-              <div className="ca-mono text-[10px] tracking-[0.24em] text-[hsl(var(--ca-red))] mb-3">
-                0{i + 1} — {s.tag}
-              </div>
-              <h3 className="ca-display text-2xl uppercase">{s.heading}</h3>
-              <p className="mt-4 text-[15px] text-[hsl(var(--ca-text-2))]">{s.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  }
+  if (reduced) return <StoryStatic />;
 
   return (
     <section

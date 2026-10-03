@@ -22,9 +22,26 @@ if ('serviceWorker' in navigator) {
       console.info('[PWA] Service workers avregistrerade i preview/iframe');
     });
   } else {
-    let reloading = false;
+    // A new version is downloaded in the background and switched to while the page is hidden
+    // (the visitor has left the app or tab), so a visit is never reloaded halfway through
+    let updateReady = false;
+    let switching = false;
+    const applyUpdateIfHidden = () => {
+      if (!updateReady || switching || document.visibilityState !== 'hidden') return;
+      switching = true;
+      updateSW(true);
+    };
+    // Reload onto the new version once it has taken over (here or from another tab); the first
+    // install, which only starts controlling the page, needs no reload
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (switching || hadController) window.location.reload();
+    });
     const updateSW = registerSW({
-      immediate: true,
+      // Register after the page has loaded, so the service worker's downloads don't compete with it
+      immediate: false,
+      // The reload is done above, also when this page was the one that installed the first version
+      onNeedReload() {},
       onRegisteredSW(swUrl, registration) {
         console.info('[PWA] Service worker registrerad', {
           swUrl,
@@ -33,13 +50,13 @@ if ('serviceWorker' in navigator) {
           waiting: Boolean(registration?.waiting),
           installing: Boolean(registration?.installing),
         });
-        // Leta efter ny version direkt och varje halvtimme
-        registration?.update?.();
+        // Leta efter ny version varje halvtimme
         setInterval(() => registration?.update?.(), 30 * 60 * 1000);
       },
       onNeedRefresh() {
-        console.info('[PWA] Ny version hittad – uppdaterar automatiskt');
-        updateSW(true);
+        console.info('[PWA] Ny version nedladdad – byter när sidan är dold');
+        updateReady = true;
+        applyUpdateIfHidden();
       },
       onOfflineReady() {
         console.info('[PWA] Offline-stöd klart');
@@ -48,13 +65,7 @@ if ('serviceWorker' in navigator) {
         console.error('[PWA] Service worker kunde inte registreras', error);
       },
     });
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloading) return;
-      reloading = true;
-      window.location.reload();
-    });
-
+    document.addEventListener('visibilitychange', applyUpdateIfHidden);
 
     navigator.serviceWorker.ready
       .then((registration) => {
