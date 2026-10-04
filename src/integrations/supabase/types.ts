@@ -629,6 +629,21 @@ export type Database = {
       }
     }
     Functions: {
+      community_reports_visible: {
+        Args: never
+        Returns: {
+          area: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          lat: number | null
+          lng: number | null
+          status: string
+          title: string
+        }[]
+      }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
