@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
 import { PLANS, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
 import { TRIAL_DAYS, trialEligible } from "../_shared/premium.ts";
+import { returnOrigin } from "../_shared/returnOrigin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,14 +97,16 @@ serve(async (req) => {
     const trial = await trialEligible(stripe, email);
     logStep("Trial", { eligible: trial });
 
+    // Only back to our own sites, never to an address the caller made up
+    const origin = returnOrigin(req.headers.get("origin"));
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
       line_items: [{ price: price.id, quantity: 1 }],
       mode: "subscription",
       ...(trial ? { subscription_data: { trial_period_days: TRIAL_DAYS } } : {}),
-      success_url: `${req.headers.get("origin")}/account?success=true`,
-      cancel_url: `${req.headers.get("origin")}/account?canceled=true`,
+      success_url: `${origin}/account?success=true`,
+      cancel_url: `${origin}/account?canceled=true`,
     });
 
     logStep("Checkout session created", { sessionId: session.id });
