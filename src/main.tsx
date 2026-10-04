@@ -1,8 +1,9 @@
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
+import ErrorBoundary from './components/ErrorBoundary';
 import { startMonitoring } from './lib/monitoring';
-import { watchForStaleBuild } from './lib/staleBuild';
+import { stripFreshParam, watchForStaleBuild } from './lib/staleBuild';
 import './index.css';
 
 const isInIframe = (() => {
@@ -74,6 +75,12 @@ if ('serviceWorker' in navigator) {
   }
 }
 
+stripFreshParam();
 startMonitoring();
 watchForStaleBuild();
-createRoot(document.getElementById('root')!).render(<App />);
+// The outer boundary also catches a failure in the app's providers, which would otherwise leave an empty page
+createRoot(document.getElementById('root')!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);
