@@ -577,30 +577,6 @@ export type Database = {
           status: string | null
           title: string | null
         }
-        Insert: {
-          area?: string | null
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          lat?: number | null
-          lng?: number | null
-          status?: string | null
-          title?: string | null
-        }
-        Update: {
-          area?: string | null
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          lat?: number | null
-          lng?: number | null
-          status?: string | null
-          title?: string | null
-        }
         Relationships: []
       }
       reviews_public: {
@@ -632,14 +608,14 @@ export type Database = {
       community_reports_visible: {
         Args: never
         Returns: {
-          area: string | null
+          area: string
           category: string
           created_at: string
           description: string
           id: string
-          image_url: string | null
-          lat: number | null
-          lng: number | null
+          image_url: string
+          lat: number
+          lng: number
           status: string
           title: string
         }[]
