@@ -226,7 +226,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             {/* Medborgarrapporter */}
             <button
             onClick={() => {
-              if (!isPremium) {navigate('/account');return;}
+              if (!isPremium) {navigate('/prisplan');return;}
               onToggleCommunityReports();
             }}
             className={`

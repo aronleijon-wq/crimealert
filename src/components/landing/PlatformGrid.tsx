@@ -25,7 +25,7 @@ const cards = [
     icon: CreditCard,
     title: 'Prisplan',
     text: 'Gratis med 15 minuters fördröjning, Pro i realtid.',
-    to: '/account',
+    to: '/prisplan',
   },
 ];
 

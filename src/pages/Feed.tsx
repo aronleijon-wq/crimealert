@@ -149,7 +149,7 @@ const Feed = () => {
             {!isPremium && (
               <p className="mt-4 rounded-xl border border-[hsl(var(--ca-line))] bg-card/60 px-3 py-2.5 text-xs leading-relaxed text-[hsl(var(--ca-text-2))] backdrop-blur">
                 Polisens händelser visas med 15 minuters fördröjning.{' '}
-                <Link to="/account" className="font-semibold text-primary hover:underline">Pro</Link> ger realtid och hela beskrivningar.
+                <Link to="/prisplan" className="font-semibold text-primary hover:underline">Pro</Link> ger realtid och hela beskrivningar.
                 VMA och krisinformation visas direkt för alla.
               </p>
             )}

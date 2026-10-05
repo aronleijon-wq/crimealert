@@ -23,11 +23,15 @@ const LEGACY_PRICE_IDS: Record<BillingCycle, string> = {
 const PREMIUM_PRODUCT_ID = 'prod_U0dsMg8IZZKY7c';
 const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 
-const Account = () => {
+/**
+ * Prisplan: Gratis or Pro, checkout and the return from Stripe. Served at /prisplan, and at
+ * /account where Stripe sends people back after checkout and older links point.
+ */
+const Prisplan = () => {
   useSEO({
-    title: 'Gratis eller Pro — CrimeAlert',
+    title: 'Prisplan: Gratis eller Pro — CrimeAlert',
     description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik, export och ingen reklam.',
-    canonical: 'https://crimealert.se/account',
+    canonical: 'https://crimealert.se/prisplan',
   });
   const { user, subscription, checkSubscription } = useAuth();
   const navigate = useNavigate();
@@ -192,13 +196,13 @@ const Account = () => {
             checkoutLoading={checkoutLoading}
           />
 
-          {/* Not signed in: the way in. Signed in: the rest of the account lives on its own page */}
+          {/* Not signed in: the way in. Signed in: the profile and settings live on their own page */}
           {user ? (
             <Link
               to="/installningar"
               className="flex items-center justify-between rounded-xl border border-[hsl(var(--ca-line-strong))] bg-card px-4 py-3.5 text-[15px] font-medium text-foreground transition hover:border-primary/50"
             >
-              Konto och inställningar
+              Din profil och inställningar
               <ChevronRight className="h-4 w-4 text-[hsl(var(--ca-text-3))]" aria-hidden />
             </Link>
           ) : (
@@ -224,4 +228,4 @@ const Account = () => {
 
 };
 
-export default Account;
+export default Prisplan;

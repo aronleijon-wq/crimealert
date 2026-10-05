@@ -140,7 +140,7 @@ const Kommun = () => {
           </div>
           {!isPremium && (
             <p className="mt-2 text-xs text-muted-foreground">
-              Visas med 15 minuters fördröjning. <Link to="/account" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
+              Visas med 15 minuters fördröjning. <Link to="/prisplan" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
             </p>
           )}
 

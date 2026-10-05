@@ -13,7 +13,7 @@ describe('FAQ', () => {
   });
 
   it('turns links into their words for plain text', () => {
-    expect(faqAnswerText(['Gå till ', { to: '/account', label: 'Konto' }, '.'])).toBe('Gå till Konto.');
+    expect(faqAnswerText(['Gå till ', { to: '/prisplan', label: 'Prisplan' }, '.'])).toBe('Gå till Prisplan.');
   });
 
   it('has no duplicate questions and no empty answers', () => {

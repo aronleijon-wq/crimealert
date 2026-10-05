@@ -7,7 +7,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
       { to: '/karta', label: 'Karta' },
       { to: '/analysis', label: 'Analys' },
       { to: '/alerts', label: 'Notiser' },
-      { to: '/account', label: 'Prisplan' },
+      { to: '/prisplan', label: 'Prisplan' },
     ],
   },
   {

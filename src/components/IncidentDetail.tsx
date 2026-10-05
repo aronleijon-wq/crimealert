@@ -88,7 +88,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
             <button
-              onClick={() => navigate('/account')}
+              onClick={() => navigate('/prisplan')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-md text-[11px] font-semibold text-primary hover:bg-primary/20 transition"
             >
               <Lock className="w-3 h-3 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> Uppgradera för detaljer

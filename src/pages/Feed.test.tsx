@@ -66,7 +66,7 @@ describe('Feed page', () => {
   it('marks the police description as Pro for free users and links to the map', async () => {
     await renderFeed();
     const policeCard = screen.getAllByRole('article')[2];
-    expect(within(policeCard).getByRole('link', { name: /Hela beskrivningen ingår i Pro/ })).toHaveAttribute('href', '/account');
+    expect(within(policeCard).getByRole('link', { name: /Hela beskrivningen ingår i Pro/ })).toHaveAttribute('href', '/prisplan');
     expect(within(policeCard).getByRole('link', { name: /Visa på kartan/ })).toHaveAttribute('href', '/karta?incident=pol-1');
   });
 

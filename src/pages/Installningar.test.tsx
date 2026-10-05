@@ -48,13 +48,13 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-describe('Konto och inställningar', () => {
+describe('Profil och inställningar', () => {
   it('shows a free account with its profile and the way to Pro', async () => {
     await renderPage();
     expect(screen.getByText('aron@example.se', { selector: 'p' })).toBeInTheDocument();
     expect(await screen.findByText('Aron')).toBeInTheDocument();
     expect(screen.getAllByText('Gratis').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /Prova Pro gratis i 7 dagar/ })).toHaveAttribute('href', '/account');
+    expect(screen.getByRole('link', { name: /Prova Pro gratis i 7 dagar/ })).toHaveAttribute('href', '/prisplan');
     expect(screen.getByRole('link', { name: /Kommuner och notiser/ })).toHaveAttribute('href', '/alerts');
     expect(screen.queryByRole('link', { name: /Hantera prenumeration/ })).toBeNull();
   });

@@ -17,7 +17,7 @@ const Index = lazyPage(() => import("./pages/Index"));
 // Lazy load non-critical routes for better initial load
 const Analysis = lazyPage(() => import("./pages/Analysis"));
 const Alerts = lazyPage(() => import("./pages/Alerts"));
-const Account = lazyPage(() => import("./pages/Account"));
+const Prisplan = lazyPage(() => import("./pages/Prisplan"));
 const Installningar = lazyPage(() => import("./pages/Installningar"));
 const Auth = lazyPage(() => import("./pages/Auth"));
 const Cookies = lazyPage(() => import("./pages/Cookies"));
@@ -68,7 +68,9 @@ const App = () => (
           <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
-          <Route path="/account" element={<Account />} />
+          <Route path="/prisplan" element={<Prisplan />} />
+          {/* Stripe sends people back here after checkout (create-checkout), and older links point here */}
+          <Route path="/account" element={<Prisplan />} />
           <Route path="/installningar" element={<Installningar />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/cookies" element={<Cookies />} />

@@ -6,7 +6,7 @@ import { PRICES, TRIAL_DAYS } from '@/components/account/plans';
 
 export const CONTACT_EMAIL = 'crimealert.swe@gmail.com';
 
-/** A piece of an answer: plain text, or a link (a route like /account, or a mailto: address). */
+/** A piece of an answer: plain text, or a link (a route like /prisplan, or a mailto: address). */
 export type FaqPart = string | { to: string; label: string };
 
 export interface FaqItem {
@@ -44,16 +44,16 @@ export const FAQ_ITEMS: FaqItem[] = [
       `Pro kostar ${monthly.price} i månaden eller ${yearly.price} om året. ` +
         'Då ser du Polisens händelser och får notiser direkt, läser hela beskrivningen av varje händelse och slipper reklam. ' +
         `Har du aldrig haft Pro kan du prova gratis i ${TRIAL_DAYS} dagar. `,
-      { to: '/account', label: 'Jämför Gratis och Pro' },
+      { to: '/prisplan', label: 'Jämför Gratis och Pro' },
       '.',
     ],
   },
   {
     q: 'Hur avslutar jag Pro?',
     a: [
-      'Gå till ',
-      { to: '/account', label: 'Konto' },
-      ' och tryck på Hantera prenumeration. Avslutar du under provperioden dras inga pengar. ' +
+      'Tryck på din profilbild uppe till höger (den runda med din bokstav) för att komma till ',
+      { to: '/installningar', label: 'din profil' },
+      ', och välj Hantera prenumeration. Avslutar du under provperioden dras inga pengar. ' +
         'Annars har du Pro perioden ut, och sedan dras inget mer.',
     ],
   },

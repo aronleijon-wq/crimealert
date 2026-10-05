@@ -239,7 +239,7 @@ const IncidentBottomSheet = ({ incident, onClose }: Props) => {
                 <p className="text-[10px] text-muted-foreground">Uppgradera till Pro för att se alla</p>
               </div>
               <button
-                onClick={() => navigate('/account')}
+                onClick={() => navigate('/prisplan')}
                 className="text-[10px] font-semibold text-primary hover:underline shrink-0"
               >
                 Uppgradera

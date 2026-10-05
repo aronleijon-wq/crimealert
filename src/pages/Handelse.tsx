@@ -72,7 +72,7 @@ const Handelse = () => {
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 <Link to="/karta" className={primaryButton}><MapIcon className="h-4 w-4" /> Till kartan</Link>
-                <Link to="/account" className={secondaryButton}>Om Pro</Link>
+                <Link to="/prisplan" className={secondaryButton}>Om Pro</Link>
               </div>
             </section>
           ) : (
@@ -113,7 +113,7 @@ const Handelse = () => {
                     <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <p className="text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
                       Polisens beskrivning av händelsen finns med Pro.{' '}
-                      <Link to="/account" className="font-medium text-primary hover:underline">Se vad Pro ger</Link>
+                      <Link to="/prisplan" className="font-medium text-primary hover:underline">Se vad Pro ger</Link>
                     </p>
                   </div>
                 )}
