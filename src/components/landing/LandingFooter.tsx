@@ -26,7 +26,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
       { to: '/om-oss', label: 'Om oss' },
       { to: '#vanliga-fragor', label: 'Vanliga frågor' },
       { to: '/auth?mode=signup', label: 'Skapa konto' },
-      { to: 'mailto:alvejon.staff@gmail.com', label: 'Kontakta oss' },
+      { to: 'mailto:crimealert.swe@gmail.com', label: 'Kontakta oss' },
     ],
   },
   {

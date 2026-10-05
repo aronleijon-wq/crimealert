@@ -55,7 +55,7 @@ describe('Landing page', () => {
     const faq = screen.getByRole('heading', { level: 2, name: 'Vanliga frågor' }).closest('section')!;
     expect(within(faq).getByText('Kostar det något?')).toBeInTheDocument();
     expect(within(faq).getByRole('link', { name: 'Konto' })).toHaveAttribute('href', '/account');
-    expect(within(faq).getByRole('link', { name: 'alvejon.staff@gmail.com' })).toHaveAttribute('href', 'mailto:alvejon.staff@gmail.com');
+    expect(within(faq).getByRole('link', { name: 'crimealert.swe@gmail.com' })).toHaveAttribute('href', 'mailto:crimealert.swe@gmail.com');
     const ld = container.querySelector('#vanliga-fragor script[type="application/ld+json"]');
     expect(JSON.parse(ld!.textContent!)['@type']).toBe('FAQPage');
     expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '#vanliga-fragor');

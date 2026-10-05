@@ -4,7 +4,7 @@
 
 import { PRICES, TRIAL_DAYS } from '@/components/account/plans';
 
-export const CONTACT_EMAIL = 'alvejon.staff@gmail.com';
+export const CONTACT_EMAIL = 'crimealert.swe@gmail.com';
 
 /** A piece of an answer: plain text, or a link (a route like /account, or a mailto: address). */
 export type FaqPart = string | { to: string; label: string };
