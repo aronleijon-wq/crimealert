@@ -56,10 +56,6 @@ const Hero = ({ live }: { live: LandingLive }) => {
 
       <div className="relative mx-auto w-full max-w-[1400px] px-5 md:px-10">
         <div className="max-w-[640px]">
-          <p className="ca-rise ca-eyebrow mb-6 flex items-center gap-2" style={{ animationDelay: '0.1s' }}>
-            <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />
-            Polisens händelser i realtid
-          </p>
 
           <h1 className="ca-display max-w-[16ch] text-[clamp(2.6rem,4.6vw,4.6rem)] uppercase leading-[0.95]" aria-label="Aktuell lägesbild, direkt på karta.">
             {HEADLINE.map((word, i) => {
