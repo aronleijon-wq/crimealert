@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
 import { isTransientBackendError } from '@/lib/errors';
+import { subscriptionFromProStatus } from '@/lib/proStatus';
 
 export interface SubscriptionState {
   subscribed: boolean;
@@ -18,7 +19,10 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   subscription: SubscriptionState;
-  /** True once check-subscription has answered for the signed-in user; false while unknown */
+  /**
+   * True once the signed-in user's subscription is known: from check-subscription, or the answer it
+   * remembered in pro_status when it can't be reached. False while unknown.
+   */
   subscriptionChecked: boolean;
   checkSubscription: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -91,6 +95,23 @@ async function loadSubscription(reuse: boolean): Promise<SubscriptionResult> {
   return check.promise;
 }
 
+/**
+ * What check-subscription last found for the signed-in user (their own pro_status row), for when
+ * it can't answer now. Without this a failed check left the subscription unknown: free accounts
+ * got no ads and Pro accounts no Pro features until the next check. Null if that can't be read.
+ */
+async function rememberedSubscription(): Promise<SubscriptionResult | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+    const { data, error } = await supabase.from('pro_status').select('pro_until').eq('user_id', session.user.id).maybeSingle();
+    if (error) return null;
+    return { state: subscriptionFromProStatus(data?.pro_until), ok: true };
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -101,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Automatic checks may reuse a recent result; an explicit checkSubscription() always asks the server
   const refreshSubscription = async (reuse: boolean) => {
     try {
-      const result = await loadSubscription(reuse);
+      let result = await loadSubscription(reuse);
+      if (!result.ok) result = (await rememberedSubscription()) ?? result;
       setSubscription(result.state);
       setSubscriptionChecked(result.ok);
     } catch (err) {

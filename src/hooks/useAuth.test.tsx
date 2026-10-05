@@ -2,10 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { setVisibility } from '@/test/visibility';
 
+// The user's own pro_status row as the database answers it; unreadable unless a test sets it
+const proStatus = vi.hoisted(() => ({ answer: { data: null, error: { message: 'unavailable' } } as { data: { pro_until: string | null } | null; error: { message: string } | null } }));
+
 vi.mock('@/integrations/supabase/client', () => {
   const session = { access_token: 'token', user: { id: 'user-1', email: 'pro@example.se' } };
   return {
     supabase: {
+      from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => proStatus.answer }) }) }),
       auth: {
         getSession: async () => ({ data: { session }, error: null }),
         onAuthStateChange: (callback: (event: string, s: typeof session) => void) => {
@@ -29,6 +33,7 @@ const flush = async () => {
 const subscriptionCalls = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('check-subscription')).length;
 
 beforeEach(() => {
+  proStatus.answer = { data: null, error: { message: 'unavailable' } };
   vi.resetModules();
   vi.useFakeTimers();
   setVisibility('visible');
@@ -89,12 +94,32 @@ describe('AuthProvider subscription checks', () => {
     expect(result.current.subscriptionChecked).toBe(true);
   });
 
-  it('treats a failed check as unknown', async () => {
+  it('treats a failed check as unknown when the remembered answer can\'t be read either', async () => {
     fetchMock.mockImplementation(async () => new Response('', { status: 503 }));
     const { AuthProvider, useAuth } = await loadAuth();
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
     await flush();
     expect(result.current.subscriptionChecked).toBe(false);
+  });
+
+  it('uses the remembered answer when the check fails: a free account is known to be free (and gets ads)', async () => {
+    fetchMock.mockImplementation(async () => new Response('', { status: 500 }));
+    proStatus.answer = { data: null, error: null };
+    const { AuthProvider, useAuth } = await loadAuth();
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await flush();
+    expect(result.current.subscriptionChecked).toBe(true);
+    expect(result.current.subscription.subscribed).toBe(false);
+  });
+
+  it('uses the remembered answer when the check fails: a Pro account keeps Pro (and no ads)', async () => {
+    fetchMock.mockImplementation(async () => new Response('', { status: 500 }));
+    proStatus.answer = { data: { pro_until: new Date(Date.now() + 20 * 24 * 60 * MINUTE).toISOString() }, error: null };
+    const { AuthProvider, useAuth } = await loadAuth();
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await flush();
+    expect(result.current.subscriptionChecked).toBe(true);
+    expect(result.current.subscription).toMatchObject({ subscribed: true, productId: 'prod_U0dsMg8IZZKY7c' });
   });
 
   it('skips the 30-minute refresh while hidden and refreshes when shown again', async () => {
