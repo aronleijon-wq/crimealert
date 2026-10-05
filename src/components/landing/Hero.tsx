@@ -5,17 +5,7 @@ import { CountUp, LiveClock, LiveLog, ScrambleText } from './HudBits';
 import type { LandingLive } from './useLandingLive';
 
 const HEADLINE = ['Aktuell', 'lägesbild,', 'direkt', 'på', 'karta'];
-// The live log's corner of the map on large screens (it sits bottom right, 380 px wide)
-const LOG_AREA = { width: 440, height: 250 };
 
-/** Corner marks around a framed area, like a sighting frame */
-const Corners = ({ className = '' }: { className?: string }) => (
-  <div className={`pointer-events-none absolute ${className}`} aria-hidden>
-    {['left-0 top-0 border-l border-t', 'right-0 top-0 border-r border-t', 'left-0 bottom-0 border-l border-b', 'right-0 bottom-0 border-r border-b'].map((pos) => (
-      <span key={pos} className={`absolute h-4 w-4 border-[hsl(var(--ca-text-3))] ${pos}`} />
-    ))}
-  </div>
-);
 
 const Stat = ({ label, children, delay }: { label: string; children: React.ReactNode; delay: number }) => (
   <div className="ca-rise" style={{ animationDelay: `${delay}s` }}>
@@ -38,7 +28,7 @@ const Hero = ({ live }: { live: LandingLive }) => {
 
       {/* Operations picture: behind the text on phones, beside it on large screens */}
       <div className="ca-map-in absolute inset-x-0 top-14 h-[60svh] opacity-45 lg:bottom-4 lg:left-auto lg:right-0 lg:top-24 lg:h-auto lg:w-[56%] lg:opacity-100">
-        <OpsMap events={live.events} focus={live.focus} alignX={0.12} reserve={LOG_AREA} className="h-full w-full" />
+        <OpsMap events={live.events} focus={live.focus} alignX={0.12} className="h-full w-full" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[hsl(var(--ca-base))] to-transparent lg:hidden" />
         <div className="absolute inset-y-0 left-0 hidden w-40 bg-gradient-to-r from-[hsl(var(--ca-base))] to-transparent lg:block" />
       </div>
@@ -117,17 +107,6 @@ const Hero = ({ live }: { live: LandingLive }) => {
         </div>
       </div>
 
-      {/* Live log beside the map on large screens */}
-      <div className="ca-rise absolute bottom-10 right-10 hidden w-[380px] lg:block" style={{ animationDelay: '1.4s' }}>
-        <div className="ca-tac relative">
-          <Corners className="-inset-1.5" />
-          <div className="flex items-center justify-between border-b border-[hsl(var(--ca-line))] px-3 py-2 ca-mono text-[9px] tracking-[0.2em] text-[hsl(var(--ca-text-3))]">
-            <span>&gt; LIVEFLÖDE</span>
-            <span>{live.events.length ? `${live.events.length} SPÅR` : '—'}</span>
-          </div>
-          <LiveLog events={live.events} focus={live.focus} loading={live.loading} failed={live.failed} />
-        </div>
-      </div>
     </section>
   );
 };
