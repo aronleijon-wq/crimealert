@@ -93,7 +93,7 @@ const Auth = () => {
       if (isLogin) {
         await withRetry(() => supabase.auth.signInWithPassword({ email: cleanEmail, password }));
         toast({ title: 'Inloggad!' });
-        navigate('/account');
+        navigate('/installningar');
       } else {
         await withRetry(() => supabase.auth.signUp({ email: cleanEmail, password, options: { emailRedirectTo: window.location.origin } }));
         toast({ title: 'Konto skapat!', description: 'Kolla din e-post för att verifiera kontot.' });

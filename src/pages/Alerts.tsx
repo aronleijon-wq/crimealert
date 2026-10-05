@@ -303,7 +303,7 @@ const Alerts = () => {
                     {!isPremium && (
                       <p className="mt-1 text-xs text-muted-foreground">
                         Med gratiskonto kommer notisen 15 minuter efter händelsen, samtidigt som den syns på kartan.{' '}
-                        <Link to="/account" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
+                        <Link to="/prisplan" className="font-medium text-primary hover:underline">Med Pro direkt</Link>
                       </p>
                     )}
                   </div>

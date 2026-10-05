@@ -155,7 +155,7 @@ const ThemeRow = () => {
 
 const Installningar = () => {
   useSEO({
-    title: 'Konto och inställningar — CrimeAlert',
+    title: 'Profil och inställningar — CrimeAlert',
     description: 'Ditt konto på CrimeAlert: profil, medlemskap, notiser, utseende och hjälp.',
     canonical: 'https://crimealert.se/installningar',
   });
@@ -184,8 +184,8 @@ const Installningar = () => {
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-xl space-y-7 px-4 pb-16 pt-6 sm:pt-10">
           <div>
-            <h1 className="font-['Archivo',Inter,sans-serif] text-3xl font-extrabold tracking-tight text-foreground">Konto</h1>
-            <p className="mt-1 text-[15px] text-[hsl(var(--ca-text-2))]">Profil, medlemskap och inställningar.</p>
+            <h1 className="font-['Archivo',Inter,sans-serif] text-3xl font-extrabold tracking-tight text-foreground">Profil</h1>
+            <p className="mt-1 text-[15px] text-[hsl(var(--ca-text-2))]">Ditt konto, din plan och dina inställningar.</p>
           </div>
 
           {user ? (
@@ -240,10 +240,10 @@ const Installningar = () => {
                 icon={Zap}
                 label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
                 hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
-                to="/account"
+                to="/prisplan"
               />
             ) : null}
-            <LinkRow icon={FileText} label="Jämför Gratis och Pro" to="/account" />
+            <LinkRow icon={FileText} label="Jämför Gratis och Pro" to="/prisplan" />
           </Section>
 
           <Section id="notiser" title="Notiser">

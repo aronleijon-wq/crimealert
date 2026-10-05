@@ -101,7 +101,7 @@ const HistoryPanel = (props: HistoryPanelProps) => {
             <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text))]">
               Med Pro spolar du tillbaka upp till 30 dagar, spelar upp hur händelserna spred sig och ser var det händer mest som värmekarta.
             </p>
-            <Link to="/account" className="mt-2 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground">
+            <Link to="/prisplan" className="mt-2 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground">
               {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
             </Link>
           </div>

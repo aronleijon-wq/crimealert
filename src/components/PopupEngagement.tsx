@@ -234,7 +234,7 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
                   <div style={{ fontSize: 9, color: '#aaa' }}>Uppgradera till Pro</div>
                 </div>
                 <a
-                  href="/account"
+                  href="/prisplan"
                   onClick={(e) => e.stopPropagation()}
                   style={{ fontSize: 9, fontWeight: 600, color: '#3b82f6', textDecoration: 'none' }}
                 >

@@ -630,7 +630,7 @@ export default function CommunityReports() {
             ) : user && !isPremium ? (
               <div className="text-center py-4 px-4 rounded-lg bg-muted/30 border border-border">
                 <p className="text-xs text-muted-foreground">
-                  <a href="/account" className="text-primary hover:underline font-semibold">Uppgradera till Pro</a> för att skicka rapporter
+                  <a href="/prisplan" className="text-primary hover:underline font-semibold">Uppgradera till Pro</a> för att skicka rapporter
                 </p>
               </div>
             ) : (

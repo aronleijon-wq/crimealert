@@ -136,7 +136,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
         )}
         {item.bodyLocked && (
           <Link
-            to="/account"
+            to="/prisplan"
             className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[hsl(var(--ca-line-strong))] px-3 py-2 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
           >
             <Lock className="h-3.5 w-3.5 text-primary" />
