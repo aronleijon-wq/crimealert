@@ -2,34 +2,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
-import { Shield, MapPin, Bell, Users } from 'lucide-react';
 
-const features = [
-  {
-    icon: MapPin,
-    id: '01',
-    title: 'Realtidskarta',
-    desc: 'Varje polisanmäld händelse placeras på karta med kommun, tidpunkt och kategori — inbrott, skottlossning, trafikolycka, brand.',
-  },
-  {
-    icon: Shield,
-    id: '02',
-    title: 'Källa: Polisen.se',
-    desc: 'All data hämtas direkt från Polisens officiella händelseflöde och kompletteras med geokodning ner till gatunivå där det går.',
-  },
-  {
-    icon: Bell,
-    id: '03',
-    title: 'Push-notiser',
-    desc: 'Du väljer kommun att bevaka och får en notis på mobilen när en ny händelse publiceras där — inget brus från övriga landet.',
-  },
-  {
-    icon: Users,
-    id: '04',
-    title: 'Medborgarrapporter',
-    desc: 'Pro-medlemmar kan rapportera det de själva ser på plats; rapporterna visas som separata markörer skilda från polisdata.',
-  },
-];
 
 const useCountUp = (target: number) => {
   const [value, setValue] = useState(0);
