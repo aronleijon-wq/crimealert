@@ -25,26 +25,55 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googlesyndication.com https://www.googletagservices.com https://partner.googleadservices.com https://adservice.google.com https://www.google.com https://www.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://polisen.se https://nominatim.openstreetmap.org https://*.googlesyndication.com https://*.doubleclick.net https://adservice.google.com https://www.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; frame-src https://accounts.google.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; object-src 'none'; base-uri 'self';" />
     <title>CrimeAlert — Livekarta över polishändelser i Sverige</title>
     <script>
-      // If the app's own files can't load (an old copy of the page from the offline cache, after
-      // a new version was published), drop the offline copy and load the site fresh, at most once
-      // a minute. The same as src/lib/staleBuild.ts, for when the app itself can't start.
-      window.addEventListener('error', function (event) {
-        var el = event.target;
-        if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
-        var url = el.src || el.href;
-        if (!url || !/\/assets\//.test(url)) return;
-        var key = 'crimealert_stale_build_reload';
-        try {
-          if (Date.now() - Number(sessionStorage.getItem(key) || 0) < 60000) return;
-          sessionStorage.setItem(key, String(Date.now()));
-        } catch (e) {}
-        var sw = navigator.serviceWorker;
-        var reload = function () { location.reload(); };
-        Promise.all([
-          sw ? sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : null,
-          window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : null,
-        ]).then(reload, reload);
-      }, true);
+      // If the app's own files can't load (an old copy of the page after a new version was
+      // published), drop the offline copy and load the page fresh, past every cache, at most once a
+      // minute. If that doesn't help, or the app doesn't start at all, show a message with a reload
+      // button instead of an empty page. The same as src/lib/staleBuild.ts, for when the app itself
+      // can't start.
+      (function () {
+        var KEY = 'crimealert_stale_build_reload';
+        function loadFresh() {
+          var done = false;
+          var go = function () {
+            if (done) return;
+            done = true;
+            try {
+              var url = new URL(location.href);
+              url.searchParams.set('_fresh', String(Date.now()));
+              location.replace(url.toString());
+            } catch (e) { location.reload(); }
+          };
+          setTimeout(go, 3000);
+          var sw = navigator.serviceWorker;
+          Promise.all([
+            sw ? sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : null,
+            window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : null
+          ]).then(go, go);
+        }
+        function showMessage() {
+          var root = document.getElementById('root');
+          if (!root || root.childNodes.length) return;
+          root.innerHTML =
+            '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:#0a0c0f;color:#e5e7eb;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
+            '<div style="max-width:320px"><p style="margin:0;font-size:20px;font-weight:700;color:#fff">CrimeAlert kunde inte starta</p>' +
+            '<p style="margin:10px 0 20px;font-size:15px;line-height:1.5;color:#a3abb5">En ny version har just publicerats eller så bröts anslutningen. Ladda om, så fungerar det igen.</p>' +
+            '<button id="ca-load-fresh" type="button" style="height:44px;padding:0 22px;border:0;border-radius:10px;background:#dc2626;color:#fff;font-size:15px;font-weight:600">Ladda om</button></div></div>';
+          document.getElementById('ca-load-fresh').onclick = loadFresh;
+        }
+        window.addEventListener('error', function (event) {
+          var el = event.target;
+          if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+          var url = el.src || el.href;
+          if (!url || !/\/assets\//.test(url)) return;
+          try {
+            if (Date.now() - Number(sessionStorage.getItem(KEY) || 0) < 60000) { showMessage(); return; }
+            sessionStorage.setItem(KEY, String(Date.now()));
+          } catch (e) {}
+          loadFresh();
+        }, true);
+        // The app draws something within a moment of loading; still nothing means it couldn't start
+        window.addEventListener('load', function () { setTimeout(showMessage, 4000); });
+      })();
     </script>
     <meta name="description" content="Se polishändelser, brand, trafikolyckor och brott i realtid på kartan. Trygghetskarta för hela Sverige!">
     <!-- Each page sets its own canonical address (useSEO); a fixed one here would point every page at the start page -->
