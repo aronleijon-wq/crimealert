@@ -18,6 +18,7 @@ const Index = lazyPage(() => import("./pages/Index"));
 const Analysis = lazyPage(() => import("./pages/Analysis"));
 const Alerts = lazyPage(() => import("./pages/Alerts"));
 const Account = lazyPage(() => import("./pages/Account"));
+const Installningar = lazyPage(() => import("./pages/Installningar"));
 const Auth = lazyPage(() => import("./pages/Auth"));
 const Cookies = lazyPage(() => import("./pages/Cookies"));
 const Sekretesspolicy = lazyPage(() => import("./pages/Sekretesspolicy"));
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/installningar" element={<Installningar />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />

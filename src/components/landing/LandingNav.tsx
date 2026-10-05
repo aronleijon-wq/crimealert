@@ -72,14 +72,14 @@ const LandingNav = () => {
             to="/account"
             className="hidden md:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
           >
-            {user ? 'Konto' : 'Prisplan'}
+            Prisplan
           </Link>
           {user ? (
             <Link
-              to="/account"
+              to="/installningar"
               className="hidden md:inline-flex items-center px-4 py-2 text-[13px] font-medium rounded-md bg-[hsl(var(--ca-red))] text-white hover:brightness-110 transition"
             >
-              Min profil
+              Mitt konto
             </Link>
           ) : (
             <Link
@@ -113,11 +113,11 @@ const LandingNav = () => {
           ))}
           {user ? (
             <Link
-              to="/account"
+              to="/installningar"
               onClick={() => setOpen(false)}
               className="mt-2 text-center py-2.5 rounded-md bg-[hsl(var(--ca-red))] text-white text-sm font-medium"
             >
-              Min profil
+              Mitt konto
             </Link>
           ) : (
             <Link

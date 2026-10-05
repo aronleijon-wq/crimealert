@@ -17,7 +17,7 @@ const Header = () => {
   const navItems = [
     ...baseNavItems,
     ...(user
-      ? [{ to: '/account', label: 'Konto', icon: User }]
+      ? [{ to: '/installningar', label: 'Konto', icon: User }]
       : [
           { to: '/auth?mode=signup', label: 'Skapa konto', icon: User },
           { to: '/account', label: 'Prisplan', icon: CreditCard },

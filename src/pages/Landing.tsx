@@ -46,6 +46,15 @@ const Landing = () => {
     };
   }, []);
 
+  // Links from other pages to a section here (like /#vanliga-fragor): scroll there once the
+  // sections above have taken their place
+  useEffect(() => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const timer = window.setTimeout(() => document.getElementById(id)?.scrollIntoView(), 400);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
+
   if (incident) return <Navigate to={`/karta${location.search}`} replace />;
 
   return (

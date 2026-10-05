@@ -1,5 +1,6 @@
 import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
@@ -190,7 +191,10 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
 
       <p className="flex items-start gap-2 rounded-xl border border-dashed border-[hsl(var(--ca-line-strong))] px-4 py-3 text-xs leading-relaxed text-[hsl(var(--ca-text-2))]">
         <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        Företag eller organisation? Vi kan ta fram en lösning för flera områden eller egna dataleveranser. Kontakta oss via mejl längre ner.
+        <span>
+          Företag eller organisation? Vi kan ta fram en lösning för flera områden eller egna dataleveranser. Mejla oss på{' '}
+          <a href={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert%20f%C3%B6r%20f%C3%B6retag`} className="font-medium text-primary hover:underline">{CONTACT_EMAIL}</a>.
+        </span>
       </p>
     </section>
   );
