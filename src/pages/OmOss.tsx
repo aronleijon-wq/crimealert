@@ -146,11 +146,11 @@ const OmOss = () => {
               Frågor om data, felaktiga händelser på kartan eller samarbeten — skriv till oss så återkommer vi.
             </p>
             <a
-              href="mailto:alvejon.staff@gmail.com"
+              href="mailto:crimealert.swe@gmail.com"
               className="inline-flex items-center gap-2 mt-5 px-4 py-2.5 ca-tac ca-panel-hover ca-mono text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--ca-text))]"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--ca-red))]" />
-              alvejon.staff@gmail.com
+              crimealert.swe@gmail.com
             </a>
           </div>
         </section>

@@ -37,11 +37,11 @@ const ContactSection = () => {
         Har du frågor, feedback eller vill veta mer om Företagsplanen? Maila oss direkt!
       </p>
       <a
-        href="mailto:alvejon.staff@gmail.com?subject=CrimeAlert%20-%20Kontakt"
+        href="mailto:crimealert.swe@gmail.com?subject=CrimeAlert%20-%20Kontakt"
         className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition-colors">
         
         <Send className="w-3.5 h-3.5" />
-        alvejon.staff@gmail.com
+        crimealert.swe@gmail.com
       </a>
     </div>);
 
