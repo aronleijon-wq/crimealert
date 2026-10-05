@@ -95,11 +95,14 @@ const TYPE_LABELS: Record<string, string> = {
   other: 'Övrigt'
 };
 
-type TimeRange = '24h' | '7d' | '30d';
+type TimeRange = '24h' | '7d' | '30d' | '60d';
 const TIME_RANGE_OPTIONS: {value: TimeRange;label: string;}[] = [
 { value: '24h', label: 'Idag' },
 { value: '7d', label: '7 dagar' },
-{ value: '30d', label: '30 dagar' }];
+{ value: '30d', label: '30 dagar' },
+{ value: '60d', label: '60 dagar' }];
+/** Days each range covers; today's is read from the live events. */
+const RANGE_DAYS: Record<TimeRange, number> = { '24h': 1, '7d': 7, '30d': 30, '60d': 60 };
 
 
 const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];selected: string | null;onSelect: (v: string | null) => void;}) => {
@@ -184,11 +187,11 @@ const Analysis = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
 
-  // Fetch archive data for 7d and 30d (with pagination to bypass 1000-row limit)
-  const archiveDays = timeRange === '30d' ? 30 : timeRange === '7d' ? 7 : 0;
+  // Fetch archive data for 7, 30 and 60 days (with pagination to bypass 1000-row limit)
+  const archiveDays = timeRange === '24h' ? 0 : RANGE_DAYS[timeRange];
   const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, timeRange !== '24h');
 
-  // Use live data for 24h, archive data for 7d/30d
+  // Use live data for 24h, archive data for the longer ranges
   const incidents = timeRange === '24h' ? liveIncidents : archiveIncidents;
   const loading = timeRange === '24h' ? liveLoading : archiveLoading;
 
@@ -374,7 +377,7 @@ const Analysis = () => {
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
-        description="Med Pro ser du trender, mest aktiva tider, riskindex och säkerhetsindex per kommun, upp till 30 dagar bakåt, och kan exportera till PDF och CSV." /> :
+        description="Med Pro ser du trender, mest aktiva tider, riskindex och säkerhetsindex per kommun, upp till 60 dagar bakåt, och kan exportera till PDF och CSV." /> :
 
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -431,7 +434,7 @@ const Analysis = () => {
                   />
                   <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
                   <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : timeRange === '7d' ? 'snitt 7 dagar' : 'snitt 30 dagar'}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
+                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : `snitt ${RANGE_DAYS[timeRange]} dagar`}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -602,7 +605,7 @@ const Analysis = () => {
                       </h2>
                     </div>
                     <p className="text-[10px] text-muted-foreground mb-4">
-                      {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : timeRange === '7d' ? '7 dagarna' : '30 dagarna'}
+                      {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : `${RANGE_DAYS[timeRange]} dagarna`}
                     </p>
                     <div className="space-y-2 max-h-[500px] overflow-y-auto">
                       {filteredIncidents.map((inc) => {

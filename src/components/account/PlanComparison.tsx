@@ -39,7 +39,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
   {
     group: 'Pro',
     rows: [
-      { feature: 'Analys och statistik per kommun', free: false, pro: 'Upp till 30 dagar' },
+      { feature: 'Analys och statistik per kommun', free: false, pro: 'Upp till 60 dagar' },
       { feature: 'Export till PDF och CSV', free: false, pro: true },
       { feature: 'Medborgarrapporter', free: false, pro: true },
       { feature: 'Reklam', free: 'Visas', pro: 'Ingen' },

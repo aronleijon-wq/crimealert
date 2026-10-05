@@ -27,7 +27,7 @@ const chip = (active: boolean) =>
     active ? 'bg-primary text-primary-foreground' : 'text-[hsl(var(--ca-text-2))] hover:bg-white/5 hover:text-[hsl(var(--ca-text))]'
   }`;
 
-/** The map's timeline: a day, week or month back, played through or as a heatmap. Pro. */
+/** The map's timeline: a day, week, month or two months back, played through or as a heatmap. Pro. */
 const HistoryPanel = (props: HistoryPanelProps) => {
   const { isPremium, offerTrial, range, end, start, now, playing, heat, count, loading, onRange, onEnd, onPlay, onHeat, onClose } = props;
   const { step } = HISTORY_RANGES[range];
@@ -99,7 +99,7 @@ const HistoryPanel = (props: HistoryPanelProps) => {
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0">
             <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text))]">
-              Med Pro spolar du tillbaka upp till 30 dagar, spelar upp hur händelserna spred sig och ser var det händer mest som värmekarta.
+              Med Pro spolar du tillbaka upp till 60 dagar, spelar upp hur händelserna spred sig och ser var det händer mest som värmekarta.
             </p>
             <Link to="/prisplan" className="mt-2 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground">
               {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}

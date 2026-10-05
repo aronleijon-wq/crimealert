@@ -26,7 +26,7 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner' },
   { icon: FileText, text: 'Hela beskrivningen av varje händelse' },
   { icon: ListChecks, text: 'Risknivå, status, Polisens kategori och platsens precision' },
-  { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 30 dagar bakåt' },
+  { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 60 dagar bakåt' },
   { icon: FileDown, text: 'Export till PDF och CSV' },
   { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna' },
   { icon: EyeOff, text: 'Ingen reklam' },

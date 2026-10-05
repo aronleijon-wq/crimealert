@@ -12,7 +12,7 @@ import MobileSignupBar from '@/components/MobileSignupBar';
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
 import HistoryPanel from '@/components/HistoryPanel';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
-import { firstEnd, historyEvents, historyLabel, HISTORY_RANGES, type HistoryRange } from '@/lib/history';
+import { archiveDaysFor, firstEnd, historyEvents, historyLabel, HISTORY_RANGES, type HistoryRange } from '@/lib/history';
 import { mockIncidents, Incident, IncidentType } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
@@ -113,7 +113,7 @@ const Index = () => {
   }, [policeIncidents, trafikverketIncidents, externalEvents, communityReports, isPremium, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
-  // Timeline (Pro): a day, week or month back, as a whole, a window being played, or a heatmap
+  // Timeline (Pro): a day, week, month or two months back, as a whole, a window being played, or a heatmap
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('7d');
   const [historyEnd, setHistoryEnd] = useState<number | null>(null);
@@ -121,18 +121,19 @@ const Index = () => {
   const [historyHeat, setHistoryHeat] = useState(false);
   const [historyNow, setHistoryNow] = useState(() => Date.now());
   const historyActive = historyOpen && isPremium;
-  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(30, historyActive && historyRange === '30d');
+  const archiveDays = archiveDaysFor(historyRange);
+  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, historyActive && archiveDays > 0);
   const historyIncidents = useMemo(
-    () => (historyActive ? historyEvents(historyRange === '30d' ? archiveIncidents : liveIncidents, historyRange, historyEnd, historyNow) : null),
-    [historyActive, historyRange, archiveIncidents, liveIncidents, historyEnd, historyNow],
+    () => (historyActive ? historyEvents(archiveDays > 0 ? archiveIncidents : liveIncidents, historyRange, historyEnd, historyNow) : null),
+    [historyActive, archiveDays, historyRange, archiveIncidents, liveIncidents, historyEnd, historyNow],
   );
   const chooseHistoryRange = (range: HistoryRange) => {
     setHistoryRange(range);
     setHistoryEnd(null);
     setHistoryPlaying(false);
     setHistoryNow(Date.now());
-    // A month of events is easiest to read, and lightest to draw, as heat
-    if (range === '30d') setHistoryHeat(true);
+    // A month or more of events is easiest to read, and lightest to draw, as heat
+    if (archiveDaysFor(range) > 0) setHistoryHeat(true);
   };
   const playHistory = (play: boolean) => {
     if (play && (historyEnd === null || historyEnd >= historyNow)) setHistoryEnd(firstEnd(historyRange, historyNow));
@@ -360,7 +361,7 @@ const Index = () => {
                 playing={historyPlaying}
                 heat={historyHeat}
                 count={filtered.length}
-                loading={historyRange === '30d' && archiveLoading}
+                loading={archiveDays > 0 && archiveLoading}
                 onRange={chooseHistoryRange}
                 onEnd={setHistoryEnd}
                 onPlay={playHistory}

@@ -6,7 +6,7 @@ const cards = [
   {
     icon: BarChart3,
     title: 'Analys',
-    text: 'Statistik per kommun och kategori, 24 timmar till 30 dagar. Ingår i Pro.',
+    text: 'Statistik per kommun och kategori, 24 timmar till 60 dagar. Ingår i Pro.',
     to: '/analysis',
   },
   {
