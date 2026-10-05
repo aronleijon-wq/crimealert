@@ -68,7 +68,7 @@ const OmOss = () => {
           <div className="relative max-w-4xl mx-auto px-4 py-14 md:py-20">
             <p className="ca-eyebrow">// om tjänsten</p>
             <h1 className="ca-display mt-3 text-3xl md:text-5xl text-[hsl(var(--ca-text))]">
-              Sveriges lägesbild, i realtid.
+              Om oss
             </h1>
             <div className="mt-6 max-w-2xl space-y-4 text-sm md:text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
               <p>
