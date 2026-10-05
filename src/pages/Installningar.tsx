@@ -4,6 +4,7 @@ import {
   Bell, ChevronRight, CreditCard, ExternalLink, FileText, HelpCircle, Info, LogOut, Mail, Moon, Pencil, Shield, Star, Sun, User, Zap,
   type LucideIcon,
 } from 'lucide-react';
+import DefaultAvatar from '@/components/DefaultAvatar';
 import Header from '@/components/Header';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
@@ -176,7 +177,6 @@ const Installningar = () => {
 
   const plan = planLabel(isPremium, subscription);
   const lifetime = subscription.subscriptionEnd === 'lifetime';
-  const initial = (user?.email ?? '?').trim().charAt(0).toUpperCase();
 
   return (
     <div className="ca-dark flex h-[100dvh] flex-col">
@@ -190,9 +190,7 @@ const Installningar = () => {
 
           {user ? (
             <div className="flex items-center gap-4 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-4">
-              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary/15 text-xl font-bold text-primary" aria-hidden>
-                {initial}
-              </span>
+              <DefaultAvatar className={`h-14 w-14 shrink-0 ${isPremium ? 'ring-2 ring-primary' : ''}`} />
               <div className="min-w-0">
                 <p className="truncate text-[15px] font-semibold text-foreground">{user.email}</p>
                 <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${isPremium ? 'bg-primary/15 text-primary' : 'bg-[hsl(var(--ca-panel-2))] text-[hsl(var(--ca-text-2))]'}`}>

@@ -2,12 +2,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import DefaultAvatar from '@/components/DefaultAvatar';
 
 /**
- * The profile picture in the header: the first letter of the e-mail address in a circle, with a
- * red ring for Pro, opening the profile and settings. Signed out, it's the way to sign in.
+ * The profile picture in the header: the classic default picture (a grey circle with a white
+ * figure), with a red ring for Pro, opening the profile and settings. Signed out, it's the way to
+ * sign in.
  */
-const ProfileButton = ({ className = 'h-8 w-8 text-sm' }: { className?: string }) => {
+const ProfileButton = ({ className = 'h-8 w-8' }: { className?: string }) => {
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const { pathname } = useLocation();
@@ -26,18 +28,17 @@ const ProfileButton = ({ className = 'h-8 w-8 text-sm' }: { className?: string }
   }
 
   const current = pathname === '/installningar';
-  const initial = (user.email ?? '?').trim().charAt(0).toUpperCase() || '?';
   return (
     <Link
       to="/installningar"
       aria-label="Profil och inställningar"
       title="Profil och inställningar"
       aria-current={current ? 'page' : undefined}
-      className={`grid shrink-0 place-items-center rounded-full bg-primary/15 font-bold text-primary transition hover:bg-primary/25 ${
-        isPremium ? 'ring-2 ring-primary' : current ? 'ring-2 ring-primary/40' : 'ring-1 ring-primary/25'
+      className={`block shrink-0 rounded-full transition hover:opacity-85 ${
+        isPremium ? 'ring-2 ring-primary' : current ? 'ring-2 ring-primary/40' : ''
       } ${className}`}
     >
-      {initial}
+      <DefaultAvatar className="h-full w-full" />
     </Link>
   );
 };
