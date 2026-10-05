@@ -9,6 +9,7 @@ import PopupEngagement from './PopupEngagement';
 import { isPoliceEvent } from '@/lib/share';
 import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
+import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 declare global {
@@ -30,15 +31,6 @@ interface MapViewProps {
   /** Shown as a heatmap (the timeline's heat view); null for none */
   heatPoints?: HeatPoint[] | null;
 }
-
-const TYPE_ICONS: Record<string, string> = {
-  police: '🛡️',
-  fire: '🔥',
-  ambulance: '🚑',
-  traffic: '🚗',
-  other: '⚠️',
-  crisis: '📢',
-};
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
 
@@ -143,7 +135,7 @@ const createMarkerIcon = (incident: Incident, touch: boolean, pulse = shouldInci
         <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
           ${shouldPulse ? `<div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>` : ''}
           <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
-          <span style="position:absolute;z-index:3;font-size:${touch ? '13' : '10'}px;line-height:1;pointer-events:none;">👁️</span>
+          <span style="position:absolute;z-index:3;display:flex;pointer-events:none;">${svgIcon('eye', touch ? 13 : 10, '#fff', 2.5)}</span>
         </div>
       `,
       iconSize: [pulseSize, pulseSize],
@@ -240,13 +232,13 @@ const getRecommendation = (risk: string, type: string): string => {
 };
 
 // Extract structured details from police description
-const extractDetails = (desc: string, title: string, originalType?: string): { label: string; value: string; icon: string }[] => {
-  const details: { label: string; value: string; icon: string }[] = [];
+const extractDetails = (desc: string, title: string, originalType?: string): { label: string; value: string }[] => {
+  const details: { label: string; value: string }[] = [];
   const text = `${title} ${desc}`.toLowerCase();
 
   // Original crime type from Polisen.se
   if (originalType && originalType.length > 0) {
-    details.push({ label: 'Brottstyp', value: originalType, icon: '📋' });
+    details.push({ label: 'Brottstyp', value: originalType });
   }
 
   // Persons mentioned
@@ -258,7 +250,7 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   for (const { pattern, label } of personPatterns) {
     const match = desc.match(pattern);
     if (match) {
-      details.push({ label, value: match[0].charAt(0).toUpperCase() + match[0].slice(1), icon: '👤' });
+      details.push({ label, value: match[0].charAt(0).toUpperCase() + match[0].slice(1) });
       break;
     }
   }
@@ -267,33 +259,33 @@ const extractDetails = (desc: string, title: string, originalType?: string): { l
   const vehiclePatterns = /(?:personbil|lastbil|mc|motorcykel|moped|buss|cykel|fordon|bil|truck|husbil|fyrhjuling|elscooter|elsparkcykel)/i;
   const vehicleMatch = desc.match(vehiclePatterns);
   if (vehicleMatch) {
-    details.push({ label: 'Fordon', value: vehicleMatch[0].charAt(0).toUpperCase() + vehicleMatch[0].slice(1), icon: '🚗' });
+    details.push({ label: 'Fordon', value: vehicleMatch[0].charAt(0).toUpperCase() + vehicleMatch[0].slice(1) });
   }
 
   // Weapons/tools
   const weaponPatterns = /(?:kniv|skjutvapen|pistol|gevär|yxa|machete|tillhygge|vapen|skott|ammunition)/i;
   const weaponMatch = desc.match(weaponPatterns);
   if (weaponMatch) {
-    details.push({ label: 'Vapen/verktyg', value: weaponMatch[0].charAt(0).toUpperCase() + weaponMatch[0].slice(1), icon: '⚔️' });
+    details.push({ label: 'Vapen/verktyg', value: weaponMatch[0].charAt(0).toUpperCase() + weaponMatch[0].slice(1) });
   }
 
   // Road/location from description
   const roadPatterns = /(?:E\d+|(?:riksväg|länsväg)\s*\d+|[A-ZÅÄÖ][a-zåäöé]+(?:gatan|vägen|torget|platsen|allén|bron|leden)(?:\s+\d+)?)/;
   const roadMatch = desc.match(roadPatterns);
   if (roadMatch) {
-    details.push({ label: 'Plats', value: roadMatch[0], icon: '📍' });
+    details.push({ label: 'Plats', value: roadMatch[0] });
   }
 
   // Alcohol/drugs
   if (/(?:rattfyller|alkohol|berus|narkotika|drog|påverkad|blåste)/i.test(text)) {
-    details.push({ label: 'Påverkan', value: 'Misstänkt påverkan', icon: '🚫' });
+    details.push({ label: 'Påverkan', value: 'Misstänkt påverkan' });
   }
 
   // Animals (vilt)
   const animalPatterns = /(?:älg|rådjur|vildsvin|hjort|ren|varg|björn|lo|vilt)/i;
   const animalMatch = desc.match(animalPatterns);
   if (animalMatch) {
-    details.push({ label: 'Djur', value: animalMatch[0].charAt(0).toUpperCase() + animalMatch[0].slice(1), icon: '🦌' });
+    details.push({ label: 'Djur', value: animalMatch[0].charAt(0).toUpperCase() + animalMatch[0].slice(1) });
   }
 
   return details;
@@ -364,7 +356,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       <div class="ca-pop-scan"></div>
 
       <div style="display:flex;align-items:flex-start;gap:${sz(9,6)}px;padding-bottom:${sz(9,6)}px;border-bottom:1px solid ${P.line};margin-bottom:${sz(10,6)}px;">
-        <span style="font-size:${sz(18,14)}px;line-height:1;margin-top:2px;">${TYPE_ICONS[inc.type] || '⚠️'}</span>
+        <span style="display:inline-flex;margin-top:1px;color:${config.color};">${svgIcon(TYPE_ICON[inc.type] ?? 'triangle-alert', sz(18, 14))}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-family:Archivo,Inter,sans-serif;font-weight:800;letter-spacing:-0.02em;font-size:${sz(14,11.5)}px;line-height:1.2;color:${P.text};">${safeTitle}</div>
           <div style="font-family:${mono};font-size:${sz(9,7.5)}px;letter-spacing:0.12em;text-transform:uppercase;color:${P.dim};margin-top:5px;">${safeConfigLabel} · ${timeAgo}</div>
@@ -373,7 +365,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
           ${isPremium
             ? `<span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;text-transform:uppercase;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${statusColor}55;background:${statusColor}1a;color:${statusColor};">${statusLabel}</span>
                <span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;text-transform:uppercase;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${riskColor}55;background:${riskColor}1a;color:${riskColor};">${safeRiskLabel}</span>`
-            : `<span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${P.line};background:${P.panel};color:${P.faint};">🔒 PRO</span>`
+            : `<span style="font-family:${mono};font-size:${sz(8.5,7)}px;letter-spacing:0.1em;padding:2px ${sz(6,4)}px;border-radius:3px;border:1px solid ${P.line};background:${P.panel};color:${P.faint};display:inline-flex;align-items:center;gap:3px;">${svgIcon('lock', sz(10, 8))} PRO</span>`
           }
         </div>
       </div>
@@ -381,7 +373,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       ${(isPremium || descriptionIsFree) && inc.description
         ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}</p>`
         : !isPremium && !descriptionIsFree
-          ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;">🔒 Detaljerad beskrivning kräver Pro</p>`
+          ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;display:flex;align-items:center;gap:5px;">${svgIcon('lock', sz(11, 9))} Detaljerad beskrivning kräver Pro</p>`
           : ''}
 
       ${(() => {
@@ -416,7 +408,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
       </div>
       ` : `
       <div style="background:${P.panel};border:1px solid ${P.line};border-radius:4px;padding:${sz(10,6)}px ${sz(11,7)}px;margin-bottom:${sz(11,6)}px;text-align:center;">
-        <div style="font-family:${mono};font-size:${sz(9,7.5)}px;color:${P.dim};letter-spacing:0.12em;text-transform:uppercase;">🔒 Riskbedömning</div>
+        <div style="font-family:${mono};font-size:${sz(9,7.5)}px;color:${P.dim};letter-spacing:0.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:5px;">${svgIcon('lock', sz(11, 9))} Riskbedömning</div>
         <div style="font-family:${mono};font-size:${sz(8.5,7)}px;color:${P.faint};margin-top:3px;">Tillgängligt med Pro</div>
       </div>
       `}
@@ -438,7 +430,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
           ${label('Status')}<br/>
           ${isPremium
             ? `<span style="font-size:${sz(11,9)}px;font-weight:600;color:${statusColor};">${statusLabel}</span>`
-            : `<span style="font-size:${sz(11,9)}px;color:${P.faint};">🔒 Pro</span>`
+            : `<span style="font-size:${sz(11,9)}px;color:${P.faint};display:inline-flex;align-items:center;gap:4px;">${svgIcon('lock', sz(11, 9))} Pro</span>`
           }
         </div>
       </div>

@@ -63,7 +63,7 @@ const Header = () => {
           );
         })}
         <span className="ml-1 flex md:ml-2">
-          <ProfileButton className="h-7 w-7 text-xs md:h-8 md:w-8 md:text-sm" />
+          <ProfileButton className="h-7 w-7 md:h-8 md:w-8" />
         </span>
       </nav>
     </header>

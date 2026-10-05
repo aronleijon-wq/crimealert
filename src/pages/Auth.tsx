@@ -6,7 +6,7 @@ import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, TriangleAlert } from 'lucide-react';
 
 const AUTH_RATE_LIMIT = { maxAttempts: 5, windowMs: 5 * 60 * 1000 };
 const authAttempts: { timestamps: number[] } = { timestamps: [] };
@@ -137,7 +137,7 @@ const Auth = () => {
 
             {!isLogin && !forgotPassword && (
               <div className="mb-4 flex items-start gap-2 rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
-                <span className="text-amber-500 text-base mt-0.5">⚠️</span>
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden />
                 <p className="text-xs font-medium text-amber-400">
                   OBS! Kolla din <span className="font-bold underline">skräppost/spam</span> efter registrering – verifieringsmailet hamnar ofta där.
                 </p>

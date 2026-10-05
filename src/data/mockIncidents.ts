@@ -105,14 +105,14 @@ export const mockIncidents: Incident[] = [
   },
 ];
 
-export const incidentTypeConfig: Record<IncidentType, { label: string; color: string; icon: string }> = {
-  police: { label: 'Polisinsats', color: 'hsl(210, 100%, 56%)', icon: '🔵' },
-  fire: { label: 'Brand', color: 'hsl(0, 100%, 62%)', icon: '🔴' },
-  ambulance: { label: 'Ambulans', color: 'hsl(142, 70%, 45%)', icon: '🟢' },
-  traffic: { label: 'Trafikolycka', color: 'hsl(25, 100%, 63%)', icon: '🟠' },
-  other: { label: 'Övrigt', color: 'hsl(0, 0%, 30%)', icon: '⚫' },
-  trafikverket: { label: 'Trafikverket', color: 'hsl(48, 100%, 55%)', icon: '🟡' },
-  crisis: { label: 'Kris & VMA', color: 'hsl(280, 75%, 62%)', icon: '🟣' },
+export const incidentTypeConfig: Record<IncidentType, { label: string; color: string }> = {
+  police: { label: 'Polisinsats', color: 'hsl(210, 100%, 56%)' },
+  fire: { label: 'Brand', color: 'hsl(0, 100%, 62%)' },
+  ambulance: { label: 'Ambulans', color: 'hsl(142, 70%, 45%)' },
+  traffic: { label: 'Trafikolycka', color: 'hsl(25, 100%, 63%)' },
+  other: { label: 'Övrigt', color: 'hsl(0, 0%, 30%)' },
+  trafikverket: { label: 'Trafikverket', color: 'hsl(48, 100%, 55%)' },
+  crisis: { label: 'Kris & VMA', color: 'hsl(280, 75%, 62%)' },
 };
 
 export const riskConfig: Record<RiskLevel, { label: string; colorClass: string }> = {

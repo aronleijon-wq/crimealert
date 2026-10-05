@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, type LucideIcon } from 'lucide-react';
 import SwedenMap from '@/components/landing/SwedenMap';
 import { useTheme } from '@/hooks/useTheme';
 import type { FeedItem } from '@/lib/feed';
@@ -14,7 +14,7 @@ const HALF_HEIGHT = 80;
 interface MediaBannerProps {
   item: FeedItem;
   accent: string;
-  icon: string;
+  icon: LucideIcon;
   label: string;
 }
 
@@ -52,15 +52,15 @@ const LocationMap = ({ lat, lng, accent }: { lat: number; lng: number; accent: s
 };
 
 /** National items without a position: a stylised Sweden in the item's colour. */
-const NationalArt = ({ accent, icon }: { accent: string; icon: string }) => (
+const NationalArt = ({ accent, icon: Icon }: { accent: string; icon: LucideIcon }) => (
   <div className="absolute inset-0 overflow-hidden ca-hud" aria-hidden>
     <div className="absolute inset-0 opacity-50" style={{ background: `radial-gradient(70% 120% at 85% 50%, ${accent}, transparent 70%)` }} />
     <SwedenMap reveal={0} showGrid className="absolute right-4 top-0 h-[300%] -translate-y-[38%] opacity-90" />
-    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-5xl drop-shadow-lg">{icon}</span>
+    <Icon className="absolute left-6 top-1/2 h-11 w-11 -translate-y-1/2 text-white/90" strokeWidth={1.5} />
   </div>
 );
 
-const MediaBanner = ({ item, accent, icon, label }: MediaBannerProps) => {
+const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !!item.image && !imageFailed;
   const hasPosition = item.lat !== null && item.lng !== null;
@@ -80,7 +80,7 @@ const MediaBanner = ({ item, accent, icon, label }: MediaBannerProps) => {
       ) : hasPosition ? (
         <LocationMap lat={item.lat!} lng={item.lng!} accent={accent} />
       ) : (
-        <NationalArt accent={accent} icon={icon} />
+        <NationalArt accent={accent} icon={Icon} />
       )}
 
       {/* Fade into the card and keep the chips readable */}
@@ -90,7 +90,7 @@ const MediaBanner = ({ item, accent, icon, label }: MediaBannerProps) => {
         className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ca-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-lg"
         style={{ background: accent }}
       >
-        <span aria-hidden>{icon}</span>
+        <Icon className="h-3 w-3" aria-hidden />
         {label}
       </span>
 

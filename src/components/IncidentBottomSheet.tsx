@@ -5,6 +5,7 @@ import { useIncidentReactions, REACTION_TYPES } from '@/hooks/useIncidentReactio
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { Send, Heart, Trash2, Lock, X, ChevronDown } from 'lucide-react';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {
@@ -93,6 +94,7 @@ const IncidentBottomSheet = ({ incident, onClose }: Props) => {
   if (!incident) return null;
 
   const config = incidentTypeConfig[incident.type];
+  const TypeIcon = incidentTypeIcon(incident.type);
   const visibleComments = isPremium ? comments : comments.slice(0, 3);
   const hiddenCount = isPremium ? 0 : Math.max(0, comments.length - 3);
 
@@ -136,9 +138,7 @@ const IncidentBottomSheet = ({ incident, onClose }: Props) => {
         {/* Header */}
         <div className="px-4 pb-3 border-b border-border shrink-0">
           <div className="flex items-start gap-3">
-            <span className="text-2xl mt-0.5">
-              {incident.type === 'police' ? '🛡️' : incident.type === 'fire' ? '🔥' : incident.type === 'ambulance' ? '🚑' : incident.type === 'traffic' ? '🚗' : '⚠️'}
-            </span>
+            <TypeIcon className="mt-0.5 h-6 w-6 shrink-0" style={{ color: config.color }} aria-hidden />
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold text-foreground leading-tight truncate">{incident.title}</h3>
               <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">

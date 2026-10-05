@@ -76,7 +76,7 @@ const LandingNav = () => {
             Prisplan
           </Link>
           {user ? (
-            <ProfileButton className="h-9 w-9 text-sm" />
+            <ProfileButton className="h-9 w-9" />
           ) : (
             <>
               <Link

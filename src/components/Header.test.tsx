@@ -27,12 +27,14 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Prisplan' })).toHaveAttribute('href', '/prisplan');
   });
 
-  it('shows a signed-in user their profile picture, which opens the profile', async () => {
+  it('shows a signed-in user the default profile picture, which opens the profile', async () => {
     auth.user = { id: 'u1', email: 'aron@example.se' };
     await renderHeader();
     const profile = screen.getByRole('link', { name: 'Profil och inställningar' });
     expect(profile).toHaveAttribute('href', '/installningar');
-    expect(profile).toHaveTextContent('A');
+    // The classic default picture: a figure drawn in a grey circle, no letters
+    expect(profile.querySelector('svg')).not.toBeNull();
+    expect(profile).toHaveTextContent('');
     expect(screen.queryByRole('link', { name: 'Logga in' })).toBeNull();
   });
 

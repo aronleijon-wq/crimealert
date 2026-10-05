@@ -1,5 +1,6 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap, Tag, Crosshair, Calendar } from 'lucide-react';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +39,7 @@ const formatFullDate = (dateStr: string): string => {
 
 const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
   const typeConf = incidentTypeConfig[incident.type];
+  const TypeIcon = incidentTypeIcon(incident.type);
   const riskConf = riskConfig[incident.risk];
   const { isPremium } = useIsPremium();
   const navigate = useNavigate();
@@ -62,7 +64,7 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{typeConf.icon}</span>
+          <TypeIcon className="h-5 w-5 shrink-0" style={{ color: typeConf.color }} aria-hidden />
           <div>
             <h3 className="text-sm font-bold text-foreground">{incident.title}</h3>
             <div className="flex items-center gap-1.5">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Heart, Lock, MessageCircle, Trash2 } from 'lucide-react';
 import { useIncidentReactions, REACTION_TYPES } from '@/hooks/useIncidentReactions';
 import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useAuth } from '@/hooks/useAuth';
@@ -142,7 +143,7 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
             transition: 'all 0.15s',
           }}
         >
-          <span style={{ fontSize: 13 }}>💬</span>
+          <MessageCircle size={13} aria-hidden />
           <span>{commentCount ?? 0}</span>
         </button>
 
@@ -207,14 +208,15 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
                           display: 'flex', alignItems: 'center', gap: 2,
                         }}
                       >
-                        {c.user_has_liked ? '❤️' : '🤍'} {c.likes_count > 0 ? c.likes_count : ''}
+                        <Heart size={10} fill={c.user_has_liked ? 'currentColor' : 'none'} aria-label={c.user_has_liked ? 'Gillad' : 'Gilla'} /> {c.likes_count > 0 ? c.likes_count : ''}
                       </button>
                       {user && c.user_id === user.id && (
                         <button
                           onClick={(e) => { e.stopPropagation(); deleteComment(c.id); }}
-                          style={{ fontSize: 9, color: '#ef4444', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                          style={{ fontSize: 9, color: '#ef4444', cursor: 'pointer', background: 'none', border: 'none', padding: 0, display: 'flex' }}
+                          aria-label="Ta bort kommentaren"
                         >
-                          🗑️
+                          <Trash2 size={10} aria-hidden />
                         </button>
                       )}
                     </div>
@@ -228,7 +230,7 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
                 display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px',
                 background: '#f8f8f8', borderRadius: 6, border: '1px solid #e5e7eb', marginTop: 4,
               }}>
-                <span style={{ fontSize: 12 }}>🔒</span>
+                <Lock size={12} color="#888" aria-hidden />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: '#333' }}>+{hiddenCount} fler kommentarer</div>
                   <div style={{ fontSize: 9, color: '#aaa' }}>Uppgradera till Pro</div>
