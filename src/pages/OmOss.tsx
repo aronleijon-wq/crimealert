@@ -114,28 +114,6 @@ const OmOss = () => {
           </div>
         </section>
 
-        {/* Funktioner */}
-        <section className="max-w-4xl mx-auto px-4 py-12 md:py-16">
-          <p className="ca-eyebrow">// funktioner</p>
-          <h2 className="ca-display mt-2 text-xl md:text-2xl text-[hsl(var(--ca-text))]">Systemöversikt</h2>
-
-          <div className="grid sm:grid-cols-2 gap-px mt-6 bg-[hsl(var(--ca-line))]">
-            {features.map(({ icon: Icon, id, title, desc }) => (
-              <div key={title} className="ca-tac ca-tac-top ca-panel-hover p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-[hsl(var(--ca-red))]" />
-                    <span className="ca-mono text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--ca-text))]">
-                      {title}
-                    </span>
-                  </div>
-                  <span className="ca-meta">{id}</span>
-                </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* Kontakt */}
         <section className="border-t border-[hsl(var(--ca-line))]">
