@@ -96,12 +96,9 @@ const LandingFooter = () => (
       <span className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))]">
         © {new Date().getFullYear()} CRIMEALERT
       </span>
-      <a
-        href="mailto:crimealert.se+240f3790a4@invite.trustpilot.com"
-        className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))] hover:text-[hsl(var(--ca-text))] transition break-all"
-      >
-        crimealert.se+240f3790a4@invite.trustpilot.com
-      </a>
+      <span className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))]">
+        SVERIGE • LIVE-DATA
+      </span>
     </div>
   </footer>
 );

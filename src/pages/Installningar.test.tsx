@@ -15,7 +15,6 @@ const state = vi.hoisted(() => ({
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: state.user, subscription: state.subscription, signOut: state.signOut }) }));
 vi.mock('@/hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
-vi.mock('@/components/ReviewSection', () => ({ default: () => <p>Omdömen här</p> }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: () => ({
@@ -109,5 +108,13 @@ describe('Konto och inställningar', () => {
     expect(screen.queryByRole('button', { name: /Logga ut/ })).toBeNull();
     expect(screen.getByRole('radiogroup', { name: 'Utseende' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Vanliga frågor/ })).toHaveAttribute('href', '/#vanliga-fragor');
+  });
+
+  it('sends reviews to Trustpilot, in a new tab', async () => {
+    await renderPage();
+    const link = screen.getByRole('link', { name: /Betygsätt oss på Trustpilot/ });
+    expect(link).toHaveAttribute('href', 'https://se.trustpilot.com/evaluate/crimealert.se');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });
