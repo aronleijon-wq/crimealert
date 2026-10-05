@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
 
 
+
 const useCountUp = (target: number) => {
   const [value, setValue] = useState(0);
   useEffect(() => {
