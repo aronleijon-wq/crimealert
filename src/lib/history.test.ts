@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Incident } from '@/data/mockIncidents';
-import { firstEnd, historyEvents, historyLabel, HISTORY_RANGES } from './history';
+import { archiveDaysFor, firstEnd, historyEvents, historyLabel, HISTORY_RANGES } from './history';
 import { heatPalette, heatStyle } from './heatLayer';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
@@ -21,6 +21,7 @@ describe('historyEvents', () => {
     expect(historyEvents(incidents, '24h', null, NOW).map((i) => i.id)).toEqual(['a', 'b']);
     expect(historyEvents(incidents, '7d', null, NOW).map((i) => i.id)).toEqual(['a', 'b', 'c']);
     expect(historyEvents(incidents, '30d', null, NOW).map((i) => i.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(historyEvents(incidents, '60d', null, NOW).map((i) => i.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 
   it('keeps the window ending at a chosen time', () => {
@@ -30,12 +31,21 @@ describe('historyEvents', () => {
 
   it('starts the window one window into the range', () => {
     expect(firstEnd('7d', NOW)).toBe(NOW - 7 * 86400e3 + HISTORY_RANGES['7d'].window);
+    expect(firstEnd('60d', NOW)).toBe(NOW - 60 * 86400e3 + 4 * 86400e3);
+  });
+
+  it('reads the archive for a month or more, as far back as the range goes', () => {
+    expect(archiveDaysFor('24h')).toBe(0);
+    expect(archiveDaysFor('7d')).toBe(0);
+    expect(archiveDaysFor('30d')).toBe(30);
+    expect(archiveDaysFor('60d')).toBe(60);
   });
 });
 
 describe('historyLabel', () => {
   it('names the range or the window', () => {
     expect(historyLabel('7d', null)).toBe('Senaste 7 dagar');
+    expect(historyLabel('60d', null)).toBe('Senaste 60 dagar');
     expect(historyLabel('24h', null)).toBe('Senaste dygnet');
     expect(historyLabel('24h', Date.parse('2026-10-03T12:00:00Z'))).toBe('lör 3 okt 12:00 – 14:00');
   });

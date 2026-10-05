@@ -129,7 +129,7 @@ function downloadPDF(incidents: Incident[], range: string) {
   return true;
 }
 
-type Range = '24h' | '7d' | '30d';
+type Range = '24h' | '7d' | '30d' | '60d';
 
 const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   const { isPremium } = useIsPremium();
@@ -137,8 +137,8 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
-  const needsArchive = range === '7d' || range === '30d';
-  const archiveDays = range === '30d' ? 30 : 7;
+  const needsArchive = range !== '24h';
+  const archiveDays = range === '60d' ? 60 : range === '30d' ? 30 : 7;
   const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, needsArchive && isPremium);
 
   const filtered24h = useMemo(() => {
@@ -154,7 +154,7 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
     if (!selectedArea) return timeFiltered;
     return timeFiltered.filter((i) => i.area === selectedArea);
   }, [timeFiltered, selectedArea]);
-  const rangeLabel = range === '24h' ? 'Senaste 24h' : range === '7d' ? 'Senaste 7 dagar' : 'Senaste 30 dagar';
+  const rangeLabel = range === '24h' ? 'Senaste 24h' : `Senaste ${archiveDays} dagar`;
 
   const handleExport = (format: 'csv' | 'pdf') => {
     if (!isPremium) return;
@@ -200,15 +200,17 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
           ['24h', 'Senaste 24h'],
           ['7d', '7 dagar'],
           ['30d', '30 dagar'],
+          ['60d', '60 dagar'],
         ] as const).map(([value, label]) => (
           <button
             key={value}
             onClick={() => setRange(value)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
+            className={`flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
               range === value ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:text-foreground bg-muted'
             }`}
           >
-            <Calendar className="w-3 h-3" />
+            {/* Four ranges fit a phone's width on one line without the icons */}
+            <Calendar className="hidden w-3 h-3 sm:block" />
             {label}
           </button>
         ))}
