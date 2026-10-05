@@ -153,7 +153,7 @@ const Prisplan = () => {
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-foreground">Välkommen till Pro! 🎉</h2>
+            <h2 className="text-lg font-bold text-foreground">Välkommen till Pro!</h2>
             <p className="text-xs text-muted-foreground mt-1">
               {subscription.trialing && subscription.subscriptionEnd
                 ? `Din provperiod gäller t.o.m. ${subscription.subscriptionEnd.slice(0, 10)}. Här är allt du nu har tillgång till:`

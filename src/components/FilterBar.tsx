@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin, Lock, Crown } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock, Crown, Eye } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -245,7 +245,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
             <span className={`relative shrink-0 flex items-center justify-center transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`} style={{ width: 14, height: 14 }}>
                   <span style={{ width: 10, height: 10, borderRadius: 2, background: '#f97316', border: '1.5px solid rgba(255,255,255,0.95)', transform: 'rotate(45deg)', boxShadow: '0 1px 4px rgba(249,115,22,0.5)', display: 'block' }} />
-                  <span style={{ position: 'absolute', fontSize: 7, lineHeight: 1, pointerEvents: 'none' }}>👁️</span>
+                  <Eye className="absolute h-2 w-2 text-white" strokeWidth={3} aria-hidden />
                 </span>
             }
               <span className="leading-none">Medborgarrapporter</span>

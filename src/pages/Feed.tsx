@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, Clock, Radio } from 'lucide-react';
+import { Activity, Clock, Construction, Layers, MapPin, Megaphone, Newspaper, Radio, Shield, type LucideIcon } from 'lucide-react';
 import Header from '@/components/Header';
 import FeedCard from '@/components/feed/FeedCard';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,13 +18,13 @@ import { buildFeed, filterFeed, groupByDay, type FeedFilter } from '@/lib/feed';
 const PAGE_SIZE = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const FILTERS: { value: FeedFilter; label: string; icon: string }[] = [
-  { value: 'all', label: 'Allt', icon: '◉' },
-  { value: 'police', label: 'Polisen', icon: '🛡️' },
-  { value: 'crisis', label: 'Kris & VMA', icon: '📢' },
-  { value: 'traffic', label: 'Trafik', icon: '🚧' },
-  { value: 'news', label: 'Nyheter', icon: '📰' },
-  { value: 'mine', label: 'Mitt område', icon: '📍' },
+const FILTERS: { value: FeedFilter; label: string; icon: LucideIcon }[] = [
+  { value: 'all', label: 'Allt', icon: Layers },
+  { value: 'police', label: 'Polisen', icon: Shield },
+  { value: 'crisis', label: 'Kris & VMA', icon: Megaphone },
+  { value: 'traffic', label: 'Trafik', icon: Construction },
+  { value: 'news', label: 'Nyheter', icon: Newspaper },
+  { value: 'mine', label: 'Mitt område', icon: MapPin },
 ];
 
 const SkeletonCard = () => (
@@ -172,7 +172,7 @@ const Feed = () => {
                         : 'border-[hsl(var(--ca-line-strong))] bg-card/60 text-[hsl(var(--ca-text-2))] hover:text-foreground'
                     }`}
                   >
-                    <span aria-hidden className="text-[11px]">{f.icon}</span>
+                    <f.icon className="h-3.5 w-3.5" aria-hidden />
                     {f.label}
                     {counts[f.value] > 0 && (
                       <span className={`tabular-nums text-[10px] ${active ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{counts[f.value]}</span>

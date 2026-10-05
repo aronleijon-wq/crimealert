@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Lock, MapPin, MessageCircle, Newspaper } from 'lucide-react';
+import { ArrowUpRight, Construction, Eye, Lock, MapPin, Megaphone, MessageCircle, Newspaper, Shield, type LucideIcon } from 'lucide-react';
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import type { Engagement } from '@/hooks/useEngagementCounts';
@@ -9,19 +9,18 @@ import { REACTION_TYPES } from '@/hooks/useIncidentReactions';
 import type { FeedItem } from '@/lib/feed';
 import { sourceName } from '@/lib/externalEvents';
 import { formatTimeAgo } from '@/lib/timeAgo';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import CommentThread from './CommentThread';
 import MediaBanner from './MediaBanner';
 
-const KINDS: Record<FeedItem['kind'], { label: string; icon: string; accent: string }> = {
-  police: { label: 'Polisen', icon: '🛡️', accent: incidentTypeConfig.police.color },
-  community: { label: 'Medborgarrapport', icon: '👁️', accent: '#f97316' },
-  traffic: { label: 'Trafik', icon: '🚧', accent: 'hsl(42, 92%, 50%)' },
-  vma: { label: 'VMA', icon: '📢', accent: 'hsl(0, 78%, 52%)' },
-  crisis: { label: 'Kris', icon: '📢', accent: incidentTypeConfig.crisis.color },
-  news: { label: 'Nyhet', icon: '📰', accent: 'hsl(205, 30%, 45%)' },
+const KINDS: Record<FeedItem['kind'], { label: string; icon: LucideIcon; accent: string }> = {
+  police: { label: 'Polisen', icon: Shield, accent: incidentTypeConfig.police.color },
+  community: { label: 'Medborgarrapport', icon: Eye, accent: '#f97316' },
+  traffic: { label: 'Trafik', icon: Construction, accent: 'hsl(42, 92%, 50%)' },
+  vma: { label: 'VMA', icon: Megaphone, accent: 'hsl(0, 78%, 52%)' },
+  crisis: { label: 'Kris', icon: Megaphone, accent: incidentTypeConfig.crisis.color },
+  news: { label: 'Nyhet', icon: Newspaper, accent: 'hsl(205, 30%, 45%)' },
 };
-
-const POLICE_ICONS: Partial<Record<string, string>> = { fire: '🔥', ambulance: '🚑', traffic: '🚗', other: '⚠️' };
 
 const SOURCE_BADGES: Record<string, string> = {
   Polisen: 'POL',
@@ -63,7 +62,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
   const kind = item.kind === 'police' && item.incidentType
     ? {
       label: incidentTypeConfig[item.incidentType].label,
-      icon: POLICE_ICONS[item.incidentType] ?? KINDS.police.icon,
+      icon: incidentTypeIcon(item.incidentType),
       accent: incidentTypeConfig[item.incidentType].color,
     }
     : KINDS[item.kind];
@@ -145,8 +144,9 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
         )}
 
         {item.alsoReported.length > 0 && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            🚧 Även rapporterat av Trafikverket: {item.alsoReported.map((t) => t.title).join(', ')}
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
+            <Construction className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span>Även rapporterat av Trafikverket: {item.alsoReported.map((t) => t.title).join(', ')}</span>
           </p>
         )}
 

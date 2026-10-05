@@ -21,10 +21,10 @@ import { cleanPoliceTitle } from '@/lib/feed';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { getDevicePushInfo } from '@/lib/push';
 import { formatTimeAgo } from '@/lib/timeAgo';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import { watchedKommunFor, type NotifySettings } from '../../supabase/functions/_shared/notifications';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const TYPE_ICONS: Partial<Record<string, string>> = { police: '🚨', fire: '🔥', ambulance: '🚑', traffic: '🚗', other: '📍' };
 
 const pushSupported = () =>
   typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -59,7 +59,9 @@ const Section = ({ id, icon: Icon, title, description, aside, children }: {
   </section>
 );
 
-const EventRow = ({ incident, highlight }: { incident: Incident; highlight?: boolean }) => (
+const EventRow = ({ incident, highlight }: { incident: Incident; highlight?: boolean }) => {
+  const TypeIcon = incidentTypeIcon(incident.type);
+  return (
   <li>
     <Link
       to={`/karta?incident=${encodeURIComponent(incident.id)}`}
@@ -67,8 +69,8 @@ const EventRow = ({ incident, highlight }: { incident: Incident; highlight?: boo
         highlight ? 'border-primary/30 bg-primary/5' : 'border-[hsl(var(--ca-line-strong))] bg-card/60'
       }`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--ca-panel-3))] text-base" aria-hidden>
-        {TYPE_ICONS[incident.type] ?? '📍'}
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--ca-panel-3))]" aria-hidden>
+        <TypeIcon className="h-4 w-4" style={{ color: incidentTypeConfig[incident.type]?.color }} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold text-foreground">{cleanPoliceTitle(incident.title)}</span>
@@ -83,7 +85,8 @@ const EventRow = ({ incident, highlight }: { incident: Incident; highlight?: boo
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
     </Link>
   </li>
-);
+  );
+};
 
 const SetupStep = ({ done, href, title, detail }: { done: boolean; href: string; title: string; detail: string }) => (
   <a href={href} className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-[hsl(var(--ca-panel-3))]">

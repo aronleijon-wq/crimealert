@@ -1,6 +1,7 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { Clock, MapPin, Lock } from 'lucide-react';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import { useIsPremium } from '@/hooks/useIsPremium';
 
 interface IncidentCardProps {
@@ -32,6 +33,7 @@ const ANIMATED_ROWS = 12;
 const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardProps) => {
   const animated = index < ANIMATED_ROWS;
   const typeConf = incidentTypeConfig[incident.type];
+  const TypeIcon = incidentTypeIcon(incident.type);
   const riskConf = riskConfig[incident.risk];
   const { isPremium } = useIsPremium();
 
@@ -57,7 +59,7 @@ const IncidentCard = ({ incident, selected, index = 0, onClick }: IncidentCardPr
 
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[11px] leading-none">{typeConf.icon}</span>
+          <TypeIcon className="h-3 w-3 shrink-0" style={{ color: typeConf.color }} aria-hidden />
           <span className="ca-mono text-[9px] uppercase tracking-[0.2em] text-[hsl(var(--ca-text-3))] truncate">
             {typeConf.label}
           </span>

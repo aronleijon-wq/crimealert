@@ -1,4 +1,5 @@
 import { Check, Loader2 } from 'lucide-react';
+import { incidentTypeIcon } from '@/lib/typeIcons';
 import {
   NOTIFY_TYPES,
   type NotifySettings,
@@ -7,12 +8,12 @@ import {
 } from '../../../supabase/functions/_shared/notifications';
 
 // Follows how police-events classifies Polisen's categories
-const TOPICS: Record<NotifyType, { icon: string; label: string; hint: string }> = {
-  police: { icon: '🚨', label: 'Brott', hint: 'Rån, inbrott, misshandel, skottlossning, hot' },
-  fire: { icon: '🔥', label: 'Bränder', hint: 'Brand och rökutveckling' },
-  traffic: { icon: '🚗', label: 'Trafik', hint: 'Trafikolyckor och rattfylleri' },
-  ambulance: { icon: '🚑', label: 'Sjukvård & försvunna', hint: 'Sjukdomsfall och försvunna personer' },
-  other: { icon: '📍', label: 'Övrigt', hint: 'Allt annat Polisen rapporterar' },
+const TOPICS: Record<NotifyType, { label: string; hint: string }> = {
+  police: { label: 'Brott', hint: 'Rån, inbrott, misshandel, skottlossning, hot' },
+  fire: { label: 'Bränder', hint: 'Brand och rökutveckling' },
+  traffic: { label: 'Trafik', hint: 'Trafikolyckor och rattfylleri' },
+  ambulance: { label: 'Sjukvård & försvunna', hint: 'Sjukdomsfall och försvunna personer' },
+  other: { label: 'Övrigt', hint: 'Allt annat Polisen rapporterar' },
 };
 
 const LEVELS: { value: RiskLevel; label: string; hint: string }[] = [
@@ -51,6 +52,7 @@ const TopicSettings = ({ settings, saving, onChange }: TopicSettingsProps) => {
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {NOTIFY_TYPES.map((type) => {
           const topic = TOPICS[type];
+          const TopicIcon = incidentTypeIcon(type);
           const on = settings.types.includes(type);
           const last = on && settings.types.length === 1;
           return (
@@ -68,7 +70,7 @@ const TopicSettings = ({ settings, saving, onChange }: TopicSettingsProps) => {
                   : 'border-[hsl(var(--ca-line-strong))] bg-card/40 opacity-70 hover:opacity-100'
               }`}
             >
-              <span className="text-lg" aria-hidden>{topic.icon}</span>
+              <TopicIcon className={`h-5 w-5 shrink-0 ${on ? 'text-primary' : 'text-muted-foreground'}`} aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">{topic.label}</span>
                 <span className="block truncate text-[11px] text-muted-foreground">{topic.hint}</span>

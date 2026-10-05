@@ -4,7 +4,7 @@ import { useSEO } from '@/hooks/useSEO';
 
 import PremiumGate from '@/components/PremiumGate';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info, type LucideIcon } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info, House, TreePine, Sun, Moon, Car, type LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
@@ -313,7 +313,7 @@ const Analysis = () => {
     }));
 
     // Seasonal warnings
-    const seasonalWarnings: { icon: string; title: string; message: string; severity: 'info' | 'warning' | 'danger' }[] = [];
+    const seasonalWarnings: { icon: LucideIcon; title: string; message: string; severity: 'info' | 'warning' | 'danger' }[] = [];
     const now2 = new Date();
     const month = now2.getMonth();
     const policeCount = typeCounts['police'] || 0;
@@ -322,21 +322,21 @@ const Analysis = () => {
 
     if (month >= 9 && month <= 10 && policeCount > 3) {
       seasonalWarnings.push({
-        icon: '🏠', title: 'Höstlovssäsong – ökad inbrottsrisk',
+        icon: House, title: 'Höstlovssäsong – ökad inbrottsrisk',
         message: `Vi ser ${policeCount} polishändelser i ${areaLabel}. Statistiskt ökar bostadsinbrott inför och under höstlovet – tänk på att tända lampor och lås ordentligt.`,
         severity: 'warning',
       });
     }
     if (month === 11 || month === 0) {
       seasonalWarnings.push({
-        icon: '🎄', title: 'Julperiod – stölder ökar',
+        icon: TreePine, title: 'Julperiod – stölder ökar',
         message: `Under december–januari ökar butiksstölder och paketbedrägerier i ${areaLabel}. Var extra vaksam med leveranser.`,
         severity: 'info',
       });
     }
     if (month >= 5 && month <= 7) {
       seasonalWarnings.push({
-        icon: '☀️', title: 'Sommar – fler inbrott i tomma hem',
+        icon: Sun, title: 'Sommar – fler inbrott i tomma hem',
         message: `Under semesterperioden ökar bostadsinbrott i ${areaLabel}. Använd tidur för belysning och be grannar hålla koll.`,
         severity: 'warning',
       });
@@ -344,21 +344,21 @@ const Analysis = () => {
     const nightIncidents = [0,1,2,3,4].reduce((sum, h2) => sum + hourlyCounts[h2], 0);
     if (nightIncidents > filteredIncidents.length * 0.3 && filteredIncidents.length > 5) {
       seasonalWarnings.push({
-        icon: '🌙', title: 'Nattlig aktivitet ovanligt hög',
+        icon: Moon, title: 'Nattlig aktivitet ovanligt hög',
         message: `${Math.round(nightIncidents / filteredIncidents.length * 100)}% av händelserna i ${areaLabel} sker mellan kl. 00–05. Var extra försiktig under nattetid.`,
         severity: 'danger',
       });
     }
     if ((month >= 9 || month <= 2) && trafficCount > 3) {
       seasonalWarnings.push({
-        icon: '🚗', title: 'Mörkerperiod – fler trafikolyckor',
+        icon: Car, title: 'Mörkerperiod – fler trafikolyckor',
         message: `${trafficCount} trafikhändelser i ${areaLabel}. Under mörka månader ökar risken – kör försiktigt och använd reflexer.`,
         severity: 'info',
       });
     }
     if (highRisk > 2 && highRisk / filteredIncidents.length > 0.2) {
       seasonalWarnings.push({
-        icon: '⚠️', title: 'Ovanligt många allvarliga händelser',
+        icon: AlertTriangle, title: 'Ovanligt många allvarliga händelser',
         message: `${highRisk} högrisk-händelser av totalt ${filteredIncidents.length} i ${areaLabel}. Var uppmärksam och följ polisens uppmaningar.`,
         severity: 'danger',
       });
@@ -573,7 +573,9 @@ const Analysis = () => {
                             }`}
                           >
                             <div className="flex items-start gap-2">
-                              <span className="text-lg">{w.icon}</span>
+                              <w.icon className={`mt-0.5 h-4 w-4 shrink-0 ${
+                                w.severity === 'danger' ? 'text-cr-red' : w.severity === 'warning' ? 'text-cr-orange' : 'text-primary'
+                              }`} aria-hidden />
                               <div className="flex-1 min-w-0">
                                 <p className={`text-xs font-semibold mb-0.5 ${
                                   w.severity === 'danger' ? 'text-cr-red' : w.severity === 'warning' ? 'text-cr-orange' : 'text-primary'
