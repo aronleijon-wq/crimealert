@@ -2,34 +2,8 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
-import { Shield, MapPin, Bell, Users } from 'lucide-react';
 
-const features = [
-  {
-    icon: MapPin,
-    id: '01',
-    title: 'Realtidskarta',
-    desc: 'Varje polisanmäld händelse placeras på karta med kommun, tidpunkt och kategori — inbrott, skottlossning, trafikolycka, brand.',
-  },
-  {
-    icon: Shield,
-    id: '02',
-    title: 'Källa: Polisen.se',
-    desc: 'All data hämtas direkt från Polisens officiella händelseflöde och kompletteras med geokodning ner till gatunivå där det går.',
-  },
-  {
-    icon: Bell,
-    id: '03',
-    title: 'Push-notiser',
-    desc: 'Du väljer kommun att bevaka och får en notis på mobilen när en ny händelse publiceras där — inget brus från övriga landet.',
-  },
-  {
-    icon: Users,
-    id: '04',
-    title: 'Medborgarrapporter',
-    desc: 'Pro-medlemmar kan rapportera det de själva ser på plats; rapporterna visas som separata markörer skilda från polisdata.',
-  },
-];
+
 
 const useCountUp = (target: number) => {
   const [value, setValue] = useState(0);
@@ -114,28 +88,6 @@ const OmOss = () => {
           </div>
         </section>
 
-        {/* Funktioner */}
-        <section className="max-w-4xl mx-auto px-4 py-12 md:py-16">
-          <p className="ca-eyebrow">// funktioner</p>
-          <h2 className="ca-display mt-2 text-xl md:text-2xl text-[hsl(var(--ca-text))]">Systemöversikt</h2>
-
-          <div className="grid sm:grid-cols-2 gap-px mt-6 bg-[hsl(var(--ca-line))]">
-            {features.map(({ icon: Icon, id, title, desc }) => (
-              <div key={title} className="ca-tac ca-tac-top ca-panel-hover p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-[hsl(var(--ca-red))]" />
-                    <span className="ca-mono text-[11px] uppercase tracking-[0.18em] text-[hsl(var(--ca-text))]">
-                      {title}
-                    </span>
-                  </div>
-                  <span className="ca-meta">{id}</span>
-                </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* Kontakt */}
         <section className="border-t border-[hsl(var(--ca-line))]">
