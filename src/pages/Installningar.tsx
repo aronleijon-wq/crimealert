@@ -1,16 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Bell, ChevronRight, CreditCard, FileText, HelpCircle, Info, LogOut, Mail, Moon, Pencil, Shield, Star, Sun, User, Zap,
+  Bell, ChevronRight, CreditCard, ExternalLink, FileText, HelpCircle, Info, LogOut, Mail, Moon, Pencil, Shield, Star, Sun, User, Zap,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/Header';
-import ReviewSection from '@/components/ReviewSection';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
+import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,16 +37,23 @@ const RowText = ({ icon: Icon, label, hint }: { icon: LucideIcon; label: string;
   </>
 );
 
-/** A row that goes somewhere: a page in the app, or an outside address (mail, Stripe). */
-const LinkRow = ({ icon, label, hint, to }: { icon: LucideIcon; label: string; hint?: ReactNode; to: string }) => {
+/**
+ * A row that goes somewhere: a page in the app, or an outside address (mail, Stripe). With
+ * `newTab`, the outside page opens next to the app instead of replacing it.
+ */
+const LinkRow = ({ icon, label, hint, to, newTab }: { icon: LucideIcon; label: string; hint?: ReactNode; to: string; newTab?: boolean }) => {
   const content = (
     <>
       <RowText icon={icon} label={label} hint={hint} />
-      <ChevronRight className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))]" aria-hidden />
+      {newTab ? (
+        <ExternalLink className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))]" aria-label="Öppnas i en ny flik" />
+      ) : (
+        <ChevronRight className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))]" aria-hidden />
+      )}
     </>
   );
   return /^(https?:|mailto:)/.test(to) ? (
-    <a href={to} className={linkRowClass}>{content}</a>
+    <a href={to} className={linkRowClass} {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{content}</a>
   ) : (
     <Link to={to} className={linkRowClass}>{content}</Link>
   );
@@ -250,15 +257,13 @@ const Installningar = () => {
           <Section id="hjalp" title="Hjälp och kontakt">
             <LinkRow icon={HelpCircle} label="Vanliga frågor" to="/#vanliga-fragor" />
             <LinkRow icon={Mail} label="Kontakta oss" hint={CONTACT_EMAIL} to={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert`} />
-            <details className="group">
-              <summary className={`${linkRowClass} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
-                <RowText icon={Star} label="Omdömen" hint="Läs vad andra tycker, eller betygsätt CrimeAlert." />
-                <ChevronRight className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))] transition-transform group-open:rotate-90 motion-reduce:transition-none" aria-hidden />
-              </summary>
-              <div className="border-t border-[hsl(var(--ca-line))] p-3">
-                <ReviewSection />
-              </div>
-            </details>
+            <LinkRow
+              icon={Star}
+              label="Betygsätt oss på Trustpilot"
+              hint="Där kan du också läsa vad andra tycker om CrimeAlert."
+              to={TRUSTPILOT_REVIEW_URL}
+              newTab
+            />
           </Section>
 
           <Section id="om" title="Om CrimeAlert">
