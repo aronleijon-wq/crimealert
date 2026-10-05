@@ -2,12 +2,14 @@ User-agent: Googlebot
 Allow: /
 Disallow: /auth
 Disallow: /account
+Disallow: /installningar
 Disallow: /reset-password
 
 User-agent: Bingbot
 Allow: /
 Disallow: /auth
 Disallow: /account
+Disallow: /installningar
 Disallow: /reset-password
 
 User-agent: Twitterbot
@@ -20,6 +22,7 @@ User-agent: *
 Allow: /
 Disallow: /auth
 Disallow: /account
+Disallow: /installningar
 Disallow: /reset-password
 
 Sitemap: https://crimealert.se/sitemap.xml

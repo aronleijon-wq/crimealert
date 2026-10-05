@@ -104,8 +104,8 @@ const Cookies = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">Kontakt</h2>
               <p>
-                Har du frågor om vår användning av cookies? Kontakta oss via formuläret på{' '}
-                <button onClick={() => navigate('/account')} className="text-primary hover:underline">
+                Har du frågor om vår användning av cookies? Kontakta oss via{' '}
+                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
                   kontosidan
                 </button>
                 .

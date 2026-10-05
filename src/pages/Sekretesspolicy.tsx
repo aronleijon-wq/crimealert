@@ -132,8 +132,8 @@ const Sekretesspolicy = () => {
                 </li>
               </ul>
               <p className="mt-2">
-                För att utöva dina rättigheter, kontakta oss via formuläret på{' '}
-                <button onClick={() => navigate('/account')} className="text-primary hover:underline">
+                För att utöva dina rättigheter, kontakta oss via{' '}
+                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
                   kontosidan
                 </button>
                 .
@@ -167,8 +167,8 @@ const Sekretesspolicy = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">9. Kontakt</h2>
               <p>
-                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta oss via formuläret på{' '}
-                <button onClick={() => navigate('/account')} className="text-primary hover:underline">
+                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta oss via{' '}
+                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
                   kontosidan
                 </button>
                 .
