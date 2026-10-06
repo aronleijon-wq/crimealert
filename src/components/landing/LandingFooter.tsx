@@ -24,6 +24,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     title: 'OM',
     links: [
       { to: '/om-oss', label: 'Om oss' },
+      { to: '/guider', label: 'Guider' },
       { to: '#vanliga-fragor', label: 'Vanliga frågor' },
       { to: '/auth?mode=signup', label: 'Skapa konto' },
       { to: 'mailto:crimealert.swe@gmail.com', label: 'Kontakta oss' },

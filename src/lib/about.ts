@@ -13,6 +13,7 @@ export const aboutJsonLd = () =>
     inLanguage: 'sv-SE',
     mainEntity: {
       '@type': 'Organization',
+      '@id': 'https://crimealert.se/#organization',
       name: 'CrimeAlert',
       url: 'https://crimealert.se',
       logo: 'https://crimealert.se/pwa-512x512.png',

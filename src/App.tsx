@@ -29,6 +29,9 @@ const DebugPush = lazyPage(() => import("./pages/DebugPush"));
 const OmOss = lazyPage(() => import("./pages/OmOss"));
 const Feed = lazyPage(() => import("./pages/Feed"));
 const Kommun = lazyPage(() => import("./pages/Kommun"));
+const KommunRapport = lazyPage(() => import("./pages/KommunRapport"));
+const Guider = lazyPage(() => import("./pages/Guider"));
+const Guide = lazyPage(() => import("./pages/Guide"));
 const Kommuner = lazyPage(() => import("./pages/Kommuner"));
 const Handelse = lazyPage(() => import("./pages/Handelse"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
@@ -65,6 +68,9 @@ const App = () => (
           <Route path="/flode" element={<Feed />} />
           <Route path="/kommun" element={<Kommuner />} />
           <Route path="/kommun/:slug" element={<Kommun />} />
+          <Route path="/kommun/:slug/:month" element={<KommunRapport />} />
+          <Route path="/guider" element={<Guider />} />
+          <Route path="/guider/:slug" element={<Guide />} />
           <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />

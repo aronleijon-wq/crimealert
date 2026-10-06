@@ -51,6 +51,11 @@ const Sekretesspolicy = () => {
                   fel. Den samlas in utan cookies, kopplas inte till dig eller ditt konto och raderas efter 30 dagar.
                 </li>
                 <li>
+                  <strong>Trafikkällor:</strong> Varifrån besöken kommer, till exempel en sökmotor, en AI-tjänst eller en
+                  annons, räknat som antal besök per källa och dag. Det samlas in utan cookies, kopplas inte till dig eller
+                  ditt konto och raderas efter 400 dagar.
+                </li>
+                <li>
                   <strong>Kommunbevakning:</strong> Vilka kommuner du väljer att bevaka lagras kopplat till ditt konto.
                 </li>
                 <li>

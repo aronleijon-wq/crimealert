@@ -103,3 +103,56 @@ export function countByKommun(incidents: Incident[], since: number): { name: str
   }
   return counts.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'sv'));
 }
+
+export interface FaqEntry { q: string; a: string }
+
+const events = (n: number) => `${n} ${n === 1 ? 'händelse' : 'händelser'}`;
+
+/**
+ * The questions people ask about a kommun, answered from the police data on its page. Without
+ * stats (still loading) the first answer says what the page shows instead of a count.
+ */
+export function kommunFaq(name: string, stats: KommunStats | null): FaqEntry[] {
+  const long = kommunLongName(name);
+  let today = `Här visas allt Polisen har rapporterat i ${long} det senaste dygnet och den senaste veckan, uppdaterat var femte minut.`;
+  if (stats && stats.last24h === 0) {
+    today = `Polisen har inte rapporterat någon händelse i ${long} det senaste dygnet. Den senaste veckan har det kommit ${events(stats.last7d)}.`;
+  } else if (stats) {
+    today = `Polisen har rapporterat ${events(stats.last24h)} i ${long} det senaste dygnet och ${events(stats.last7d)} den senaste veckan.`;
+    if (stats.topCategory) today += ` Vanligast den senaste veckan är ${stats.topCategory.name.toLocaleLowerCase('sv-SE')}.`;
+  }
+  return [
+    { q: `Vad har hänt i ${name} idag?`, a: today },
+    {
+      q: `Hur ser jag Polisens händelser i ${name} på en karta?`,
+      a: `Tryck på "Visa ${name} på kartan". CrimeAlerts karta visar Polisens händelser i hela Sverige och är gratis att använda, utan konto.`,
+    },
+    {
+      q: `Kan jag få en notis när något händer i ${name}?`,
+      a: `Ja. Skapa ett gratis konto, välj ${name} under Notiser och slå på notiser i mobilen eller datorn. Med ett gratiskonto kommer notisen 15 minuter efter att Polisen publicerat händelsen, med Pro direkt.`,
+    },
+    {
+      q: `Visar det här all brottslighet i ${name}?`,
+      a: `Nej. Uppgifterna är Polisens händelsenotiser, ett urval av de insatser Polisen själv berättar om. Statistik över alla anmälda brott publiceras av Brottsförebyggande rådet (Brå). Platsen i en notis är ofta ungefärlig.`,
+    },
+  ];
+}
+
+/** Breadcrumbs and FAQ for a kommun page, as schema.org JSON-LD. */
+export function kommunJsonLd(name: string, faq: FaqEntry[]): string {
+  return JSON.stringify([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Kommuner', item: 'https://crimealert.se/kommun' },
+        { '@type': 'ListItem', position: 2, name, item: `https://crimealert.se${kommunPath(name)}` },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faq.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]);
+}
