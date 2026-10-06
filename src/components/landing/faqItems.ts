@@ -51,7 +51,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     q: 'Hur avslutar jag Pro?',
     a: [
-      'Tryck på din profilbild uppe till höger (den runda med din bokstav) för att komma till ',
+      'Tryck på din profilbild uppe till höger (den runda med en figur) för att komma till ',
       { to: '/installningar', label: 'din profil' },
       ', och välj Hantera prenumeration. Avslutar du under provperioden dras inga pengar. ' +
         'Annars har du Pro perioden ut, och sedan dras inget mer.',
