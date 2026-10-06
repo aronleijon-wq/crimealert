@@ -1,15 +1,28 @@
 # CrimeAlert
 
-> CrimeAlert är Sveriges trygghetskarta — en realtidskarta över polishändelser, bränder, trafikolyckor och andra säkerhetsrelaterade händelser i hela Sverige. Data hämtas direkt från Polisen.se och uppdateras kontinuerligt.
+> CrimeAlert (crimealert.se) visar Polisens händelser på karta i hela Sverige, i alla 290 kommuner. Händelserna hämtas löpande från Polisens öppna data på polisen.se och uppdateras var femte minut. Kartan är gratis; med ett konto kan man få notiser när något händer i valda kommuner. Pro ger händelserna direkt, 60 dagars historik, värmekarta, statistik per kommun och export.
 
-## Pages
+Uppgifterna är Polisens händelsenotiser, ett urval av Polisens insatser och inte all brottslighet. Statistik över alla anmälda brott publiceras av Brottsförebyggande rådet (Brå). CrimeAlert är en fristående tjänst och inte en del av Polisen. Grundare: Aron Leijon.
 
-- [/](/): Realtidskarta med polishändelser, filter efter typ och kommun, push-notiser och detaljerad händelseinformation.
-- [/om-oss](/om-oss): Information om CrimeAlert, vårt syfte och kontaktvägar.
-- [/flode](/flode): Flöde med polisens händelser, VMA, krisinformation, trafikstörningar och lokala nyheter (rubrik och länk), med reaktioner och kommentarer.
-- [/analysis](/analysis): Statistik och analys över brott och händelser, filtrering på tidsperiod (24h/7d/30d), kommunranking och dataexport för Pro-användare.
-- [/alerts](/alerts): Inställningar för push-notiser — välj vilka kommuner du vill bevaka och vilka händelsetyper som ska trigga notiser.
-- [/konto](/konto): Användarkonto, profilinställningar, push-notispreferenser, betalningshantering och recensioner.
-- [/villkor](/villkor): Användarvillkor och medlemsvillkor för CrimeAlert.
-- [/sekretesspolicy](/sekretesspolicy): Integritetspolicy och hantering av personuppgifter.
-- [/auth](/auth): Inloggning och registrering via Google eller e-post.
+## Sidor
+
+- [Karta över Polisens händelser](https://crimealert.se/karta): de senaste händelserna i hela Sverige
+- [Flöde](https://crimealert.se/flode): Polisens händelser, VMA, krisinformation, trafikstörningar och lokala nyheter (rubrik och länk), med reaktioner och kommentarer
+- [Analys](https://crimealert.se/analysis): statistik per kommun och typ av händelse, 24 timmar till 60 dagar, och export (Pro)
+- [Notiser](https://crimealert.se/alerts): välj kommuner och typer av händelser att få notiser om
+- [Alla kommuner](https://crimealert.se/kommun): en sida per kommun med det senaste dygnet och veckan, vanliga frågor och månadsrapporter
+- [Exempel: Stockholm](https://crimealert.se/kommun/stockholm)
+- [Prisplan](https://crimealert.se/prisplan): Gratis och Pro
+- [Om CrimeAlert](https://crimealert.se/om-oss): vem som står bakom tjänsten, vad den strävar efter och kontakt
+- [Användarvillkor](https://crimealert.se/villkor) och [integritetspolicy](https://crimealert.se/sekretesspolicy)
+
+## Guider
+
+- [Så ser du vad som har hänt i ditt område](https://crimealert.se/guider/se-vad-som-hant-i-ditt-omrade)
+- [Vad är Polisens händelsenotiser?](https://crimealert.se/guider/polisens-handelsenotiser)
+- [Så skyddar du hemmet mot inbrott](https://crimealert.se/guider/skydda-hemmet-mot-inbrott)
+- [Så kollar du ett område innan du flyttar](https://crimealert.se/guider/kolla-omradet-innan-du-flyttar)
+
+## Kontakt
+
+- E-post: crimealert.swe@gmail.com

@@ -83,10 +83,42 @@
     <meta property="og:site_name" content="CrimeAlert" />
     <meta property="og:locale" content="sv_SE" />
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@graph":[
-      {"@type":"Organization","name":"CrimeAlert","url":"https://crimealert.se/","logo":"https://crimealert.se/pwa-512x512.png"},
-      {"@type":"WebSite","name":"CrimeAlert","url":"https://crimealert.se/"}
-    ]}
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://crimealert.se/#organization",
+            "name": "CrimeAlert",
+            "url": "https://crimealert.se/",
+            "logo": "https://crimealert.se/pwa-512x512.png",
+            "email": "crimealert.swe@gmail.com",
+            "founder": {
+              "@type": "Person",
+              "name": "Aron Leijon",
+              "jobTitle": "Grundare"
+            },
+            "areaServed": {
+              "@type": "Country",
+              "name": "Sverige"
+            },
+            "sameAs": [
+              "https://se.trustpilot.com/review/crimealert.se"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://crimealert.se/#website",
+            "name": "CrimeAlert",
+            "url": "https://crimealert.se/",
+            "description": "Polisens händelser på karta i hela Sverige, med notiser för din kommun, statistik och månadsrapporter.",
+            "inLanguage": "sv-SE",
+            "publisher": {
+              "@id": "https://crimealert.se/#organization"
+            }
+          }
+        ]
+      }
     </script>
     <!-- AdSense is loaded by AdsController for free users only (Pro has no ads) -->
     <meta name="google-adsense-account" content="ca-pub-3945855440160391" />

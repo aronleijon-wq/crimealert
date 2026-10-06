@@ -36,6 +36,31 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://crimealert.se/guider</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/se-vad-som-hant-i-ditt-omrade</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/polisens-handelsenotiser</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/skydda-hemmet-mot-inbrott</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/kolla-omradet-innan-du-flyttar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://crimealert.se/sekretesspolicy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

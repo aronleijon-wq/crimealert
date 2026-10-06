@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, AlertTriangle, Gauge, Loader2 } from 'lucide-react';
+import { Activity, AlertTriangle, Gauge, Loader2, Share2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,6 +25,13 @@ const verdict = (name: string, value: number) => {
   return value <= limit.good ? 'text-[hsl(var(--cr-green))]' : value <= limit.poor ? 'text-[hsl(var(--cr-orange))]' : 'text-destructive';
 };
 
+// Names for the sources monitoring.ts records; any other is the linking site's address
+const SOURCE_NAMES: Record<string, string> = {
+  direkt: 'Direkt (adress, bokmärke, app)', chatgpt: 'ChatGPT', google: 'Google', bing: 'Bing', meta: 'Meta (Facebook, Instagram)',
+  tiktok: 'TikTok', perplexity: 'Perplexity', gemini: 'Gemini', claude: 'Claude', copilot: 'Copilot', duckduckgo: 'DuckDuckGo',
+  reddit: 'Reddit', flashback: 'Flashback', x: 'X', youtube: 'YouTube', linkedin: 'LinkedIn',
+};
+
 const formatVital = (name: string, value: number) => (name === 'CLS' ? value.toFixed(2) : `${(value / 1000).toFixed(2)} s`);
 
 /** How the site is doing for real visitors: views, loading times and errors, the last 7 days. */
@@ -32,6 +39,7 @@ const HealthPanel = () => {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [police, setPolice] = useState<{ fetched_at: string | null; alerted_at: string | null; latest_event_at: string | null } | null>(null);
+  const [sources, setSources] = useState<{ source: string; visits: number }[] | null>(null);
 
   useEffect(() => {
     supabase.rpc('monitoring_summary', { _days: 7 }).then(({ data, error: rpcError }) => {
@@ -40,6 +48,9 @@ const HealthPanel = () => {
     });
     supabase.rpc('police_fetch_status').then(({ data }) => {
       if (data) setPolice(data as unknown as typeof police);
+    });
+    supabase.rpc('traffic_sources_summary', { _days: 30 }).then(({ data }) => {
+      if (data) setSources(data as unknown as { source: string; visits: number }[]);
     });
   }, []);
 
@@ -100,6 +111,30 @@ const HealthPanel = () => {
                 ))}
               </ul>
             </section>
+
+            {sources && (
+              <section>
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground"><Share2 className="h-4 w-4" /> Varifrån besökarna kommer (30 dagar)</h3>
+                {sources.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">Inga besök räknade än.</p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5 text-sm">
+                    {sources.map((s) => (
+                      <li key={s.source} className="flex items-center gap-3">
+                        <span className="w-44 shrink-0 truncate text-xs text-muted-foreground" title={s.source}>{SOURCE_NAMES[s.source] ?? s.source}</span>
+                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <span className="block h-full rounded-full bg-primary" style={{ width: `${(s.visits / sources[0].visits) * 100}%` }} />
+                        </span>
+                        <span className="w-12 shrink-0 text-right tabular-nums">{s.visits}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Annonslänkar märks med ?utm_source=meta (eller tiktok, chatgpt). ChatGPT märker sina länkar själv.
+                </p>
+              </section>
+            )}
 
             <section>
               <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground"><Gauge className="h-4 w-4" /> Laddtider (75 % av besöken är snabbare)</h3>

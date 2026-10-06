@@ -10,7 +10,8 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { parseIncidentTime } from '@/lib/incidentTime';
-import { kommunFromSlug, kommunLongName, kommunPath, kommunStats, neighbourKommuner } from '@/lib/kommunPages';
+import { kommunFaq, kommunFromSlug, kommunJsonLd, kommunLongName, kommunPath, kommunStats, neighbourKommuner } from '@/lib/kommunPages';
+import { monthLabel, reportMonths, stockholmToday } from '@/lib/monthlyReport';
 import { eventPath } from '@/lib/share';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
@@ -99,6 +100,7 @@ const Kommun = () => {
   }
 
   const busiest = stats.byType[0]?.count ?? 0;
+  const faq = kommunFaq(name, loading && !incidents.length ? null : stats);
 
   return (
     <div className="ca-dark flex h-[100dvh] flex-col">
@@ -224,6 +226,37 @@ const Kommun = () => {
               </div>
             </section>
           )}
+
+          <section className="mt-10" aria-labelledby="rapporter">
+            <h2 id="rapporter" className="ca-meta !text-[10px]">Månadsrapporter</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {reportMonths().map((m) => (
+                <Link
+                  key={m}
+                  to={`${kommunPath(name)}/${m}`}
+                  className="rounded-full border border-[hsl(var(--ca-line-strong))] bg-card px-3 py-1.5 text-xs font-medium text-[hsl(var(--ca-text-2))] transition hover:border-primary/50 hover:text-foreground"
+                >
+                  {name} i {monthLabel(m)}{m === stockholmToday().month ? ' (hittills)' : ''}
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-10" aria-labelledby="fragor">
+            <h2 id="fragor" className="font-['Archivo',Inter,sans-serif] text-lg font-extrabold text-foreground">Vanliga frågor om {name}</h2>
+            <div className="mt-3 divide-y divide-[hsl(var(--ca-line))] rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card">
+              {faq.map(({ q, a }) => (
+                <details key={q} className="group px-4 py-3">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-foreground">
+                    {q}
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-open:rotate-90" aria-hidden />
+                  </summary>
+                  <p className="mt-2 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">{a}</p>
+                </details>
+              ))}
+            </div>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: kommunJsonLd(name, faq) }} />
+          </section>
 
           <p className="mt-10 text-xs leading-relaxed text-muted-foreground">
             Uppgifterna kommer från Polisens händelsenotiser på polisen.se och visar var Polisen har varit insatt, inte all brottslighet i

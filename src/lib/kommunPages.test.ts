@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import type { Incident } from '@/data/mockIncidents';
-import { countByKommun, kommunFromSlug, kommunPath, kommunSlug, kommunStats, neighbourKommuner } from './kommunPages';
+import { countByKommun, kommunFaq, kommunFromSlug, kommunJsonLd, kommunPath, kommunSlug, kommunStats, neighbourKommuner } from './kommunPages';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
 const hoursAgo = (h: number) => new Date(NOW - h * 3600e3).toISOString();
@@ -84,5 +84,32 @@ describe('countByKommun speed', () => {
     const counts = countByKommun(week, NOW - 24 * 3600e3);
     expect(counts.length).toBeGreaterThan(100);
     expect(performance.now() - started).toBeLessThan(400);
+  });
+});
+
+describe('kommun FAQ', () => {
+  it('answers what happened today from the counts on the page', () => {
+    const stats = kommunStats([event('a', 'Malmö', 2), event('b', 'Malmö', 30), event('c', 'Malmö', 50, { originalType: 'Brand' })], 'Malmö', NOW);
+    const [today, map, notify, all] = kommunFaq('Malmö', stats);
+    expect(today.q).toBe('Vad har hänt i Malmö idag?');
+    expect(today.a).toBe('Polisen har rapporterat 1 händelse i Malmö kommun det senaste dygnet och 3 händelser den senaste veckan. Vanligast den senaste veckan är stöld.');
+    expect(map.q).toBe('Hur ser jag Polisens händelser i Malmö på en karta?');
+    expect(notify.a).toMatch(/15 minuter/);
+    expect(all.a).toMatch(/Brå/);
+  });
+
+  it('says so when nothing has happened, and what the page shows before the data is in', () => {
+    const quiet = kommunStats([event('a', 'Malmö', 30)], 'Malmö', NOW);
+    expect(kommunFaq('Malmö', quiet)[0].a).toBe('Polisen har inte rapporterat någon händelse i Malmö kommun det senaste dygnet. Den senaste veckan har det kommit 1 händelse.');
+    expect(kommunFaq('Gotland', null)[0].a).toMatch(/^Här visas allt Polisen har rapporterat i Region Gotland/);
+  });
+
+  it('gives search engines the breadcrumbs and the same questions and answers', () => {
+    const faq = kommunFaq('Malmö', null);
+    const [crumbs, page] = JSON.parse(kommunJsonLd('Malmö', faq));
+    expect(crumbs.itemListElement[1]).toEqual({ '@type': 'ListItem', position: 2, name: 'Malmö', item: 'https://crimealert.se/kommun/malmo' });
+    expect(page['@type']).toBe('FAQPage');
+    expect(page.mainEntity.map((q: { name: string }) => q.name)).toEqual(faq.map((f) => f.q));
+    expect(page.mainEntity[0].acceptedAnswer.text).toBe(faq[0].a);
   });
 });
