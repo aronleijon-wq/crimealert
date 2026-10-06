@@ -639,24 +639,12 @@ export type Database = {
         }
         Returns: undefined
       }
-      kommun_month_counts: {
-        Args: { _kommun: string; _month: string }
-        Returns: {
-          area: string
-          day: string
-          events: number
-          original_type: string
-          type: string
-        }[]
-      }
       monitoring_summary: { Args: { _days?: number }; Returns: Json }
       police_fetch_status: { Args: never; Returns: Json }
       track_page_view: {
         Args: { _device: string; _page: string }
         Returns: undefined
       }
-      track_visit_source: { Args: { _source: string }; Returns: undefined }
-      traffic_sources_summary: { Args: { _days: number }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
