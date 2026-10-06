@@ -526,6 +526,24 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_sources: {
+        Row: {
+          day: string
+          source: string
+          visits: number
+        }
+        Insert: {
+          day: string
+          source: string
+          visits?: number
+        }
+        Update: {
+          day?: string
+          source?: string
+          visits?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -628,6 +646,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      kommun_month_counts: {
+        Args: { _kommun: string; _month: string }
+        Returns: {
+          area: string
+          day: string
+          events: number
+          original_type: string
+          type: string
+        }[]
+      }
       log_client_event: {
         Args: {
           _detail: string
@@ -645,6 +673,8 @@ export type Database = {
         Args: { _device: string; _page: string }
         Returns: undefined
       }
+      track_visit_source: { Args: { _source: string }; Returns: undefined }
+      traffic_sources_summary: { Args: { _days: number }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
