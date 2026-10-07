@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const rpc = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: (...args: unknown[]) => rpc(...args) } }));
 
-const { accountCountLabel, loadAccountCount } = await import('./accountCount');
+const { accountCountLabel, loadAccountCount, rememberedAccountCount } = await import('./accountCount');
 
 describe('the number of accounts', () => {
   beforeEach(() => {
@@ -14,8 +14,8 @@ describe('the number of accounts', () => {
   it('is only mentioned from a hundred', () => {
     expect(accountCountLabel(null)).toBeNull();
     expect(accountCountLabel(0)).toBeNull();
-    expect(accountCountLabel(100)).toBe('över 100 användare');
-    expect(accountCountLabel(1200)).toBe('över 1 200 användare');
+    expect(accountCountLabel(100)).toBe('över 100');
+    expect(accountCountLabel(1200)).toBe('över 1 200');
   });
 
   it('is asked for once and then remembered for six hours', async () => {
@@ -25,6 +25,7 @@ describe('the number of accounts', () => {
     expect(await loadAccountCount(now + 5 * 60 * 60 * 1000)).toBe(500);
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith('account_count');
+    expect(rememberedAccountCount(now + 60 * 1000)).toBe(500);
 
     rpc.mockResolvedValue({ data: 600, error: null });
     expect(await loadAccountCount(now + 7 * 60 * 60 * 1000)).toBe(600);

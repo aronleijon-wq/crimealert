@@ -6,6 +6,7 @@ const count = vi.fn();
 vi.mock('@/lib/accountCount', async (original) => ({
   ...(await original<typeof import('@/lib/accountCount')>()),
   loadAccountCount: () => count(),
+  rememberedAccountCount: () => null,
 }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/integrations/lovable/index', () => ({ lovable: {} }));
@@ -19,17 +20,19 @@ const renderAuth = async (path: string) => {
 describe('Skapa konto', () => {
   beforeEach(() => count.mockReset());
 
-  it('says how many already have an account', async () => {
+  it('asks you to join the others who already have an account', async () => {
     count.mockResolvedValue(500);
     await renderAuth('/auth?mode=signup');
-    expect(await screen.findByText('över 500 användare')).toBeInTheDocument();
-    expect(screen.getByText(/inget kort behövs/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Gå med nu' })).toBeInTheDocument();
+    expect(await screen.findByText('över 500 andra nöjda användare')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Gratis', 'Inget kort behövs', 'Notiser för din kommun']);
+    expect(screen.getByRole('button', { name: /Skapa gratis konto/ })).toBeInTheDocument();
   });
 
   it('leaves the number out while there are few accounts', async () => {
     count.mockResolvedValue(0);
     await renderAuth('/auth?mode=signup');
-    expect(await screen.findByText('Skapa ett gratis konto för att komma igång. Inget kort behövs.')).toBeInTheDocument();
+    expect(await screen.findByText('Följ det som händer där du bor.')).toBeInTheDocument();
     expect(screen.queryByText(/användare/)).toBeNull();
   });
 

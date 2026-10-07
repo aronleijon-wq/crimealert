@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { accountCountLabel, loadAccountCount } from '@/lib/accountCount';
+import { accountCountLabel, loadAccountCount, rememberedAccountCount } from '@/lib/accountCount';
 import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, ArrowRight, TriangleAlert } from 'lucide-react';
+import { Mail, Lock, ArrowRight, TriangleAlert, Check } from 'lucide-react';
 
 const AUTH_RATE_LIMIT = { maxAttempts: 5, windowMs: 5 * 60 * 1000 };
 const authAttempts: { timestamps: number[] } = { timestamps: [] };
@@ -18,6 +18,8 @@ const isRateLimited = () => {
 };
 const recordAttempt = () => { authAttempts.timestamps.push(Date.now()); };
 const sanitizeInput = (str: string) => str.replace(/<[^>]*>/g, '').trim();
+// What a free account gets (plans.ts, notifications with Polisen's 15 minutes)
+const SIGNUP_PERKS = ['Gratis', 'Inget kort behövs', 'Notiser för din kommun'];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const withRetry = async (action: () => Promise<{ error: AuthError | null }>, attempts = 3) => {
@@ -49,7 +51,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
-  const [accountCount, setAccountCount] = useState<number | null>(null);
+  const [accountCount, setAccountCount] = useState<number | null>(() => rememberedAccountCount());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -121,14 +123,30 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="bg-card border border-border rounded-lg p-6">
-            <h1 className="text-lg font-bold text-foreground mb-1">
-              {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Skapa konto'}
+            <h1 className={`font-bold text-foreground mb-1 ${signingUp ? 'text-2xl' : 'text-lg'}`}>
+              {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Gå med nu'}
             </h1>
-            <p className="text-xs text-muted-foreground mb-5">
-              {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk' : isLogin ? 'Logga in på ditt konto' : members ? (
-                <>Gå med <span className="font-semibold text-foreground">{members}</span>. Det är gratis, och inget kort behövs.</>
-              ) : 'Skapa ett gratis konto för att komma igång. Inget kort behövs.'}
-            </p>
+            {signingUp ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {members ? (
+                    <>Gör som <strong className="font-semibold text-foreground">{members} andra nöjda användare</strong>.</>
+                  ) : 'Följ det som händer där du bor.'}
+                </p>
+                <ul className="mt-3 mb-5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                  {SIGNUP_PERKS.map((perk) => (
+                    <li key={perk} className="flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-primary" aria-hidden />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground mb-5">
+                {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk' : 'Logga in på ditt konto'}
+              </p>
+            )}
 
             {!forgotPassword && (
               <>
@@ -188,7 +206,7 @@ const Auth = () => {
                     </div>
                   )}
                   <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50">
-                    {loading ? 'Vänta...' : isLogin ? 'Logga in' : 'Skapa konto'}
+                    {loading ? 'Vänta...' : isLogin ? 'Logga in' : 'Skapa gratis konto'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
