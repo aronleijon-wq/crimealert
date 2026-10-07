@@ -623,7 +623,6 @@ export type Database = {
       }
     }
     Functions: {
-      account_count: { Args: never; Returns: number }
       community_reports_visible: {
         Args: never
         Returns: {
