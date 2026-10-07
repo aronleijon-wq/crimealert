@@ -38,7 +38,7 @@ describe('Skapa konto', () => {
 
   it('does not ask for the number when signing in', async () => {
     await renderAuth('/auth');
-    expect(screen.getByText('Logga in på ditt konto')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Logga in' })).toBeInTheDocument();
     expect(count).not.toHaveBeenCalled();
   });
 });

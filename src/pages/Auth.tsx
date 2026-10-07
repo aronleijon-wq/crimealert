@@ -7,7 +7,7 @@ import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, ArrowRight, TriangleAlert, Check } from 'lucide-react';
+import { Mail, Lock, ArrowRight, TriangleAlert } from 'lucide-react';
 
 const AUTH_RATE_LIMIT = { maxAttempts: 5, windowMs: 5 * 60 * 1000 };
 const authAttempts: { timestamps: number[] } = { timestamps: [] };
@@ -117,34 +117,43 @@ const Auth = () => {
     } finally { setLoading(false); }
   };
 
+  const field =
+    'h-11 w-full rounded-md border border-[hsl(var(--ca-line-strong))] bg-background/60 pl-10 pr-3 text-sm text-foreground placeholder:text-[hsl(var(--ca-text-3))] transition focus:border-[hsl(var(--ca-red)/0.6)] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ca-red)/0.2)]';
+  const primary =
+    'flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[hsl(var(--ca-red))] text-sm font-semibold text-white shadow-[0_0_32px_-12px_hsl(var(--ca-red))] transition hover:brightness-110 disabled:opacity-50';
+  const fieldIcon = 'absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--ca-text-3))]';
+
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="ca-dark flex h-[100dvh] flex-col bg-background">
       <Header />
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h1 className={`font-bold text-foreground mb-1 ${signingUp ? 'text-2xl' : 'text-lg'}`}>
+      <main className="relative flex-1 overflow-y-auto">
+        <div className="pointer-events-none absolute inset-0 ca-hud opacity-50" />
+        <div className="pointer-events-none absolute inset-0 ca-vignette" />
+        <div className="relative flex min-h-full items-center justify-center px-4 py-10">
+          <div className="ca-tac ca-tac-top w-full max-w-[400px] !bg-card/90 p-6 sm:p-8">
+            <p className="ca-eyebrow">// {forgotPassword ? 'återställ lösenord' : isLogin ? 'logga in' : 'nytt konto'}</p>
+            <h1 className="ca-display mt-3 text-[2rem] text-foreground">
               {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Gå med nu'}
             </h1>
             {signingUp ? (
               <>
-                <p className="text-sm text-muted-foreground">
+                <p className="mt-3 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
                   {members ? (
-                    <>Gör som <strong className="font-semibold text-foreground">{members} andra nöjda användare</strong>.</>
+                    <>Gör som <strong className="font-medium text-foreground">{members} andra nöjda användare</strong>.</>
                   ) : 'Följ det som händer där du bor.'}
                 </p>
-                <ul className="mt-3 mb-5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                <ul className="ca-meta mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
                   {SIGNUP_PERKS.map((perk) => (
-                    <li key={perk} className="flex items-center gap-1.5">
-                      <Check className="h-3.5 w-3.5 text-primary" aria-hidden />
+                    <li key={perk} className="flex items-center gap-2">
+                      <span className="h-1 w-1 bg-[hsl(var(--ca-red))]" aria-hidden />
                       {perk}
                     </li>
                   ))}
                 </ul>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground mb-5">
-                {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk' : 'Logga in på ditt konto'}
+              <p className="mt-3 text-sm text-[hsl(var(--ca-text-2))]">
+                {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk.' : 'Välkommen tillbaka.'}
               </p>
             )}
 
@@ -153,15 +162,16 @@ const Auth = () => {
                 <button
                   onClick={handleGoogleLogin}
                   disabled={googleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 bg-foreground text-background rounded-md text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 mb-4"
+                  className="mt-7 flex h-11 w-full items-center justify-center gap-3 rounded-md bg-foreground text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
                 >
                   <GoogleIcon />
                   {googleLoading ? 'Vänta...' : 'Fortsätt med Google'}
                 </button>
 
-                <div className="relative mb-4">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                  <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">eller</span></div>
+                <div className="my-5 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-[hsl(var(--ca-line))]" />
+                  <span className="ca-meta !text-[9px]">eller med e-post</span>
+                  <span className="h-px flex-1 bg-[hsl(var(--ca-line))]" />
                 </div>
               </>
             )}
@@ -176,57 +186,58 @@ const Auth = () => {
             )}
 
             {forgotPassword ? (
-              <form onSubmit={handleForgotPassword} className="space-y-3">
+              <form onSubmit={handleForgotPassword} className="mt-7 space-y-3">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="email" placeholder="E-postadress" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                  <Mail className={fieldIcon} />
+                  <input type="email" placeholder="E-postadress" value={email} onChange={(e) => setEmail(e.target.value)} required className={field} />
                 </div>
-                <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50">
+                <button type="submit" disabled={loading} className={primary}>
                   {loading ? 'Vänta...' : 'Skicka återställningslänk'}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="h-4 w-4" />
                 </button>
-                <div className="text-center">
-                  <button type="button" onClick={() => setForgotPassword(false)} className="text-xs text-muted-foreground hover:text-foreground transition">Tillbaka till inloggning</button>
+                <div className="pt-1 text-center">
+                  <button type="button" onClick={() => setForgotPassword(false)} className="text-[13px] text-[hsl(var(--ca-text-2))] transition hover:text-foreground">Tillbaka till inloggning</button>
                 </div>
               </form>
             ) : (
               <>
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input type="email" placeholder="E-postadress" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                    <Mail className={fieldIcon} />
+                    <input type="email" placeholder="E-postadress" value={email} onChange={(e) => setEmail(e.target.value)} required className={field} />
                   </div>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input type="password" placeholder="Lösenord" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                    <Lock className={fieldIcon} />
+                    <input type="password" placeholder="Lösenord" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className={field} />
                   </div>
                   {isLogin && (
                     <div className="text-right">
-                      <button type="button" onClick={() => setForgotPassword(true)} className="text-xs text-primary hover:text-primary/80 transition">Glömt lösenord?</button>
+                      <button type="button" onClick={() => setForgotPassword(true)} className="text-xs text-[hsl(var(--ca-text-2))] transition hover:text-foreground">Glömt lösenord?</button>
                     </div>
                   )}
-                  <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition disabled:opacity-50">
+                  <button type="submit" disabled={loading} className={primary}>
                     {loading ? 'Vänta...' : isLogin ? 'Logga in' : 'Skapa gratis konto'}
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 </form>
                 {!isLogin && (
-                  <p className="mt-3 text-[10px] text-muted-foreground text-center leading-relaxed">
+                  <p className="mt-4 text-[11px] leading-relaxed text-[hsl(var(--ca-text-3))]">
                     Genom att skapa ett konto godkänner du våra{' '}
-                    <button onClick={() => navigate('/villkor')} className="text-primary hover:underline">användarvillkor</button>
+                    <button onClick={() => navigate('/villkor')} className="text-[hsl(var(--ca-text-2))] underline underline-offset-2 hover:text-foreground">användarvillkor</button>
                     {' '}och samtycker till att ta emot tjänsterelaterade e-postmeddelanden.
                   </p>
                 )}
-                <div className="mt-3 text-center">
-                  <button onClick={() => setIsLogin(!isLogin)} className="text-xs text-muted-foreground hover:text-foreground transition">
-                    {isLogin ? 'Har du inget konto? Skapa ett' : 'Har du redan ett konto? Logga in'}
+                <div className="mt-6 border-t border-[hsl(var(--ca-line))] pt-5 text-center">
+                  <button onClick={() => setIsLogin(!isLogin)} className="text-[13px] text-[hsl(var(--ca-text-2))] transition hover:text-foreground">
+                    {isLogin ? 'Har du inget konto? ' : 'Har du redan ett konto? '}
+                    <span className="font-medium text-foreground underline decoration-[hsl(var(--ca-red)/0.6)] underline-offset-4">{isLogin ? 'Skapa ett' : 'Logga in'}</span>
                   </button>
                 </div>
               </>
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
