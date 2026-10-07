@@ -136,7 +136,7 @@ const Auth = () => {
             {signingUp ? (
               <p className="mt-3 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
                 {members ? (
-                  <>Gör som <strong className="font-medium text-foreground">{members} andra nöjda användare</strong>.</>
+                  <>Gör som <strong className="font-medium text-foreground">över 500 andra nöjda användare</strong>.</>
                 ) : 'Följ det som händer där du bor.'}
               </p>
             ) : (
