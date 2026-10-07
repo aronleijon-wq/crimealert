@@ -23,9 +23,9 @@ describe('Skapa konto', () => {
   it('asks you to join the others who already have an account', async () => {
     count.mockResolvedValue(500);
     await renderAuth('/auth?mode=signup');
-    expect(screen.getByRole('heading', { level: 1, name: 'Gå med nu' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Skapa konto' })).toBeInTheDocument();
     expect(await screen.findByText('över 500 andra nöjda användare')).toBeInTheDocument();
-    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Gratis', 'Inget kort behövs', 'Notiser för din kommun']);
+    expect(screen.queryByText('Inget kort behövs')).toBeNull();
     expect(screen.getByRole('button', { name: /Skapa gratis konto/ })).toBeInTheDocument();
   });
 

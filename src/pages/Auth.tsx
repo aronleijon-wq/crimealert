@@ -18,8 +18,6 @@ const isRateLimited = () => {
 };
 const recordAttempt = () => { authAttempts.timestamps.push(Date.now()); };
 const sanitizeInput = (str: string) => str.replace(/<[^>]*>/g, '').trim();
-// What a free account gets (plans.ts, notifications with Polisen's 15 minutes)
-const SIGNUP_PERKS = ['Gratis', 'Inget kort behövs', 'Notiser för din kommun'];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const withRetry = async (action: () => Promise<{ error: AuthError | null }>, attempts = 3) => {
@@ -133,24 +131,14 @@ const Auth = () => {
           <div className="ca-tac ca-tac-top w-full max-w-[400px] !bg-card/90 p-6 sm:p-8">
             <p className="ca-eyebrow">// {forgotPassword ? 'återställ lösenord' : isLogin ? 'logga in' : 'nytt konto'}</p>
             <h1 className="ca-display mt-3 text-[2rem] text-foreground">
-              {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Gå med nu'}
+              {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Skapa konto'}
             </h1>
             {signingUp ? (
-              <>
-                <p className="mt-3 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-                  {members ? (
-                    <>Gör som <strong className="font-medium text-foreground">{members} andra nöjda användare</strong>.</>
-                  ) : 'Följ det som händer där du bor.'}
-                </p>
-                <ul className="ca-meta mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
-                  {SIGNUP_PERKS.map((perk) => (
-                    <li key={perk} className="flex items-center gap-2">
-                      <span className="h-1 w-1 bg-[hsl(var(--ca-red))]" aria-hidden />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <p className="mt-3 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
+                {members ? (
+                  <>Gör som <strong className="font-medium text-foreground">{members} andra nöjda användare</strong>.</>
+                ) : 'Följ det som händer där du bor.'}
+              </p>
             ) : (
               <p className="mt-3 text-sm text-[hsl(var(--ca-text-2))]">
                 {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk.' : 'Välkommen tillbaka.'}
