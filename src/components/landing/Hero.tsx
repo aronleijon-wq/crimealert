@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin } from 'lucide-react';
+import { TRIAL_DAYS } from '@/components/account/plans';
+import { useAuth } from '@/hooks/useAuth';
 import OpsMap from './OpsMap';
 import { CountUp, LiveClock, LiveLog, ScrambleText } from './HudBits';
 import type { LandingLive } from './useLandingLive';
 
 const HEADLINE = ['Aktuell', 'lägesbild,', 'direkt', 'på', 'karta'];
-
 
 const Stat = ({ label, children, delay }: { label: string; children: React.ReactNode; delay: number }) => (
   <div className="ca-rise" style={{ animationDelay: `${delay}s` }}>
@@ -15,6 +16,9 @@ const Stat = ({ label, children, delay }: { label: string; children: React.React
 );
 
 const Hero = ({ live }: { live: LandingLive }) => {
+  const { user, subscription } = useAuth();
+  // Same rule as the checkout: signed out, or an account that never had Pro
+  const offerTrial = !user || subscription.trialEligible === true;
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-12 pt-24 md:items-center md:py-28">
       {/* Atmosphere */}
@@ -46,6 +50,20 @@ const Hero = ({ live }: { live: LandingLive }) => {
 
       <div className="relative mx-auto w-full max-w-[1400px] px-5 md:px-10">
         <div className="max-w-[640px]">
+          {offerTrial && (
+            <Link
+              to="/prisplan"
+              className="ca-rise group mb-6 inline-flex items-center gap-2.5 rounded-full border border-[hsl(var(--ca-red)/0.45)] bg-[hsl(var(--ca-red)/0.08)] py-1 pl-1 pr-3.5 backdrop-blur-md transition hover:border-[hsl(var(--ca-red)/0.8)] hover:bg-[hsl(var(--ca-red)/0.14)]"
+              style={{ animationDelay: '0.1s' }}
+            >
+              <span className="rounded-full bg-[hsl(var(--ca-red))] px-2 py-0.5 ca-mono text-[9px] font-semibold tracking-[0.18em] text-white">PRO</span>
+              <span className="text-[13px] text-[hsl(var(--ca-text))]">
+                Prova gratis i {TRIAL_DAYS} dagar
+                <span className="hidden text-[hsl(var(--ca-text-3))] sm:inline"> · händelser och notiser direkt</span>
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-[hsl(var(--ca-text-2))] transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
 
           <h1 className="ca-display max-w-[16ch] text-[clamp(2.6rem,4.6vw,4.6rem)] uppercase leading-[0.95]" aria-label="Aktuell lägesbild, direkt på karta.">
             {HEADLINE.map((word, i) => {
