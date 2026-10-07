@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { accountCountLabel, loadAccountCount } from '@/lib/accountCount';
 import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
@@ -48,8 +49,18 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [accountCount, setAccountCount] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const signingUp = !isLogin && !forgotPassword;
+  useEffect(() => {
+    if (!signingUp || accountCount !== null) return;
+    let live = true;
+    loadAccountCount().then((count) => live && setAccountCount(count)).catch(() => {});
+    return () => { live = false; };
+  }, [signingUp, accountCount]);
+  const members = accountCountLabel(accountCount);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -114,7 +125,9 @@ const Auth = () => {
               {forgotPassword ? 'Glömt lösenord' : isLogin ? 'Logga in' : 'Skapa konto'}
             </h1>
             <p className="text-xs text-muted-foreground mb-5">
-              {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk' : isLogin ? 'Logga in på ditt konto' : 'Skapa ett konto för att komma igång'}
+              {forgotPassword ? 'Ange din e-post så skickar vi en återställningslänk' : isLogin ? 'Logga in på ditt konto' : members ? (
+                <>Gå med <span className="font-semibold text-foreground">{members}</span>. Det är gratis, och inget kort behövs.</>
+              ) : 'Skapa ett gratis konto för att komma igång. Inget kort behövs.'}
             </p>
 
             {!forgotPassword && (
