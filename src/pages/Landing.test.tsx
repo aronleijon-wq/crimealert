@@ -50,6 +50,12 @@ describe('Landing page', () => {
     expect(within(hero).getByRole('link', { name: /Öppna livekartan/ })).toHaveAttribute('href', '/karta');
   });
 
+  it('offers the free Pro trial above the headline', async () => {
+    await renderLanding();
+    const hero = screen.getByRole('heading', { level: 1 }).closest('section')!;
+    expect(within(hero).getByRole('link', { name: /Prova gratis i 7 dagar/ })).toHaveAttribute('href', '/prisplan');
+  });
+
   it('answers common questions, with links to the right pages', async () => {
     const { container } = await renderLanding();
     const faq = screen.getByRole('heading', { level: 2, name: 'Vanliga frågor' }).closest('section')!;
