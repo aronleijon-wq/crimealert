@@ -12,10 +12,10 @@ export type AdsDecision = 'show' | 'hide' | 'wait';
 
 /**
  * Pages with our own text, where ads may run: the start page, kommun pages and their monthly
- * reports, the guides and Om oss. AdSense counts ads on screens without publisher content (the
+ * reports, the guides, the statistics page and Om oss. AdSense counts ads on screens without publisher content (the
  * map, sign-in, settings, checkout) against the whole site, so those stay without.
  */
-const AD_PAGES = [/^\/$/, /^\/kommun(\/[^/]+(\/\d{4}-\d{2})?)?\/?$/, /^\/guider(\/[^/]+)?\/?$/, /^\/om-oss\/?$/];
+const AD_PAGES = [/^\/$/, /^\/kommun(\/[^/]+(\/\d{4}-\d{2})?)?\/?$/, /^\/guider(\/[^/]+)?\/?$/, /^\/statistik\/?$/, /^\/om-oss\/?$/];
 
 export const adsAllowedOn = (pathname: string) => AD_PAGES.some((page) => page.test(pathname));
 
