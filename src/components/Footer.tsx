@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, FileText, Cookie, Info, BookOpen } from 'lucide-react';
+import { Shield, FileText, Cookie, Info, BookOpen, BarChart3 } from 'lucide-react';
 
 const Footer = () =>
 <footer className="border-t border-border bg-card px-4 my-0 py-[2px]">
@@ -27,6 +27,10 @@ const Footer = () =>
         <Link to="/guider" className="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted-foreground hover:text-foreground transition">
           <BookOpen className="w-3 h-3" />
           Guider
+        </Link>
+        <Link to="/statistik" className="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted-foreground hover:text-foreground transition">
+          <BarChart3 className="w-3 h-3" />
+          Statistik
         </Link>
       </nav>
     </div>

@@ -1,14 +1,16 @@
 import { Lock, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TRIAL_DAYS } from '@/components/account/plans';
 import { useAuth } from '@/hooks/useAuth';
 
 interface PremiumGateProps {
   title: string;
   description: string;
+  /** Something free users can look at instead */
+  free?: { to: string; label: string };
 }
 
-const PremiumGate = ({ title, description }: PremiumGateProps) => {
+const PremiumGate = ({ title, description, free }: PremiumGateProps) => {
   const navigate = useNavigate();
   const { user, subscription } = useAuth();
   const offerTrial = !user || subscription.trialEligible === true;
@@ -27,6 +29,11 @@ const PremiumGate = ({ title, description }: PremiumGateProps) => {
         >
           <Zap className="w-4 h-4" /> {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
         </button>
+        {free && (
+          <p className="mt-5 text-sm">
+            <Link to={free.to} className="text-muted-foreground underline underline-offset-4 hover:text-foreground">{free.label}</Link>
+          </p>
+        )}
       </div>
     </div>
   );

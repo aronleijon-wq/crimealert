@@ -16,6 +16,10 @@ Uppgifterna är Polisens händelsenotiser, ett urval av Polisens insatser och in
 - [Om CrimeAlert](https://crimealert.se/om-oss): vem som står bakom tjänsten, vad den strävar efter och kontakt
 - [Användarvillkor](https://crimealert.se/villkor) och [integritetspolicy](https://crimealert.se/sekretesspolicy)
 
+## Statistik
+
+- [Brottsutvecklingen i Sverige](https://crimealert.se/statistik): skjutningar och sprängningar per år enligt Polisen, och anmälda brott enligt Brå, med källor.
+
 ## Guider
 
 - [Så ser du vad som har hänt i ditt område](https://crimealert.se/guider/se-vad-som-hant-i-ditt-omrade)

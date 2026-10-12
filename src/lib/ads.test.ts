@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe('adsAllowedOn', () => {
   it('allows ads on pages with our own text', () => {
-    for (const path of ['/', '/kommun', '/kommun/malmo', '/kommun/malmo/2026-09', '/guider', '/guider/skydda-hemmet-mot-inbrott', '/om-oss']) {
+    for (const path of ['/', '/kommun', '/kommun/malmo', '/kommun/malmo/2026-09', '/guider', '/guider/skydda-hemmet-mot-inbrott', '/statistik', '/om-oss']) {
       expect(adsAllowedOn(path), path).toBe(true);
     }
   });

@@ -377,7 +377,8 @@ const Analysis = () => {
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
-        description="Med Pro ser du trender, mest aktiva tider, riskindex och säkerhetsindex per kommun, upp till 60 dagar bakåt, och kan exportera till PDF och CSV." /> :
+        description="Med Pro ser du trender, mest aktiva tider, riskindex och säkerhetsindex per kommun, upp till 60 dagar bakåt, och kan exportera till PDF och CSV."
+        free={{ to: '/statistik', label: 'Se brottsutvecklingen i hela Sverige gratis' }} /> :
 
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6">
