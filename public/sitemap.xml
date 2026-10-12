@@ -61,6 +61,31 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://crimealert.se/guider/polisens-handelsetyper</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/skydda-dig-mot-bedragerier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/vma-och-hesa-fredrik</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/ringa-112-eller-114-14</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://crimealert.se/guider/sa-polisanmaler-du-ett-brott</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://crimealert.se/sekretesspolicy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

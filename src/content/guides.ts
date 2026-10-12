@@ -170,6 +170,233 @@ export const GUIDES: Guide[] = [
     ],
     updated: '2026-10-06',
   },
+  {
+    slug: 'polisens-handelsetyper',
+    title: 'Polisens händelsetyper – vad betyder de?',
+    description: 'Ofredande, olaga hot, rån eller rattfylleri? Så betyder de vanligaste rubrikerna i Polisens händelsenotiser, förklarade med vanliga ord.',
+    intro:
+      'Varje händelsenotis från Polisen börjar med en rubrik som talar om vilken sorts händelse det gäller. Många av rubrikerna är juridiska begrepp som inte är självklara. Här förklarar vi de vanligaste med vardagliga ord.',
+    sections: [
+      {
+        heading: 'Brott mot en person',
+        list: [
+          'Misshandel: någon har orsakat en annan person kroppsskada, sjukdom eller smärta, till exempel med slag eller sparkar.',
+          'Olaga hot: någon har hotat en annan med ett brott på ett sätt som kan få den hotade att allvarligt frukta för sin eller någon annans säkerhet.',
+          'Ofredande: någon har antastat en annan fysiskt, eller stört någon genom hänsynslöst beteende, till exempel genom att knuffa, ringa gång på gång eller skicka obehagliga meddelanden.',
+          'Rån: en stöld där gärningspersonen använder våld eller hotar med våld, till exempel när någon tvingas lämna ifrån sig sin telefon eller plånbok.',
+          'Mord/dråp och försök till mord/dråp: Polisen utreder om någon har dödats eller om någon har försökt döda en annan. Rubriken är Polisens första bedömning, inte en dom.',
+        ],
+      },
+      {
+        heading: 'Stölder, inbrott och skadegörelse',
+        list: [
+          'Stöld: någon har tagit något som tillhör någon annan, till exempel i en butik, ur en bil eller en cykel som stått utanför.',
+          'Inbrott: någon har tagit sig in i en bostad, ett förråd, en bil eller en lokal för att stjäla. Står det "försök" kom gärningspersonen inte in eller fick inte med sig något.',
+          'Skadegörelse: någon har förstört eller skadat något som tillhör någon annan, till exempel krossade rutor, klotter eller sönderslagna bilar.',
+          'Bedrägeri: någon har lurats att lämna ifrån sig pengar, varor eller uppgifter, ofta via telefon, sms eller nätet. Läs mer i guiden om [hur du skyddar dig mot bedrägerier](/guider/skydda-dig-mot-bedragerier).',
+        ],
+      },
+      {
+        heading: 'Trafik',
+        list: [
+          'Trafikolycka: en olycka på väg eller gata. Tillägg som "personskada", "singel" eller "vilt" berättar att någon har skadats, att bara ett fordon var inblandat eller att ett djur blev påkört.',
+          'Rattfylleri: någon har kört med minst 0,2 promille alkohol i blodet, eller med narkotika i kroppen. Med 1,0 promille eller mer, eller om föraren är avsevärt påverkad, räknas det som grovt rattfylleri.',
+          'Trafikkontroll: Polisen har kontrollerat förare, till exempel deras nykterhet eller hastighet. Notisen berättar ofta hur många som kontrollerades och hur många som misstänks för brott.',
+        ],
+      },
+      {
+        heading: 'Bränder, larm och insatser',
+        list: [
+          'Brand: Polisen har varit på plats vid en brand, ofta tillsammans med räddningstjänsten. Det kan vara allt från en brinnande container till en husbrand.',
+          'Skottlossning och explosion: Polisen har fått larm om skott eller en detonation. I början vet Polisen sällan om någon har skadats, så notisen uppdateras ofta när mer är känt.',
+          'Försvunnen person: Polisen söker efter någon. Ibland ber Polisen allmänheten om tips.',
+          'Polisinsats/kommendering: en planerad insats, till exempel vid en fotbollsmatch, en demonstration eller ett större evenemang.',
+          'Sammanfattning: en översikt över flera händelser i ett län under en natt, en kväll eller en helg. CrimeAlert visar sammanfattningarna men räknar dem inte som egna händelser.',
+        ],
+      },
+      {
+        heading: 'Vad rubriken inte säger',
+        text: [
+          'Rubriken är Polisens första bedömning av vad som har hänt. En notis med rubriken "Misshandel" betyder inte att någon har dömts för misshandel, och en händelse kan bedömas annorlunda när Polisen vet mer.',
+          'Läs därför hela notisen hos Polisen, där texten ofta uppdateras. Vill du veta mer om hur notiserna fungerar finns guiden [Vad är Polisens händelsenotiser?](/guider/polisens-handelsenotiser). Alla händelser i hela landet hittar du på [kartan](/karta).',
+        ],
+      },
+    ],
+    updated: '2026-10-12',
+  },
+  {
+    slug: 'skydda-dig-mot-bedragerier',
+    title: 'Så skyddar du dig mot bedrägerier',
+    description: 'Falska poliser, bankbedragare och sms med länkar: så känner du igen de vanligaste bedrägerierna och så gör du om du har blivit lurad.',
+    intro:
+      'Bedragare ringer, sms:ar och mejlar och utger sig ofta för att vara banken, Polisen eller ett känt företag. Gemensamt för nästan alla upplägg är att du ska stressas att göra något direkt. Det bästa skyddet är att känna igen knepen och att aldrig låta dig skyndas.',
+    sections: [
+      {
+        heading: 'Det här gör banken och Polisen aldrig',
+        list: [
+          'Ber dig legitimera dig eller skriva under med BankID för att "stoppa" en betalning eller "skydda" ditt konto.',
+          'Frågar efter dina koder, lösenord eller kortuppgifter i telefon, sms eller mejl.',
+          'Ber dig flytta pengar till ett "säkert konto".',
+          'Skickar någon hem till dig för att hämta kort, kontanter eller smycken.',
+        ],
+      },
+      {
+        heading: 'Vanliga upplägg',
+        list: [
+          'Falska samtal från banken eller Polisen: någon påstår att ditt konto är i fara och ber dig öppna BankID. I själva verket loggar bedragaren in på ditt konto.',
+          'Sms och mejl med länkar: ett paket väntar, en räkning är obetald eller ett konto ska spärras. Länken leder till en falsk sida som samlar in dina uppgifter.',
+          '"Hej mamma" eller "hej pappa": någon skriver att de är ditt barn med ett nytt nummer och behöver pengar snabbt.',
+          'Köp och sälj: motparten vill att du betalar eller tar emot pengar via en länk de skickar, eller visar en falsk betalningsbekräftelse.',
+          'Investeringar: annonser där kända personer sägs ha blivit rika snabbt, och som lovar hög avkastning utan risk.',
+        ],
+      },
+      {
+        heading: 'Så skyddar du dig',
+        list: [
+          'Lägg på om du blir osäker. Ring sedan upp banken själv på numret som står på bankens webbplats eller på ditt kort.',
+          'Klicka inte på länkar i oväntade sms och mejl. Gå in på tjänsten själv i stället, i appen eller genom att skriva adressen.',
+          'Läs alltid vad som står i BankID-appen innan du legitimerar dig eller skriver under. Öppna aldrig BankID för att någon i telefon ber dig om det.',
+          'Prata med äldre släktingar och grannar om de vanligaste knepen. Bedragare ringer ofta till äldre.',
+        ],
+      },
+      {
+        heading: 'Om du har blivit lurad',
+        list: [
+          'Ring din bank direkt och be dem spärra kort, konton och BankID. Bankerna har spärrtjänster som är öppna dygnet runt.',
+          'Pågår bedrägeriet just nu, till exempel om någon är på väg hem till dig för att hämta saker: ring 112.',
+          'Polisanmäl på polisen.se eller på 114 14. Spara sms, mejl, telefonnummer och kontonummer som bedragaren använde. Läs mer i guiden [Så polisanmäler du ett brott](/guider/sa-polisanmaler-du-ett-brott).',
+          'Skäms inte. Bedragarna är skickliga och vem som helst kan bli lurad. Ju snabbare du berättar, desto större chans att stoppa pengarna.',
+        ],
+      },
+      {
+        heading: 'Håll koll i ditt område',
+        text: ['Polisen skriver ibland om bedrägeriförsök i ett område, till exempel när falska poliser har ringt runt till äldre. Med CrimeAlert kan du [bevaka din kommun](/alerts) och se sådana notiser på [kartan](/karta).'],
+      },
+    ],
+    updated: '2026-10-12',
+  },
+  {
+    slug: 'vma-och-hesa-fredrik',
+    title: 'VMA och Hesa Fredrik – så fungerar varningarna',
+    description: 'Vad ett VMA är, hur signalerna från Hesa Fredrik låter, när de testas och vad du ska göra när du hör varningen.',
+    intro:
+      'VMA, Viktigt meddelande till allmänheten, används när många människor snabbt behöver varnas, till exempel vid en brand med giftig rök, ett gasutsläpp eller förorenat dricksvatten. Varningen kan komma via radio och tv, på krisinformation.se och genom utomhussignalen som kallas Hesa Fredrik.',
+    sections: [
+      {
+        heading: 'Så låter signalerna',
+        list: [
+          'Viktigt meddelande: 7 sekunder ljud och 14 sekunder tystnad, om och om igen i minst 2 minuter.',
+          'Faran över: en sammanhängande signal i 30 sekunder.',
+          'Beredskapslarm: 30 sekunder ljud och 15 sekunder tystnad i minst 5 minuter. Signalen används om Sverige hamnar i höjd beredskap.',
+        ],
+      },
+      {
+        heading: 'Testerna fyra gånger om året',
+        text: ['Signalen Viktigt meddelande testas klockan 15.00 den första helgfria måndagen i mars, juni, september och december. Hör du signalen då är det ett test och du behöver inte göra något.'],
+      },
+      {
+        heading: 'Det här gör du när du hör signalen',
+        list: [
+          'Gå inomhus.',
+          'Stäng dörrar, fönster och ventilation.',
+          'Lyssna på Sveriges Radio P4 eller gå in på krisinformation.se för att få veta vad som har hänt och hur du ska göra.',
+          'Ring inte 112 för att fråga om varningen. Numret behövs till dem som är i nöd. Vill du ha information om en olycka eller kris kan du ringa 113 13.',
+        ],
+      },
+      {
+        heading: 'VMA på CrimeAlert',
+        text: ['När ett VMA är aktivt visas det överst i [flödet](/flode) och på [kartan](/karta), tillsammans med Polisens händelser i området. Följ alltid myndigheternas instruktioner i själva meddelandet.'],
+      },
+    ],
+    updated: '2026-10-12',
+  },
+  {
+    slug: 'ringa-112-eller-114-14',
+    title: 'När ska du ringa 112 och när 114 14?',
+    description: 'Skillnaden mellan 112, 114 14, 1177 och 113 13, och vad du ska säga när du ringer larmnumret.',
+    intro:
+      'I Sverige finns ett nummer för nödsituationer och flera för allt annat. Att ringa rätt gör att hjälpen kommer snabbare, både till dig och till andra som behöver den.',
+    sections: [
+      {
+        heading: 'Ring 112 när det är bråttom',
+        text: ['112 är numret när det är fara för liv, hälsa, egendom eller miljö: ett brott pågår just nu, någon är allvarligt skadad eller sjuk, det brinner eller du har sett en allvarlig olycka. Samtalet är gratis.'],
+      },
+      {
+        heading: 'Ring 114 14 när det inte är akut',
+        text: ['114 14 är Polisens nummer för allt som inte är akut: att anmäla ett brott som redan har hänt, lämna tips eller ställa en fråga. Ringer du från utlandet är numret +46 77 114 14 00.'],
+      },
+      {
+        heading: 'Andra bra nummer',
+        list: [
+          '1177: råd om vård och var du ska vända dig när det inte är akut.',
+          '113 13: information om olyckor och kriser, till exempel vid ett VMA. Läs mer i guiden om [VMA och Hesa Fredrik](/guider/vma-och-hesa-fredrik).',
+        ],
+      },
+      {
+        heading: 'Det här ska du berätta när du ringer 112',
+        list: [
+          'Vad som har hänt.',
+          'Var det har hänt: adress, ort eller något som syns i närheten om du inte vet adressen.',
+          'Hur många som är skadade eller i fara.',
+          'Ditt namn och det nummer du ringer från.',
+          'Följ operatörens frågor och instruktioner, och lägg inte på förrän du blir ombedd.',
+        ],
+      },
+      {
+        heading: 'Om du inte kan prata',
+        text: ['Har du en hörsel- eller talnedsättning kan du registrera dig för att kunna skicka sms till 112. Det måste göras i förväg, så gör det redan nu om det gäller dig eller någon i din närhet.'],
+      },
+      {
+        heading: 'Efteråt',
+        text: ['Har du sett eller varit med om ett brott kan du följa vad Polisen rapporterar i området på [kartan](/karta). Ibland ber Polisen om tips i sina notiser, och då är 114 14 rätt nummer.'],
+      },
+    ],
+    updated: '2026-10-12',
+  },
+  {
+    slug: 'sa-polisanmaler-du-ett-brott',
+    title: 'Så polisanmäler du ett brott',
+    description: 'Var du anmäler, vad du ska ha med dig och vad som händer sedan, för stöld, skadegörelse, bedrägeri och andra brott.',
+    intro:
+      'En polisanmälan behövs för att Polisen ska kunna utreda ett brott, och för att du ska få ersättning från försäkringen. Den gör också att Polisen ser var och när brott sker. Så här går det till.',
+    sections: [
+      {
+        heading: 'Tre sätt att anmäla',
+        list: [
+          'På polisen.se: många vanliga brott, till exempel stöld, skadegörelse och vissa bedrägerier, kan anmälas direkt på nätet.',
+          'Per telefon på 114 14.',
+          'På en polisstation med öppen reception.',
+          'Pågår brottet, eller är någon i fara: ring 112 i stället.',
+        ],
+      },
+      {
+        heading: 'Det här är bra att ha till hands',
+        list: [
+          'När och var brottet hände, så noga du kan.',
+          'Vad som hände, med dina egna ord.',
+          'Hur gärningspersonen såg ut, om du såg någon: längd, kläder, fordon eller registreringsnummer.',
+          'Vad som har stulits eller skadats, gärna med serienummer, kvitton och bilder.',
+          'Namn och kontaktuppgifter till vittnen.',
+        ],
+      },
+      {
+        heading: 'Vad händer sedan?',
+        text: [
+          'Du får ett kvitto på anmälan med ett diarienummer. Spara det, eftersom försäkringsbolaget ofta vill ha numret.',
+          'Polisen bedömer sedan om det finns förutsättningar att utreda brottet. Saknas spår, vittnen eller bilder läggs många ärenden ner. Anmälan är ändå viktig: den behövs för försäkringen och om nya uppgifter kommer fram senare.',
+        ],
+      },
+      {
+        heading: 'Stöd om du har utsatts',
+        text: ['Att utsättas för brott kan kännas jobbigt även när det gäller saker. Brottsofferjouren ger kostnadsfritt stöd och nås på 116 006.'],
+      },
+      {
+        heading: 'Förebygg nästa gång',
+        text: ['Har det varit inbrott eller stölder i ditt område kan du [bevaka din kommun](/alerts) på CrimeAlert och få en notis när Polisen rapporterar något nytt. Tips om hur du gör det svårare för tjuven finns i guiden [Så skyddar du hemmet mot inbrott](/guider/skydda-hemmet-mot-inbrott).'],
+      },
+    ],
+    updated: '2026-10-12',
+  },
 ];
 
 export const guideBySlug = (slug: string | undefined) => GUIDES.find((g) => g.slug === slug) ?? null;
