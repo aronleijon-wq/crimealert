@@ -10,6 +10,9 @@ import {
   type MonthReport, type MonthRow,
 } from '@/lib/monthlyReport';
 
+/** Months with fewer events than this say too little to be worth a place in search results */
+const THIN_REPORT = 20;
+
 const fetchMonth = async (kommun: string, month: string): Promise<MonthRow[]> => {
   const { data, error } = await supabase.rpc('kommun_month_counts', { _kommun: kommun, _month: `${month}-01` });
   if (error) throw error;
@@ -82,6 +85,7 @@ const KommunRapport = () => {
     title: valid ? `Polisen ${name} ${label} – månadsrapport | CrimeAlert` : 'Rapporten finns inte | CrimeAlert',
     description: summary || (valid ? `Polisens händelser i ${name} i ${label}: antal, vanligaste händelserna och utvecklingen dag för dag.` : 'Månadsrapporter per kommun på CrimeAlert.'),
     canonical: valid && name ? `https://crimealert.se${kommunPath(name)}/${month}` : 'https://crimealert.se/kommun',
+    noindex: !valid || failed || (!!report && report.total < THIN_REPORT),
   });
 
   if (!valid || !name || !month) {

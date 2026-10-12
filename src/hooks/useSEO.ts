@@ -4,9 +4,11 @@ interface SEOProps {
   title: string;
   description: string;
   canonical?: string;
+  /** Keep the page out of search results (thin or missing pages); links on it are still followed */
+  noindex?: boolean;
 }
 
-export const useSEO = ({ title, description, canonical }: SEOProps) => {
+export const useSEO = ({ title, description, canonical, noindex = false }: SEOProps) => {
   useEffect(() => {
     document.title = title;
 
@@ -35,5 +37,21 @@ export const useSEO = ({ title, description, canonical }: SEOProps) => {
       }
       link.href = canonical;
     }
-  }, [title, description, canonical]);
+
+    let robots = document.querySelector('meta[name="robots"]');
+    if (noindex) {
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.setAttribute('name', 'robots');
+        document.head.appendChild(robots);
+      }
+      robots.setAttribute('content', 'noindex, follow');
+    } else {
+      robots?.remove();
+    }
+    // Pages without useSEO must not keep it after leaving this one
+    return () => {
+      if (noindex) document.querySelector('meta[name="robots"]')?.remove();
+    };
+  }, [title, description, canonical, noindex]);
 };
