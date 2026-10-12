@@ -23,8 +23,17 @@ describe('guides', () => {
       for (const part of texts.flatMap(parseLinks)) {
         if (typeof part === 'string' || !part.href.startsWith('/')) continue;
         const kommun = part.href.match(/^\/kommun\/([^/]+)$/);
-        expect(kommun ? kommunFromSlug(kommun[1]) : APP_PATHS.has(part.href) ? true : null, part.href).toBeTruthy();
+        const guide = part.href.match(/^\/guider\/([^/]+)$/);
+        const exists = kommun ? kommunFromSlug(kommun[1]) : guide ? guideBySlug(guide[1]) : APP_PATHS.has(part.href);
+        expect(exists, part.href).toBeTruthy();
       }
+    }
+  });
+
+  it('are long enough to be worth reading', () => {
+    for (const g of GUIDES) {
+      const words = [g.intro, ...g.sections.flatMap((s) => [s.heading, ...(s.text ?? []), ...(s.list ?? [])])].map(plainText).join(' ').split(/\s+/).length;
+      expect(words, g.slug).toBeGreaterThan(200);
     }
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { adsDecision, hideAds, showAds } from './ads';
+import { adsAllowedOn, adsDecision, hideAds, showAds } from './ads';
 
 type AdsWindow = Window & { adsbygoogle?: unknown[] & { pauseAdRequests?: number } };
 const scripts = () => document.querySelectorAll('script[src*="adsbygoogle.js"]');
@@ -18,6 +18,20 @@ beforeEach(() => {
 afterEach(() => {
   vi.runOnlyPendingTimers();
   vi.useRealTimers();
+});
+
+describe('adsAllowedOn', () => {
+  it('allows ads on pages with our own text', () => {
+    for (const path of ['/', '/kommun', '/kommun/malmo', '/kommun/malmo/2026-09', '/guider', '/guider/skydda-hemmet-mot-inbrott', '/om-oss']) {
+      expect(adsAllowedOn(path), path).toBe(true);
+    }
+  });
+
+  it('keeps ads off the map, sign-in, settings, checkout and other app screens', () => {
+    for (const path of ['/karta', '/auth', '/installningar', '/account', '/prisplan', '/alerts', '/analysis', '/admin', '/reset-password', '/handelse/abc', '/flode', '/villkor', '/kommun/malmo/rapport/x']) {
+      expect(adsAllowedOn(path), path).toBe(false);
+    }
+  });
 });
 
 describe('adsDecision', () => {
