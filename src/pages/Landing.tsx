@@ -6,6 +6,7 @@ import Hero from '@/components/landing/Hero';
 import MapPreview from '@/components/landing/MapPreview';
 import Categories from '@/components/landing/Categories';
 import LocalMonitoring from '@/components/landing/LocalMonitoring';
+import CrimeTrends from '@/components/landing/CrimeTrends';
 import PlatformGrid from '@/components/landing/PlatformGrid';
 import FAQ from '@/components/landing/FAQ';
 import FinalCTA from '@/components/landing/FinalCTA';
@@ -72,6 +73,7 @@ const Landing = () => {
         <MapPreview live={live} />
         <Categories />
         <LocalMonitoring />
+        <CrimeTrends />
         <PlatformGrid />
         <FAQ />
         <FinalCTA />
