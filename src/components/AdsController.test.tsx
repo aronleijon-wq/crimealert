@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 const auth = { user: null as { id: string } | null, loading: false, subscriptionChecked: false };
 const premium = { isPremium: false };
@@ -10,9 +11,9 @@ vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('@/hooks/useIsPremium', () => ({ useIsPremium: () => premium }));
 vi.mock('@/lib/ads', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/ads')>()), showAds, hideAds }));
 
-const renderController = async () => {
+const renderController = async (path = '/') => {
   const { default: AdsController } = await import('./AdsController');
-  return render(<AdsController />);
+  return render(<AdsController />, { wrapper: ({ children }) => <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter> });
 };
 
 beforeEach(() => {
@@ -39,6 +40,13 @@ describe('AdsController', () => {
     rerender(<AdsController />);
     expect(hideAds).toHaveBeenCalledTimes(1);
     expect(showAds).not.toHaveBeenCalled();
+  });
+
+  it('keeps ads off screens without our own content, like the map and sign-in', async () => {
+    await renderController('/karta');
+    await renderController('/auth');
+    expect(showAds).not.toHaveBeenCalled();
+    expect(hideAds).toHaveBeenCalledTimes(2);
   });
 
   it('shows ads to signed-in free users once checked', async () => {

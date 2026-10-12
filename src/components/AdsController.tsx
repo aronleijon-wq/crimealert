@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
-import { adsDecision, hideAds, showAds } from '@/lib/ads';
+import { adsAllowedOn, adsDecision, hideAds, showAds } from '@/lib/ads';
 
-/** Turns AdSense on for free users and off for Pro. Renders nothing. */
+/** Turns AdSense on for free users on pages with our own content, and off for Pro. Renders nothing. */
 const AdsController = () => {
+  const { pathname } = useLocation();
   const { user, loading, subscriptionChecked } = useAuth();
   const { isPremium } = useIsPremium();
-  const decision = adsDecision({ loading, signedIn: !!user, subscriptionChecked, isPremium });
+  const decision = adsAllowedOn(pathname) ? adsDecision({ loading, signedIn: !!user, subscriptionChecked, isPremium }) : 'hide';
 
   useEffect(() => {
     if (decision === 'show') showAds();
