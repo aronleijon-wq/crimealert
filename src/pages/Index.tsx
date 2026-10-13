@@ -19,11 +19,12 @@ import { useCommunityReports } from '@/hooks/useCommunityReports';
 import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
-import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon, History } from 'lucide-react';
+import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon, History, Cctv } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
 import { useExternalEvents } from '@/hooks/useExternalEvents';
+import { cameraLayerWanted, loadCameras, rememberCameraLayer, type TrafficCamera } from '@/lib/trafficCameras';
 
 
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
@@ -115,6 +116,23 @@ const Index = () => {
 
   // Timeline (Pro): a day, week, month or two months back, as a whole, a window being played, or a heatmap
   const [historyOpen, setHistoryOpen] = useState(false);
+  // Trafikverket's road cameras, fetched the first time the layer is turned on
+  const [showCameras, setShowCameras] = useState(cameraLayerWanted);
+  const [cameras, setCameras] = useState<TrafficCamera[] | null>(null);
+  const [camerasFailed, setCamerasFailed] = useState(false);
+  useEffect(() => {
+    if (!showCameras || cameras) return;
+    let live = true;
+    setCamerasFailed(false);
+    loadCameras()
+      .then((list) => live && setCameras(list))
+      .catch(() => live && setCamerasFailed(true));
+    return () => { live = false; };
+  }, [showCameras, cameras]);
+  const toggleCameras = () => {
+    rememberCameraLayer(!showCameras);
+    setShowCameras(!showCameras);
+  };
   const [historyRange, setHistoryRange] = useState<HistoryRange>('7d');
   const [historyEnd, setHistoryEnd] = useState<number | null>(null);
   const [historyPlaying, setHistoryPlaying] = useState(false);
@@ -289,7 +307,8 @@ const Index = () => {
             onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
             flyToLocation={flyToLocation}
-            heatPoints={showHeat ? filtered : null} />
+            heatPoints={showHeat ? filtered : null}
+            cameras={showCameras ? cameras : null} />
 
           {/* Vinjett för nattkänsla över kartan */}
           <div
@@ -336,18 +355,34 @@ const Index = () => {
             </span>
           </div>
 
-          {!historyOpen && (
+          <div className="absolute left-3 z-[1000] flex flex-col items-start gap-2" style={{ top: isFullscreen ? 'calc(3.1rem + env(safe-area-inset-top, 0px))' : '3.1rem' }}>
+            {!historyOpen && (
+              <button
+                type="button"
+                onClick={() => { setHistoryOpen(true); setHistoryNow(Date.now()); }}
+                className="ca-glass rounded-md px-3 py-1.5 flex items-center gap-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+              >
+                <History className="w-3.5 h-3.5" />
+                <span className="ca-mono text-[9px] tracking-[0.18em] uppercase">Tidslinje</span>
+                {!isPremium && <span className="rounded bg-primary/20 px-1 text-[8px] font-bold text-primary">PRO</span>}
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => { setHistoryOpen(true); setHistoryNow(Date.now()); }}
-              className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex items-center gap-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
-              style={{ top: isFullscreen ? 'calc(3.1rem + env(safe-area-inset-top, 0px))' : '3.1rem' }}
+              onClick={toggleCameras}
+              aria-pressed={showCameras}
+              title={camerasFailed ? 'Kamerorna kunde inte hämtas just nu' : 'Trafikverkets vägkameror'}
+              className={`ca-glass rounded-md px-3 py-1.5 flex items-center gap-1.5 transition-colors ${showCameras ? 'text-[hsl(var(--ca-text))] ring-1 ring-[#7dd3fc]/60' : 'text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))]'}`}
             >
-              <History className="w-3.5 h-3.5" />
-              <span className="ca-mono text-[9px] tracking-[0.18em] uppercase">Tidslinje</span>
-              {!isPremium && <span className="rounded bg-primary/20 px-1 text-[8px] font-bold text-primary">PRO</span>}
+              <Cctv className={`w-3.5 h-3.5 ${showCameras ? 'text-[#7dd3fc]' : ''}`} />
+              <span className="ca-mono text-[9px] tracking-[0.18em] uppercase">Kameror</span>
+              {showCameras && (
+                <span className="ca-mono text-[9px] text-[hsl(var(--ca-text-3))]">
+                  {camerasFailed ? 'ej tillgängliga' : cameras ? cameras.length.toLocaleString('sv-SE') : '…'}
+                </span>
+              )}
             </button>
-          )}
+          </div>
 
           {historyOpen && (
             <div className={`absolute left-1/2 z-[1000] -translate-x-1/2 ${isMobile && !mobileListOpen ? 'bottom-16' : 'bottom-4'}`}>
