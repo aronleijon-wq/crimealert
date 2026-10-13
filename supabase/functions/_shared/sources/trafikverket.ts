@@ -74,7 +74,7 @@ const ACUTE_CODES = [
 const isInSweden = (lat: number, lng: number) => lat >= 54 && lat <= 70 && lng >= 10 && lng <= 25;
 
 /** Coordinate pairs from a WGS84 WKT POINT or LINESTRING ("lng lat" order, optional Z). */
-export function wktCoordinates(wkt: unknown): { lat: number; lng: number }[] {
+function wktCoordinates(wkt: unknown): { lat: number; lng: number }[] {
   const body = String(wkt ?? '').match(/\(([^()]*)\)/)?.[1];
   if (!body) return [];
   return body.split(',').map((pair) => {
