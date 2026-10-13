@@ -10,7 +10,6 @@ import { isPoliceEvent } from '@/lib/share';
 import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
-import type { TrafficCamera } from '@/lib/trafficCameras';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 declare global {
@@ -31,40 +30,9 @@ interface MapViewProps {
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
   /** Shown as a heatmap (the timeline's heat view); null for none */
   heatPoints?: HeatPoint[] | null;
-  /** Trafikverket's road cameras, when the camera layer is on */
-  cameras?: TrafficCamera[] | null;
 }
 
 const COMMUNITY_REPORT_COLOR = '#f97316'; // orange
-const CAMERA_COLOR = '#7dd3fc'; // light blue, apart from every event colour
-
-const openLightbox = (url: string) => {
-  window.__crimeAlertLightbox = url;
-  window.dispatchEvent(new CustomEvent('crimealert-lightbox'));
-};
-
-/** A camera's latest image, built with text nodes only. The image comes straight from Trafikverket. */
-const createCameraPopup = (cam: TrafficCamera, isTouch: boolean): HTMLElement => {
-  const el = (tag: string, css: string, text?: string) => {
-    const node = document.createElement(tag);
-    node.style.cssText = css;
-    if (text) node.textContent = text;
-    return node;
-  };
-  const root = el('div', `width:${isTouch ? 230 : 300}px`);
-  root.append(
-    el('div', 'font-family:JetBrains Mono,ui-monospace,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7', cam.type ?? 'Trafikkamera'),
-    el('div', 'font-weight:600;font-size:13px;margin-top:2px;line-height:1.3', cam.name),
-  );
-  const img = el('img', `display:block;width:100%;height:auto;min-height:120px;max-height:${isTouch ? 180 : 240}px;object-fit:cover;margin-top:8px;border-radius:4px;background:rgba(127,127,127,0.15);cursor:zoom-in`) as HTMLImageElement;
-  img.src = cam.photoUrl;
-  img.alt = `Kamerabild: ${cam.name}`;
-  img.loading = 'lazy';
-  img.onclick = () => openLightbox(cam.fullSizeUrl ?? cam.photoUrl);
-  img.onerror = () => img.replaceWith(el('div', 'margin-top:8px;padding:24px 8px;border-radius:4px;background:rgba(127,127,127,0.15);font-size:12px;text-align:center', 'Bilden kunde inte laddas just nu.'));
-  root.append(img, el('div', 'margin-top:6px;font-size:11px;opacity:0.7', `${cam.direction ? `Riktning mot ${cam.direction} · ` : ''}Bild: Trafikverket`));
-  return root;
-};
 
 const isTouchDevice = () =>
   typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -482,7 +450,7 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
 };
 
 
-const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation, heatPoints = null, cameras = null }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation, heatPoints = null }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker | L.CircleMarker>>(new Map());
@@ -735,37 +703,6 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     heatLayerRef.current.setPoints(heatPoints);
   }, [heatPoints]);
 
-  // Trafikverket's cameras: small dots on the events' canvas, drawn under the events
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !cameras?.length) return;
-    const layer = L.layerGroup();
-    for (const cam of cameras) {
-      L.circleMarker([cam.lat, cam.lng], {
-        renderer: canvasRendererRef.current ?? undefined,
-        radius: isTouch ? 5 : 3.5,
-        color: 'rgba(8,12,18,0.85)',
-        weight: 1.5,
-        fillColor: CAMERA_COLOR,
-        fillOpacity: 1,
-      })
-        .bindPopup(() => createCameraPopup(cam, isTouch), {
-          className: 'incident-popup',
-          maxWidth: isTouch ? 260 : 340,
-          autoPan: true,
-          autoPanPadding: L.point(isTouch ? 15 : 40, isTouch ? 15 : 40),
-        })
-        .addTo(layer);
-    }
-    layer.addTo(map);
-    markerMapRef.current.forEach((marker) => {
-      if (marker instanceof L.CircleMarker) marker.bringToFront();
-    });
-    return () => {
-      layer.remove();
-    };
-  }, [cameras, isTouch]);
-
   useEffect(() => {
     if (!mapRef.current || !flyToLocation) return;
     mapRef.current.flyTo([flyToLocation.lat, flyToLocation.lng], flyToLocation.zoom, { duration: 1.2 });
@@ -984,7 +921,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           </button>
           <img
             src={lightboxUrl}
-            alt="Förstorad bild"
+            alt="Rapportbild"
             className="max-w-full max-h-[85vh] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
