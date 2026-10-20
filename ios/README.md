@@ -10,6 +10,10 @@ Det appen gör själv (`App/AppDelegate.swift`, används av sajten via `src/lib/
   skickar når även appen (`supabase/functions/_shared/apns.ts`).
 - **Logga in med Apple eller Google** i Apples inloggningsfönster, eftersom Google inte tillåter
   inloggning i en apps webbvy. Fönstret öppnar `/app-login` och lämnar tillbaka inloggningen till appen.
+- **Pro via App Store** (StoreKit). Servern frågar Apple om varje köp (`apple-subscription`,
+  `apple-notifications`) och ger kontot Pro, även på webben.
+- **Eget utseende** (`src/native`): flikar längst ner, egen titelrad, iPhones typsnitt och en
+  välkomstguide första gången. Webbplatsen påverkas inte; allt det laddas bara i appen.
 
 ## Kör appen på din iPhone
 
@@ -77,7 +81,7 @@ Texter, nyckelord, dataskyddssvar och granskningsanteckning finns i `APPSTORE.md
 
 - **Ny version i App Store** behövs bara när något i `ios/` ändras. Höj då **Build** (och
   **Version** vid större ändringar) under målet App → General innan du arkiverar.
-- **Pro:** appen säljer inte Pro och länkar inte till var det säljs. Den som redan har Pro loggar in
-  och får det. Vill Apple att Pro ska kunna köpas i appen behövs köp via Apple (t.ex. RevenueCat).
+- **Pro:** säljs i appen via Apple. Stegen i App Store Connect finns i `APPSTORE.md`
+  (Prenumerationen). Den som har Pro från webben har det i appen också, och tvärtom.
 - **Ändrar du `capacitor.config.ts`:** kör `npm install` och `npx cap sync ios` (kräver Node.js),
   eller ändra samma sak i `App/App/capacitor.config.json`.

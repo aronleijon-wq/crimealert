@@ -2,6 +2,7 @@ import UIKit
 import Capacitor
 import UserNotifications
 import AuthenticationServices
+import StoreKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -54,12 +55,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-/// The site's bridge to what only the app can do: notifications through Apple and signing in
-/// with Google or Apple. The site uses them through src/lib/nativeApp.ts.
+/// The site's bridge to what only the app can do: notifications through Apple, signing in with
+/// Google or Apple, and buying Pro through the App Store. The site uses them through
+/// src/lib/nativeApp.ts and src/lib/appStore.ts.
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(CrimeAlertPushPlugin())
         bridge?.registerPluginInstance(CrimeAlertAuthPlugin())
+        bridge?.registerPluginInstance(CrimeAlertStorePlugin())
     }
 }
 
@@ -212,5 +215,166 @@ public class CrimeAlertAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticat
 
     public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         bridge?.viewController?.view.window ?? ASPresentationAnchor()
+    }
+}
+
+// MARK: - Pro through the App Store (StoreKit 2)
+
+/// Buys and restores Pro. The site sends the transaction ids to the server (apple-subscription),
+/// which asks Apple what they give; nothing here decides who has Pro.
+@objc(CrimeAlertStorePlugin)
+public class CrimeAlertStorePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "CrimeAlertStorePlugin"
+    public let jsName = "CrimeAlertStore"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "products", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "entitlements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise)
+    ]
+
+    private var updates: Task<Void, Never>?
+
+    override public func load() {
+        // Renewals, purchases approved later (Ask to Buy) and refunds arrive here while the app runs
+        updates = Task.detached { [weak self] in
+            for await result in Transaction.updates {
+                guard case .verified(let transaction) = result else { continue }
+                await transaction.finish()
+                let id = String(transaction.id)
+                DispatchQueue.main.async {
+                    self?.notifyListeners("transaction", data: ["transactionId": id], retainUntilConsumed: true)
+                }
+            }
+        }
+    }
+
+    deinit {
+        updates?.cancel()
+    }
+
+    private static func period(_ period: Product.SubscriptionPeriod) -> String {
+        let unit: String
+        switch period.unit {
+        case .day: unit = "day"
+        case .week: unit = "week"
+        case .month: unit = "month"
+        case .year: unit = "year"
+        @unknown default: unit = "month"
+        }
+        return "\(period.value) \(unit)"
+    }
+
+    /// The Pro subscriptions with their prices in the user's own currency
+    @objc func products(_ call: CAPPluginCall) {
+        let ids = call.getArray("ids", String.self) ?? []
+        Task {
+            do {
+                var list: [[String: Any]] = []
+                for product in try await Product.products(for: ids) {
+                    var item: [String: Any] = [
+                        "id": product.id,
+                        "title": product.displayName,
+                        "description": product.description,
+                        "price": product.displayPrice,
+                        "amount": NSDecimalNumber(decimal: product.price).doubleValue,
+                        "currency": product.priceFormatStyle.currencyCode
+                    ]
+                    if let subscription = product.subscription {
+                        item["period"] = CrimeAlertStorePlugin.period(subscription.subscriptionPeriod)
+                        if let offer = subscription.introductoryOffer, offer.paymentMode == .freeTrial,
+                           await subscription.isEligibleForIntroOffer {
+                            item["trial"] = CrimeAlertStorePlugin.period(offer.period)
+                        }
+                    }
+                    list.append(item)
+                }
+                call.resolve(["products": list])
+            } catch {
+                call.reject(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Buys a subscription for the signed-in account (its id goes with the purchase to Apple)
+    @objc func purchase(_ call: CAPPluginCall) {
+        guard let id = call.getString("productId"),
+              let account = call.getString("accountId").flatMap({ UUID(uuidString: $0) }) else {
+            call.reject("Saknar produkt eller konto")
+            return
+        }
+        Task {
+            do {
+                guard let product = try await Product.products(for: [id]).first else {
+                    call.reject("Produkten finns inte i App Store")
+                    return
+                }
+                switch try await product.purchase(options: [.appAccountToken(account)]) {
+                case .success(let verification):
+                    guard case .verified(let transaction) = verification else {
+                        call.reject("Apple kunde inte bekräfta köpet")
+                        return
+                    }
+                    await transaction.finish()
+                    call.resolve(["transactionId": String(transaction.id)])
+                case .pending:
+                    // Waits for approval (Ask to Buy); it arrives through Transaction.updates
+                    call.resolve(["pending": true])
+                case .userCancelled:
+                    call.reject("Avbrutet", "CANCELLED")
+                @unknown default:
+                    call.reject("Köpet gick inte igenom")
+                }
+            } catch {
+                call.reject(error.localizedDescription)
+            }
+        }
+    }
+
+    private func currentTransactions() async -> [String] {
+        var ids: [String] = []
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let transaction) = result, transaction.productType == .autoRenewable {
+                ids.append(String(transaction.id))
+            }
+        }
+        return ids
+    }
+
+    /// The subscriptions this Apple ID has now
+    @objc func entitlements(_ call: CAPPluginCall) {
+        Task {
+            call.resolve(["transactionIds": await currentTransactions()])
+        }
+    }
+
+    /// "Återställ köp": fetches the purchases from Apple again (asks for the Apple ID password)
+    @objc func restore(_ call: CAPPluginCall) {
+        Task {
+            do {
+                try await AppStore.sync()
+            } catch {
+                call.reject(error.localizedDescription)
+                return
+            }
+            call.resolve(["transactionIds": await currentTransactions()])
+        }
+    }
+
+    /// Apple's own sheet for changing or cancelling the subscription
+    @objc func manage(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let scene = self.bridge?.viewController?.view.window?.windowScene else {
+                call.reject("Kunde inte öppna prenumerationer")
+                return
+            }
+            do {
+                try await AppStore.showManageSubscriptions(in: scene)
+                call.resolve()
+            } catch {
+                call.reject(error.localizedDescription)
+            }
+        }
     }
 }

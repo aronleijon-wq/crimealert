@@ -13,7 +13,7 @@ const CONFIRM_WORD = 'RADERA';
 
 /** Deletes the account for good (delete-account), after the user types RADERA. Apple requires it in the app. */
 const DeleteAccount = () => {
-  const { signOut } = useAuth();
+  const { signOut, subscription } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -48,7 +48,9 @@ const DeleteAccount = () => {
           <AlertDialogTitle>Radera ditt konto?</AlertDialogTitle>
           <AlertDialogDescription>
             Kontot, dina bevakade kommuner, notisinställningar, kommentarer och rapporter raderas för gott och kan inte återställas.
-            Har du en prenumeration avslutas den direkt.
+            {subscription.store === 'apple'
+              ? 'Din Pro-prenumeration via App Store avslutas inte av att kontot raderas. Avsluta den under Inställningar → ditt namn → Prenumerationer, annars fortsätter Apple att debitera.'
+              : 'Har du en prenumeration avslutas den direkt.'}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <label className="block text-sm text-foreground">

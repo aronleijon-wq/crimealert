@@ -314,8 +314,8 @@ async function findProUsers(supabase: AdminClient, userIds: string[], now: numbe
     try {
       const { data, error } = await supabase.auth.admin.getUserById(userId);
       if (error || !data.user?.email) continue;
-      const proUntil = await lookupProUntil(stripe, data.user.email, now);
-      await rememberProStatus(supabase, userId, proUntil);
+      // Stored together with Pro bought through Apple, which is what counts
+      const proUntil = await rememberProStatus(supabase, userId, await lookupProUntil(stripe, data.user.email, now));
       if (proUntilActive(proUntil, now)) pro.add(userId);
       else pro.delete(userId);
     } catch (error) {

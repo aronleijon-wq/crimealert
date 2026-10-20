@@ -2,6 +2,7 @@
 // the web push subscriptions, as "apns:<sandbox|production>:<token>" (src/lib/nativeApp.ts), so
 // everything send-push-notifications sends reaches the app too. Needs the secrets APNS_KEY_ID,
 // APNS_TEAM_ID and APNS_PRIVATE_KEY (the .p8 key from developer.apple.com, Keys).
+import { signAppleJwt } from './appleJwt.ts';
 
 export interface ApnsTarget {
   environment: 'sandbox' | 'production';
@@ -39,27 +40,14 @@ export function apnsMessage(webPayload: string): { body: string; collapseId: str
   };
 }
 
-const base64url = (bytes: Uint8Array) => {
-  let binary = '';
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-
 // Apple refuses tokens renewed more often than every 20 minutes, and old ones after an hour.
 // Every run in the same half hour signs with the same issue time, however many runs there are.
 const WINDOW_SECONDS = 30 * 60;
 
 /** The signed token (ES256) Apple takes in place of a certificate */
-export async function apnsJwt(key: ApnsKey, now: number): Promise<string> {
-  const pem = key.privateKey.replace(/\\n/g, '\n').replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
-  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
-  const signingKey = await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
-  const encode = (value: unknown) => base64url(new TextEncoder().encode(JSON.stringify(value)));
+export function apnsJwt(key: ApnsKey, now: number): Promise<string> {
   const issuedAt = Math.floor(now / 1000 / WINDOW_SECONDS) * WINDOW_SECONDS;
-  const unsigned = `${encode({ alg: 'ES256', kid: key.keyId })}.${encode({ iss: key.teamId, iat: issuedAt })}`;
-  // WebCrypto signs in the raw r|s form JWT uses
-  const signature = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, signingKey, new TextEncoder().encode(unsigned));
-  return `${unsigned}.${base64url(new Uint8Array(signature))}`;
+  return signAppleJwt({ kid: key.keyId }, { iss: key.teamId, iat: issuedAt }, key.privateKey);
 }
 
 // A token Apple no longer delivers to (app removed, or not this app's): it is deleted

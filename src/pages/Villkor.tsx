@@ -61,6 +61,11 @@ const Villkor = () => {
                 provperioden startar och den första betalningen dras när den slutar. Avslutar du prenumerationen
                 under provperioden dras ingenting. Provperioden gäller en gång per person.
               </p>
+              <p className="mt-2">
+                I iPhone-appen köps Pro som prenumeration via App Store. Betalning, förnyelse, provperiod och avslut
+                sköts då av Apple enligt Apples villkor, och du avslutar under Inställningar → ditt namn →
+                Prenumerationer. Pro gäller för ditt CrimeAlert-konto, i appen och på webben.
+              </p>
             </section>
 
             <section>

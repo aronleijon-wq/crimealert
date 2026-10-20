@@ -14,7 +14,10 @@ const native = vi.hoisted(() => ({
 vi.mock('@/lib/native', () => ({ isNativeApp: () => true }));
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isPluginAvailable: () => native.available },
-  registerPlugin: (name: string) => (name === 'CrimeAlertPush' ? native.push : native.auth),
+  // Like Capacitor's: every property is a method, "then" too
+  registerPlugin: (name: string) => new Proxy(name === 'CrimeAlertPush' ? native.push : native.auth, {
+    get: (target, prop) => (prop in target ? Reflect.get(target, prop) : () => { throw new Error(`${String(prop)} is not implemented`); }),
+  }),
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

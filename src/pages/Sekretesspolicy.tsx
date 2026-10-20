@@ -44,7 +44,8 @@ const Sekretesspolicy = () => {
                 </li>
                 <li>
                   <strong>Betalningsuppgifter:</strong> Hanteras av vår betalningsleverantör Stripe. Vi lagrar aldrig
-                  kortnummer eller bankuppgifter.
+                  kortnummer eller bankuppgifter. Köper du Pro i iPhone-appen sköts betalningen av Apple, och vi får
+                  bara veta vilken prenumeration ditt konto har och hur länge den gäller.
                 </li>
                 <li>
                   <strong>Användningsdata:</strong> Anonym statistik om hur tjänsten används: antal sidvisningar per dag,

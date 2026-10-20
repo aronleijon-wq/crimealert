@@ -19,19 +19,24 @@ interface AuthPlugin {
 
 const plugins = new Map<string, Promise<unknown>>();
 
+// A Capacitor plugin answers every property, "then" too, so a promise that resolves to one would
+// call it as a native method. Hidden, the plugin can be handed around in promises.
+const notThenable = <T extends object>(plugin: T): T =>
+  new Proxy(plugin, { get: (target, prop) => (prop === 'then' ? undefined : Reflect.get(target, prop)) });
+
 // @capacitor/core is loaded only in the app, so the website doesn't carry it
-function plugin<T>(name: string): Promise<T | null> {
+export function nativePlugin<T>(name: string): Promise<T | null> {
   if (!isNativeApp()) return Promise.resolve(null);
   if (!plugins.has(name)) {
     plugins.set(name, import('@capacitor/core')
-      .then(({ Capacitor, registerPlugin }) => (Capacitor.isPluginAvailable(name) ? registerPlugin<T>(name) : null))
+      .then(({ Capacitor, registerPlugin }) => (Capacitor.isPluginAvailable(name) ? notThenable(registerPlugin<T & object>(name)) : null))
       .catch(() => null));
   }
   return plugins.get(name) as Promise<T | null>;
 }
 
-export const nativePush = () => plugin<PushPlugin>('CrimeAlertPush');
-export const nativeAuth = () => plugin<AuthPlugin>('CrimeAlertAuth');
+export const nativePush = () => nativePlugin<PushPlugin>('CrimeAlertPush');
+export const nativeAuth = () => nativePlugin<AuthPlugin>('CrimeAlertAuth');
 
 // The app's device tokens live with the web push subscriptions, as "apns:<environment>:<token>",
 // so every notification the site sends reaches the app too (send-push-notifications)

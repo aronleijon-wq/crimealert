@@ -13,6 +13,8 @@ export interface SubscriptionState {
   trialing?: boolean;
   /** May start Pro with the free trial (never had Pro) */
   trialEligible?: boolean;
+  /** Bought in the iPhone app, through Apple (managed there, not with Stripe) */
+  store?: 'apple';
 }
 
 interface AuthContextType {
@@ -68,6 +70,7 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
         subscriptionEnd: data.subscription_end || null,
         trialing: data.trialing === true,
         trialEligible: data.trial_eligible === true,
+        ...(data.store === 'apple' ? { store: 'apple' as const } : {}),
       },
       ok: true,
     };

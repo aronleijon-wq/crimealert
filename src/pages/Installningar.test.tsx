@@ -141,13 +141,20 @@ describe('Profil och inställningar', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('in the iPhone app, neither sells Pro nor links to the payment portal', async () => {
+  it('in the iPhone app, sends Pro to Apple’s page and never to the payment portal', async () => {
     state.native = true;
     state.subscription = { subscribed: true, productId: PRO, subscriptionEnd: '2026-11-01T00:00:00Z' };
     await renderPage();
-    expect(screen.queryByText('Hantera prenumeration')).toBeNull();
+    expect(screen.queryByRole('link', { name: /Hantera prenumeration/ })).toBeNull();
     expect(screen.queryByText(/Prova Pro gratis|Uppgradera till Pro/)).toBeNull();
-    expect(screen.getByRole('link', { name: /Det här ingår i Pro/ })).toHaveAttribute('href', '/prisplan');
+    expect(screen.getByRole('link', { name: /CrimeAlert Pro/ })).toHaveAttribute('href', '/prisplan');
+    expect(document.querySelector(`a[href="${BILLING_PORTAL_URL}"]`)).toBeNull();
+  });
+
+  it('in the iPhone app, offers Pro to a free account', async () => {
+    state.native = true;
+    await renderPage();
+    expect(screen.getByRole('link', { name: /Skaffa Pro/ })).toHaveAttribute('href', '/prisplan');
   });
 
   it('deletes the account only after RADERA is typed, then signs out', async () => {

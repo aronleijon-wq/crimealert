@@ -18,7 +18,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
-import { canSellPro } from '@/lib/native';
+import { isNativeApp } from '@/lib/native';
 
 const Section = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
   <section aria-labelledby={id}>
@@ -244,18 +244,29 @@ const Installningar = () => {
                 <RowText icon={Zap} label="Din plan" hint={plan} />
               </div>
             )}
-            {/* The app neither sells Pro nor links to where it is paid for (lib/native) */}
-            {!canSellPro() ? null : isPremium && !lifetime ? (
-              <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
-            ) : !isPremium ? (
+            {isNativeApp() ? (
+              // In the app Pro is bought and managed through Apple, on its own page (src/native/AppPro)
               <LinkRow
                 icon={Zap}
-                label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-                hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
+                label={isPremium ? 'CrimeAlert Pro' : 'Skaffa Pro'}
+                hint={isPremium ? (subscription.store === 'apple' ? 'Hantera din prenumeration.' : 'Det här ingår.') : 'Händelser och notiser direkt, och hela beskrivningen.'}
                 to="/prisplan"
               />
-            ) : null}
-            <LinkRow icon={FileText} label={canSellPro() ? 'Jämför Gratis och Pro' : 'Det här ingår i Pro'} to="/prisplan" />
+            ) : (
+              <>
+                {isPremium && !lifetime ? (
+                  <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
+                ) : !isPremium ? (
+                  <LinkRow
+                    icon={Zap}
+                    label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
+                    hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
+                    to="/prisplan"
+                  />
+                ) : null}
+                <LinkRow icon={FileText} label="Jämför Gratis och Pro" to="/prisplan" />
+              </>
+            )}
           </Section>
 
           <Section id="notiser" title="Notiser">

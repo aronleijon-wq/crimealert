@@ -15,3 +15,5 @@ project_id = "pqoiwiiydtikouzjrllx"
     verify_jwt = false
   [functions.ingest-sources]
     verify_jwt = false
+  [functions.apple-notifications]
+    verify_jwt = false
