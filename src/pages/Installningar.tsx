@@ -5,6 +5,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import DefaultAvatar from '@/components/DefaultAvatar';
+import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import Header from '@/components/Header';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
@@ -16,6 +17,7 @@ import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
 import { canSellPro } from '@/lib/native';
 
 const Section = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
@@ -82,9 +84,17 @@ const DisplayNameRow = ({ userId }: { userId: string }) => {
   const save = async () => {
     const trimmed = draft.trim().slice(0, 30);
     if (!trimmed) return;
+    if (hasBlockedWords(trimmed)) {
+      toast({ title: 'Kunde inte spara', description: BLOCKED_WORDS_MESSAGE, variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from('profiles').upsert({ id: userId, display_name: trimmed });
     setSaving(false);
+    if (isBlockedWordsError(error)) {
+      toast({ title: 'Kunde inte spara', description: BLOCKED_WORDS_MESSAGE, variant: 'destructive' });
+      return;
+    }
     if (error) {
       toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
       return;
@@ -224,6 +234,7 @@ const Installningar = () => {
               <div className={rowClass}>
                 <RowText icon={Mail} label="E-post" hint={user.email} />
               </div>
+              <BlockedUsers userId={user.id} />
             </Section>
           )}
 

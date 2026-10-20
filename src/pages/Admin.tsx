@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, Loader2, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 import HealthPanel from "@/components/admin/HealthPanel";
+import ModerationPanel from "@/components/admin/ModerationPanel";
 
 export default function Admin() {
   const { user, session, loading: authLoading } = useAuth();
@@ -90,6 +91,7 @@ export default function Admin() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl space-y-6">
+        <ModerationPanel />
         <HealthPanel />
         <Card>
           <CardHeader>
