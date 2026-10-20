@@ -10,7 +10,8 @@
 	},
 	"ios": {
 		"contentInset": "never",
-		"backgroundColor": "#05080b"
+		"backgroundColor": "#05080b",
+		"handleApplicationNotifications": false
 	},
 	"packageClassList": []
 }

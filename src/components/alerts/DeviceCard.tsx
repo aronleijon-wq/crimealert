@@ -10,6 +10,8 @@ interface DeviceCardProps {
   onEnable: () => void;
   onDisable: () => void;
   onTest: () => void;
+  /** In the iPhone app, where iOS asks and the Settings app turns it back on */
+  inApp?: boolean;
 }
 
 const BADGES: Record<DeviceState, { label: string; className: string }> = {
@@ -19,7 +21,7 @@ const BADGES: Record<DeviceState, { label: string; className: string }> = {
   blocked: { label: 'Blockerad', className: 'border-[hsl(var(--ca-red)/0.4)] bg-[hsl(var(--ca-red)/0.1)] text-[hsl(var(--ca-red))]' },
   install: { label: 'Installera först', className: 'border-[hsl(var(--ca-amber)/0.4)] bg-[hsl(var(--ca-amber)/0.12)] text-[hsl(var(--ca-amber))]' },
   unsupported: { label: 'Stöds inte', className: 'border-[hsl(var(--ca-line-strong))] text-muted-foreground' },
-  app: { label: 'E-post', className: 'border-[hsl(var(--ca-line-strong))] text-muted-foreground' },
+  app: { label: 'Uppdatera', className: 'border-[hsl(var(--ca-line-strong))] text-muted-foreground' },
 };
 
 const Step = ({ n, children }: { n: number; children: React.ReactNode }) => (
@@ -40,7 +42,7 @@ export const DeviceBadge = ({ state }: { state: DeviceState }) => (
   </span>
 );
 
-const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest }: DeviceCardProps) => {
+const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest, inApp = false }: DeviceCardProps) => {
   return (
     <div>
       {state === 'checking' && (
@@ -68,7 +70,7 @@ const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest 
       {state === 'off' && (
         <>
           <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-            Slå på för att få en notis när Polisen rapporterar något i dina områden, även när sidan är stängd.
+            Slå på för att få en notis när Polisen rapporterar något i dina områden, även när {inApp ? 'appen' : 'sidan'} är stängd.
           </p>
           <button type="button" onClick={onEnable} disabled={busy} className={`${primaryButton} mt-4 w-full sm:w-auto`}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />} Slå på notiser
@@ -90,7 +92,24 @@ const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest 
         </>
       )}
 
-      {state === 'blocked' && (
+      {state === 'blocked' && inApp && (
+        <>
+          <p className="flex items-start gap-2 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--ca-red))]" />
+            Notiser från CrimeAlert är avstängda i iPhone. Så här slår du på dem:
+          </p>
+          <ol className="mt-3 space-y-2.5">
+            <Step n={1}>Öppna appen <strong className="text-foreground">Inställningar</strong> och välj <strong className="text-foreground">Notiser</strong>.</Step>
+            <Step n={2}>Välj <strong className="text-foreground">CrimeAlert</strong> och slå på <strong className="text-foreground">Tillåt notiser</strong>.</Step>
+            <Step n={3}>Kom tillbaka hit och tryck på <strong className="text-foreground">Slå på notiser</strong>.</Step>
+          </ol>
+          <button type="button" onClick={onEnable} disabled={busy} className={`${secondaryButton} mt-4`}>
+            <RotateCw className="h-4 w-4" /> Försök igen
+          </button>
+        </>
+      )}
+
+      {state === 'blocked' && !inApp && (
         <>
           <p className="flex items-start gap-2 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--ca-red))]" />
@@ -116,7 +135,7 @@ const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest 
 
       {state === 'app' && (
         <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-          I appen får du veckosammanfattningen för dina kommuner via e-post. Pushnotiser i appen läggs till i en kommande version.
+          Uppdatera appen i App Store för att få notiser i den här telefonen.
         </p>
       )}
 

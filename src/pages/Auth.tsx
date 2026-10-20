@@ -4,6 +4,7 @@ import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { accountCountLabel, loadAccountCount, rememberedAccountCount } from '@/lib/accountCount';
 import { isNativeApp } from '@/lib/native';
+import { nativeAuth, signInInApp } from '@/lib/nativeApp';
 import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
@@ -42,6 +43,12 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const AppleIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <path d="M16.37 12.6c-.02-2.3 1.88-3.41 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.29-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.36 2.88 2.31 1.16-.05 1.59-.75 2.99-.75 1.4 0 1.79.75 3.01.72 1.24-.02 2.03-1.13 2.79-2.25.88-1.29 1.24-2.54 1.26-2.6-.03-.01-2.42-.93-2.45-3.71zM14.08 5.85c.64-.77 1.07-1.85.95-2.92-.92.04-2.03.61-2.69 1.38-.59.68-1.11 1.78-.97 2.83 1.02.08 2.07-.52 2.71-1.29z" />
+  </svg>
+);
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
@@ -49,6 +56,9 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // The iPhone app signs in with Google or Apple in Apple's sign-in sheet (lib/nativeApp)
+  const [appSignIn, setAppSignIn] = useState(false);
+  const [appLoading, setAppLoading] = useState<'google' | 'apple' | null>(null);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [accountCount, setAccountCount] = useState<number | null>(() => rememberedAccountCount());
   const navigate = useNavigate();
@@ -62,6 +72,21 @@ const Auth = () => {
     return () => { live = false; };
   }, [signingUp, accountCount]);
   const members = accountCountLabel(accountCount);
+
+  useEffect(() => {
+    if (isNativeApp()) nativeAuth().then((auth) => setAppSignIn(Boolean(auth)));
+  }, []);
+
+  const handleAppSignIn = async (provider: 'google' | 'apple') => {
+    setAppLoading(provider);
+    try {
+      if (await signInInApp(provider)) navigate('/karta');
+    } catch (err) {
+      toast({ title: 'Inloggningsfel', description: getErrorMessage(err) || 'Kunde inte logga in.', variant: 'destructive' });
+    } finally {
+      setAppLoading(null);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -146,7 +171,36 @@ const Auth = () => {
               </p>
             )}
 
-            {/* No Google in the iPhone app: Google refuses embedded web views (lib/native) */}
+            {/* The iPhone app: Google refuses embedded web views, so both open Apple's sign-in sheet.
+                Apple asks for Sign in with Apple wherever Google is offered. */}
+            {!forgotPassword && appSignIn && (
+              <>
+                <button
+                  onClick={() => handleAppSignIn('apple')}
+                  disabled={appLoading !== null}
+                  className="mt-7 flex h-11 w-full items-center justify-center gap-3 rounded-md bg-foreground text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
+                >
+                  <AppleIcon />
+                  {appLoading === 'apple' ? 'Vänta...' : 'Fortsätt med Apple'}
+                </button>
+                <button
+                  onClick={() => handleAppSignIn('google')}
+                  disabled={appLoading !== null}
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-md border border-[hsl(var(--ca-line-strong))] bg-card text-sm font-semibold text-foreground transition hover:border-primary/50 disabled:opacity-50"
+                >
+                  <GoogleIcon />
+                  {appLoading === 'google' ? 'Vänta...' : 'Fortsätt med Google'}
+                </button>
+
+                <div className="my-5 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-[hsl(var(--ca-line))]" />
+                  <span className="ca-meta !text-[9px]">eller med e-post</span>
+                  <span className="h-px flex-1 bg-[hsl(var(--ca-line))]" />
+                </div>
+              </>
+            )}
+
+            {/* No Google in the web view itself (lib/native); app versions without the sheet sign in by e-mail */}
             {!forgotPassword && !isNativeApp() && (
               <>
                 <button

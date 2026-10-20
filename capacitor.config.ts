@@ -18,6 +18,8 @@ const config: CapacitorConfig = {
     // The site already keeps clear of the notch and home bar (viewport-fit=cover)
     contentInset: 'never',
     backgroundColor: '#05080b',
+    // The app's own PushCenter (ios/App/App/AppDelegate.swift) handles notifications
+    handleApplicationNotifications: false,
   },
 };
 

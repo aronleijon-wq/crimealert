@@ -13,6 +13,7 @@ import { trackPageView } from "@/lib/monitoring";
 import { isNativeApp } from "@/lib/native";
 import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
+import NativeAppBridge from "@/components/native/NativeAppBridge";
 const Index = lazyPage(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
@@ -38,6 +39,7 @@ const Guide = lazyPage(() => import("./pages/Guide"));
 const Kommuner = lazyPage(() => import("./pages/Kommuner"));
 const Handelse = lazyPage(() => import("./pages/Handelse"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
+const AppLogin = lazyPage(() => import("./pages/AppLogin"));
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <PageViews />
+        {isNativeApp() && <NativeAppBridge />}
         <ErrorBoundary>
         <Suspense fallback={<LazyFallback />}>
         <Routes>
@@ -82,6 +85,8 @@ const App = () => (
           <Route path="/account" element={isNativeApp() ? <ProInApp /> : <Prisplan />} />
           <Route path="/installningar" element={<Installningar />} />
           <Route path="/auth" element={<Auth />} />
+          {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
+          <Route path="/app-login" element={<AppLogin />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />
           <Route path="/privacy" element={<Sekretesspolicy />} />
