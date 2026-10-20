@@ -2,7 +2,14 @@
 
 Appen är ett inbyggt skal (Capacitor) som öppnar https://crimealert.se/karta. Allt du ändrar på
 sajten syns direkt i appen, utan ny App Store-version. Sajten känner igen appen och följer Apples
-regler där: ingen reklam, ingen försäljning av Pro, ingen Google-inloggning (se `src/lib/native.ts`).
+regler där: ingen reklam och ingen försäljning av Pro (se `src/lib/native.ts`).
+
+Det appen gör själv (`App/AppDelegate.swift`, används av sajten via `src/lib/nativeApp.ts`):
+
+- **Notiser via Apple (APNs).** Telefonens adress sparas bland notisprenumerationerna, så allt sajten
+  skickar når även appen (`supabase/functions/_shared/apns.ts`).
+- **Logga in med Apple eller Google** i Apples inloggningsfönster, eftersom Google inte tillåter
+  inloggning i en apps webbvy. Fönstret öppnar `/app-login` och lämnar tillbaka inloggningen till appen.
 
 ## Kör appen på din iPhone
 
@@ -19,6 +26,34 @@ regler där: ingen reklam, ingen försäljning av Pro, ingen Google-inloggning (
    lita på ditt utvecklarcertifikat.
 
 Ingen npm eller Terminal behövs för detta.
+
+## Notiser: en gång i ditt utvecklarkonto
+
+1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +**. Namn: `CrimeAlert APNs`,
+   kryssa i **Apple Push Notifications service (APNs)** → Continue → Register.
+2. **Ladda ner** nyckeln (`AuthKey_XXXXXXXXXX.p8`). Det går bara en gång, så spara filen.
+   Skriv upp **Key ID** (10 tecken) och ditt **Team ID** (under Membership, eller uppe till höger).
+3. I Lovable: lägg till tre secrets (Cloud → Secrets, eller be Lovable i chatten att lägga till dem,
+   så får du ett formulär). Klistra aldrig in nyckeln som vanlig text i en chatt.
+   - `APNS_KEY_ID` = Key ID
+   - `APNS_TEAM_ID` = Team ID
+   - `APNS_PRIVATE_KEY` = hela innehållet i `.p8`-filen (öppna den i TextEdit)
+4. Notiser finns i bygget du arkiverar (Release: TestFlight och App Store), via
+   `App/App.entitlements`. När du kör appen med ▶︎ (Debug) är de avstängda, så att den går att köra
+   även utan betalt utvecklarkonto.
+
+Testa i TestFlight: logga in, gå till **Notiser → Slå på notiser → Skicka testnotis**.
+
+## Logga in med Apple
+
+I Lovable: **Cloud → Users → Authentication** (inloggningsmetoder) och se till att **Apple** är på,
+precis som Google. Apple kräver att appen erbjuder Logga in med Apple när den erbjuder Google.
+
+## Anmälningar: varje dag
+
+Apple kräver att anmälda kommentarer och rapporter hanteras inom 24 timmar. Öppna
+https://crimealert.se/admin, högst upp finns **Anmälda inlägg**: Ta bort, Ta bort och stäng av
+skribenten, eller Avfärda. Tre anmälningar döljer ett inlägg för alla tills du har hanterat det.
 
 ## Till App Store
 
@@ -38,8 +73,11 @@ Ingen npm eller Terminal behövs för detta.
 
 ## Inför granskningen
 
-- **Pushnotiser:** Apple vill att appen gör mer än webbplatsen (regel 4.2). Nästa steg är riktiga
-  pushnotiser via Apple (kräver en APNs-nyckel från ditt utvecklarkonto).
+Texter, nyckelord, dataskyddssvar och granskningsanteckning finns i `APPSTORE.md`.
+
+- **Ny version i App Store** behövs bara när något i `ios/` ändras. Höj då **Build** (och
+  **Version** vid större ändringar) under målet App → General innan du arkiverar.
 - **Pro:** appen säljer inte Pro och länkar inte till var det säljs. Den som redan har Pro loggar in
   och får det. Vill Apple att Pro ska kunna köpas i appen behövs köp via Apple (t.ex. RevenueCat).
-- **Ändrar du `capacitor.config.ts`:** kör `npm install` och `npx cap sync ios` (kräver Node.js).
+- **Ändrar du `capacitor.config.ts`:** kör `npm install` och `npx cap sync ios` (kräver Node.js),
+  eller ändra samma sak i `App/App/capacitor.config.json`.
