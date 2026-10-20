@@ -5,6 +5,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import DefaultAvatar from '@/components/DefaultAvatar';
+import DeleteAccount from '@/components/account/DeleteAccount';
 import Header from '@/components/Header';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
@@ -15,6 +16,7 @@ import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { canSellPro } from '@/lib/native';
 
 const Section = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
   <section aria-labelledby={id}>
@@ -231,7 +233,8 @@ const Installningar = () => {
                 <RowText icon={Zap} label="Din plan" hint={plan} />
               </div>
             )}
-            {isPremium && !lifetime ? (
+            {/* The app neither sells Pro nor links to where it is paid for (lib/native) */}
+            {!canSellPro() ? null : isPremium && !lifetime ? (
               <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
             ) : !isPremium ? (
               <LinkRow
@@ -241,7 +244,7 @@ const Installningar = () => {
                 to="/prisplan"
               />
             ) : null}
-            <LinkRow icon={FileText} label="Jämför Gratis och Pro" to="/prisplan" />
+            <LinkRow icon={FileText} label={canSellPro() ? 'Jämför Gratis och Pro' : 'Det här ingår i Pro'} to="/prisplan" />
           </Section>
 
           <Section id="notiser" title="Notiser">
@@ -282,6 +285,8 @@ const Installningar = () => {
               {signingOut ? 'Loggar ut…' : 'Logga ut'}
             </button>
           )}
+
+          {user && <DeleteAccount />}
 
           <p className="text-center text-[13px] text-[hsl(var(--ca-text-3))]">
             CrimeAlert följer GDPR. Uppgifterna om händelser kommer från Polisen.se och andra öppna källor.

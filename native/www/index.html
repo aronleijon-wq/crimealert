@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CrimeAlert</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #05080b; color: #e8ebef; font-family: -apple-system, system-ui, sans-serif; }
+    main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; box-sizing: border-box; text-align: center; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #e5383b; box-shadow: 0 0 24px #e5383b; }
+    h1 { font-size: 22px; margin: 20px 0 8px; }
+    p { margin: 0; max-width: 300px; line-height: 1.5; color: #9aa3ad; font-size: 15px; }
+    button { margin-top: 24px; height: 44px; padding: 0 22px; border: 0; border-radius: 8px; background: #e5383b; color: #fff; font-size: 15px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="dot"></div>
+    <h1>Ingen anslutning</h1>
+    <p>CrimeAlert behöver internet för att visa Polisens senaste händelser. Kontrollera din anslutning och försök igen.</p>
+    <button type="button" onclick="location.href='https://crimealert.se/karta'">Försök igen</button>
+  </main>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { Lock, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TRIAL_DAYS } from '@/components/account/plans';
 import { useAuth } from '@/hooks/useAuth';
+import { canSellPro } from '@/lib/native';
 
 interface PremiumGateProps {
   title: string;
@@ -23,12 +24,16 @@ const PremiumGate = ({ title, description, free }: PremiumGateProps) => {
         </div>
         <h2 className="text-lg font-bold text-foreground mb-2">{title}</h2>
         <p className="text-sm text-muted-foreground mb-6">{description}</p>
-        <button
-          onClick={() => navigate('/prisplan')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition glow-red"
-        >
-          <Zap className="w-4 h-4" /> {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-        </button>
+        {canSellPro() ? (
+          <button
+            onClick={() => navigate('/prisplan')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:bg-primary/90 transition glow-red"
+          >
+            <Zap className="w-4 h-4" /> {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
+          </button>
+        ) : (
+          <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary"><Zap className="w-4 h-4" /> Ingår i CrimeAlert Pro</p>
+        )}
         {free && (
           <p className="mt-5 text-sm">
             <Link to={free.to} className="text-muted-foreground underline underline-offset-4 hover:text-foreground">{free.label}</Link>

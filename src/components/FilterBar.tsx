@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { canSellPro } from '@/lib/native';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
@@ -226,7 +227,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             {/* Medborgarrapporter */}
             <button
             onClick={() => {
-              if (!isPremium) {navigate('/prisplan');return;}
+              if (!isPremium) {if (canSellPro()) navigate('/prisplan');return;}
               onToggleCommunityReports();
             }}
             className={`

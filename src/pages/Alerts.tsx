@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { isNativeApp } from '@/lib/native';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BellRing, CalendarDays, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -122,7 +123,9 @@ const Alerts = () => {
   const [attempted, setAttempted] = useState(false);
 
   const device = getDevicePushInfo();
-  const deviceState: DeviceState = device.isIos && !device.isStandalone
+  const deviceState: DeviceState = isNativeApp()
+    ? 'app'
+    : device.isIos && !device.isStandalone
     ? 'install'
     : !pushSupported()
       ? 'unsupported'
@@ -319,12 +322,12 @@ const Alerts = () => {
                       title="Välj områden"
                       detail={kommuner.length > 0 ? listNames(kommuner) : 'Vilka kommuner vill du bevaka?'}
                     />
-                    <SetupStep
+                    {deviceState !== 'app' && <SetupStep
                       done={deviceState === 'on'}
                       href="#enhet"
                       title="Slå på notiser i den här enheten"
                       detail={deviceState === 'on' ? 'Klart' : deviceState === 'install' ? 'Lägg först till CrimeAlert på hemskärmen' : 'Ett tryck, sedan godkänner du i webbläsaren'}
-                    />
+                    />}
                   </div>
                 )}
               </section>

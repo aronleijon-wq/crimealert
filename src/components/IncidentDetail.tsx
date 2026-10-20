@@ -1,4 +1,5 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
+import { canSellPro } from '@/lib/native';
 import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap, Tag, Crosshair, Calendar } from 'lucide-react';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -90,10 +91,10 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
             <button
-              onClick={() => navigate('/prisplan')}
+              onClick={() => canSellPro() && navigate('/prisplan')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-md text-[11px] font-semibold text-primary hover:bg-primary/20 transition"
             >
-              <Lock className="w-3 h-3 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> Uppgradera för detaljer
+              <Lock className="w-3 h-3 drop-shadow-[0_0_4px_hsl(var(--destructive)/0.5)]" /> {canSellPro() ? 'Uppgradera för detaljer' : 'Detaljerna ingår i Pro'}
             </button>
           </div>
         </div>

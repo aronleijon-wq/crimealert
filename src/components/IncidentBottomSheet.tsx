@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { canSellPro } from '@/lib/native';
 import { Incident, incidentTypeConfig } from '@/data/mockIncidents';
 import { useIncidentComments } from '@/hooks/useIncidentComments';
 import { useIncidentReactions, REACTION_TYPES } from '@/hooks/useIncidentReactions';
@@ -236,14 +237,16 @@ const IncidentBottomSheet = ({ incident, onClose }: Props) => {
               <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="flex-1">
                 <p className="text-xs font-medium text-foreground">+{hiddenCount} fler kommentarer</p>
-                <p className="text-[10px] text-muted-foreground">Uppgradera till Pro för att se alla</p>
+                <p className="text-[10px] text-muted-foreground">{canSellPro() ? 'Uppgradera till Pro för att se alla' : 'Alla kommentarer ingår i Pro'}</p>
               </div>
-              <button
-                onClick={() => navigate('/prisplan')}
-                className="text-[10px] font-semibold text-primary hover:underline shrink-0"
-              >
-                Uppgradera
-              </button>
+              {canSellPro() && (
+                <button
+                  onClick={() => navigate('/prisplan')}
+                  className="text-[10px] font-semibold text-primary hover:underline shrink-0"
+                >
+                  Uppgradera
+                </button>
+              )}
             </div>
           )}
         </div>
