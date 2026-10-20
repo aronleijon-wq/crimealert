@@ -1,0 +1,16 @@
+{
+	"appId": "se.crimealert.app",
+	"appName": "CrimeAlert",
+	"webDir": "native/www",
+	"backgroundColor": "#05080b",
+	"appendUserAgent": "CrimeAlertApp",
+	"server": {
+		"url": "https://crimealert.se/karta",
+		"errorPath": "index.html"
+	},
+	"ios": {
+		"contentInset": "never",
+		"backgroundColor": "#05080b"
+	},
+	"packageClassList": []
+}

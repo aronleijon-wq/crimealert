@@ -1,0 +1,11 @@
+App/build
+App/Pods
+App/output
+DerivedData
+xcuserdata
+
+# Cordova plugins for Capacitor
+capacitor-cordova-ios-plugins
+
+# Generated config and web files are committed on purpose: a fresh clone opens and runs
+# in Xcode without npm. Run `npx cap sync ios` after changing capacitor.config.ts.
