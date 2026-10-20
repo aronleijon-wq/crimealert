@@ -10,7 +10,11 @@ const state = vi.hoisted(() => ({
   subscription: { subscribed: false, productId: null, subscriptionEnd: null } as SubscriptionState,
   signOut: vi.fn(async () => {}),
   upsert: vi.fn(async (_row: unknown) => ({ error: null })),
+  invoke: vi.fn(async (_name: string, _opts?: unknown) => ({ data: { deleted: true }, error: null })),
+  native: false,
 }));
+
+vi.mock('@/lib/native', () => ({ isNativeApp: () => state.native, canSellPro: () => !state.native }));
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: state.user, subscription: state.subscription, signOut: state.signOut }) }));
 vi.mock('@/hooks/useSEO', () => ({ useSEO: () => {} }));
@@ -21,6 +25,7 @@ vi.mock('@/integrations/supabase/client', () => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { display_name: 'Aron' }, error: null }) }) }),
       upsert: (row: unknown) => state.upsert(row),
     }),
+    functions: { invoke: (name: string, opts?: unknown) => state.invoke(name, opts) },
   },
 }));
 
@@ -45,6 +50,8 @@ beforeEach(() => {
   state.subscription = { subscribed: false, productId: null, subscriptionEnd: null, trialEligible: true };
   state.signOut.mockClear();
   state.upsert.mockClear();
+  state.invoke.mockClear();
+  state.native = false;
   localStorage.clear();
 });
 
@@ -116,5 +123,27 @@ describe('Profil och inställningar', () => {
     expect(link).toHaveAttribute('href', 'https://se.trustpilot.com/evaluate/crimealert.se');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('in the iPhone app, neither sells Pro nor links to the payment portal', async () => {
+    state.native = true;
+    state.subscription = { subscribed: true, productId: PRO, subscriptionEnd: '2026-11-01T00:00:00Z' };
+    await renderPage();
+    expect(screen.queryByText('Hantera prenumeration')).toBeNull();
+    expect(screen.queryByText(/Prova Pro gratis|Uppgradera till Pro/)).toBeNull();
+    expect(screen.getByRole('link', { name: /Det här ingår i Pro/ })).toHaveAttribute('href', '/prisplan');
+  });
+
+  it('deletes the account only after RADERA is typed, then signs out', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /Radera konto/ }));
+    const confirm = await screen.findByRole('button', { name: 'Radera kontot' });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Skriv RADERA/), { target: { value: 'radera' } });
+    expect(confirm).toBeEnabled();
+    fireEvent.click(confirm);
+    await waitFor(() => expect(state.invoke).toHaveBeenCalledWith('delete-account', { method: 'POST' }));
+    await waitFor(() => expect(state.signOut).toHaveBeenCalled());
+    expect(await screen.findByText('Startsidan')).toBeInTheDocument();
   });
 });
