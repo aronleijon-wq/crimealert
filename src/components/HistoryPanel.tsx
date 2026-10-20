@@ -1,4 +1,5 @@
 import { Flame, Lock, Pause, Play, X } from 'lucide-react';
+import { canSellPro } from '@/lib/native';
 import { Link } from 'react-router-dom';
 import { TRIAL_DAYS } from '@/components/account/plans';
 import { HISTORY_RANGES, historyLabel, type HistoryRange } from '@/lib/history';
@@ -101,9 +102,11 @@ const HistoryPanel = (props: HistoryPanelProps) => {
             <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text))]">
               Med Pro spolar du tillbaka upp till 60 dagar, spelar upp hur händelserna spred sig och ser var det händer mest som värmekarta.
             </p>
-            <Link to="/prisplan" className="mt-2 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground">
-              {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-            </Link>
+            {canSellPro() && (
+              <Link to="/prisplan" className="mt-2 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground">
+                {offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
+              </Link>
+            )}
           </div>
         </div>
       )}

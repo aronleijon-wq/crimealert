@@ -4,6 +4,7 @@ import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import { startMonitoring } from './lib/monitoring';
 import { stripFreshParam, watchForStaleBuild } from './lib/staleBuild';
+import { isNativeApp } from './lib/native';
 import './index.css';
 
 const isInIframe = (() => {
@@ -18,8 +19,11 @@ const isPreviewHost =
   window.location.hostname.includes('id-preview--') ||
   window.location.hostname.includes('lovableproject.com');
 
+if (isNativeApp()) document.documentElement.classList.add('native-app');
+
 if ('serviceWorker' in navigator) {
-  if (isInIframe || isPreviewHost) {
+  // The iPhone app loads the site fresh from the network; its web view has no use for one
+  if (isInIframe || isPreviewHost || isNativeApp()) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => registration.unregister());
       console.info('[PWA] Service workers avregistrerade i preview/iframe');

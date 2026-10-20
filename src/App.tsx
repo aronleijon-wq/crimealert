@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import AdsController from "@/components/AdsController";
@@ -10,6 +10,7 @@ import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { Suspense, useEffect } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { trackPageView } from "@/lib/monitoring";
+import { isNativeApp } from "@/lib/native";
 import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
 const Index = lazyPage(() => import("./pages/Index"));
@@ -28,6 +29,7 @@ const Admin = lazyPage(() => import("./pages/Admin"));
 const DebugPush = lazyPage(() => import("./pages/DebugPush"));
 const OmOss = lazyPage(() => import("./pages/OmOss"));
 const Statistik = lazyPage(() => import("./pages/Statistik"));
+const ProInApp = lazyPage(() => import("./pages/ProInApp"));
 const Feed = lazyPage(() => import("./pages/Feed"));
 const Kommun = lazyPage(() => import("./pages/Kommun"));
 const KommunRapport = lazyPage(() => import("./pages/KommunRapport"));
@@ -64,7 +66,7 @@ const App = () => (
         <ErrorBoundary>
         <Suspense fallback={<LazyFallback />}>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={isNativeApp() ? <Navigate to="/karta" replace /> : <Landing />} />
           <Route path="/karta" element={<Index />} />
           <Route path="/flode" element={<Feed />} />
           <Route path="/kommun" element={<Kommuner />} />
@@ -75,9 +77,9 @@ const App = () => (
           <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
-          <Route path="/prisplan" element={<Prisplan />} />
+          <Route path="/prisplan" element={isNativeApp() ? <ProInApp /> : <Prisplan />} />
           {/* Stripe sends people back here after checkout (create-checkout), and older links point here */}
-          <Route path="/account" element={<Prisplan />} />
+          <Route path="/account" element={isNativeApp() ? <ProInApp /> : <Prisplan />} />
           <Route path="/installningar" element={<Installningar />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/cookies" element={<Cookies />} />

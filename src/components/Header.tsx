@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
 import { Radio, Newspaper, BarChart3, Bell, CreditCard } from 'lucide-react';
+import { canSellPro } from '@/lib/native';
 
 const navItems = [
   { to: '/karta', label: 'Karta', icon: Radio },
@@ -12,6 +13,9 @@ const navItems = [
 ];
 
 // The plans page also answers at /account (Stripe's way back)
+// The app doesn't sell Pro (lib/native), so it has no price page in the menu
+const menuItems = () => (canSellPro() ? navItems : navItems.filter((item) => item.to !== '/prisplan'));
+
 const isCurrent = (to: string, pathname: string) => pathname === to || (to === '/prisplan' && pathname === '/account');
 
 const Header = () => {
@@ -43,7 +47,7 @@ const Header = () => {
       </Link>
 
       <nav className="flex items-center gap-0.5">
-        {navItems.map(({ to, label, icon: Icon }) => {
+        {menuItems().map(({ to, label, icon: Icon }) => {
           const active = isCurrent(to, location.pathname);
           return (
             <Link

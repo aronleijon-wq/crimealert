@@ -1,6 +1,6 @@
 import { BellOff, BellRing, Loader2, RotateCw, Send, Share, ShieldAlert, SquarePlus } from 'lucide-react';
 
-export type DeviceState = 'checking' | 'on' | 'off' | 'blocked' | 'install' | 'unsupported';
+export type DeviceState = 'checking' | 'on' | 'off' | 'blocked' | 'install' | 'unsupported' | 'app';
 
 interface DeviceCardProps {
   state: DeviceState;
@@ -19,6 +19,7 @@ const BADGES: Record<DeviceState, { label: string; className: string }> = {
   blocked: { label: 'Blockerad', className: 'border-[hsl(var(--ca-red)/0.4)] bg-[hsl(var(--ca-red)/0.1)] text-[hsl(var(--ca-red))]' },
   install: { label: 'Installera först', className: 'border-[hsl(var(--ca-amber)/0.4)] bg-[hsl(var(--ca-amber)/0.12)] text-[hsl(var(--ca-amber))]' },
   unsupported: { label: 'Stöds inte', className: 'border-[hsl(var(--ca-line-strong))] text-muted-foreground' },
+  app: { label: 'E-post', className: 'border-[hsl(var(--ca-line-strong))] text-muted-foreground' },
 };
 
 const Step = ({ n, children }: { n: number; children: React.ReactNode }) => (
@@ -113,7 +114,13 @@ const DeviceCard = ({ state, busy, hasAreas, error, onEnable, onDisable, onTest 
         </p>
       )}
 
-      {error && state !== 'install' && state !== 'unsupported' && (
+      {state === 'app' && (
+        <p className="text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
+          I appen får du veckosammanfattningen för dina kommuner via e-post. Pushnotiser i appen läggs till i en kommande version.
+        </p>
+      )}
+
+      {error && state !== 'install' && state !== 'unsupported' && state !== 'app' && (
         <p role="alert" className="mt-3 rounded-lg border border-[hsl(var(--ca-red)/0.3)] bg-[hsl(var(--ca-red)/0.08)] px-3 py-2 text-xs text-[hsl(var(--ca-red))]">
           {error}
         </p>

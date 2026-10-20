@@ -9,6 +9,8 @@ const hideAds = vi.fn();
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('@/hooks/useIsPremium', () => ({ useIsPremium: () => premium }));
+const native = vi.hoisted(() => ({ on: false }));
+vi.mock('@/lib/native', () => ({ isNativeApp: () => native.on }));
 vi.mock('@/lib/ads', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/ads')>()), showAds, hideAds }));
 
 const renderController = async (path = '/') => {
@@ -20,6 +22,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   Object.assign(auth, { user: null, loading: false, subscriptionChecked: false });
   premium.isPremium = false;
+  native.on = false;
 });
 
 describe('AdsController', () => {
@@ -53,5 +56,12 @@ describe('AdsController', () => {
     Object.assign(auth, { user: { id: 'u1' }, subscriptionChecked: true });
     await renderController();
     expect(showAds).toHaveBeenCalledTimes(1);
+  });
+
+  it('never shows ads in the iPhone app', async () => {
+    native.on = true;
+    await renderController('/');
+    expect(showAds).not.toHaveBeenCalled();
+    expect(hideAds).toHaveBeenCalledTimes(1);
   });
 });

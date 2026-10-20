@@ -11,6 +11,8 @@ vi.mock('@/lib/accountCount', async (original) => ({
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/integrations/lovable/index', () => ({ lovable: {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
+const native = vi.hoisted(() => ({ on: false }));
+vi.mock('@/lib/native', () => ({ isNativeApp: () => native.on, canSellPro: () => !native.on }));
 
 const renderAuth = async (path: string) => {
   const { default: Auth } = await import('./Auth');
@@ -18,7 +20,10 @@ const renderAuth = async (path: string) => {
 };
 
 describe('Skapa konto', () => {
-  beforeEach(() => count.mockReset());
+  beforeEach(() => {
+    count.mockReset();
+    native.on = false;
+  });
 
   it('asks you to join the others who already have an account', async () => {
     count.mockResolvedValue(500);
@@ -40,5 +45,14 @@ describe('Skapa konto', () => {
     await renderAuth('/auth');
     expect(screen.getByRole('heading', { level: 1, name: 'Logga in' })).toBeInTheDocument();
     expect(count).not.toHaveBeenCalled();
+  });
+
+  it('signs in with Google on the web but not in the iPhone app', async () => {
+    const { unmount } = await renderAuth('/auth');
+    expect(screen.getByRole('button', { name: /Fortsätt med Google/ })).toBeInTheDocument();
+    unmount();
+    native.on = true;
+    await renderAuth('/auth');
+    expect(screen.queryByRole('button', { name: /Fortsätt med Google/ })).toBeNull();
   });
 });

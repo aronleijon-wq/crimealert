@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { isNativeApp } from '@/lib/native';
 
 const MobileSignupBar = () => {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ const MobileSignupBar = () => {
       <div className="flex items-center gap-2 min-w-0">
         <Bell className="w-4 h-4 text-primary shrink-0" />
         <span className="text-xs text-muted-foreground truncate">
-          Få push-notiser om brott nära dig
+          {/* The app has no push notifications yet (Alerts: weekly summary by e-mail) */}
+          {isNativeApp() ? 'Bevaka din kommun med ett gratiskonto' : 'Få push-notiser om brott nära dig'}
         </span>
       </div>
       <Button

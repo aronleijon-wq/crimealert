@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { accountCountLabel, loadAccountCount, rememberedAccountCount } from '@/lib/accountCount';
+import { isNativeApp } from '@/lib/native';
 import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
 import Header from '@/components/Header';
@@ -145,7 +146,8 @@ const Auth = () => {
               </p>
             )}
 
-            {!forgotPassword && (
+            {/* No Google in the iPhone app: Google refuses embedded web views (lib/native) */}
+            {!forgotPassword && !isNativeApp() && (
               <>
                 <button
                   onClick={handleGoogleLogin}
