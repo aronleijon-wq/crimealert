@@ -15,6 +15,13 @@
       "when": 1792590956676,
       "tag": "0001_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792590966138,
+      "tag": "0002_apple_subscriptions",
+      "breakpoints": true
     }
   ]
 }

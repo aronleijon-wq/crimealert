@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      apple_subscriptions: {
+        Row: {
+          environment: string
+          expires_at: string | null
+          original_transaction_id: string
+          product_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          environment: string
+          expires_at?: string | null
+          original_transaction_id: string
+          product_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          environment?: string
+          expires_at?: string | null
+          original_transaction_id?: string
+          product_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_events: {
         Row: {
           created_at: string
