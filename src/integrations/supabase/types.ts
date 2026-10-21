@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      apple_subscriptions: {
+        Row: {
+          environment: string
+          expires_at: string | null
+          original_transaction_id: string
+          product_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          environment: string
+          expires_at?: string | null
+          original_transaction_id: string
+          product_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          environment?: string
+          expires_at?: string | null
+          original_transaction_id?: string
+          product_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_events: {
         Row: {
           created_at: string
@@ -145,6 +172,36 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       external_events: {
         Row: {
           area: string | null
@@ -223,36 +280,6 @@ export type Database = {
           lng?: number
           precision?: string
           query?: string
-        }
-        Relationships: []
-      }
-      content_reports: {
-        Row: {
-          created_at: string
-          id: string
-          reason: string
-          reporter_id: string
-          status: string
-          target_id: string
-          target_type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          reason: string
-          reporter_id: string
-          status?: string
-          target_id: string
-          target_type: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          reason?: string
-          reporter_id?: string
-          status?: string
-          target_id?: string
-          target_type?: string
         }
         Relationships: []
       }
@@ -694,11 +721,6 @@ export type Database = {
     Functions: {
       account_count: { Args: never; Returns: number }
       block_report_author: { Args: { _report_id: string }; Returns: undefined }
-      content_hidden: { Args: { _author: string; _id: string; _type: string }; Returns: boolean }
-      has_blocked_words: { Args: { _text: string }; Returns: boolean }
-      is_posting_banned: { Args: { _user_id: string }; Returns: boolean }
-      my_report_blocks: { Args: never; Returns: { created_at: string; report_id: string }[] }
-      unblock_report_author: { Args: { _report_id: string }; Returns: undefined }
       community_reports_visible: {
         Args: never
         Returns: {
@@ -714,6 +736,11 @@ export type Database = {
           title: string
         }[]
       }
+      content_hidden: {
+        Args: { _author: string; _id: string; _type: string }
+        Returns: boolean
+      }
+      has_blocked_words: { Args: { _text: string }; Returns: boolean }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -722,6 +749,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_posting_banned: { Args: { _user_id: string }; Returns: boolean }
       kommun_month_counts: {
         Args: { _kommun: string; _month: string }
         Returns: {
@@ -744,6 +772,13 @@ export type Database = {
         Returns: undefined
       }
       monitoring_summary: { Args: { _days?: number }; Returns: Json }
+      my_report_blocks: {
+        Args: never
+        Returns: {
+          created_at: string
+          report_id: string
+        }[]
+      }
       police_fetch_status: { Args: never; Returns: Json }
       track_page_view: {
         Args: { _device: string; _page: string }
@@ -751,6 +786,10 @@ export type Database = {
       }
       track_visit_source: { Args: { _source: string }; Returns: undefined }
       traffic_sources_summary: { Args: { _days: number }; Returns: Json }
+      unblock_report_author: {
+        Args: { _report_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
