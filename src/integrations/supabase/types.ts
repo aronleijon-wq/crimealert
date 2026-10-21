@@ -145,6 +145,36 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       external_events: {
         Row: {
           area: string | null
@@ -409,6 +439,24 @@ export type Database = {
         }
         Relationships: []
       }
+      posting_bans: {
+        Row: {
+          created_at: string
+          target_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          target_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          target_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       pro_status: {
         Row: {
           checked_at: string
@@ -544,6 +592,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          via_report: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          via_report?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          via_report?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -624,6 +693,7 @@ export type Database = {
     }
     Functions: {
       account_count: { Args: never; Returns: number }
+      block_report_author: { Args: { _report_id: string }; Returns: undefined }
       community_reports_visible: {
         Args: never
         Returns: {
@@ -639,6 +709,11 @@ export type Database = {
           title: string
         }[]
       }
+      content_hidden: {
+        Args: { _author: string; _id: string; _type: string }
+        Returns: boolean
+      }
+      has_blocked_words: { Args: { _text: string }; Returns: boolean }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -647,6 +722,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_posting_banned: { Args: { _user_id: string }; Returns: boolean }
       kommun_month_counts: {
         Args: { _kommun: string; _month: string }
         Returns: {
@@ -669,6 +745,13 @@ export type Database = {
         Returns: undefined
       }
       monitoring_summary: { Args: { _days?: number }; Returns: Json }
+      my_report_blocks: {
+        Args: never
+        Returns: {
+          created_at: string
+          report_id: string
+        }[]
+      }
       police_fetch_status: { Args: never; Returns: Json }
       track_page_view: {
         Args: { _device: string; _page: string }
@@ -676,6 +759,10 @@ export type Database = {
       }
       track_visit_source: { Args: { _source: string }; Returns: undefined }
       traffic_sources_summary: { Args: { _days: number }; Returns: Json }
+      unblock_report_author: {
+        Args: { _report_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
