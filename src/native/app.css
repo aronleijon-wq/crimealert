@@ -1,0 +1,50 @@
+/* The iPhone app's own look (src/native). This file is loaded only in the app, and every rule
+   is scoped to it besides, so the website never changes. */
+
+/* Pages fill the space between the top bar and the tabs, not the whole screen */
+html.native-app .ca-app-page .h-\[100dvh\] { height: 100%; }
+html.native-app .ca-app-page .min-h-\[100dvh\],
+html.native-app .ca-app-page .min-h-screen { min-height: 100%; }
+
+/* The iPhone's own font, and plain words instead of the website's monospaced labels */
+html.native-app body,
+html.native-app .ca-dark,
+html.native-app .ca-dark .ca-display {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+}
+html.native-app .ca-dark .ca-display { letter-spacing: -0.02em; }
+html.native-app .ca-mono,
+html.native-app .ca-meta {
+  font-family: inherit;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+html.native-app .ca-eyebrow { display: none; }
+html.native-app .ca-hud,
+html.native-app .ca-gridlines { background-image: none; }
+html.native-app .ca-tac { border-radius: 14px; }
+
+/* Bars like the system's: translucent and blurred */
+html.native-app .ca-app-topbar,
+html.native-app .ca-app-tabbar {
+  background: hsl(var(--ca-base) / 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Taps without the web's grey flash and long-press menus on buttons */
+html.native-app { -webkit-tap-highlight-color: transparent; }
+html.native-app button,
+html.native-app .ca-app-tabbar a { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+
+/* Page titles as the iPhone's large titles: bold, in sentence case rather than shouted */
+html.native-app .ca-app-page h1.ca-display,
+html.native-app .ca-app-page h1 {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  text-transform: none;
+  font-size: 34px;
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

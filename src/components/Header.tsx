@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
 import { Radio, Newspaper, BarChart3, Bell, CreditCard } from 'lucide-react';
-import { canSellPro } from '@/lib/native';
+import { canSellPro, isNativeApp } from '@/lib/native';
 
 const navItems = [
   { to: '/karta', label: 'Karta', icon: Radio },
@@ -20,6 +20,8 @@ const isCurrent = (to: string, pathname: string) => pathname === to || (to === '
 
 const Header = () => {
   const location = useLocation();
+  // The iPhone app has its own title bar and tabs (src/native/AppShell)
+  if (isNativeApp()) return null;
 
   return (
     <>

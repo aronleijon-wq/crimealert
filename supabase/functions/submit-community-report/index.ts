@@ -146,6 +146,13 @@ Deno.serve(async (req) => {
       .select("id")
       .single();
 
+    // The database refuses slurs and writers shut out by an admin (migration 20261020200000_moderation)
+    if (error?.message?.includes("blocked_words")) {
+      return json({ error: "Texten innehåller ord som inte är tillåtna på CrimeAlert." }, 400);
+    }
+    if (error?.message?.includes("posting_banned")) {
+      return json({ error: "Ditt konto kan inte längre skriva på CrimeAlert, efter en anmälan som vi har granskat." }, 403);
+    }
     if (error) {
       console.error("[submit-community-report] insert failed", error.message);
       return json({ error: "Kunde inte spara rapporten." }, 500);

@@ -21,6 +21,7 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { isNativeApp } from '@/lib/native';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
 import { useExternalEvents } from '@/hooks/useExternalEvents';
@@ -308,8 +309,8 @@ const Index = () => {
             </button>
           }
 
-          {/* Fullscreen toggle button */}
-          <button
+          {/* Fullscreen toggle button (the app keeps its bars) */}
+          {!isNativeApp() && <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="absolute right-14 z-[1000] ca-glass rounded-md p-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors duration-300"
             style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}
@@ -317,7 +318,7 @@ const Index = () => {
             title={isFullscreen ? 'Avsluta fullskärm' : 'Fullskärm'}>
             
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
+          </button>}
 
           <div className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex max-w-[calc(100%-8rem)] items-center gap-2 ca-rise" style={{ top: isFullscreen ? 'calc(0.75rem + env(safe-area-inset-top, 0px))' : '0.75rem' }}>
             {isPremium ?
@@ -376,8 +377,9 @@ const Index = () => {
 
       {/* The sign-up bar sits over the bottom of the screen; the map ends above it, so the list
           button and the timeline stay reachable */}
-      {!isLoggedIn && <div className="h-[calc(3.6rem+env(safe-area-inset-bottom,0px))] shrink-0 md:hidden" aria-hidden />}
-      {!isLoggedIn && <MobileSignupBar />}
+      {/* The app has its welcome and tabs instead */}
+      {!isLoggedIn && !isNativeApp() && <div className="h-[calc(3.6rem+env(safe-area-inset-bottom,0px))] shrink-0 md:hidden" aria-hidden />}
+      {!isLoggedIn && !isNativeApp() && <MobileSignupBar />}
       
     </div>);
 

@@ -12,6 +12,7 @@ import {
   type NotifySettings,
   type PushEvent,
 } from '../_shared/notifications.ts';
+import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,30 @@ type PushSubscriptionRow = {
 };
 
 type EventRow = PushEvent;
+
+const apnsKey: ApnsKey | null = (() => {
+  const keyId = Deno.env.get('APNS_KEY_ID');
+  const teamId = Deno.env.get('APNS_TEAM_ID');
+  const privateKey = Deno.env.get('APNS_PRIVATE_KEY');
+  return keyId && teamId && privateKey ? { keyId, teamId, privateKey } : null;
+})();
+
+/** One notification to one device: the iPhone app's through Apple, the rest as web push. */
+async function sendPush(subscription: PushSubscriptionRow, payload: string, vapidPublicKey: string, vapidPrivateKey: string): Promise<PushResult> {
+  const apns = parseApnsEndpoint(subscription.endpoint);
+  if (!apns) return sendWebPush(subscription, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+  // Without the key the app's tokens are kept, for when it is added
+  if (!apnsKey) return { ok: false, status: null, expired: false, error: 'APNS_KEY_ID, APNS_TEAM_ID eller APNS_PRIVATE_KEY saknas.' };
+  try {
+    const now = Date.now();
+    const result = await sendApns(apns, payload, await apnsJwt(apnsKey, now), Deno.env.get('APNS_BUNDLE_ID') ?? 'se.crimealert.app', now);
+    if (!result.ok) console.warn('APNs returned non-OK status', { status: result.status, reason: result.error, expired: result.expired });
+    return result;
+  } catch (error) {
+    console.error('APNs send error:', error);
+    return { ok: false, status: null, expired: false, error: error instanceof Error ? error.message : 'Unknown APNs error' };
+  }
+}
 
 async function sendWebPush(
   subscription: { endpoint: string; p256dh: string; auth: string },
@@ -289,8 +314,8 @@ async function findProUsers(supabase: AdminClient, userIds: string[], now: numbe
     try {
       const { data, error } = await supabase.auth.admin.getUserById(userId);
       if (error || !data.user?.email) continue;
-      const proUntil = await lookupProUntil(stripe, data.user.email, now);
-      await rememberProStatus(supabase, userId, proUntil);
+      // Stored together with Pro bought through Apple, which is what counts
+      const proUntil = await rememberProStatus(supabase, userId, await lookupProUntil(stripe, data.user.email, now));
       if (proUntilActive(proUntil, now)) pro.add(userId);
       else pro.delete(userId);
     } catch (error) {
@@ -346,7 +371,7 @@ async function sendHealthAlert(supabase: ServiceClient, vapidPublicKey: string, 
   const payload = JSON.stringify({ title: message.title, body: message.body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png', tag: 'crimealert-health', data: { url: '/admin' }, requireInteraction: true });
   let sent = 0;
   for (const sub of (subs ?? []) as PushSubscriptionRow[]) {
-    const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+    const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
     if (result.ok) sent++;
   }
   console.log('Health alert', JSON.stringify({ kind: message.key, sent }));
@@ -422,7 +447,7 @@ async function sendWeeklySummaries(supabase: ServiceClient, vapidPublicKey: stri
       requireInteraction: false,
     });
     for (const sub of subscriptions.filter((s) => s.user_id === userId)) {
-      const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+      const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
       if (result.ok) sent++;
       else if (result.expired) expiredEndpoints.push(sub.endpoint);
     }
@@ -536,7 +561,7 @@ Deno.serve(async (req) => {
       const expiredEndpoints: string[] = [];
 
       for (const sub of subscriptions as PushSubscriptionRow[]) {
-        const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+        const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
         results.push({ endpoint: sub.endpoint, ...result });
         if (result.expired) expiredEndpoints.push(sub.endpoint);
       }
@@ -682,7 +707,7 @@ Deno.serve(async (req) => {
         requireInteraction: true,
       });
 
-      const result = await sendWebPush(sub, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+      const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
       console.log('Push live result', JSON.stringify({ userId: sub.user_id, endpoint: sub.endpoint, eventCount: events.length, result }));
 
       if (result.ok) {

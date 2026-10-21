@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import ModerationMenu from '@/components/ModerationMenu';
+import { BLOCKED_WORDS_MESSAGE, blockReportAuthor, hasBlockedWords, reportContent, type ReportReason } from '@/lib/moderation';
 
 
 type Report = {
@@ -203,6 +205,11 @@ export default function CommunityReports() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !category || !title.trim() || !description.trim()) return;
+    if (hasBlockedWords(`${title} ${description}`)) {
+      setGeoError(BLOCKED_WORDS_MESSAGE);
+      toast.error(BLOCKED_WORDS_MESSAGE);
+      return;
+    }
     setSubmitting(true);
 
     let image_url: string | null = null;
@@ -255,6 +262,20 @@ export default function CommunityReports() {
     await supabase.from('community_reports').delete().eq('id', id);
     setReports((prev) => prev.filter((r) => r.id !== id));
     setDeleteConfirm(null);
+  };
+
+  // A reported report, or one whose author is blocked, disappears for the user at once
+  const handleReport = async (id: string, reason: ReportReason) => {
+    if (!user) return;
+    await reportContent(user.id, 'community_report', id, reason);
+    setReports((prev) => prev.filter((r) => r.id !== id));
+    toast.success('Tack. Vi granskar rapporten inom 24 timmar.');
+  };
+
+  const handleBlock = async (id: string) => {
+    await blockReportAuthor(id);
+    fetchReports();
+    toast.success('Skribenten är blockerad.');
   };
 
   const filteredReports = activeFilter
@@ -706,7 +727,7 @@ export default function CommunityReports() {
                           </button>
                         )}
 
-                        <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
                           {r.area && (
                             <span className="flex items-center gap-0.5">
                               <MapPin className="w-2.5 h-2.5" />{r.area}
@@ -717,6 +738,14 @@ export default function CommunityReports() {
                           </span>
                           <span className="hidden sm:inline">·</span>
                           <span className="hidden sm:inline text-[9px] uppercase tracking-wide">{cat?.label ?? r.category}</span>
+                          {user && !r.isOwn && (
+                            <ModerationMenu
+                              what="rapporten"
+                              author="skribenten"
+                              onReport={(reason) => handleReport(r.id, reason)}
+                              onBlock={() => handleBlock(r.id)}
+                            />
+                          )}
                         </div>
                       </div>
 

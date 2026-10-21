@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { supabase } from '@/integrations/supabase/client';
 import ShareButton from '@/components/ShareButton';
+import ModerationMenu from '@/components/ModerationMenu';
+import { blockReportAuthor, communityReportId, reportContent } from '@/lib/moderation';
 
 interface Props {
   incidentId: string;
@@ -38,7 +40,18 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
   const [showAuthNudge, setShowAuthNudge] = useState(false);
   const [commentCount, setCommentCount] = useState<number | null>(null);
   const { reactions, toggleReaction } = useIncidentReactions(incidentId);
-  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(incidentId, commentsOpen);
+  const { comments, loading, addComment, toggleLike, deleteComment, reportComment, blockAuthor } = useIncidentComments(incidentId, commentsOpen);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // A citizen report can itself be reported, by anyone but its author
+  const reportId = communityReportId(incidentId);
+  const [ownReport, setOwnReport] = useState(true);
+  useEffect(() => {
+    if (!reportId || !user) return;
+    supabase.from('community_reports').select('id').eq('id', reportId).eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => setOwnReport(!!data));
+  }, [reportId, user]);
 
   // Eagerly fetch comment count
   useEffect(() => {
@@ -79,8 +92,9 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
 
   const handleSubmit = async () => {
     if (!text.trim()) return;
-    await addComment(text);
-    setText('');
+    const error = await addComment(text);
+    setCommentError(error);
+    if (!error) setText('');
   };
 
   return (
@@ -153,7 +167,27 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
             className="inline-flex items-center gap-1 rounded-xl border border-[#e5e7eb] bg-[#f8f8f8] px-2 py-[3px] text-[11px] font-medium leading-none text-[#888] [&_svg]:h-3 [&_svg]:w-3"
           />
         )}
+
+        {reportId && user && !ownReport && (
+          <ModerationMenu
+            tone="popup"
+            what="rapporten"
+            author="skribenten"
+            onReport={async (reason) => {
+              await reportContent(user.id, 'community_report', reportId, reason);
+              setNotice('Tack. Vi granskar rapporten inom 24 timmar, och du ser den inte längre.');
+            }}
+            onBlock={async () => {
+              await blockReportAuthor(reportId);
+              setNotice('Skribenten är blockerad. Du ser inte längre det hen rapporterar.');
+            }}
+          />
+        )}
       </div>
+
+      {notice && (
+        <div style={{ fontSize: 10, color: '#555', marginTop: 6 }}>{notice}</div>
+      )}
 
       {/* Auth nudge */}
       {showAuthNudge && !user && (
@@ -195,7 +229,7 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
                     <p style={{ fontSize: 10, color: '#555', margin: '2px 0 0', lineHeight: 1.5, wordBreak: 'break-word' }}>
                       {c.text}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 2 }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -218,6 +252,21 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
                         >
                           <Trash2 size={10} aria-hidden />
                         </button>
+                      )}
+                      {user && c.user_id !== user.id && (
+                        <ModerationMenu
+                          tone="popup"
+                          what="kommentaren"
+                          author={displayNames[c.user_id] || 'personen'}
+                          onReport={async (reason) => {
+                            await reportComment(c.id, reason);
+                            setNotice('Tack. Vi granskar kommentaren inom 24 timmar.');
+                          }}
+                          onBlock={async () => {
+                            await blockAuthor(c.user_id);
+                            setNotice('Blockerad. Du ser inte längre personens kommentarer.');
+                          }}
+                        />
                       )}
                     </div>
                   </div>
@@ -288,6 +337,9 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
               >
                 <a href="/auth" onClick={(e) => e.stopPropagation()} style={{ color: '#3b82f6', textDecoration: 'underline' }}>Logga in</a> för att kommentera
               </div>
+            )}
+            {commentError && (
+              <div role="alert" style={{ fontSize: 10, color: '#ef4444', marginTop: 4 }}>{commentError}</div>
             )}
           </div>
         </div>

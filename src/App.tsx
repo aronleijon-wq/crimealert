@@ -7,12 +7,13 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
-import { Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { trackPageView } from "@/lib/monitoring";
 import { isNativeApp } from "@/lib/native";
 import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
+import NativeAppBridge from "@/components/native/NativeAppBridge";
 const Index = lazyPage(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
@@ -29,7 +30,6 @@ const Admin = lazyPage(() => import("./pages/Admin"));
 const DebugPush = lazyPage(() => import("./pages/DebugPush"));
 const OmOss = lazyPage(() => import("./pages/OmOss"));
 const Statistik = lazyPage(() => import("./pages/Statistik"));
-const ProInApp = lazyPage(() => import("./pages/ProInApp"));
 const Feed = lazyPage(() => import("./pages/Feed"));
 const Kommun = lazyPage(() => import("./pages/Kommun"));
 const KommunRapport = lazyPage(() => import("./pages/KommunRapport"));
@@ -38,6 +38,13 @@ const Guide = lazyPage(() => import("./pages/Guide"));
 const Kommuner = lazyPage(() => import("./pages/Kommuner"));
 const Handelse = lazyPage(() => import("./pages/Handelse"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
+const AppLogin = lazyPage(() => import("./pages/AppLogin"));
+// The iPhone app's own frame and Pro page (src/native), loaded only there
+const AppShell = lazy(() => import("@/native/AppShell"));
+const AppPro = lazyPage(() => import("@/native/AppPro"));
+
+/** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
+const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
 
 const queryClient = new QueryClient();
 
@@ -63,8 +70,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <PageViews />
+        {isNativeApp() && <NativeAppBridge />}
         <ErrorBoundary>
         <Suspense fallback={<LazyFallback />}>
+        <InApp>
         <Routes>
           <Route path="/" element={isNativeApp() ? <Navigate to="/karta" replace /> : <Landing />} />
           <Route path="/karta" element={<Index />} />
@@ -77,11 +86,13 @@ const App = () => (
           <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
-          <Route path="/prisplan" element={isNativeApp() ? <ProInApp /> : <Prisplan />} />
+          <Route path="/prisplan" element={isNativeApp() ? <AppPro /> : <Prisplan />} />
           {/* Stripe sends people back here after checkout (create-checkout), and older links point here */}
-          <Route path="/account" element={isNativeApp() ? <ProInApp /> : <Prisplan />} />
+          <Route path="/account" element={isNativeApp() ? <AppPro /> : <Prisplan />} />
           <Route path="/installningar" element={<Installningar />} />
           <Route path="/auth" element={<Auth />} />
+          {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
+          <Route path="/app-login" element={<AppLogin />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />
           <Route path="/privacy" element={<Sekretesspolicy />} />
@@ -93,6 +104,7 @@ const App = () => (
           <Route path="/statistik" element={<Statistik />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </InApp>
         </Suspense>
         </ErrorBoundary>
         <BackendStatusBanner />

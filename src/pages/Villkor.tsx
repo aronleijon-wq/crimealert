@@ -19,7 +19,7 @@ const Villkor = () => {
             <div>
               <p className="ca-eyebrow">// användarvillkor</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Användarvillkor</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-20</p>
             </div>
           </div>
 
@@ -61,6 +61,11 @@ const Villkor = () => {
                 provperioden startar och den första betalningen dras när den slutar. Avslutar du prenumerationen
                 under provperioden dras ingenting. Provperioden gäller en gång per person.
               </p>
+              <p className="mt-2">
+                I iPhone-appen köps Pro som prenumeration via App Store. Betalning, förnyelse, provperiod och avslut
+                sköts då av Apple enligt Apples villkor, och du avslutar under Inställningar → ditt namn →
+                Prenumerationer. Pro gäller för ditt CrimeAlert-konto, i appen och på webben.
+              </p>
             </section>
 
             <section>
@@ -69,6 +74,18 @@ const Villkor = () => {
                 Om du skickar in medborgarrapporter, recensioner eller annan information via tjänsten garanterar du
                 att innehållet är korrekt och inte kränker andras rättigheter. Vi förbehåller oss rätten att ta bort
                 innehåll som bedöms vara olämpligt, stötande eller felaktigt.
+              </p>
+              <p className="mt-2">
+                Vi har nolltolerans mot kränkande innehåll och mot användare som trakasserar andra. Det gäller bland
+                annat hot, hat, rasism, trakasserier, personuppgifter om andra och spam, i kommentarer, rapporter och
+                användarnamn. Ord som uppenbart är kränkande stoppas innan de publiceras.
+              </p>
+              <p className="mt-2">
+                Du kan anmäla en kommentar eller medborgarrapport med flaggan bredvid den, och blockera den som
+                skrivit den. Det du anmäler eller blockerar försvinner direkt för dig, och ett inlägg som flera
+                anmäler döljs för alla tills vi har granskat det. Vi går igenom anmälningar inom 24 timmar, tar bort
+                innehåll som bryter mot villkoren och stänger av den som skrivit det från att skriva mer. Blockeringar
+                kan du häva under Profil.
               </p>
             </section>
 

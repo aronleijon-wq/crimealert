@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
-import { hadPro, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
+import { hadPro, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +12,13 @@ const corsHeaders = {
 // current_period_end is not on the typed Subscription for this API version
 // (it lives on subscription items), so read it defensively.
 type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_end?: number | null };
+
+/** Pro bought in the iPhone app (apple_subscriptions), with no Stripe subscription. */
+const appleResponse = (proUntil: string | null) =>
+  new Response(
+    JSON.stringify({ subscribed: true, product_id: "prod_U0dsMg8IZZKY7c", subscription_end: proUntil, store: "apple", trial_eligible: false }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+  );
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -99,7 +106,8 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No customer found");
-      await rememberProStatus(supabaseClient, user.id, null);
+      const stored = await rememberProStatus(supabaseClient, user.id, null);
+      if (proUntilActive(stored, Date.now())) return appleResponse(stored);
       return new Response(JSON.stringify({ subscribed: false, trial_eligible: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -193,7 +201,8 @@ serve(async (req) => {
     }
 
     // What the archive's access rule and the push sender go by
-    await rememberProStatus(supabaseClient, user.id, proUntilFor(validSub, Date.now()));
+    const stored = await rememberProStatus(supabaseClient, user.id, proUntilFor(validSub, Date.now()));
+    if (!hasActiveSub && proUntilActive(stored, Date.now())) return appleResponse(stored);
 
     return new Response(
       JSON.stringify({

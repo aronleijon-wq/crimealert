@@ -5,6 +5,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import DefaultAvatar from '@/components/DefaultAvatar';
+import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import Header from '@/components/Header';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
@@ -16,7 +17,8 @@ import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { useTheme } from '@/hooks/useTheme';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { canSellPro } from '@/lib/native';
+import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
+import { isNativeApp } from '@/lib/native';
 
 const Section = ({ id, title, children }: { id: string; title: string; children: ReactNode }) => (
   <section aria-labelledby={id}>
@@ -82,9 +84,17 @@ const DisplayNameRow = ({ userId }: { userId: string }) => {
   const save = async () => {
     const trimmed = draft.trim().slice(0, 30);
     if (!trimmed) return;
+    if (hasBlockedWords(trimmed)) {
+      toast({ title: 'Kunde inte spara', description: BLOCKED_WORDS_MESSAGE, variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from('profiles').upsert({ id: userId, display_name: trimmed });
     setSaving(false);
+    if (isBlockedWordsError(error)) {
+      toast({ title: 'Kunde inte spara', description: BLOCKED_WORDS_MESSAGE, variant: 'destructive' });
+      return;
+    }
     if (error) {
       toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
       return;
@@ -224,6 +234,7 @@ const Installningar = () => {
               <div className={rowClass}>
                 <RowText icon={Mail} label="E-post" hint={user.email} />
               </div>
+              <BlockedUsers userId={user.id} />
             </Section>
           )}
 
@@ -233,18 +244,29 @@ const Installningar = () => {
                 <RowText icon={Zap} label="Din plan" hint={plan} />
               </div>
             )}
-            {/* The app neither sells Pro nor links to where it is paid for (lib/native) */}
-            {!canSellPro() ? null : isPremium && !lifetime ? (
-              <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
-            ) : !isPremium ? (
+            {isNativeApp() ? (
+              // In the app Pro is bought and managed through Apple, on its own page (src/native/AppPro)
               <LinkRow
                 icon={Zap}
-                label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-                hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
+                label={isPremium ? 'CrimeAlert Pro' : 'Skaffa Pro'}
+                hint={isPremium ? (subscription.store === 'apple' ? 'Hantera din prenumeration.' : 'Det här ingår.') : 'Händelser och notiser direkt, och hela beskrivningen.'}
                 to="/prisplan"
               />
-            ) : null}
-            <LinkRow icon={FileText} label={canSellPro() ? 'Jämför Gratis och Pro' : 'Det här ingår i Pro'} to="/prisplan" />
+            ) : (
+              <>
+                {isPremium && !lifetime ? (
+                  <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
+                ) : !isPremium ? (
+                  <LinkRow
+                    icon={Zap}
+                    label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
+                    hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
+                    to="/prisplan"
+                  />
+                ) : null}
+                <LinkRow icon={FileText} label="Jämför Gratis och Pro" to="/prisplan" />
+              </>
+            )}
           </Section>
 
           <Section id="notiser" title="Notiser">

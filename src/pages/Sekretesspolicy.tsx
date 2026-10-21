@@ -19,7 +19,7 @@ const Sekretesspolicy = () => {
             <div>
               <p className="ca-eyebrow">// sekretesspolicy</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Sekretesspolicy</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-20</p>
             </div>
           </div>
 
@@ -39,11 +39,13 @@ const Sekretesspolicy = () => {
                 <li>
                   <strong>Kontoinformation:</strong> E-postadress och namn vid registrering och inloggning. Om du loggar in
                   via Google OAuth samlar vi in din e-postadress och ditt namn från ditt Google-konto för att identifiera dig
-                  och tillhandahålla tjänsten.
+                  och tillhandahålla tjänsten. Loggar du in med Apple får vi den e-postadress du väljer att dela, som kan
+                  vara en anonym adress från Apple.
                 </li>
                 <li>
                   <strong>Betalningsuppgifter:</strong> Hanteras av vår betalningsleverantör Stripe. Vi lagrar aldrig
-                  kortnummer eller bankuppgifter.
+                  kortnummer eller bankuppgifter. Köper du Pro i iPhone-appen sköts betalningen av Apple, och vi får
+                  bara veta vilken prenumeration ditt konto har och hur länge den gäller.
                 </li>
                 <li>
                   <strong>Användningsdata:</strong> Anonym statistik om hur tjänsten används: antal sidvisningar per dag,
@@ -61,6 +63,17 @@ const Sekretesspolicy = () => {
                 <li>
                   <strong>Användarrapporter:</strong> Om du skickar in rapporter via Medborgarrapporter lagras titel,
                   beskrivning, kategori och ungefärlig plats.
+                </li>
+                <li>
+                  <strong>Kommentarer, anmälningar och blockeringar:</strong> Kommentarer du skriver lagras kopplade till
+                  ditt konto och visas med ditt användarnamn. Anmäler du ett inlägg eller blockerar någon lagras det kopplat
+                  till ditt konto, så att vi kan granska anmälan och dölja innehållet för dig. Den du anmäler eller
+                  blockerar får inte veta att det var du.
+                </li>
+                <li>
+                  <strong>Notiser:</strong> När du slår på notiser sparar vi en adress för notiser till din enhet, från
+                  webbläsaren eller, i iPhone-appen, från Apple. Den raderas när du stänger av notiserna, loggar ut i appen
+                  eller raderar ditt konto.
                 </li>
               </ul>
             </section>
@@ -109,6 +122,10 @@ const Sekretesspolicy = () => {
                 </li>
                 <li>
                   <strong>Stripe:</strong> Säker betalningshantering för Pro-prenumerationer.
+                </li>
+                <li>
+                  <strong>Apple:</strong> Levererar notiser till iPhone-appen (Apple Push Notification service) och sköter
+                  inloggning med Apple.
                 </li>
               </ul>
             </section>

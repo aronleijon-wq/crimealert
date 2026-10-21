@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
 import { isTransientBackendError } from '@/lib/errors';
+import { isNativeApp } from '@/lib/native';
 import { subscriptionFromProStatus } from '@/lib/proStatus';
 
 export interface SubscriptionState {
@@ -12,6 +13,8 @@ export interface SubscriptionState {
   trialing?: boolean;
   /** May start Pro with the free trial (never had Pro) */
   trialEligible?: boolean;
+  /** Bought in the iPhone app, through Apple (managed there, not with Stripe) */
+  store?: 'apple';
 }
 
 interface AuthContextType {
@@ -67,6 +70,7 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
         subscriptionEnd: data.subscription_end || null,
         trialing: data.trialing === true,
         trialEligible: data.trial_eligible === true,
+        ...(data.store === 'apple' ? { store: 'apple' as const } : {}),
       },
       ok: true,
     };
@@ -181,6 +185,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    // In the iPhone app, this phone stops getting the account's notifications
+    if (user && isNativeApp()) {
+      await import('@/lib/nativeApp').then(({ forgetDeviceToken }) => forgetDeviceToken(user.id, false)).catch(() => {});
+    }
 
     let lastError: AuthError | null = null;
 

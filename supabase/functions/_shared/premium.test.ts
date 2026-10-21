@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bestValidSubscription, findSubscription, hadPro, isFresh, lookupProUntil, proUntilActive, proUntilFor, trialEligible, type SubscriptionLike } from './premium';
+import { bestValidSubscription, findSubscription, hadPro, isFresh, laterProUntil, lookupProUntil, proUntilActive, proUntilFor, rememberProStatus, storeApplePro, trialEligible, type SubscriptionLike } from './premium';
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
 const sec = (iso: string) => Date.parse(iso) / 1000;
@@ -84,5 +84,52 @@ describe('free trial', () => {
 
   it('is not offered to accounts with free Pro', async () => {
     expect(await trialEligible(stripe({}), 'kcleijon@gmail.com')).toBe(false);
+  });
+});
+
+// A pro_status and apple_subscriptions table in memory, as the service role sees them
+function fakeDb(apple: { expires_at: string | null }[], proStatus: { pro_until: string | null; checked_at: string } | null) {
+  const state = { proStatus };
+  const db = {
+    from: (table: string) => ({
+      select: () => ({
+        eq: (_c: string, _v: string) => (table === 'apple_subscriptions'
+          ? Promise.resolve({ data: apple, error: null })
+          : { maybeSingle: async () => ({ data: state.proStatus, error: null }) }),
+      }),
+      upsert: async (row: { pro_until: string | null; checked_at: string }) => { state.proStatus = { pro_until: row.pro_until, checked_at: row.checked_at }; return { error: null }; },
+      update: (patch: { checked_at: string }) => ({ eq: async () => { state.proStatus = { ...state.proStatus!, ...patch }; return { error: null }; } }),
+    }),
+  };
+  return { db, state };
+}
+
+describe('Pro through Apple', () => {
+  const future = new Date(Date.now() + 10 * 86400000).toISOString();
+  const later = new Date(Date.now() + 40 * 86400000).toISOString();
+
+  it('takes the later of two ends', () => {
+    expect(laterProUntil(future, later)).toBe(later);
+    expect(laterProUntil(null, future)).toBe(future);
+    expect(laterProUntil('infinity', later)).toBe('infinity');
+    expect(laterProUntil(null, null)).toBeNull();
+  });
+
+  it('keeps Apple Pro when Stripe has none', async () => {
+    const { db, state } = fakeDb([{ expires_at: future }, { expires_at: null }], null);
+    await expect(rememberProStatus(db, 'u1', null)).resolves.toBe(future);
+    expect(state.proStatus?.pro_until).toBe(future);
+    const both = fakeDb([{ expires_at: future }], null);
+    await expect(rememberProStatus(both.db, 'u1', later)).resolves.toBe(later);
+  });
+
+  it('adds Apple Pro at once, and has Stripe asked again when Apple gives none', async () => {
+    const { db, state } = fakeDb([{ expires_at: later }], { pro_until: future, checked_at: '2026-10-21T00:00:00.000Z' });
+    await expect(storeApplePro(db, 'u1')).resolves.toBe(later);
+    expect(state.proStatus).toEqual({ pro_until: later, checked_at: '2026-10-21T00:00:00.000Z' });
+
+    const gone = fakeDb([{ expires_at: null }], { pro_until: future, checked_at: '2026-10-21T00:00:00.000Z' });
+    await storeApplePro(gone.db, 'u1');
+    expect(gone.state.proStatus?.checked_at).toBe(new Date(0).toISOString());
   });
 });

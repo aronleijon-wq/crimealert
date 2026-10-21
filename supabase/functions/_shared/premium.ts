@@ -114,12 +114,55 @@ export interface ProStatusRow {
   checked_at: string;
 }
 
-/** Remembers an answer; a failure only means the next check asks Stripe again. */
-export async function rememberProStatus(db: ServiceClient, userId: string, proUntil: string | null) {
+/** The later of two pro_until values ('infinity' is later than any date, null earlier). */
+export function laterProUntil(a: string | null, b: string | null): string | null {
+  if (a === 'infinity' || b === 'infinity') return 'infinity';
+  if (!a || !b) return a ?? b;
+  return Date.parse(a) >= Date.parse(b) ? a : b;
+}
+
+/** Until when the user has Pro bought in the iPhone app (apple_subscriptions), or null. */
+export async function appleProUntil(db: ServiceClient, userId: string, nowMs = Date.now()): Promise<string | null> {
+  const { data, error } = await db.from('apple_subscriptions').select('expires_at').eq('user_id', userId);
+  // Before its migration has run there is no Pro through Apple to find
+  if (error) return null;
+  let until: string | null = null;
+  for (const row of (data ?? []) as { expires_at: string | null }[]) {
+    if (row.expires_at && Date.parse(row.expires_at) > nowMs) until = laterProUntil(until, row.expires_at);
+  }
+  return until;
+}
+
+/**
+ * Remembers an answer from Stripe, together with Pro bought through Apple, and returns what was
+ * stored: the later of the two. A failure only means the next check asks again.
+ */
+export async function rememberProStatus(db: ServiceClient, userId: string, proUntil: string | null): Promise<string | null> {
+  const combined = laterProUntil(proUntil, await appleProUntil(db, userId));
   const { error } = await db
     .from('pro_status')
-    .upsert({ user_id: userId, pro_until: proUntil, checked_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    .upsert({ user_id: userId, pro_until: combined, checked_at: new Date().toISOString() }, { onConflict: 'user_id' });
   if (error) console.warn('[premium] could not store pro_status:', error.message);
+  return combined;
+}
+
+/**
+ * After Apple has said something new about the user's subscription (apple-subscription,
+ * apple-notifications): Pro through Apple is added to what pro_status holds at once. When Apple
+ * gives no Pro (any more), the next check asks Stripe again and counts Apple anew.
+ */
+export async function storeApplePro(db: ServiceClient, userId: string): Promise<string | null> {
+  const appleUntil = await appleProUntil(db, userId);
+  const { data } = await db.from('pro_status').select('pro_until, checked_at').eq('user_id', userId).maybeSingle();
+  const row = data as { pro_until: string | null; checked_at: string } | null;
+  const stale = new Date(0).toISOString();
+  if (appleUntil) {
+    const proUntil = laterProUntil(row?.pro_until ?? null, appleUntil);
+    await db.from('pro_status').upsert({ user_id: userId, pro_until: proUntil, checked_at: row?.checked_at ?? stale }, { onConflict: 'user_id' });
+    return proUntil;
+  }
+  if (row) await db.from('pro_status').update({ checked_at: stale }).eq('user_id', userId);
+  return row?.pro_until ?? null;
 }
 
 /** Remembered answers for these users, by user id (missing if never checked or unreadable). */

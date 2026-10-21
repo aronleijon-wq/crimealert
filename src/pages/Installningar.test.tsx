@@ -12,6 +12,9 @@ const state = vi.hoisted(() => ({
   upsert: vi.fn(async (_row: unknown) => ({ error: null })),
   invoke: vi.fn(async (_name: string, _opts?: unknown) => ({ data: { deleted: true }, error: null })),
   native: false,
+  blocks: [] as { blocked_id: string }[],
+  reportBlocks: [] as { report_id: string; created_at: string }[],
+  unblocked: [] as string[],
 }));
 
 vi.mock('@/lib/native', () => ({ isNativeApp: () => state.native, canSellPro: () => !state.native }));
@@ -21,10 +24,20 @@ vi.mock('@/hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { display_name: 'Aron' }, error: null }) }) }),
+    from: (table: string) => ({
+      select: () => ({
+        eq: () => (table === 'user_blocks'
+          ? Promise.resolve({ data: state.blocks, error: null })
+          : { maybeSingle: async () => ({ data: { display_name: 'Aron' }, error: null }) }),
+        in: async () => ({ data: [{ id: 'u2', display_name: 'Bertil' }], error: null }),
+      }),
       upsert: (row: unknown) => state.upsert(row),
+      delete: () => ({ eq: () => ({ eq: async (_column: string, id: string) => { state.unblocked.push(id); return { error: null }; } }) }),
     }),
+    rpc: async (name: string, args?: { _report_id?: string }) => {
+      if (name === 'unblock_report_author') state.unblocked.push(args?._report_id ?? '');
+      return { data: name === 'my_report_blocks' ? state.reportBlocks : null, error: null };
+    },
     functions: { invoke: (name: string, opts?: unknown) => state.invoke(name, opts) },
   },
 }));
@@ -52,6 +65,9 @@ beforeEach(() => {
   state.upsert.mockClear();
   state.invoke.mockClear();
   state.native = false;
+  state.blocks = [];
+  state.reportBlocks = [];
+  state.unblocked = [];
   localStorage.clear();
 });
 
@@ -125,13 +141,20 @@ describe('Profil och inställningar', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('in the iPhone app, neither sells Pro nor links to the payment portal', async () => {
+  it('in the iPhone app, sends Pro to Apple’s page and never to the payment portal', async () => {
     state.native = true;
     state.subscription = { subscribed: true, productId: PRO, subscriptionEnd: '2026-11-01T00:00:00Z' };
     await renderPage();
-    expect(screen.queryByText('Hantera prenumeration')).toBeNull();
+    expect(screen.queryByRole('link', { name: /Hantera prenumeration/ })).toBeNull();
     expect(screen.queryByText(/Prova Pro gratis|Uppgradera till Pro/)).toBeNull();
-    expect(screen.getByRole('link', { name: /Det här ingår i Pro/ })).toHaveAttribute('href', '/prisplan');
+    expect(screen.getByRole('link', { name: /CrimeAlert Pro/ })).toHaveAttribute('href', '/prisplan');
+    expect(document.querySelector(`a[href="${BILLING_PORTAL_URL}"]`)).toBeNull();
+  });
+
+  it('in the iPhone app, offers Pro to a free account', async () => {
+    state.native = true;
+    await renderPage();
+    expect(screen.getByRole('link', { name: /Skaffa Pro/ })).toHaveAttribute('href', '/prisplan');
   });
 
   it('deletes the account only after RADERA is typed, then signs out', async () => {
@@ -145,5 +168,20 @@ describe('Profil och inställningar', () => {
     await waitFor(() => expect(state.invoke).toHaveBeenCalledWith('delete-account', { method: 'POST' }));
     await waitFor(() => expect(state.signOut).toHaveBeenCalled());
     expect(await screen.findByText('Startsidan')).toBeInTheDocument();
+  });
+
+  it('lists blocked people, report authors anonymously, and unblocks them', async () => {
+    state.blocks = [{ blocked_id: 'u2' }];
+    state.reportBlocks = [{ report_id: 'r1', created_at: '2026-10-20T10:00:00Z' }];
+    await renderPage();
+    expect(await screen.findByText('Bertil')).toBeInTheDocument();
+    expect(screen.getByText(/Skribenten av en medborgarrapport/)).toBeInTheDocument();
+    const [first, second] = screen.getAllByRole('button', { name: 'Häv' });
+    fireEvent.click(first);
+    await waitFor(() => expect(screen.queryByText('Bertil')).toBeNull());
+    fireEvent.click(second);
+    await waitFor(() => expect(screen.queryByText(/Skribenten av en medborgarrapport/)).toBeNull());
+    expect(state.unblocked).toEqual(['u2', 'r1']);
+    expect(screen.getByText(/Tryck på flaggan/)).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { startMonitoring } from './lib/monitoring';
 import { stripFreshParam, watchForStaleBuild } from './lib/staleBuild';
 import { isNativeApp } from './lib/native';
+import { handOverAppLogin } from './lib/appLogin';
 import './index.css';
 
 const isInIframe = (() => {
@@ -80,6 +81,7 @@ if ('serviceWorker' in navigator) {
 }
 
 stripFreshParam();
+handOverAppLogin();
 startMonitoring();
 watchForStaleBuild();
 // The outer boundary also catches a failure in the app's providers, which would otherwise leave an empty page

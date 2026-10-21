@@ -53,7 +53,8 @@ const defaultDeviceInfo: DevicePushInfo = {
   isStandalone: false,
 };
 
-export function usePushNotifications() {
+/** Web push in this browser; off (enabled = false) in the iPhone app, which uses useNativePush */
+export function usePushNotifications(enabled = true) {
   const { user } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -211,11 +212,12 @@ export function usePushNotifications() {
   }, [fetchBackendConfig, fetchDatabaseSubscriptions, log, syncSubscriptionToDatabase, user]);
 
   useEffect(() => {
+    if (!enabled) return;
     refreshStatus().finally(() => setChecked(true));
-  }, [refreshStatus]);
+  }, [enabled, refreshStatus]);
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
+    if (!enabled || !('serviceWorker' in navigator)) return;
 
     const onMessage = (event: MessageEvent) => {
       const payload = event.data;
@@ -228,7 +230,7 @@ export function usePushNotifications() {
 
     navigator.serviceWorker.addEventListener('message', onMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onMessage);
-  }, [log]);
+  }, [enabled, log]);
 
   const subscribe = useCallback(async () => {
     if (!user || !isSupported) return false;

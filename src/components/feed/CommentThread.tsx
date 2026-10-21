@@ -4,6 +4,7 @@ import { Heart, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentComments } from '@/hooks/useIncidentComments';
+import ModerationMenu from '@/components/ModerationMenu';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
 interface CommentThreadProps {
@@ -14,8 +15,10 @@ interface CommentThreadProps {
 /** Comments on one feed post (same comments as the map popup for that event). */
 const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
   const { user } = useAuth();
-  const { comments, loading, addComment, toggleLike, deleteComment } = useIncidentComments(itemId, true);
+  const { comments, loading, addComment, toggleLike, deleteComment, reportComment, blockAuthor } = useIncidentComments(itemId, true);
   const [text, setText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
   const loadedOnce = useRef(false);
 
@@ -40,8 +43,9 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
-    await addComment(text);
-    setText('');
+    const refused = await addComment(text);
+    setError(refused);
+    if (!refused) setText('');
   };
 
   return (
@@ -65,7 +69,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
                     <span className="text-[10px] text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
                   </div>
                   <p className="text-xs text-foreground/90 break-words mt-0.5">{c.text}</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex flex-wrap items-center gap-3 mt-1">
                     <button
                       type="button"
                       onClick={() => user && toggleLike(c.id, c.user_has_liked)}
@@ -86,6 +90,20 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
                         <Trash2 className="w-3 h-3" />
                       </button>
                     )}
+                    {user && user.id !== c.user_id && (
+                      <ModerationMenu
+                        what="kommentaren"
+                        author={displayNames[c.user_id] || 'personen'}
+                        onReport={async (reason) => {
+                          await reportComment(c.id, reason);
+                          setNotice('Tack. Vi granskar kommentaren inom 24 timmar.');
+                        }}
+                        onBlock={async () => {
+                          await blockAuthor(c.user_id);
+                          setNotice('Blockerad. Du ser inte längre personens kommentarer.');
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               </li>
@@ -93,6 +111,8 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
           })}
         </ul>
       )}
+
+      {notice && <p className="text-[11px] text-muted-foreground">{notice}</p>}
 
       {user ? (
         <form onSubmit={submit} className="flex gap-2">
@@ -117,6 +137,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
           <Link to="/auth" className="text-primary underline">Logga in</Link> för att kommentera
         </p>
       )}
+      {error && <p role="alert" className="text-[11px] text-destructive">{error}</p>}
     </div>
   );
 };

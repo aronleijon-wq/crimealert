@@ -119,8 +119,8 @@ async function checkPremiumStatus(req: Request): Promise<boolean> {
     } else {
       const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
       const stripe = stripeKey ? new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' }) : null;
-      proUntil = await lookupProUntil(stripe, data.user.email, now);
-      await rememberProStatus(supabase, userId, proUntil);
+      // Stored together with Pro bought through Apple, which is what counts
+      proUntil = await rememberProStatus(supabase, userId, await lookupProUntil(stripe, data.user.email, now));
     }
 
     const result = proUntilActive(proUntil, now);

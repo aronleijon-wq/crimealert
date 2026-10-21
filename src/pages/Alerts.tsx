@@ -17,6 +17,7 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useNativePush } from '@/hooks/useNativePush';
 import { useSEO } from '@/hooks/useSEO';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { parseIncidentTime } from '@/lib/incidentTime';
@@ -118,13 +119,23 @@ const Alerts = () => {
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
   const { settings, available: settingsAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
-  const push = usePushNotifications();
+  // The iPhone app gets notifications through Apple; app versions without that keep web push off
+  const native = isNativeApp();
+  const webPush = usePushNotifications(!native);
+  const nativePush = useNativePush(native);
+  const push = native ? nativePush : webPush;
   const { toast } = useToast();
   const [attempted, setAttempted] = useState(false);
 
   const device = getDevicePushInfo();
-  const deviceState: DeviceState = isNativeApp()
-    ? 'app'
+  const deviceState: DeviceState = native
+    ? nativePush.available === false
+      ? 'app'
+      : !nativePush.checked
+        ? 'checking'
+        : nativePush.permission === 'denied'
+          ? 'blocked'
+          : nativePush.isSubscribed ? 'on' : 'off'
     : device.isIos && !device.isStandalone
     ? 'install'
     : !pushSupported()
@@ -326,7 +337,7 @@ const Alerts = () => {
                       done={deviceState === 'on'}
                       href="#enhet"
                       title="Slå på notiser i den här enheten"
-                      detail={deviceState === 'on' ? 'Klart' : deviceState === 'install' ? 'Lägg först till CrimeAlert på hemskärmen' : 'Ett tryck, sedan godkänner du i webbläsaren'}
+                      detail={deviceState === 'on' ? 'Klart' : deviceState === 'install' ? 'Lägg först till CrimeAlert på hemskärmen' : native ? 'Ett tryck, sedan godkänner du' : 'Ett tryck, sedan godkänner du i webbläsaren'}
                     />}
                   </div>
                 )}
@@ -340,6 +351,7 @@ const Alerts = () => {
               <Section id="enhet" icon={Smartphone} title="Den här enheten" description="Mobilen eller datorn du använder nu." aside={<DeviceBadge state={deviceState} />}>
                 <DeviceCard
                   state={deviceState}
+                  inApp={native}
                   busy={push.loading}
                   hasAreas={kommuner.length > 0}
                   error={attempted ? friendlyError(push.lastError) : null}
