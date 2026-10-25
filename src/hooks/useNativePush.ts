@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { testFailureReason, type TestAnswer } from '@/lib/pushDiagnostics';
 import { forgetDeviceToken, nativePush, nativePushTurnedOff, saveDeviceToken } from '@/lib/nativeApp';
 
 const toPermission = (p: string): NotificationPermission => (p === 'granted' ? 'granted' : p === 'denied' ? 'denied' : 'default');
@@ -78,11 +79,16 @@ export function useNativePush(enabled = true) {
     setLoading(true);
     setLastError(null);
     try {
-      const { data, error } = await supabase.functions.invoke<{ sent?: number; error?: string }>('send-push-notifications', {
+      const { data, error } = await supabase.functions.invoke<TestAnswer>('send-push-notifications', {
         body: { mode: 'test', url },
       });
-      if (error || !data?.sent) throw new Error(data?.error ?? 'Testnotisen misslyckades.');
-      return data;
+      // A refusal (no device saved) comes as an error with the answer in its response
+      let answer: TestAnswer | null = data;
+      const context = (error as { context?: Response } | null)?.context;
+      if (!answer && context?.json) answer = await context.json().catch(() => null);
+      const reason = testFailureReason(answer);
+      if (reason) throw new Error(reason);
+      return answer ?? {};
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Kunde inte skicka testnotis.';
       setLastError(message);
