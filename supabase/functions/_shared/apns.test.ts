@@ -29,6 +29,20 @@ describe('APNs', () => {
     expect(JSON.parse(apnsMessage(JSON.stringify({ title: 'Hej' })).body).url).toBe('/karta');
   });
 
+  it('reads the key however it was pasted, and says so when it can’t', async () => {
+    const { pem } = await p8Key();
+    const pastes = [
+      `"${pem}"`,
+      pem.replace(/-----/g, '–––––'),
+      `APNS_PRIVATE_KEY=${pem.replace(/\n/g, ' ')}`,
+      pem.replace(/-----[^-]+-----/g, '').replace(/\n/g, '\r\n'),
+    ];
+    for (const privateKey of pastes) {
+      await expect(apnsJwt({ keyId: 'KEY123', teamId: 'TEAM45', privateKey }, Date.now())).resolves.toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/);
+    }
+    await expect(apnsJwt({ keyId: 'KEY123', teamId: 'TEAM45', privateKey: '-----BEGIN PRIVATE KEY----- ... (hela' }, Date.now())).rejects.toThrow(/\.p8\) gick inte att läsa/);
+  });
+
   it('signs a token Apple can check, with the same issue time all half hour', async () => {
     const { pem, publicKey } = await p8Key();
     const at = Date.UTC(2026, 9, 20, 12, 10);

@@ -12,6 +12,8 @@ describe('push diagnostics', () => {
     expect(testFailureReason({ sent: 0, results: [apns('APNS_KEY_ID, APNS_TEAM_ID eller APNS_PRIVATE_KEY saknas.')] })).toMatch(/Apple-nyckeln saknas/);
     expect(testFailureReason({ sent: 0, results: [apns('InvalidProviderToken')] })).toMatch(/Key ID, Team ID/);
     expect(testFailureReason({ sent: 0, results: [apns('DeviceTokenNotForTopic')] })).toMatch(/se\.crimealert\.app/);
+    expect(testFailureReason({ sent: 0, results: [apns('Failed to decode base64')] })).toMatch(/fel inklistrad/);
+    expect(testFailureReason({ sent: 0, results: [apns('Nyckeln från Apple (.p8) gick inte att läsa. Klistra in hela .p8-filen igen.')] })).toMatch(/fel inklistrad/);
   });
 
   it('knows when the phone was never saved', () => {

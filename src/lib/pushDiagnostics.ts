@@ -14,6 +14,7 @@ export interface TestAnswer {
 }
 
 const REASONS: [RegExp, string][] = [
+  [/\.p8\) gick inte att läsa|decode base64/, 'Apple-nyckeln är fel inklistrad i Lovable. Öppna .p8-filen, kopiera allt och klistra in det på nytt i APNS_PRIVATE_KEY.'],
   [/APNS_KEY_ID|APNS_TEAM_ID|APNS_PRIVATE_KEY/, 'Apple-nyckeln saknas på servern. Lägg in APNS_KEY_ID, APNS_TEAM_ID och APNS_PRIVATE_KEY som secrets i Lovable.'],
   [/InvalidProviderToken|ExpiredProviderToken|MissingProviderToken/, 'Apple godkänner inte nyckeln. Kontrollera Key ID, Team ID och att hela .p8-filen är inklistrad.'],
   [/TopicDisallowed|DeviceTokenNotForTopic|BadTopic/, 'Nyckeln eller adressen hör inte till appen se.crimealert.app.'],
