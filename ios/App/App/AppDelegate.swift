@@ -64,6 +64,14 @@ class MainViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(CrimeAlertAuthPlugin())
         bridge?.registerPluginInstance(CrimeAlertStorePlugin())
     }
+
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        // Swipe from the left edge to go back, and no web-style previews on a long press
+        webView?.allowsBackForwardNavigationGestures = true
+        webView?.allowsLinkPreview = false
+        webView?.scrollView.bounces = false
+    }
 }
 
 // MARK: - Notifications through Apple (APNs)

@@ -48,3 +48,31 @@ html.native-app .ca-app-page h1 {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+/* The app's own screens (src/native/ui.tsx): iOS's dark colours and type */
+html.native-app .ios {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+html.native-app .ios .ios-large-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+/* Hairlines between rows, starting where the text starts */
+html.native-app .ios-group > :not(:first-child) .ios-row-body,
+html.native-app .ios-group > .ios-row:not(:first-child) .ios-row-body {
+  border-top: 0.5px solid rgba(84, 84, 88, 0.65);
+}
+html.native-app .ca-app:has(.ios) { background: #000; }
+html.native-app .ca-app:has(.ios) .ca-app-topbar { border-color: transparent; background: rgba(0, 0, 0, 0.82); }
+
+/* Nothing to select or copy except what you type, as in an app */
+html.native-app body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html.native-app input, html.native-app textarea, html.native-app [contenteditable] { -webkit-user-select: text; user-select: text; }
+
+/* A page opened from a tab slides in from the right */
+@keyframes ca-app-push { from { transform: translateX(28%); opacity: 0.4; } to { transform: none; opacity: 1; } }
+html.native-app .ca-app-push { animation: ca-app-push 0.32s cubic-bezier(0.2, 0.9, 0.3, 1); }

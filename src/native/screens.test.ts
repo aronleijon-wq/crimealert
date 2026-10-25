@@ -5,7 +5,7 @@ describe('app screens', () => {
   it('has the five tabs, with no way back from them', () => {
     expect(TABS.map((t) => t.label)).toEqual(['Karta', 'Flöde', 'Statistik', 'Notiser', 'Profil']);
     expect(screenFor('/karta')).toEqual({ title: 'CrimeAlert', tab: true, tabBar: true });
-    expect(screenFor('/alerts/')).toEqual({ title: 'Notiser', tab: true, tabBar: true });
+    expect(screenFor('/alerts/')).toEqual({ title: 'Notiser', tab: true, tabBar: true, largeTitle: true });
   });
 
   it('names other pages and lets you go back', () => {
