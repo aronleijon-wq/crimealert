@@ -13,7 +13,7 @@ const LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
 const money = (amount: number, currency: string) =>
   new Intl.NumberFormat('sv-SE', { style: 'currency', currency, maximumFractionDigits: 2 }).format(amount);
 
-/** "Gratis i 1 vecka, sedan 159,00 kr per år." */
+/** "Gratis i 1 vecka, sedan 199,00 kr per år." */
 const termsLine = (p: StoreProduct) =>
   `${p.trial ? `Gratis i ${periodLabel(p.trial, true)}, sedan ` : ''}${p.price} per ${periodLabel(p.period)}.`;
 

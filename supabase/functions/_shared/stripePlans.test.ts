@@ -37,6 +37,12 @@ describe('pickPrice', () => {
     expect(pickPrice(prices, 'monthly')?.id).toBe('price_monthly');
   });
 
+  it('charges the pinned yearly price while it is active, whatever is newer', () => {
+    const pinned = price('price_1UUXrRC5T1wZbLBJKb8Jzfnj', 100);
+    expect(pickPrice([pinned, price('price_newer', 900)], 'yearly')?.id).toBe('price_1UUXrRC5T1wZbLBJKb8Jzfnj');
+    expect(pickPrice([{ ...pinned, active: false }, price('price_newer', 900)], 'yearly')?.id).toBe('price_newer');
+  });
+
   it('finds nothing when the product has no active price', () => {
     expect(pickPrice([price('price_archived', 1, { active: false })], 'yearly')).toBeNull();
   });
