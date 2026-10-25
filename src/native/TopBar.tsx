@@ -26,7 +26,7 @@ const TopBar = ({ screen, home }: { screen: AppScreen; home: boolean }) => {
             <img src={LOGO} alt="" className="h-6 w-6 rounded-md" width={24} height={24} />
             <span className="text-[17px] font-semibold tracking-tight text-foreground">CrimeAlert</span>
           </span>
-        ) : (
+        ) : screen.largeTitle ? null : (
           <span className="truncate text-[17px] font-semibold tracking-tight text-foreground">{screen.title}</span>
         )}
         {screen.tab && !isPremium && canSellPro() && (

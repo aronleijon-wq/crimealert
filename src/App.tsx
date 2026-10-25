@@ -42,6 +42,9 @@ const AppLogin = lazyPage(() => import("./pages/AppLogin"));
 // The iPhone app's own frame and Pro page (src/native), loaded only there
 const AppShell = lazy(() => import("@/native/AppShell"));
 const AppPro = lazyPage(() => import("@/native/AppPro"));
+const NativeFeed = lazyPage(() => import("@/native/NativeFeed"));
+const NativeAlerts = lazyPage(() => import("@/native/NativeAlerts"));
+const NativeProfile = lazyPage(() => import("@/native/NativeProfile"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
 const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
@@ -77,7 +80,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={isNativeApp() ? <Navigate to="/karta" replace /> : <Landing />} />
           <Route path="/karta" element={<Index />} />
-          <Route path="/flode" element={<Feed />} />
+          <Route path="/flode" element={isNativeApp() ? <NativeFeed /> : <Feed />} />
           <Route path="/kommun" element={<Kommuner />} />
           <Route path="/kommun/:slug" element={<Kommun />} />
           <Route path="/kommun/:slug/:month" element={<KommunRapport />} />
@@ -85,11 +88,11 @@ const App = () => (
           <Route path="/guider/:slug" element={<Guide />} />
           <Route path="/handelse/:id" element={<Handelse />} />
           <Route path="/analysis" element={<Analysis />} />
-          <Route path="/alerts" element={<Alerts />} />
+          <Route path="/alerts" element={isNativeApp() ? <NativeAlerts /> : <Alerts />} />
           <Route path="/prisplan" element={isNativeApp() ? <AppPro /> : <Prisplan />} />
           {/* Stripe sends people back here after checkout (create-checkout), and older links point here */}
           <Route path="/account" element={isNativeApp() ? <AppPro /> : <Prisplan />} />
-          <Route path="/installningar" element={<Installningar />} />
+          <Route path="/installningar" element={isNativeApp() ? <NativeProfile /> : <Installningar />} />
           <Route path="/auth" element={<Auth />} />
           {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
           <Route path="/app-login" element={<AppLogin />} />

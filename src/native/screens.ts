@@ -18,6 +18,8 @@ export const TABS: AppTab[] = [
 
 export interface AppScreen {
   title: string;
+  /** The screen shows its own large title, so the bar above stays empty (as iOS does) */
+  largeTitle?: boolean;
   /** One of the tabs: no back button */
   tab: boolean;
   /** The tab bar shows (not while signing in or buying Pro) */
@@ -42,12 +44,15 @@ const TITLES: [RegExp, string][] = [
   [/^\/admin$/, 'Admin'],
 ];
 
+// The app's own screens (NativeFeed, NativeAlerts, NativeProfile) with iOS large titles
+const LARGE_TITLES = ['/flode', '/alerts', '/installningar'];
+
 const WITHOUT_TABS = /^\/(prisplan|account|auth|reset-password)$/;
 
 export function screenFor(pathname: string): AppScreen {
   const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
   const tab = TABS.find((t) => t.to === path);
-  if (tab) return { title: tab.to === '/karta' ? 'CrimeAlert' : tab.label, tab: true, tabBar: true };
+  if (tab) return { title: tab.to === '/karta' ? 'CrimeAlert' : tab.label, tab: true, tabBar: true, ...(LARGE_TITLES.includes(tab.to) ? { largeTitle: true } : {}) };
   const title = TITLES.find(([pattern]) => pattern.test(path))?.[1] ?? 'CrimeAlert';
   return { title, tab: false, tabBar: !WITHOUT_TABS.test(path) };
 }

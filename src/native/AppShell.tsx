@@ -20,12 +20,30 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   // A new page starts at the top
   useEffect(() => { pageRef.current?.scrollTo(0, 0); }, [pathname]);
 
+  // The tab you are on, tapped again: back to the top of everything that scrolls
+  useEffect(() => {
+    const top = () => {
+      const root = pageRef.current;
+      if (!root) return;
+      [root, ...root.querySelectorAll<HTMLElement>('*')].forEach((el) => { if (el.scrollTop > 0) el.scrollTo({ top: 0, behavior: 'smooth' }); });
+    };
+    window.addEventListener('ca-tab-top', top);
+    return () => window.removeEventListener('ca-tab-top', top);
+  }, []);
+
+  // An app doesn't zoom when you pinch or tap twice
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    meta?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  }, []);
+
   return (
     <div className="ca-dark ca-app fixed inset-0 flex flex-col bg-[hsl(var(--ca-base))] text-foreground">
       <TopBar screen={screen} home={pathname === '/karta'} />
       <PoliceStaleNotice />
       <div ref={pageRef} className="ca-app-page relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        {children}
+        {/* Pages opened from a tab slide in from the right */}
+        <div key={pathname} className={`h-full ${screen.tab ? '' : 'ca-app-push'}`}>{children}</div>
       </div>
       {screen.tabBar && <TabBar />}
       {showWelcome && <Welcome onDone={() => setShowWelcome(false)} />}
