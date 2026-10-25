@@ -7,11 +7,23 @@ const base64url = (bytes: Uint8Array) => {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
-/** A .p8 file's contents, with or without its header lines and line breaks (also as "\n") */
+/**
+ * A .p8 file's contents, as pasted into a secret: with or without its header lines, line breaks
+ * (also as "\n"), quotes around it, or dashes a text editor turned into long ones.
+ */
 async function importP8(privateKey: string): Promise<CryptoKey> {
-  const pem = privateKey.replace(/\\n/g, '\n').replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
-  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
-  return crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  let body = privateKey.replace(/\\n/g, '\n');
+  const begin = body.search(/BEGIN [A-Z ]*KEY/);
+  if (begin >= 0) body = body.slice(begin).replace(/^BEGIN [A-Z ]*KEY/, '');
+  const end = body.search(/END [A-Z ]*KEY/);
+  if (end >= 0) body = body.slice(0, end);
+  body = body.replace(/[^A-Za-z0-9+/=]/g, '');
+  try {
+    const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+    return await crypto.subtle.importKey('pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  } catch {
+    throw new Error('Nyckeln från Apple (.p8) gick inte att läsa. Klistra in hela .p8-filen igen.');
+  }
 }
 
 export async function signAppleJwt(header: Record<string, unknown>, claims: Record<string, unknown>, privateKey: string): Promise<string> {
