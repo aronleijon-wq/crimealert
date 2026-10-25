@@ -9,6 +9,7 @@ import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
 import { parseIncidentTime } from '@/lib/incidentTime';
+import { registerFailureReason } from '@/lib/pushDiagnostics';
 import { NOTIFY_TYPES, watchedKommunFor, type NotifyType, type RiskLevel } from '../../supabase/functions/_shared/notifications';
 import { Row, Screen, Section, Switch } from './ui';
 
@@ -119,7 +120,7 @@ const NativeAlerts = () => {
   const test = async () => {
     setTestNote('Skickar…');
     const result = await push.sendTestNotification('/alerts');
-    setTestNote('error' in result && result.error ? 'Testnotisen kom inte fram. Stäng av och slå på notiser och försök igen.' : 'Skickad. Den kommer inom några sekunder.');
+    setTestNote('error' in result && result.error ? result.error : 'Skickad. Den kommer inom några sekunder.');
   };
 
   const toggleType = (type: NotifyType) => {
@@ -129,6 +130,7 @@ const NativeAlerts = () => {
   };
 
   const blocked = push.permission === 'denied';
+  const registerError = registerFailureReason(push.lastError);
 
   return (
     <Screen title="Notiser">
@@ -136,6 +138,8 @@ const NativeAlerts = () => {
         header="Den här iPhonen"
         footer={blocked
           ? 'Notiser är avstängda för CrimeAlert. Slå på dem under Inställningar → Notiser → CrimeAlert.'
+          : registerError && !push.isSubscribed
+            ? registerError
           : push.available === false
             ? 'Uppdatera appen i App Store för att få notiser.'
             : isPremium ? 'Du får notisen direkt när något händer.' : 'Med gratiskonto kommer notisen 15 minuter efter händelsen. Med Pro direkt.'}
