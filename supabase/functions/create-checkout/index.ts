@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
-import { PLANS, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
+import { PLANS, fitsPlan, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
 import { TRIAL_DAYS, trialEligible } from "../_shared/premium.ts";
 import { returnOrigin } from "../_shared/returnOrigin.ts";
 
@@ -83,7 +83,13 @@ serve(async (req) => {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
     const { data: prices } = await stripe.prices.list({ product: PLANS[plan].product, active: true, type: "recurring", limit: 100 });
-    const price = pickPrice(prices, plan);
+    let price = pickPrice(prices, plan);
+    // The pinned price may sit on another product; it is charged when it is active
+    const pinned = PLANS[plan].price;
+    if (pinned && price?.id !== pinned) {
+      const found = await stripe.prices.retrieve(pinned).catch(() => null);
+      if (found && fitsPlan(found, plan)) price = found;
+    }
     if (!price) throw new Error(`No active ${plan} price in Stripe`);
     logStep("Price chosen", { plan, priceId: price.id, amount: price.unit_amount, currency: price.currency });
 

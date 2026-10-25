@@ -3,7 +3,7 @@ import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Users, Zap
 
 // Must match the active prices in Stripe (create-checkout charges whatever is active there)
 const MONTHLY_KR = 19;
-const YEARLY_KR = 159;
+const YEARLY_KR = 199;
 
 /** How much cheaper a year is than twelve months, in percent */
 export const YEARLY_DISCOUNT_PERCENT = Math.round((1 - YEARLY_KR / (MONTHLY_KR * 12)) * 100);

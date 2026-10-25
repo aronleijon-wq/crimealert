@@ -41,9 +41,9 @@ describe('PlanComparison', () => {
 
   it('switches between monthly and yearly prices', () => {
     const { onBillingCycle } = renderPlans({ billingCycle: 'yearly' });
-    expect(screen.getByText('159 kr')).toBeInTheDocument();
-    expect(screen.getByText('Spara 69 kr jämfört med månadsvis')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Årsvis −30%/ })).toBeInTheDocument();
+    expect(screen.getByText('199 kr')).toBeInTheDocument();
+    expect(screen.getByText('Spara 29 kr jämfört med månadsvis')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Årsvis −13%/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: 'Månadsvis' }));
     expect(onBillingCycle).toHaveBeenCalledWith('monthly');
   });
@@ -70,10 +70,10 @@ describe('plan texts match the code', () => {
     expect(TRIAL_DAYS).toBe(serverTrialDays);
   });
 
-  it('gives 30 % off for a year', () => {
+  it('gives 13 % off for a year', () => {
     expect(PRICES.monthly.price).toBe('19 kr');
-    expect(PRICES.yearly.price).toBe('159 kr');
-    expect(YEARLY_DISCOUNT_PERCENT).toBe(30);
-    expect(PRICES.yearly.note).toBe('Spara 69 kr jämfört med månadsvis');
+    expect(PRICES.yearly.price).toBe('199 kr');
+    expect(YEARLY_DISCOUNT_PERCENT).toBe(13);
+    expect(PRICES.yearly.note).toBe('Spara 29 kr jämfört med månadsvis');
   });
 });

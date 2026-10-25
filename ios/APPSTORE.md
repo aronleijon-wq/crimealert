@@ -130,7 +130,7 @@ kommuner, Flöde, statistik för en kommun.
 | Pro månad | `se.crimealert.pro.monthly` | 1 månad | 25 kr |
 | Pro år | `se.crimealert.pro.yearly` | 1 år | 199 kr |
 
-   Apple tar en del av priset, så det kan vara lite högre än på webben (19 kr och 159 kr).
+   På webben kostar Pro 19 kr/mån och 199 kr/år. Apple tar en del av priset, så månadspriset kan vara lite högre i appen.
 4. För båda: **Introduktionserbjudande → Gratis i 1 vecka**, en svensk visningstext (namn
    ”CrimeAlert Pro”, beskrivning ”Händelser och notiser direkt”), och en skärmbild av
    Pro-sidan för granskningen.
