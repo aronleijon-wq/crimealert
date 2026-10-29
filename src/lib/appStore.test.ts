@@ -30,8 +30,8 @@ describe('Pro through Apple', () => {
 
   it('buys for the signed-in account and has the server check it with Apple', async () => {
     store.purchase.mockResolvedValue({ transactionId: '1005' });
-    await expect(buyPro('se.crimealert.pro.yearly', 'u1')).resolves.toBe('pro');
-    expect(store.purchase).toHaveBeenCalledWith({ productId: 'se.crimealert.pro.yearly', accountId: 'u1' });
+    await expect(buyPro('crimealert.pro.yearly', 'u1')).resolves.toBe('pro');
+    expect(store.purchase).toHaveBeenCalledWith({ productId: 'crimealert.pro.yearly', accountId: 'u1' });
     expect(store.invoke).toHaveBeenCalledWith('apple-subscription', { body: { transactionIds: ['1005'] } });
   });
 

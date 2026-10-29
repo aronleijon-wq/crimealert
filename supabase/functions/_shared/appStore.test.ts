@@ -7,7 +7,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const USER = '6f1c2a3b-0000-4000-8000-000000000001';
 
 const tx = (over: Record<string, unknown> = {}) => jws({
-  originalTransactionId: '1000', transactionId: '1005', bundleId: 'se.crimealert.app', productId: 'se.crimealert.pro.monthly',
+  originalTransactionId: '1000', transactionId: '1005', bundleId: 'se.crimealert.app', productId: 'crimealert.pro.monthly',
   expiresDate: NOW + 10 * DAY, appAccountToken: USER.toUpperCase(), ...over,
 });
 const status = (code: number, signedTransactionInfo = tx(), signedRenewalInfo?: string) =>
@@ -18,7 +18,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('App Store subscriptions', () => {
   it('gives Pro while Apple says it is active, until it expires', () => {
     expect(subscriptionFromStatus(status(1), 'production', NOW)).toEqual({
-      originalTransactionId: '1000', productId: 'se.crimealert.pro.monthly', expiresAt: new Date(NOW + 10 * DAY).toISOString(),
+      originalTransactionId: '1000', productId: 'crimealert.pro.monthly', expiresAt: new Date(NOW + 10 * DAY).toISOString(),
       accountId: USER, environment: 'production',
     });
   });
