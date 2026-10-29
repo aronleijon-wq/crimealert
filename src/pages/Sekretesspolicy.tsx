@@ -2,10 +2,14 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
+import { isNativeApp } from '@/lib/native';
 
 const Sekretesspolicy = () => {
   useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar CrimeAlert in, använder och skyddar dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
   const navigate = useNavigate();
+  // Ads, analytics and Stripe are the website's; the app has none of them (AppPrivacyNote)
+  const app = isNativeApp();
 
   return (
     <div className="ca-dark h-screen flex flex-col bg-background">
@@ -24,6 +28,7 @@ const Sekretesspolicy = () => {
           </div>
 
           <div className="prose-sm space-y-6 text-muted-foreground text-sm leading-relaxed">
+            <AppPrivacyNote />
             <section>
               <p>
                 CrimeAlert (crimealert.se) värnar om din integritet. Denna sekretesspolicy förklarar vilken information vi
@@ -86,7 +91,7 @@ const Sekretesspolicy = () => {
                 <li>Hantera ditt konto och din prenumeration.</li>
                 <li>Skicka relevanta notiser om händelser i kommuner du bevakar.</li>
                 <li>Analysera trafik och användarmönster för att förbättra upplevelsen.</li>
-                <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>
+                {!app && <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>}
               </ul>
             </section>
 
@@ -107,22 +112,28 @@ const Sekretesspolicy = () => {
                 som hjälper oss att driva tjänsten:
               </p>
               <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li>
-                  <strong>Google Analytics:</strong> Anonymiserad trafikdata för att förstå användningsmönster.
-                </li>
-                <li>
-                  <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
-                  <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
-                    cookiepolicy
-                  </button>{' '}
-                  för mer information.
-                </li>
+                {!app && (
+                  <>
+                    <li>
+                      <strong>Google Analytics:</strong> Anonymiserad trafikdata för att förstå användningsmönster.
+                    </li>
+                    <li>
+                      <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
+                      <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
+                        cookiepolicy
+                      </button>{' '}
+                      för mer information.
+                    </li>
+                  </>
+                )}
                 <li>
                   <strong>Leaflet / OpenStreetMap:</strong> Karttjänst för att visa händelser på kartan.
                 </li>
-                <li>
-                  <strong>Stripe:</strong> Säker betalningshantering för Pro-prenumerationer.
-                </li>
+                {!app && (
+                  <li>
+                    <strong>Stripe:</strong> Säker betalningshantering för Pro-prenumerationer.
+                  </li>
+                )}
                 <li>
                   <strong>Apple:</strong> Levererar notiser till iPhone-appen (Apple Push Notification service) och sköter
                   inloggning med Apple.
