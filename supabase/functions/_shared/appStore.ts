@@ -9,7 +9,7 @@ import { decodeJws, signAppleJwt } from './appleJwt.ts';
 export const APP_BUNDLE_ID = 'se.crimealert.app';
 
 /** Must match the subscriptions in App Store Connect (and src/lib/appStore.ts) */
-export const APPLE_PRO_PRODUCTS: readonly string[] = ['se.crimealert.pro.monthly', 'se.crimealert.pro.yearly'];
+export const APPLE_PRO_PRODUCTS: readonly string[] = ['crimealert.pro.monthly', 'crimealert.pro.yearly'];
 
 export interface AppStoreKey {
   issuerId: string;

@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { nativePlugin } from '@/lib/nativeApp';
 
 /** Must match the subscriptions in App Store Connect (and supabase/functions/_shared/appStore.ts) */
-export const APPLE_PRO_PRODUCTS = { monthly: 'se.crimealert.pro.monthly', yearly: 'se.crimealert.pro.yearly' } as const;
+export const APPLE_PRO_PRODUCTS = { monthly: 'crimealert.pro.monthly', yearly: 'crimealert.pro.yearly' } as const;
 
 export interface StoreProduct {
   id: string;
