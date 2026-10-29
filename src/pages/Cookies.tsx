@@ -2,10 +2,14 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
+import { isNativeApp } from '@/lib/native';
 
 const Cookies = () => {
   useSEO({ title: 'Cookies | CrimeAlert', description: 'Vilka cookies CrimeAlert använder, varför de behövs och hur du ändrar dina inställningar i webbläsaren.', canonical: 'https://crimealert.se/cookies' });
   const navigate = useNavigate();
+  // The app sets no analytics or ad cookies (AppPrivacyNote), so it shows only the necessary ones
+  const app = isNativeApp();
 
   return (
     <div className="ca-dark h-screen flex flex-col bg-background">
@@ -24,6 +28,7 @@ const Cookies = () => {
           </div>
 
           <div className="prose-sm space-y-6 text-muted-foreground text-sm leading-relaxed">
+            <AppPrivacyNote />
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">Vad är cookies?</h2>
               <p>
@@ -46,60 +51,68 @@ const Cookies = () => {
                   </p>
                 </div>
 
-                <div className="ca-tac ca-tac-top p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">Analyscookies</h3>
-                  <p>
-                    Vi använder analyskookies (bland annat Google Analytics) för att förstå hur besökare interagerar med vår
-                    webbplats. Informationen används för att förbättra sidans prestanda, användarvänlighet och innehåll. Dessa
-                    cookies samlar in anonymiserad data som sidvisningar, besökslängd och vilka funktioner som används mest.
-                  </p>
-                </div>
+                {!app && (
+                  <>
+                    <div className="ca-tac ca-tac-top p-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-1">Analyscookies</h3>
+                      <p>
+                        Vi använder analyskookies (bland annat Google Analytics) för att förstå hur besökare interagerar med vår
+                        webbplats. Informationen används för att förbättra sidans prestanda, användarvänlighet och innehåll. Dessa
+                        cookies samlar in anonymiserad data som sidvisningar, besökslängd och vilka funktioner som används mest.
+                      </p>
+                    </div>
 
-                <div className="ca-tac ca-tac-top p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">Marknadsföringscookies</h3>
-                  <p>
-                    CrimeAlert använder Google AdSense för att visa annonser. Google och dess annonsnätverk kan placera cookies
-                    på din enhet för att visa relevanta annonser baserat på dina intressen. Dessa cookies spårar din aktivitet
-                    över olika webbplatser för att anpassa annonsupplevelsen. Pro-medlemmar ser inga annonser och berörs därför
-                    inte av dessa cookies.
-                  </p>
-                </div>
+                    <div className="ca-tac ca-tac-top p-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-1">Marknadsföringscookies</h3>
+                      <p>
+                        CrimeAlert använder Google AdSense för att visa annonser. Google och dess annonsnätverk kan placera cookies
+                        på din enhet för att visa relevanta annonser baserat på dina intressen. Dessa cookies spårar din aktivitet
+                        över olika webbplatser för att anpassa annonsupplevelsen. Pro-medlemmar ser inga annonser och berörs därför
+                        inte av dessa cookies.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 
-            <section>
-              <h2 className="text-base font-semibold text-foreground mb-2">Tredjepartscookies</h2>
-              <p>
-                Utöver våra egna cookies kan tredjepartsleverantörer placera cookies på din enhet. Dessa inkluderar:
-              </p>
-              <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li><strong>Google Analytics</strong> – för trafikanalys och besöksstatistik</li>
-                <li><strong>Google AdSense</strong> – för att visa anpassade annonser</li>
-                <li><strong>Leaflet / OpenStreetMap</strong> – karttjänster för att visa brottshändelser</li>
-                <li><strong>Stripe</strong> – för säker betalningshantering</li>
-              </ul>
-            </section>
+            {!app && (
+              <>
+                <section>
+                  <h2 className="text-base font-semibold text-foreground mb-2">Tredjepartscookies</h2>
+                  <p>
+                    Utöver våra egna cookies kan tredjepartsleverantörer placera cookies på din enhet. Dessa inkluderar:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    <li><strong>Google Analytics</strong> – för trafikanalys och besöksstatistik</li>
+                    <li><strong>Google AdSense</strong> – för att visa anpassade annonser</li>
+                    <li><strong>Leaflet / OpenStreetMap</strong> – karttjänster för att visa brottshändelser</li>
+                    <li><strong>Stripe</strong> – för säker betalningshantering</li>
+                  </ul>
+                </section>
 
-            <section>
-              <h2 className="text-base font-semibold text-foreground mb-2">Hur stänger man av cookies?</h2>
-              <p>
-                Du kan hantera och radera cookies via din webbläsares inställningar. Observera att om du blockerar vissa
-                cookies kan det påverka webbplatsens funktionalitet.
-              </p>
-              <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li><strong>Chrome:</strong> Inställningar → Sekretess och säkerhet → Cookies</li>
-                <li><strong>Firefox:</strong> Inställningar → Sekretess & Säkerhet → Cookies och webbplatsdata</li>
-                <li><strong>Safari:</strong> Inställningar → Sekretess → Hantera webbplatsdata</li>
-                <li><strong>Edge:</strong> Inställningar → Sekretess, sökning och tjänster → Cookies</li>
-              </ul>
-              <p className="mt-2">
-                Du kan även besöka{' '}
-                <a href="https://www.youronlinechoices.eu" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  www.youronlinechoices.eu
-                </a>{' '}
-                för att hantera intressebaserad annonsering.
-              </p>
-            </section>
+                <section>
+                  <h2 className="text-base font-semibold text-foreground mb-2">Hur stänger man av cookies?</h2>
+                  <p>
+                    Du kan hantera och radera cookies via din webbläsares inställningar. Observera att om du blockerar vissa
+                    cookies kan det påverka webbplatsens funktionalitet.
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    <li><strong>Chrome:</strong> Inställningar → Sekretess och säkerhet → Cookies</li>
+                    <li><strong>Firefox:</strong> Inställningar → Sekretess & Säkerhet → Cookies och webbplatsdata</li>
+                    <li><strong>Safari:</strong> Inställningar → Sekretess → Hantera webbplatsdata</li>
+                    <li><strong>Edge:</strong> Inställningar → Sekretess, sökning och tjänster → Cookies</li>
+                  </ul>
+                  <p className="mt-2">
+                    Du kan även besöka{' '}
+                    <a href="https://www.youronlinechoices.eu" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      www.youronlinechoices.eu
+                    </a>{' '}
+                    för att hantera intressebaserad annonsering.
+                  </p>
+                </section>
+              </>
+            )}
 
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">Kontakt</h2>
