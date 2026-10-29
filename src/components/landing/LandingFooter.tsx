@@ -32,10 +32,10 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     ],
   },
   {
-    title: 'LEGAL',
+    title: 'JURIDIK',
     links: [
-      { to: '/sekretesspolicy', label: 'Privacy policy' },
-      { to: '/villkor', label: 'Terms of use' },
+      { to: '/sekretesspolicy', label: 'Sekretesspolicy' },
+      { to: '/villkor', label: 'Användarvillkor' },
       { to: '/cookies', label: 'Cookies' },
     ],
   },

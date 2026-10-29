@@ -23,7 +23,7 @@ const Cookies = () => {
             <div>
               <p className="ca-eyebrow">// cookies</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Cookies</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-03-07</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-29</p>
             </div>
           </div>
 
@@ -54,11 +54,11 @@ const Cookies = () => {
                 {!app && (
                   <>
                     <div className="ca-tac ca-tac-top p-4">
-                      <h3 className="text-sm font-semibold text-foreground mb-1">Analyscookies</h3>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">Statistik utan cookies</h3>
                       <p>
-                        Vi använder analyskookies (bland annat Google Analytics) för att förstå hur besökare interagerar med vår
-                        webbplats. Informationen används för att förbättra sidans prestanda, användarvänlighet och innehåll. Dessa
-                        cookies samlar in anonymiserad data som sidvisningar, besökslängd och vilka funktioner som används mest.
+                        Vi använder inga analyscookies. För att förbättra sidan räknar vi sidvisningar, laddtider och
+                        felmeddelanden utan cookies och utan att koppla något till dig eller ditt konto. Läs mer i vår
+                        sekretesspolicy.
                       </p>
                     </div>
 
@@ -84,10 +84,8 @@ const Cookies = () => {
                     Utöver våra egna cookies kan tredjepartsleverantörer placera cookies på din enhet. Dessa inkluderar:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 mt-2">
-                    <li><strong>Google Analytics</strong> – för trafikanalys och besöksstatistik</li>
-                    <li><strong>Google AdSense</strong> – för att visa anpassade annonser</li>
-                    <li><strong>Leaflet / OpenStreetMap</strong> – karttjänster för att visa brottshändelser</li>
-                    <li><strong>Stripe</strong> – för säker betalningshantering</li>
+                    <li><strong>Google AdSense</strong> – för att visa annonser för besökare utan Pro</li>
+                    <li><strong>Stripe</strong> – på Stripes betalsida, när du köper Pro</li>
                   </ul>
                 </section>
 

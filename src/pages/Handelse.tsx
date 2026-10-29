@@ -42,6 +42,8 @@ const Handelse = () => {
       ? `${incident.originalType || incidentTypeConfig[incident.type]?.label || 'Händelse'} i ${incident.area}, ${fullTime(incident.time)}. Se den på kartan på CrimeAlert.`
       : 'Polisens händelser i Sverige på karta.',
     canonical: `https://crimealert.se${eventPath(id)}`,
+    // An event older than a week is gone from here; keep its empty page out of search results
+    noindex: !loading && !incident,
   });
 
   const isSummary = !!incident?.originalType?.toLowerCase().includes('sammanfattning');

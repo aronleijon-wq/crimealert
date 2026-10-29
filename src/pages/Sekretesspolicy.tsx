@@ -8,7 +8,7 @@ import { isNativeApp } from '@/lib/native';
 const Sekretesspolicy = () => {
   useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar CrimeAlert in, använder och skyddar dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
   const navigate = useNavigate();
-  // Ads, analytics and Stripe are the website's; the app has none of them (AppPrivacyNote)
+  // Ads and Stripe are the website's; the app has neither (AppPrivacyNote)
   const app = isNativeApp();
 
   return (
@@ -23,7 +23,7 @@ const Sekretesspolicy = () => {
             <div>
               <p className="ca-eyebrow">// sekretesspolicy</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Sekretesspolicy</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-20</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-29</p>
             </div>
           </div>
 
@@ -113,18 +113,13 @@ const Sekretesspolicy = () => {
               </p>
               <ul className="list-disc pl-5 space-y-1 mt-2">
                 {!app && (
-                  <>
-                    <li>
-                      <strong>Google Analytics:</strong> Anonymiserad trafikdata för att förstå användningsmönster.
-                    </li>
-                    <li>
-                      <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
-                      <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
-                        cookiepolicy
-                      </button>{' '}
-                      för mer information.
-                    </li>
-                  </>
+                  <li>
+                    <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
+                    <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
+                      cookiepolicy
+                    </button>{' '}
+                    för mer information.
+                  </li>
                 )}
                 <li>
                   <strong>Leaflet / OpenStreetMap:</strong> Karttjänst för att visa händelser på kartan.
