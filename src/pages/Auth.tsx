@@ -198,6 +198,22 @@ const Auth = () => {
                   <GoogleIcon />
                   {googleLoading ? 'Vänta...' : 'Fortsätt med Google'}
                 </button>
+                <button
+                  onClick={async () => {
+                    setGoogleLoading(true);
+                    try {
+                      const result = await lovable.auth.signInWithOAuth('apple', { redirect_uri: window.location.origin });
+                      if (result?.error) toast({ title: 'Inloggningsfel', description: String(result.error.message || result.error), variant: 'destructive' });
+                    } catch (err) {
+                      toast({ title: 'Fel', description: getErrorMessage(err) || 'Kunde inte logga in med Apple.', variant: 'destructive' });
+                    } finally { setGoogleLoading(false); }
+                  }}
+                  disabled={googleLoading}
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-3 rounded-md border border-[hsl(var(--ca-line))] bg-background text-sm font-semibold text-foreground transition hover:opacity-90 disabled:opacity-50"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.14-2.77.83-3.49.83-.72 0-1.83-.81-3-.79-1.55.02-2.97.9-3.77 2.28-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.78.74 2.99.72 1.24-.02 2.02-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.66zM14.1 5.86c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.27z"/></svg>
+                  Fortsätt med Apple
+                </button>
 
                 <div className="my-5 flex items-center gap-3">
                   <span className="h-px flex-1 bg-[hsl(var(--ca-line))]" />
