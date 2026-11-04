@@ -62,8 +62,12 @@ export async function syncApplePurchases(transactionIds: string[]): Promise<Sync
   const { data, error } = await supabase.functions.invoke<{ pro?: boolean; other_account?: boolean; error?: string }>('apple-subscription', {
     body: { transactionIds },
   });
-  if (error || !data || data.error) throw new Error(data?.error ?? 'Kunde inte kontrollera köpet just nu.');
-  return { pro: data.pro === true, otherAccount: data.other_account === true };
+  let answer = data;
+  // On an error status the reason is in the response body, e.g. that purchases aren't set up
+  const context = (error as { context?: Response } | null)?.context;
+  if (!answer && context?.json) answer = await context.json().catch(() => null);
+  if (error || !answer || answer.error) throw new Error(answer?.error ?? 'Kunde inte kontrollera köpet just nu.');
+  return { pro: answer.pro === true, otherAccount: answer.other_account === true };
 }
 
 export type PurchaseOutcome = 'pro' | 'pending' | 'cancelled' | 'other_account';
