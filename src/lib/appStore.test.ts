@@ -46,6 +46,13 @@ describe('Pro through Apple', () => {
     await expect(buyPro('p', 'u1')).resolves.toBe('other_account');
   });
 
+  it('passes on why the server could not check the purchase', async () => {
+    store.purchase.mockResolvedValueOnce({ transactionId: '7' });
+    const context = new Response(JSON.stringify({ error: 'Köp via App Store är inte konfigurerat än.' }), { status: 503 });
+    store.invoke.mockResolvedValueOnce({ data: null, error: Object.assign(new Error('non-2xx'), { context }) });
+    await expect(buyPro('p', 'u1')).rejects.toThrow('Köp via App Store är inte konfigurerat än.');
+  });
+
   it('restores what the Apple ID has, or says there is nothing', async () => {
     store.restore.mockResolvedValueOnce({ transactionIds: [] });
     await expect(restorePro()).resolves.toEqual({ pro: false, otherAccount: false, found: false });
