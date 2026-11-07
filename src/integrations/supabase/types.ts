@@ -391,6 +391,24 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_contacts: {
+        Row: {
+          email: string
+          synced_at: string
+          user_id: string
+        }
+        Insert: {
+          email: string
+          synced_at?: string
+          user_id: string
+        }
+        Update: {
+          email?: string
+          synced_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
