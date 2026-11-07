@@ -87,15 +87,17 @@ describe('free trial', () => {
   });
 });
 
-// A pro_status and apple_subscriptions table in memory, as the service role sees them
-function fakeDb(apple: { expires_at: string | null }[], proStatus: { pro_until: string | null; checked_at: string } | null) {
+// pro_status, apple_subscriptions and invite_codes in memory, as the service role sees them
+function fakeDb(apple: { expires_at: string | null }[], proStatus: { pro_until: string | null; checked_at: string } | null, invitePro: string | null = null) {
   const state = { proStatus };
   const db = {
     from: (table: string) => ({
       select: () => ({
         eq: (_c: string, _v: string) => (table === 'apple_subscriptions'
           ? Promise.resolve({ data: apple, error: null })
-          : { maybeSingle: async () => ({ data: state.proStatus, error: null }) }),
+          : table === 'invite_codes'
+            ? { maybeSingle: async () => ({ data: invitePro === null ? null : { pro_until: invitePro }, error: null }) }
+            : { maybeSingle: async () => ({ data: state.proStatus, error: null }) }),
       }),
       upsert: async (row: { pro_until: string | null; checked_at: string }) => { state.proStatus = { pro_until: row.pro_until, checked_at: row.checked_at }; return { error: null }; },
       update: (patch: { checked_at: string }) => ({ eq: async () => { state.proStatus = { ...state.proStatus!, ...patch }; return { error: null }; } }),
@@ -103,6 +105,24 @@ function fakeDb(apple: { expires_at: string | null }[], proStatus: { pro_until: 
   };
   return { db, state };
 }
+
+describe('Pro from invites', () => {
+  const week = new Date(Date.now() + 7 * 86400000).toISOString();
+  const month = new Date(Date.now() + 30 * 86400000).toISOString();
+
+  it('is kept when Stripe and Apple have none, and the latest end counts', async () => {
+    const { db, state } = fakeDb([], null, week);
+    await expect(rememberProStatus(db, 'u1', null)).resolves.toBe(week);
+    expect(state.proStatus?.pro_until).toBe(week);
+    await expect(rememberProStatus(fakeDb([], null, week).db, 'u1', month)).resolves.toBe(month);
+    await expect(rememberProStatus(fakeDb([{ expires_at: month }], null, week).db, 'u1', null)).resolves.toBe(month);
+  });
+
+  it('ends by itself', async () => {
+    const past = new Date(Date.now() - 86400000).toISOString();
+    await expect(rememberProStatus(fakeDb([], null, past).db, 'u1', null)).resolves.toBeNull();
+  });
+});
 
 describe('Pro through Apple', () => {
   const future = new Date(Date.now() + 10 * 86400000).toISOString();

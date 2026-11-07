@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const ids = Array.isArray(body?.transactionIds)
-      ? [...new Set(body.transactionIds.filter((id: unknown): id is string => typeof id === "string"))].slice(0, 5)
+      ? [...new Set<string>(body.transactionIds.filter((id: unknown): id is string => typeof id === "string"))].slice(0, 5)
       : [];
 
     let otherAccount = false;

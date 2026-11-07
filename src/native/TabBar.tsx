@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { haptics } from './haptics';
 import { TABS } from './screens';
 
 /** The app's tabs, along the bottom like any iPhone app */
@@ -14,7 +15,11 @@ const TabBar = () => (
           <NavLink
             to={to}
             // Tapping the tab you are on goes back to its top, as in iOS
-            onClick={() => { if (window.location.pathname === to) window.dispatchEvent(new Event('ca-tab-top')); }}
+            onClick={() => {
+              // A tap under the finger in app versions with haptics (1.3 on)
+              haptics.selection();
+              if (window.location.pathname === to) window.dispatchEvent(new Event('ca-tab-top'));
+            }}
             className={({ isActive }) =>
               `flex h-full flex-col items-center justify-center gap-[3px] text-[10px] font-medium transition-colors ${
                 isActive ? 'text-[hsl(var(--ca-red))]' : 'text-[hsl(var(--ca-text-3))]'

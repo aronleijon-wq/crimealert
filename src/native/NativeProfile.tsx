@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
+import { FileText, Gift, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import { planLabel } from '@/components/account/plans';
@@ -8,6 +8,7 @@ import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
+import { hasAppDesign13 } from '@/lib/native';
 import { supabase } from '@/integrations/supabase/client';
 import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
 import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
@@ -113,6 +114,8 @@ const NativeProfile = () => {
 
       <Section>
         <Row icon={Zap} label="CrimeAlert Pro" value={isPremium ? planLabel(true, subscription).replace(/^Pro /, '') : 'Skaffa'} to="/prisplan" />
+        {/* From app version 1.3 (NativeInvite) */}
+        {hasAppDesign13() && <Row icon={Gift} iconBg="#ff2d55" label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />}
       </Section>
 
       <Section header="Konto">

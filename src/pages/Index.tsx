@@ -21,7 +21,8 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import { useAuth } from '@/hooks/useAuth';
 import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, ShieldCheck, MapPin, Bell as BellIcon, History } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { isNativeApp } from '@/lib/native';
+import { hasAppDesign13, isNativeApp } from '@/lib/native';
+import MapChrome from '@/native/MapChrome';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
 import { useExternalEvents } from '@/hooks/useExternalEvents';
@@ -191,6 +192,63 @@ const Index = () => {
     if (index >= listCount) setListCount(Math.ceil((index + 1) / LIST_PAGE) * LIST_PAGE);
   }, [selectedId, filtered, listCount]);
   
+
+  const timelinePanel = historyOpen && (
+    <HistoryPanel
+      isPremium={isPremium}
+      offerTrial={!isLoggedIn || subscription.trialEligible === true}
+      range={historyRange}
+      end={historyEnd}
+      start={firstEnd(historyRange, historyNow)}
+      now={historyNow}
+      playing={historyPlaying}
+      heat={historyHeat}
+      count={filtered.length}
+      loading={archiveDays > 0 && archiveLoading}
+      onRange={chooseHistoryRange}
+      onEnd={setHistoryEnd}
+      onPlay={playHistory}
+      onHeat={setHistoryHeat}
+      onClose={() => { setHistoryOpen(false); setHistoryPlaying(false); setHistoryEnd(null); }}
+    />
+  );
+
+  // The iPhone app from 1.3: the map fills the screen and the events are in a sheet (src/native/MapChrome)
+  if (hasAppDesign13()) {
+    return (
+      <div className="ca-dark relative h-[100dvh] overflow-hidden">
+        <h1 className="sr-only">Livekarta över polishändelser och olyckor i Sverige</h1>
+        <MapView
+          incidents={showHeat ? NO_INCIDENTS : filtered}
+          selectedId={selectedId}
+          onSelectIncident={(id) => setSelectedId(id || null)}
+          isPremium={isPremium}
+          flyToLocation={flyToLocation}
+          heatPoints={showHeat ? filtered : null} />
+        <MapChrome
+          incidents={filtered}
+          activeCount={activeCount}
+          loading={loading && liveIncidents.length === 0}
+          status={historyActive ? `Tidslinje, ${historyLabel(historyRange, historyEnd)}` : isPremium ? 'Realtid' : isLive ? '15 min fördröjning' : 'Exempeldata'}
+          live={isPremium || historyActive}
+          selectedId={selectedId}
+          onSelect={(incident) => setSelectedId(incident.id)}
+          activeFilters={activeFilters}
+          onToggleFilter={toggleFilter}
+          isPremium={isPremium}
+          showCommunityReports={showCommunityReports}
+          onToggleCommunityReports={() => setShowCommunityReports((prev) => !prev)}
+          onSearch={(m) => setFlyToLocation({ lat: m.lat, lng: m.lng, zoom: m.zoom, _ts: Date.now() })}
+          onTimeline={() => {
+            if (historyOpen) { setHistoryOpen(false); setHistoryPlaying(false); setHistoryEnd(null); }
+            else { setHistoryOpen(true); setHistoryNow(Date.now()); }
+          }}
+          timelineOpen={historyOpen}
+          timeline={timelinePanel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="ca-dark h-[100dvh] flex flex-col overflow-hidden">

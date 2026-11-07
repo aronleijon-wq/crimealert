@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
+import { hasAppDesign13 } from '@/lib/native';
 import { recordMoment, recordUse } from './review';
 import { screenFor, welcomed } from './screens';
 import TabBar from './TabBar';
@@ -17,6 +18,8 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   const screen = screenFor(pathname);
   const [showWelcome, setShowWelcome] = useState(() => !welcomed());
   const pageRef = useRef<HTMLDivElement>(null);
+  // From 1.3 the map reaches up under the status bar, with its own search on top (MapChrome)
+  const fullBleed = hasAppDesign13() && pathname === '/karta';
 
   // A new page starts at the top
   useEffect(() => { pageRef.current?.scrollTo(0, 0); }, [pathname]);
@@ -47,8 +50,8 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="ca-dark ca-app fixed inset-0 flex flex-col bg-[hsl(var(--ca-base))] text-foreground">
-      <TopBar screen={screen} home={pathname === '/karta'} />
-      <PoliceStaleNotice />
+      {!fullBleed && <TopBar screen={screen} home={pathname === '/karta'} />}
+      {!fullBleed && <PoliceStaleNotice />}
       <div ref={pageRef} className="ca-app-page relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {/* Pages opened from a tab slide in from the right */}
         <div key={pathname} className={`h-full ${screen.tab ? '' : 'ca-app-push'}`}>{children}</div>

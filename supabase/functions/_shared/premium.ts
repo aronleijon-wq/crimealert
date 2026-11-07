@@ -133,12 +133,22 @@ export async function appleProUntil(db: ServiceClient, userId: string, nowMs = D
   return until;
 }
 
+/** Until when the user has Pro from inviting friends (invite_codes), or null. */
+export async function inviteProUntil(db: ServiceClient, userId: string, nowMs = Date.now()): Promise<string | null> {
+  const { data, error } = await db.from('invite_codes').select('pro_until').eq('user_id', userId).maybeSingle();
+  // Before its migration has run there is no Pro from invites to find
+  if (error) return null;
+  const until = (data as { pro_until: string | null } | null)?.pro_until ?? null;
+  return until && Date.parse(until) > nowMs ? until : null;
+}
+
 /**
- * Remembers an answer from Stripe, together with Pro bought through Apple, and returns what was
- * stored: the later of the two. A failure only means the next check asks again.
+ * Remembers an answer from Stripe, together with Pro bought through Apple and Pro from invites,
+ * and returns what was stored: the latest of them. A failure only means the next check asks again.
  */
 export async function rememberProStatus(db: ServiceClient, userId: string, proUntil: string | null): Promise<string | null> {
-  const combined = laterProUntil(proUntil, await appleProUntil(db, userId));
+  const [apple, invites] = await Promise.all([appleProUntil(db, userId), inviteProUntil(db, userId)]);
+  const combined = laterProUntil(laterProUntil(proUntil, apple), invites);
   const { error } = await db
     .from('pro_status')
     .upsert({ user_id: userId, pro_until: combined, checked_at: new Date().toISOString() }, { onConflict: 'user_id' });

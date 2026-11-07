@@ -133,6 +133,8 @@ const AppPro = () => {
               <button type="button" onClick={manage} disabled={busy !== null} className="flex h-[52px] w-full items-center justify-center rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-panel-2))] text-[17px] font-semibold">
                 Hantera prenumeration
               </button>
+            ) : subscription.store === 'invite' ? (
+              <p className="text-center text-[14px] leading-relaxed text-[hsl(var(--ca-text-2))]">Du har Pro tack vare dina inbjudningar. Det tar slut av sig självt, och efter det kan du skaffa Pro här.</p>
             ) : (
               <p className="text-center text-[14px] text-[hsl(var(--ca-text-2))]">Din prenumeration hanteras där du startade den.</p>
             )}

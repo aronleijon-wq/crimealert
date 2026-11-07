@@ -20,4 +20,9 @@ describe('app screens', () => {
     expect(screenFor('/auth').tabBar).toBe(false);
     expect(screenFor('/villkor').tabBar).toBe(true);
   });
+
+  it('gives Bjud in vänner its own large title, with a way back', () => {
+    expect(screenFor('/bjud-in')).toEqual({ title: 'CrimeAlert', tab: false, tabBar: true, largeTitle: true });
+    expect(screenFor('/inbjudan/ABCD2345').title).toBe('Inbjudan');
+  });
 });

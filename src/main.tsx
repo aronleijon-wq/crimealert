@@ -4,7 +4,7 @@ import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import { startMonitoring } from './lib/monitoring';
 import { stripFreshParam, watchForStaleBuild } from './lib/staleBuild';
-import { isNativeApp } from './lib/native';
+import { hasAppDesign13, isNativeApp } from './lib/native';
 import { handOverAppLogin } from './lib/appLogin';
 import './index.css';
 
@@ -21,6 +21,8 @@ const isPreviewHost =
   window.location.hostname.includes('lovableproject.com');
 
 if (isNativeApp()) document.documentElement.classList.add('native-app');
+// The app's own design from version 1.3 (src/native/app.css); older versions keep theirs
+if (hasAppDesign13()) document.documentElement.classList.add('app-13');
 
 if ('serviceWorker' in navigator) {
   // The iPhone app loads the site fresh from the network; its web view has no use for one
