@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Activity, BellRing, CalendarDays, ChevronRight, Clock, Map as MapIcon, TrendingUp } from 'lucide-react';
+import Discussion from '@/components/community/Discussion';
 import Header from '@/components/Header';
 import SwedenLocator from '@/components/SwedenLocator';
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
@@ -14,6 +15,7 @@ import { kommunFaq, kommunFromSlug, kommunJsonLd, kommunLongName, kommunPath, ko
 import { monthLabel, reportMonths, stockholmToday } from '@/lib/monthlyReport';
 import { eventPath } from '@/lib/share';
 import { formatTimeAgo } from '@/lib/timeAgo';
+import { kommunThreadId } from '../../supabase/functions/_shared/replies';
 
 const PAGE = 25;
 
@@ -69,6 +71,7 @@ const UnknownKommun = () => (
 const Kommun = () => {
   const { slug } = useParams();
   const name = kommunFromSlug(slug);
+  const wantsChat = new URLSearchParams(useLocation().search).has('chatt');
   useSEO({
     title: name ? `Polisen ${name} idag – händelser just nu | CrimeAlert` : 'Kommunen finns inte | CrimeAlert',
     description: name
@@ -208,6 +211,13 @@ const Kommun = () => {
               </>
             )}
           </section>
+
+          <Discussion
+            threadId={kommunThreadId(name)}
+            title={`Prata om ${name}`}
+            intro={`Diskussionen för alla som bor i eller bryr sig om ${name}. Håll god ton, och inga namn på misstänkta.`}
+            focus={wantsChat}
+          />
 
           {neighbours.length > 0 && (
             <section className="mt-10" aria-labelledby="grannar">

@@ -10,6 +10,8 @@ import { canSellPro } from '@/lib/native';
 import { kommunPath } from '@/lib/kommunPages';
 import { areaStats, inArea, insights, kommunChanges, risingKommuner, WEEKDAYS_SHORT, type AreaStats, type StatEvent, type ThemeTrend } from './stats';
 import { useStatsEvents } from './useStatsEvents';
+import ShareCardButton from '@/components/ShareCardButton';
+import { drawTrendCard } from '@/lib/shareCard';
 import { Screen, Segmented } from './ui';
 
 // The website's analysis page, with everything it has (charts, risk, citizen reports, export),
@@ -281,6 +283,22 @@ const NativeStats = () => {
               ? stats.trends.slice(0, 12).map((t) => <TrendRow key={t.theme.id} trend={t} />)
               : <p className={`text-[15px] ${MUTED}`}>Inga händelser av de här slagen i {place} under perioden.</p>}
           </Card>
+
+          <div className="mx-4 mt-3">
+            <ShareCardButton
+              make={() => drawTrendCard({
+                place,
+                days: period,
+                rows: stats.trends.filter((t) => t.count + t.previous > 0).slice(0, 5).map((t) => ({ label: t.theme.label, count: t.count, change: t.change })),
+                url: area ? `https://crimealert.se${kommunPath(area)}` : 'https://crimealert.se/statistik',
+              })}
+              title={`Brotten i ${place}`}
+              text={`Så har brotten förändrats i ${place} de senaste ${period} dagarna – på CrimeAlert`}
+              url={area ? `https://crimealert.se${kommunPath(area)}` : 'https://crimealert.se/statistik'}
+              fileName="crimealert-statistik.png"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#1c1c1e] text-[17px] font-semibold text-[#0a84ff] active:opacity-60"
+            />
+          </div>
 
           <SinceLast stats={stats} days={60} />
           <DailyChart stats={stats} />

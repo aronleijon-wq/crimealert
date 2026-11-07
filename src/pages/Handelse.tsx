@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { ChevronRight, ExternalLink, Lock, Map as MapIcon } from 'lucide-react';
+import Discussion from '@/components/community/Discussion';
 import Header from '@/components/Header';
 import ShareButton from '@/components/ShareButton';
+import ShareCardButton from '@/components/ShareCardButton';
 import SwedenLocator from '@/components/SwedenLocator';
 import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { incidentTypeConfig } from '@/data/mockIncidents';
@@ -12,7 +14,8 @@ import { useSEO } from '@/hooks/useSEO';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { kommunPath, kommunStats } from '@/lib/kommunPages';
-import { eventPath } from '@/lib/share';
+import { eventPath, eventUrl } from '@/lib/share';
+import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 
@@ -26,6 +29,7 @@ const secondaryButton = 'inline-flex h-11 items-center gap-2 rounded-xl border b
 
 const Handelse = () => {
   const { id = '' } = useParams();
+  const wantsChat = new URLSearchParams(useLocation().search).has('chatt');
   const { incidents, loading } = usePoliceEvents();
   const { isPremium } = useIsPremium();
   const incident = useMemo(() => incidents.find((i) => i.id === id) ?? null, [incidents, id]);
@@ -125,6 +129,14 @@ const Handelse = () => {
                     <MapIcon className="h-4 w-4" /> Visa på kartan
                   </Link>
                   <ShareButton event={incident} className={secondaryButton} />
+                  <ShareCardButton
+                    make={() => drawEventCard({ id: incident.id, kind: title.split(',')[0].trim(), area: incident.area, when: cardTime(parseIncidentTime(incident.time)?.getTime() ?? Date.now()), active: incident.status === 'active', color: config.color })}
+                    title={title}
+                    text={`${title} – på CrimeAlert`}
+                    url={eventUrl(incident.id)}
+                    fileName="crimealert.png"
+                    className={secondaryButton}
+                  />
                   {policeUrl && (
                     <a href={policeUrl} target="_blank" rel="noopener noreferrer" className={secondaryButton}>
                       <ExternalLink className="h-4 w-4" /> Polisen.se
@@ -151,6 +163,18 @@ const Handelse = () => {
                     Allt från {kommun}
                   </Link>
                 </section>
+              )}
+
+              <Discussion
+                threadId={incident.id}
+                title="Kommentarer"
+                intro="Vet du mer, eller hörde du något? Skriv vad du såg. Inga namn på misstänkta."
+                focus={wantsChat}
+              />
+              {kommun && (
+                <Link to={`${kommunPath(kommun)}?chatt=1`} className="mt-3 inline-flex text-sm font-medium text-primary hover:underline">
+                  Prata om {kommun} i kommunens diskussion
+                </Link>
               )}
             </>
           )}
