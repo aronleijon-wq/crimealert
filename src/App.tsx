@@ -14,6 +14,7 @@ import { isNativeApp } from "@/lib/native";
 import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
 import NativeAppBridge from "@/components/native/NativeAppBridge";
+import InviteRedeemer from "@/components/InviteRedeemer";
 const Index = lazyPage(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
@@ -39,6 +40,7 @@ const Kommuner = lazyPage(() => import("./pages/Kommuner"));
 const Handelse = lazyPage(() => import("./pages/Handelse"));
 const NotFound = lazyPage(() => import("./pages/NotFound"));
 const AppLogin = lazyPage(() => import("./pages/AppLogin"));
+const Inbjudan = lazyPage(() => import("./pages/Inbjudan"));
 // The iPhone app's own frame and Pro page (src/native), loaded only there
 const AppShell = lazy(() => import("@/native/AppShell"));
 const AppPro = lazyPage(() => import("@/native/AppPro"));
@@ -46,6 +48,7 @@ const NativeFeed = lazyPage(() => import("@/native/NativeFeed"));
 const NativeAlerts = lazyPage(() => import("@/native/NativeAlerts"));
 const NativeProfile = lazyPage(() => import("@/native/NativeProfile"));
 const NativeStats = lazyPage(() => import("@/native/NativeStats"));
+const NativeInvite = lazyPage(() => import("@/native/NativeInvite"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
 const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
@@ -74,6 +77,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <PageViews />
+        <InviteRedeemer />
         {isNativeApp() && <NativeAppBridge />}
         <ErrorBoundary>
         <Suspense fallback={<LazyFallback />}>
@@ -97,6 +101,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
           <Route path="/app-login" element={<AppLogin />} />
+          <Route path="/inbjudan/:code" element={<Inbjudan />} />
+          <Route path="/bjud-in" element={isNativeApp() ? <NativeInvite /> : <Navigate to="/installningar#bjud-in" replace />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />
           <Route path="/privacy" element={<Sekretesspolicy />} />

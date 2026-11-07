@@ -8,6 +8,8 @@ import { useNativePush } from '@/hooks/useNativePush';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { getErrorMessage } from '@/lib/errors';
 import { nativeAuth, signInInApp } from '@/lib/nativeApp';
+import { hasAppDesign13 } from '@/lib/native';
+import Intro from './Intro';
 import { WELCOME_DONE_KEY } from './screens';
 
 const LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
@@ -83,8 +85,13 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
 
   const steps: Step[] = user ? ['intro', 'areas', 'notify'] : ['intro', 'account', 'areas', 'notify'];
 
+  // From app version 1.3 the welcome opens with pages to swipe through (Intro)
+  const swipeIntro = step === 'intro' && hasAppDesign13();
+
   let content: ReactNode;
-  if (step === 'intro') {
+  if (swipeIntro) {
+    content = <Intro onStart={() => setStep(user ? 'areas' : 'account')} onSkip={finish} />;
+  } else if (step === 'intro') {
     content = (
       <Screen
         actions={
@@ -195,11 +202,11 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
       className="ca-dark fixed inset-0 z-[3000] flex flex-col bg-[hsl(var(--ca-base))] text-foreground"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="flex justify-center gap-1.5 pt-3" aria-hidden>
+      {!swipeIntro && <div className="flex justify-center gap-1.5 pt-3" aria-hidden>
         {steps.map((s) => (
           <span key={s} className={`h-1.5 rounded-full transition-all ${s === step ? 'w-6 bg-[hsl(var(--ca-red))]' : 'w-1.5 bg-[hsl(var(--ca-line-strong))]'}`} />
         ))}
-      </div>
+      </div>}
       <div className="min-h-0 flex-1">{content}</div>
     </div>
   );

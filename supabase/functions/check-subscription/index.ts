@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
-import { hadPro, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
+import { appleProUntil, hadPro, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,12 +13,17 @@ const corsHeaders = {
 // (it lives on subscription items), so read it defensively.
 type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_end?: number | null };
 
-/** Pro bought in the iPhone app (apple_subscriptions), with no Stripe subscription. */
-const appleResponse = (proUntil: string | null) =>
-  new Response(
-    JSON.stringify({ subscribed: true, product_id: "prod_U0dsMg8IZZKY7c", subscription_end: proUntil, store: "apple", trial_eligible: false }),
+/**
+ * Pro with no Stripe subscription: bought in the iPhone app (apple_subscriptions), or earned by
+ * inviting friends (invite_codes). "store" says which, so the app knows where it is managed.
+ */
+const proResponse = async (db: Parameters<typeof appleProUntil>[0], userId: string, proUntil: string | null, trialEligible = false) => {
+  const store = (await appleProUntil(db, userId)) ? "apple" : "invite";
+  return new Response(
+    JSON.stringify({ subscribed: true, product_id: "prod_U0dsMg8IZZKY7c", subscription_end: proUntil, store, trial_eligible: store === "invite" && trialEligible }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
   );
+};
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
@@ -107,7 +112,7 @@ serve(async (req) => {
     if (customers.data.length === 0) {
       logStep("No customer found");
       const stored = await rememberProStatus(supabaseClient, user.id, null);
-      if (proUntilActive(stored, Date.now())) return appleResponse(stored);
+      if (proUntilActive(stored, Date.now())) return proResponse(supabaseClient, user.id, stored, true);
       return new Response(JSON.stringify({ subscribed: false, trial_eligible: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -202,7 +207,7 @@ serve(async (req) => {
 
     // What the archive's access rule and the push sender go by
     const stored = await rememberProStatus(supabaseClient, user.id, proUntilFor(validSub, Date.now()));
-    if (!hasActiveSub && proUntilActive(stored, Date.now())) return appleResponse(stored);
+    if (!hasActiveSub && proUntilActive(stored, Date.now())) return proResponse(supabaseClient, user.id, stored, !usedTrial);
 
     return new Response(
       JSON.stringify({

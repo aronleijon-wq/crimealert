@@ -30,16 +30,33 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
   const loadedOnce = useRef(false);
   const input = useRef<HTMLInputElement>(null);
 
-  /** "Svara": starts the comment with @Name, which also tells that person (send-push-notifications) */
-  const replyTo = (name: string) => {
-    const mention = `@${name} `;
-    setText((current) => (current.startsWith(mention) ? current : mention + current.replace(/^@\S+(?: \S+)?\s/, '')));
+  // Whom the comment being written answers, shown above the field until it is sent or cancelled
+  const [replying, setReplying] = useState<{ userId: string; name: string } | null>(null);
+
+  /**
+   * "Svara": answers someone. With a name the comment starts with @Name, which also tells that
+   * person at once (send-push-notifications); everyone who wrote in the thread hears of it anyway.
+   */
+  const replyTo = (userId: string, name: string) => {
+    setReplying({ userId, name: name || 'Anonym' });
+    if (name) {
+      const mention = `@${name} `;
+      setText((current) => (current.startsWith(mention) ? current : mention + current.replace(/^@\S+(?: \S+)?\s/, '')));
+    }
     requestAnimationFrame(() => {
       const field = input.current;
       if (!field) return;
       field.focus();
       field.setSelectionRange(field.value.length, field.value.length);
     });
+  };
+
+  const cancelReply = () => {
+    if (replying && displayNames[replying.userId]) {
+      const mention = `@${displayNames[replying.userId]} `;
+      setText((current) => (current.startsWith(mention) ? current.slice(mention.length) : current));
+    }
+    setReplying(null);
   };
 
   useEffect(() => {
@@ -65,7 +82,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
     if (!text.trim()) return;
     const refused = await addComment(text);
     setError(refused);
-    if (!refused) setText('');
+    if (!refused) { setText(''); setReplying(null); }
   };
 
   return (
@@ -100,11 +117,12 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
                       <Heart className={`w-3 h-3 ${c.user_has_liked ? 'fill-current' : ''}`} />
                       {c.likes_count > 0 && c.likes_count}
                     </button>
-                    {user && user.id !== c.user_id && displayNames[c.user_id] && (
+                    {user && user.id !== c.user_id && (
                       <button
                         type="button"
-                        onClick={() => replyTo(displayNames[c.user_id])}
-                        className="text-[10px] font-semibold text-muted-foreground hover:text-foreground transition"
+                        onClick={() => replyTo(c.user_id, displayNames[c.user_id] ?? '')}
+                        className="-my-1.5 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition"
+                        aria-label={`Svara ${name}`}
                       >
                         Svara
                       </button>
@@ -144,12 +162,19 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
       {notice && <p className="text-[11px] text-muted-foreground">{notice}</p>}
 
       {user ? (
+        <div className="space-y-1.5">
+        {replying && (
+          <p className="flex items-center gap-2 px-1 text-[11px] text-muted-foreground">
+            <span className="min-w-0 flex-1 truncate">Svarar <span className="font-semibold text-foreground">{replying.name}</span></span>
+            <button type="button" onClick={cancelReply} className="font-semibold hover:text-foreground">Avbryt</button>
+          </p>
+        )}
         <form onSubmit={submit} className="flex gap-2">
           <input
             ref={input}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Skriv en kommentar…"
+            placeholder={replying ? `Svara ${replying.name}…` : 'Skriv en kommentar…'}
             maxLength={500}
             aria-label="Kommentar"
             className="flex-1 min-w-0 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary"
@@ -162,6 +187,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
             Skicka
           </button>
         </form>
+        </div>
       ) : (
         <p className="text-xs text-muted-foreground text-center">
           <Link to="/auth" className="text-primary underline">Logga in</Link> för att kommentera

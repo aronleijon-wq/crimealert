@@ -13,8 +13,11 @@ export interface SubscriptionState {
   trialing?: boolean;
   /** May start Pro with the free trial (never had Pro) */
   trialEligible?: boolean;
-  /** Bought in the iPhone app, through Apple (managed there, not with Stripe) */
-  store?: 'apple';
+  /**
+   * Where Pro comes from when it isn't Stripe: bought in the iPhone app, through Apple (managed
+   * there), or earned by inviting friends (ends by itself)
+   */
+  store?: 'apple' | 'invite';
 }
 
 interface AuthContextType {
@@ -70,7 +73,7 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
         subscriptionEnd: data.subscription_end || null,
         trialing: data.trialing === true,
         trialEligible: data.trial_eligible === true,
-        ...(data.store === 'apple' ? { store: 'apple' as const } : {}),
+        ...(data.store === 'apple' || data.store === 'invite' ? { store: data.store as 'apple' | 'invite' } : {}),
       },
       ok: true,
     };

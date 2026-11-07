@@ -1,6 +1,7 @@
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useBackendHealth } from '@/hooks/useBackendHealth';
+import { hasAppDesign13 } from '@/lib/native';
 
 export default function BackendStatusBanner() {
   const { status, downSince, recheck } = useBackendHealth();
@@ -15,6 +16,23 @@ export default function BackendStatusBanner() {
     await recheck();
     setChecking(false);
   };
+
+  // The app from 1.3: a small card at the top, below the title bar or the map's search, in the
+  // phone's own type, not a red strip over the tabs
+  if (hasAppDesign13()) {
+    return (
+      <div role="status" aria-live="polite" className="fixed inset-x-3 z-[9999] flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[rgba(44,44,46,0.92)] px-4 py-3 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 60px)' }}>
+        <AlertTriangle className="h-5 w-5 shrink-0 text-[#ff9f0a]" aria-hidden />
+        <p className="min-w-0 flex-1 text-[14px] leading-snug">
+          <span className="block font-semibold">Ingen anslutning</span>
+          <span className="block text-[13px] text-[rgba(235,235,245,0.6)]">Visar det senast kända. Försöker igen av sig själv.</span>
+        </p>
+        <button type="button" onClick={handleRetry} disabled={checking} className="shrink-0 text-[15px] font-semibold text-[#ff453a] disabled:opacity-50">
+          {checking ? 'Försöker…' : 'Försök igen'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div

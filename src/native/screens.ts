@@ -42,10 +42,13 @@ const TITLES: [RegExp, string][] = [
   [/^\/(sekretesspolicy|privacy)$/, 'Sekretesspolicy'],
   [/^\/cookies$/, 'Cookies'],
   [/^\/admin$/, 'Admin'],
+  [/^\/inbjudan\//, 'Inbjudan'],
 ];
 
 // The app's own screens (NativeFeed, NativeStats, NativeAlerts, NativeProfile) with iOS large titles
 const LARGE_TITLES = ['/flode', '/analysis', '/alerts', '/installningar'];
+// Pages under a tab that show their own large title
+const OWN_LARGE_TITLES = ['/bjud-in'];
 
 const WITHOUT_TABS = /^\/(prisplan|account|auth|reset-password)$/;
 
@@ -54,7 +57,7 @@ export function screenFor(pathname: string): AppScreen {
   const tab = TABS.find((t) => t.to === path);
   if (tab) return { title: tab.to === '/karta' ? 'CrimeAlert' : tab.label, tab: true, tabBar: true, ...(LARGE_TITLES.includes(tab.to) ? { largeTitle: true } : {}) };
   const title = TITLES.find(([pattern]) => pattern.test(path))?.[1] ?? 'CrimeAlert';
-  return { title, tab: false, tabBar: !WITHOUT_TABS.test(path) };
+  return { title, tab: false, tabBar: !WITHOUT_TABS.test(path), ...(OWN_LARGE_TITLES.includes(path) ? { largeTitle: true } : {}) };
 }
 
 export const WELCOME_DONE_KEY = 'ca-app-welcomed';

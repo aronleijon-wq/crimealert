@@ -63,6 +63,7 @@ class MainViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(CrimeAlertPushPlugin())
         bridge?.registerPluginInstance(CrimeAlertAuthPlugin())
         bridge?.registerPluginInstance(CrimeAlertStorePlugin())
+        bridge?.registerPluginInstance(CrimeAlertHapticsPlugin())
     }
 
     override open func viewDidLoad() {
@@ -71,6 +72,49 @@ class MainViewController: CAPBridgeViewController {
         webView?.allowsBackForwardNavigationGestures = true
         webView?.allowsLinkPreview = false
         webView?.scrollView.bounces = false
+    }
+}
+
+// MARK: - Haptics
+
+/// The small taps an iPhone gives under your finger: when a tab, a switch or a sheet moves, and
+/// when something succeeds or fails (src/native/haptics.ts). The web has no way to do this on iOS.
+public class CrimeAlertHapticsPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "CrimeAlertHapticsPlugin"
+    public let jsName = "CrimeAlertHaptics"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "impact", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "selection", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "notification", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func impact(_ call: CAPPluginCall) {
+        let style: UIImpactFeedbackGenerator.FeedbackStyle
+        switch call.getString("style") {
+        case "heavy": style = .heavy
+        case "medium": style = .medium
+        case "rigid": style = .rigid
+        case "soft": style = .soft
+        default: style = .light
+        }
+        DispatchQueue.main.async { UIImpactFeedbackGenerator(style: style).impactOccurred() }
+        call.resolve()
+    }
+
+    @objc func selection(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { UISelectionFeedbackGenerator().selectionChanged() }
+        call.resolve()
+    }
+
+    @objc func notification(_ call: CAPPluginCall) {
+        let type: UINotificationFeedbackGenerator.FeedbackType
+        switch call.getString("type") {
+        case "warning": type = .warning
+        case "error": type = .error
+        default: type = .success
+        }
+        DispatchQueue.main.async { UINotificationFeedbackGenerator().notificationOccurred(type) }
+        call.resolve()
     }
 }
 

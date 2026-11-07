@@ -7,6 +7,7 @@ import {
 import DefaultAvatar from '@/components/DefaultAvatar';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
+import InviteFriends from '@/components/account/InviteFriends';
 import Header from '@/components/Header';
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
@@ -187,6 +188,15 @@ const Installningar = () => {
     navigate('/');
   };
 
+  // "/installningar#bjud-in" from the invite page: to that section once it is there
+  const signedIn = !!user;
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id || !signedIn) return;
+    const timer = setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    return () => clearTimeout(timer);
+  }, [signedIn]);
+
   const plan = planLabel(isPremium, subscription);
   const lifetime = subscription.subscriptionEnd === 'lifetime';
 
@@ -254,7 +264,14 @@ const Installningar = () => {
               />
             ) : (
               <>
-                {isPremium && !lifetime ? (
+                {isPremium && subscription.store === 'invite' ? (
+                  // Pro from inviting friends ends by itself; Pro can be bought to go on after it
+                  <LinkRow icon={Zap} label="Pro från dina inbjudningar" hint="Tar slut av sig själv. Vill du fortsätta efter det kan du skaffa Pro." to="/prisplan" />
+                ) : isPremium && subscription.store === 'apple' ? (
+                  <div className={rowClass}>
+                    <RowText icon={CreditCard} label="Prenumeration via App Store" hint="Ändra eller avsluta den på din iPhone: Inställningar → ditt namn → Prenumerationer." />
+                  </div>
+                ) : isPremium && !lifetime ? (
                   <LinkRow icon={CreditCard} label="Hantera prenumeration" hint="Byt betalkort, se kvitton eller avsluta." to={BILLING_PORTAL_URL} />
                 ) : !isPremium ? (
                   <LinkRow
@@ -268,6 +285,12 @@ const Installningar = () => {
               </>
             )}
           </Section>
+
+          {user && (
+            <Section id="bjud-in" title="Bjud in vänner">
+              <InviteFriends />
+            </Section>
+          )}
 
           <Section id="notiser" title="Notiser">
             <LinkRow icon={Bell} label="Kommuner och notiser" hint="Välj vilka kommuner du bevakar och vad du får notiser om." to="/alerts" />

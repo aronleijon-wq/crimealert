@@ -81,3 +81,42 @@ html.native-app .ca-app-push { animation: ca-app-push 0.32s cubic-bezier(0.2, 0.
 html.native-app .ca-app-analysis .h-screen { height: auto; }
 html.native-app .ca-app-analysis .overflow-y-auto { overflow: visible; }
 html.native-app .ca-app-analysis h1 { font-size: 22px; }
+
+/* ---- From app version 1.3 (html.app-13, set in main.tsx). Older versions never get these. ---- */
+
+/* The map: pinch to zoom, as in Maps; no web buttons for it */
+html.app-13 .leaflet-control-zoom { display: none; }
+html.app-13 .leaflet-control-attribution { font-size: 9px; opacity: 0.6; margin-bottom: 120px !important; }
+
+/* Sheets slide up, dialogs fade in */
+@keyframes ca-app-sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ca-app-fade { from { opacity: 0; } to { opacity: 1; } }
+html.native-app .ca-app-sheet { animation: ca-app-sheet 0.42s cubic-bezier(0.32, 0.72, 0, 1); }
+html.native-app .ca-app-fade { animation: ca-app-fade 0.25s ease-out; }
+
+/* Pressed rows and buttons dim a little, as on iOS, instead of the web's hover colours */
+html.app-13 .ca-app-page button:active,
+html.app-13 .ca-app-page a:active { opacity: 0.7; }
+html.app-13 .ca-app-page .ios-row:active { opacity: 1; }
+
+/* The tab bar: the system's material, the selected tab in its colour and filled */
+html.app-13 .ca-app-tabbar { border-top-color: rgba(84, 84, 88, 0.45); background: rgba(22, 22, 24, 0.78); }
+html.app-13 .ca-app-tabbar a[aria-current='page'] svg { fill: currentColor; fill-opacity: 0.18; }
+
+/* The welcome's pictures (Intro) */
+@keyframes ca-intro-ring { from { transform: scale(0.35); opacity: 0.9; } to { transform: scale(1); opacity: 0; } }
+.ca-intro-ring { animation: ca-intro-ring 3.3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+@keyframes ca-intro-drop {
+  0% { transform: translateY(-140%) scale(0.96); opacity: 0; }
+  14% { transform: translateY(6%) scale(1); opacity: 1; }
+  20% { transform: none; }
+  86% { transform: none; opacity: 1; }
+  100% { transform: translateY(-20%); opacity: 0; }
+}
+.ca-intro-drop { animation: ca-intro-drop 2.6s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes ca-intro-ping { 0% { transform: scale(1); opacity: 0.7; } 80%, 100% { transform: scale(3.2); opacity: 0; } }
+.ca-intro-ping { animation: ca-intro-ping 3.6s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-intro-ring, .ca-intro-ping, .ca-intro-drop, html.native-app .ca-app-sheet, html.native-app .ca-app-fade { animation: none; }
+}
