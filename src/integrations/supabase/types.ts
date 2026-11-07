@@ -433,6 +433,12 @@ export type Database = {
       notification_settings: {
         Row: {
           min_risk: string
+          near_lat: number | null
+          near_lng: number | null
+          near_radius_km: number | null
+          quiet_end: number | null
+          quiet_start: number | null
+          themes: string[] | null
           types: string[]
           updated_at: string
           user_id: string
@@ -440,6 +446,12 @@ export type Database = {
         }
         Insert: {
           min_risk?: string
+          near_lat?: number | null
+          near_lng?: number | null
+          near_radius_km?: number | null
+          quiet_end?: number | null
+          quiet_start?: number | null
+          themes?: string[] | null
           types?: string[]
           updated_at?: string
           user_id: string
@@ -447,6 +459,12 @@ export type Database = {
         }
         Update: {
           min_risk?: string
+          near_lat?: number | null
+          near_lng?: number | null
+          near_radius_km?: number | null
+          quiet_end?: number | null
+          quiet_start?: number | null
+          themes?: string[] | null
           types?: string[]
           updated_at?: string
           user_id?: string

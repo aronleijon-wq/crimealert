@@ -10,6 +10,9 @@
 - [x] Nyhetsbrevsmigreringen (20261107120000_newsletter_contacts.sql) körd exakt som skriven
 - [x] RESEND_API_KEY sparad (ingen lista-ID — kontakter läggs i Resends allmänna kontakter)
 
+- [ ] Notisfilter-migreringen (20261108090000_notification_filters.sql) körd exakt som skriven
+- [ ] Alla backendfunktioner deployade igen (7 nov 20:14)
+
 ## Väntar på användaren
 - Testa iPhone-push i TestFlight (Notiser → Skicka testnotis)
 - AdSense-godkännande: kontrollera status i Google-kontot
