@@ -8,10 +8,11 @@
 - [x] MapKit-hemligheter sparade (MAPKIT_KEY_ID, MAPKIT_PRIVATE_KEY)
 - [x] Apple Maps på webbens karta också (Karta/Hybrid/Satellit, faller tillbaka till egen karta om Apple inte svarar)
 - [x] Nyhetsbrevsmigreringen (20261107120000_newsletter_contacts.sql) körd exakt som skriven
+- [x] RESEND_API_KEY sparad (ingen lista-ID — kontakter läggs i Resends allmänna kontakter)
 
 ## Väntar på användaren
 - Testa iPhone-push i TestFlight (Notiser → Skicka testnotis)
 - AdSense-godkännande: kontrollera status i Google-kontot
 - Beslut: mobilprestanda (canvas-markörer/kollapsad lista) och SEO-förslag
-- Nyhetsbrev: RESEND_API_KEY sparad; RESEND_AUDIENCE_ID väntar på användaren
+
 - "Lägg till marknadsförings liten del" på inloggningssidan: vad den ska innehålla
