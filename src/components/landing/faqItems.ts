@@ -77,7 +77,9 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     q: 'Finns det en app?',
     a: [
-      'Inte i App Store än. Men lägger du till CrimeAlert på hemskärmen öppnas den som en app, ' +
+      'Ja, CrimeAlert finns för iPhone i ',
+      { href: APP_STORE_URL, label: 'App Store' },
+      '. På Android och dator kan du lägga till crimealert.se på hemskärmen, då öppnas den som en app ' +
         'med egen ikon och utan webbläsarens adressfält.',
     ],
   },

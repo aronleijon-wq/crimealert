@@ -3,6 +3,7 @@ import { ArrowRight, MapPin } from 'lucide-react';
 import { TRIAL_DAYS } from '@/components/account/plans';
 import { useAuth } from '@/hooks/useAuth';
 import OpsMap from './OpsMap';
+import AppStoreBadge from './AppStoreBadge';
 import { CountUp, LiveClock, LiveLog, ScrambleText } from './HudBits';
 import type { LandingLive } from './useLandingLive';
 
@@ -107,6 +108,15 @@ const Hero = ({ live }: { live: LandingLive }) => {
             <a href="#hur-det-fungerar" className="inline-flex items-center px-2 py-3.5 text-sm text-[hsl(var(--ca-text-3))] transition hover:text-[hsl(var(--ca-text))]">
               Se hur det fungerar
             </a>
+          </div>
+
+          <div className="ca-rise mt-7 flex flex-wrap items-center gap-4" style={{ animationDelay: '1.12s' }}>
+            <AppStoreBadge />
+            <div className="leading-tight">
+              <div className="ca-mono text-[9px] tracking-[0.2em] text-[hsl(var(--ca-text-3))]">NYHET</div>
+              <div className="mt-1 text-[14px] font-medium text-[hsl(var(--ca-text))]">Nu som app för iPhone</div>
+              <div className="text-[12px] text-[hsl(var(--ca-text-3))]">Notiser direkt i telefonen</div>
+            </div>
           </div>
 
           <div className="mt-10 grid max-w-[520px] grid-cols-3 gap-6 border-t border-[hsl(var(--ca-line))] pt-5">
