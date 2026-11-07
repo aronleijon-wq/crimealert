@@ -4,16 +4,17 @@ import { APP_STORE_URL } from '@/lib/appStoreLink';
 import { isNativeApp } from '@/lib/native';
 import { AppleLogo } from './AppStoreBadge';
 
-const STORAGE_KEY = 'ca-app-banner-closed';
+// Closing lasts for this visit only, so everyone sees the banner again next time they come
+const STORAGE_KEY = 'ca-app-banner-closed-visit';
 /** Height of the strip, so the page below can make room for it */
 export const APP_BANNER_HEIGHT = 40;
 
-/** Whether the iPhone app banner shows: not inside the app itself, and not after the visitor closed it */
+/** Whether the iPhone app banner shows: on every page of the site, not inside the app itself, and not after the visitor closed it during this visit */
 export const useAppBanner = () => {
   const [visible, setVisible] = useState(() => {
     if (isNativeApp()) return false;
     try {
-      return localStorage.getItem(STORAGE_KEY) !== '1';
+      return sessionStorage.getItem(STORAGE_KEY) !== '1';
     } catch {
       return true;
     }
@@ -21,20 +22,27 @@ export const useAppBanner = () => {
   const dismiss = useCallback(() => {
     setVisible(false);
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      sessionStorage.setItem(STORAGE_KEY, '1');
     } catch {
-      /* private mode: closes for this visit only */
+      /* storage blocked: closes on this page only */
     }
   }, []);
   return { visible, dismiss };
 };
 
 /**
- * Strip across the top of the start page announcing the iPhone app. Black with white type,
+ * Strip across the top of every page announcing the iPhone app. Black with white type,
  * like Apple's own App Store badge, so it reads as Apple on both themes.
  */
-const AppBanner = ({ onClose }: { onClose: () => void }) => (
-  <div className="relative flex items-center justify-center bg-black text-white" style={{ height: APP_BANNER_HEIGHT }}>
+const AppBanner = ({ onClose, safeTop = false }: { onClose: () => void; safeTop?: boolean }) => (
+  <div
+    className="relative flex shrink-0 items-center justify-center bg-black text-white"
+    style={
+      safeTop
+        ? { paddingTop: 'env(safe-area-inset-top, 0px)', height: `calc(${APP_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))` }
+        : { height: APP_BANNER_HEIGHT }
+    }
+  >
     <a
       href={APP_STORE_URL}
       target="_blank"
@@ -61,7 +69,7 @@ const AppBanner = ({ onClose }: { onClose: () => void }) => (
       type="button"
       onClick={onClose}
       aria-label="Stäng"
-      className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
+      className="absolute bottom-1 right-2 grid h-8 w-8 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
     >
       <X className="h-4 w-4" />
     </button>
