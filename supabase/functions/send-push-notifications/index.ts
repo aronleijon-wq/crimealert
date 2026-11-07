@@ -13,7 +13,7 @@ import {
   type PushEvent,
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
-import { replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
+import { mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -477,18 +477,24 @@ async function sendReplyNotifications(supabase: ServiceClient, authorId: string,
     supabase.from('incident_comments').select('id, user_id, created_at').eq('incident_id', comment.incident_id).order('created_at').limit(500),
     supabase.from('user_blocks').select('blocker_id').eq('blocked_id', authorId),
   ]);
-  const recipients = replyRecipients((thread ?? []) as ThreadComment[], comment, new Set((blocks ?? []).map((b: { blocker_id: string }) => b.blocker_id)));
+  const blocked = new Set<string>((blocks ?? []).map((b: { blocker_id: string }) => b.blocker_id));
+  const participants = [...new Set(((thread ?? []) as ThreadComment[]).map((c) => c.user_id))];
+  const { data: profiles } = await supabase.from('profiles').select('id, display_name').in('id', participants);
+  const names: Record<string, string> = {};
+  for (const p of (profiles ?? []) as { id: string; display_name: string | null }[]) names[p.id] = p.display_name ?? '';
+  // Whoever the comment answers (@Name) hears of it every time; the others once per round
+  const answered = mentionedUsers(comment.text, names).filter((id) => id !== authorId && !blocked.has(id));
+  const recipients = [...new Set([...answered, ...replyRecipients((thread ?? []) as ThreadComment[], comment, blocked)])];
   if (!recipients.length) return { sent: 0, reason: 'no_recipients' };
 
-  const [{ data: profile }, { data: event }, { data: subscriptions }] = await Promise.all([
-    supabase.from('profiles').select('display_name').eq('id', authorId).maybeSingle(),
+  const [{ data: event }, { data: subscriptions }] = await Promise.all([
     comment.incident_id.startsWith('kommun:')
       ? Promise.resolve({ data: null })
       : supabase.from('police_events_archive').select('title').eq('id', comment.incident_id).maybeSingle(),
     supabase.from('push_subscriptions').select('*').in('user_id', recipients),
   ]);
   const { title, body } = replyMessage({
-    author: profile?.display_name ?? '',
+    author: names[authorId] ?? '',
     text: comment.text,
     place: threadPlace(comment.incident_id, event?.title ?? null),
   });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { kommunThreadId, replyMessage, replyRecipients, threadPath, threadPlace } from './replies';
+import { kommunThreadId, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace } from './replies';
 import { safeAppPath } from './notifications';
 
 const c = (id: string, user: string, minute: number) => ({ id, user_id: user, created_at: new Date(Date.UTC(2026, 10, 7, 12, minute)).toISOString() });
@@ -26,6 +26,13 @@ describe('reply notifications', () => {
     expect(threadPath('kommun:nacka')).toBe('/kommun/nacka?chatt=1');
     expect(threadPath('612345')).toBe('/handelse/612345?chatt=1');
     expect(safeAppPath(threadPath('kommun:nacka'))).toBe('/kommun/nacka?chatt=1');
+  });
+
+  it('finds who a comment answers', () => {
+    const names = { anna: 'Anna', annal: 'Anna L', bo: 'Bo' };
+    expect(mentionedUsers('@Anna L såg det också', names)).toEqual(['annal']);
+    expect(mentionedUsers('@anna tack!', names)).toEqual(['anna']);
+    expect(mentionedUsers('Hörde smällarna', names)).toEqual([]);
   });
 
   it('names the thread', () => {

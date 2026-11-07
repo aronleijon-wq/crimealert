@@ -1,6 +1,6 @@
-import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, SmilePlus, type LucideIcon } from 'lucide-react';
 import CommentThread from '@/components/feed/CommentThread';
 import ShareCardButton from '@/components/ShareCardButton';
 import { incidentTypeConfig } from '@/data/mockIncidents';
@@ -90,37 +90,33 @@ const MapPicture = ({ lat, lng, color }: { lat: number; lng: number; color: stri
 };
 
 const Art = ({ icon: Icon, color }: { icon: LucideIcon; color: string }) => (
-  <div className="absolute inset-0" style={{ background: `radial-gradient(90% 90% at 70% 20%, ${color}, #111 75%)` }} aria-hidden>
-    <Icon className="absolute right-6 top-6 h-24 w-24 text-white/15" strokeWidth={1.2} />
+  <div className="absolute inset-0" style={{ background: `radial-gradient(100% 80% at 75% 15%, ${color}, #0b0b0c 72%)` }} aria-hidden>
+    <Icon className="absolute right-7 top-7 h-20 w-20 text-white/15" strokeWidth={1.2} />
   </div>
 );
 
-const Picture = ({ item, icon: Icon, color }: { item: FeedItem; icon: LucideIcon; color: string }) => {
+/** The post's square picture: the news photo, the place on the map, or the kind's colour */
+const Picture = ({ item, icon, color }: { item: FeedItem; icon: LucideIcon; color: string }) => {
   const [failed, setFailed] = useState(false);
   const image = item.image && !failed ? item.image : null;
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#111]">
+    <div className="relative aspect-square w-full overflow-hidden bg-[#111]">
       {image ? (
         <img src={image.url} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover" />
       ) : item.lat !== null && item.lng !== null ? (
         <MapPicture lat={item.lat} lng={item.lng} color={color} />
       ) : (
-        <Art icon={Icon} color={color} />
+        <Art icon={icon} color={color} />
       )}
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/30 to-transparent" aria-hidden />
+      <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/80 to-transparent" aria-hidden />
       {item.active && item.kind !== 'news' && (
-        <span className="absolute left-3 top-3 rounded-[5px] bg-[#ff453a] px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Pågår</span>
+        <span className="absolute left-3 top-3 rounded-md bg-[#ff453a] px-2 py-[3px] text-[11px] font-bold uppercase tracking-wide text-white">Pågår</span>
       )}
-      <div className="absolute inset-x-4 bottom-3.5 flex items-end gap-2.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: color }}>
-          <Icon className="h-5 w-5 text-white" strokeWidth={2.2} aria-hidden />
-        </span>
-        <span className="min-w-0 pb-0.5 text-[22px] font-bold leading-[26px] tracking-tight text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.5)] line-clamp-2">
-          {headline(item)}
-        </span>
-      </div>
-      {image?.credit && <span className="absolute right-2 top-2 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white/80">Foto: {image.credit}</span>}
+      <span className="absolute inset-x-4 bottom-3.5 text-[24px] font-bold leading-[28px] tracking-tight text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.45)] line-clamp-2">
+        {headline(item)}
+      </span>
+      {image?.credit && <span className="absolute bottom-1.5 right-2 text-[10px] text-white/60">Foto: {image.credit}</span>}
     </div>
   );
 };
@@ -135,19 +131,21 @@ interface PostProps {
   onCommentCount: (id: string, count: number) => void;
 }
 
-const ActionButton = ({ onClick, label, pressed, children }: { onClick: () => void; label: string; pressed?: boolean; children: ReactNode }) => (
-  <button type="button" onClick={onClick} aria-label={label} aria-pressed={pressed} className="flex h-10 min-w-[40px] items-center justify-center gap-1 rounded-full px-1.5 active:scale-90 transition-transform">
-    {children}
-  </button>
-);
+const ICON = 'h-[26px] w-[26px] text-white';
+const iconButton = 'flex h-11 w-11 items-center justify-center rounded-full transition-transform active:scale-90';
 
 const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: PostProps) => {
   const navigate = useNavigate();
   const { icon, color } = lookOf(item);
   const [expanded, setExpanded] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
   const reactions = engagement?.reactions ?? [];
   const total = reactions.reduce((s, r) => s + r.count, 0);
+  const mine = reactions.find((r) => r.userReacted);
+  const top = REACTION_TYPES.filter((r) => (reactions.find((x) => x.type === r.type)?.count ?? 0) > 0)
+    .sort((a, b) => (reactions.find((x) => x.type === b.type)?.count ?? 0) - (reactions.find((x) => x.type === a.type)?.count ?? 0))
+    .slice(0, 3);
   const comments = engagement?.commentCount ?? 0;
   const handleCount = useCallback((n: number) => onCommentCount(item.id, n), [item.id, onCommentCount]);
   const open = () => {
@@ -155,41 +153,43 @@ const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: Post
     else if (item.mapLink) navigate(item.mapLink);
     else if (item.url) window.open(item.url, '_blank');
   };
+  const react = (type: string) => {
+    setPicking(false);
+    if (signedIn) onReact(item.id, type);
+    else navigate('/auth');
+  };
   const KindIcon = KIND[item.kind].icon;
-  const long = item.body.length > 110;
+  const text = [item.title, item.body].filter(Boolean).join(' · ');
+  const long = text.length > 90;
+  const news = item.related[0];
 
   return (
-    <article className="border-b border-[rgba(84,84,88,0.45)] pb-3">
-      <header className="flex items-center gap-3 px-4 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: `${KIND[item.kind].color}` }}>
-          <KindIcon className="h-[18px] w-[18px] text-white" strokeWidth={2.2} aria-hidden />
+    <article className="pb-6">
+      <header className="flex items-center gap-2.5 px-3 py-2">
+        <span className="rounded-full p-[2px]" style={{ background: item.active ? 'linear-gradient(45deg, #ffd60a, #ff453a 60%, #bf5af2)' : 'transparent' }}>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-black" style={{ background: KIND[item.kind].color }}>
+            <KindIcon className="h-4 w-4 text-white" strokeWidth={2.2} aria-hidden />
+          </span>
         </span>
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="block truncate text-[15px] font-semibold text-white">{item.source}</span>
-          <span className={`block truncate text-[13px] ${MUTED}`}>{item.area}</span>
+        <span className="min-w-0 flex-1 leading-[17px]">
+          <span className="block truncate text-[14px] font-semibold text-white">{item.source}</span>
+          <span className="block truncate text-[12px] text-[rgba(235,235,245,0.7)]">{item.area}</span>
         </span>
-        <span className={`shrink-0 text-[13px] ${MUTED}`}>{formatTimeAgo(item.time)}</span>
       </header>
 
       <button type="button" onClick={open} className="block w-full text-left active:opacity-90" aria-label={`Öppna ${headline(item)}`}>
         <Picture item={item} icon={icon} color={color} />
       </button>
 
-      <div className="flex items-center px-2.5 pt-1.5">
-        {REACTION_TYPES.map((r) => {
-          const mine = reactions.find((x) => x.type === r.type);
-          return (
-            <ActionButton key={r.type} label={`Reagera med ${r.emoji}`} pressed={!!mine?.userReacted}
-              onClick={() => (signedIn ? onReact(item.id, r.type) : navigate('/auth'))}>
-              <span className={`text-[22px] leading-none transition ${mine?.userReacted ? 'scale-110' : 'opacity-90 grayscale-[35%]'}`} aria-hidden>{r.emoji}</span>
-              {!!mine?.count && <span className="text-[13px] font-semibold tabular-nums text-white">{mine.count}</span>}
-            </ActionButton>
-          );
-        })}
-        <ActionButton label="Kommentarer" pressed={commentsOpen} onClick={() => setCommentsOpen((v) => !v)}>
-          <MessageCircle className="h-[24px] w-[24px] text-white" strokeWidth={1.9} aria-hidden />
-          {comments > 0 && <span className="text-[13px] font-semibold tabular-nums text-white">{comments}</span>}
-        </ActionButton>
+      <div className="relative flex items-center px-1.5">
+        <button type="button" onClick={() => setPicking((v) => !v)} aria-label="Reagera" aria-expanded={picking} className={iconButton}>
+          {mine
+            ? <span className="text-[24px] leading-none" aria-hidden>{REACTION_TYPES.find((r) => r.type === mine.type)?.emoji}</span>
+            : <SmilePlus className={ICON} strokeWidth={1.7} aria-hidden />}
+        </button>
+        <button type="button" onClick={() => setCommentsOpen((v) => !v)} aria-label="Kommentarer" aria-pressed={commentsOpen} className={iconButton}>
+          <MessageCircle className={ICON} strokeWidth={1.7} aria-hidden />
+        </button>
         {item.kind === 'police' && (
           <ShareCardButton
             make={() => drawEventCard({ id: item.id, kind: headline(item), area: item.area, when: cardTime(item.timestamp), active: item.active, color })}
@@ -198,53 +198,63 @@ const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: Post
             url={eventUrl(item.id)}
             fileName="crimealert.png"
             label="Dela som bild"
-            className="flex h-10 min-w-[40px] items-center justify-center rounded-full px-1.5 text-white transition-transform active:scale-90"
+            className={iconButton}
           >
-            <Send className="h-[23px] w-[23px]" strokeWidth={1.9} aria-hidden />
+            <Send className="h-[24px] w-[24px] text-white" strokeWidth={1.7} aria-hidden />
           </ShareCardButton>
         )}
         {item.mapLink && (
-          <Link to={item.mapLink} aria-label="Visa på kartan" className="ml-auto flex h-10 w-10 items-center justify-center rounded-full text-white active:scale-90 transition-transform">
-            <MapPin className="h-[24px] w-[24px]" strokeWidth={1.9} aria-hidden />
+          <Link to={item.mapLink} aria-label="Visa på kartan" className={`${iconButton} ml-auto`}>
+            <MapPin className={ICON} strokeWidth={1.7} aria-hidden />
           </Link>
         )}
-      </div>
-
-      <div className="px-4">
-        {total > 0 && <p className="text-[14px] font-semibold text-white">{total} {total === 1 ? 'reaktion' : 'reaktioner'}</p>}
-        <p className="mt-0.5 text-[15px] leading-[20px] text-white">
-          <span className="font-semibold">{item.title}</span>
-          {item.body && (
-            <span className="text-[rgba(235,235,245,0.85)]">
-              {' '}{long && !expanded ? `${item.body.slice(0, 110).trimEnd()}… ` : `${item.body} `}
-              {long && !expanded && <button type="button" onClick={() => setExpanded(true)} className={MUTED}>mer</button>}
-            </span>
-          )}
-        </p>
-        {item.bodyLocked && (
-          <p className={`mt-1 flex items-center gap-1.5 text-[14px] ${MUTED}`}>
-            <Lock className="h-3.5 w-3.5" aria-hidden />
-            Polisens beskrivning finns med Pro{canSellPro() && <>{' · '}<Link to="/prisplan" className="font-semibold text-[#ff453a]">Prova</Link></>}
-          </p>
-        )}
-        {item.related.length > 0 && (
-          <div className="mt-2 space-y-1">
-            {item.related.map((news) => (
-              <a key={news.id} href={news.url ?? undefined} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-[14px] leading-snug">
-                <Newspaper className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5e5ce6]" aria-hidden />
-                <span><span className="font-semibold text-white">{sourceName(news.source)}</span> <span className="text-[rgba(235,235,245,0.85)]">{news.title}</span></span>
-              </a>
+        {picking && (
+          <div className="absolute -top-12 left-2 z-10 flex gap-1 rounded-full bg-[#2c2c2e] px-2 py-1 shadow-[0_8px_30px_rgba(0,0,0,0.5)]" role="menu">
+            {REACTION_TYPES.map((r) => (
+              <button key={r.type} type="button" role="menuitem" onClick={() => react(r.type)} aria-label={`Reagera med ${r.emoji}`}
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-[26px] transition-transform active:scale-125 ${mine?.type === r.type ? 'bg-white/15' : ''}`}>
+                {r.emoji}
+              </button>
             ))}
           </div>
         )}
+      </div>
+
+      <div className="space-y-1 px-3.5">
+        {total > 0 && (
+          <p className="flex items-center gap-1.5 text-[14px] font-semibold text-white">
+            <span className="text-[14px] tracking-[-0.15em]" aria-hidden>{top.map((r) => r.emoji).join('')}</span>
+            {total} {total === 1 ? 'reaktion' : 'reaktioner'}
+          </p>
+        )}
+        <p className={`text-[14px] leading-[19px] text-white ${long && !expanded ? 'line-clamp-2' : ''}`}>
+          <span className="font-semibold">{item.source}</span>{' '}
+          <span className="text-[rgba(255,255,255,0.88)]">{text}</span>
+        </p>
+        {long && !expanded && (
+          <button type="button" onClick={() => setExpanded(true)} className="text-[14px] text-[rgba(235,235,245,0.6)]">mer</button>
+        )}
+        {item.bodyLocked && (
+          <p className="flex items-center gap-1.5 text-[13px] text-[rgba(235,235,245,0.6)]">
+            <Lock className="h-3 w-3" aria-hidden />
+            Hela beskrivningen med Pro{canSellPro() && <>{' · '}<Link to="/prisplan" className="font-semibold text-[#ff453a]">Prova</Link></>}
+          </p>
+        )}
+        {news && (
+          <a href={news.url ?? undefined} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[13px] text-[rgba(235,235,245,0.6)]">
+            <Newspaper className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="truncate"><span className="font-semibold text-[rgba(235,235,245,0.85)]">{sourceName(news.source)}:</span> {news.title}</span>
+          </a>
+        )}
         {comments > 0 && !commentsOpen && (
-          <button type="button" onClick={() => setCommentsOpen(true)} className={`mt-1 block text-[14px] ${MUTED}`}>
+          <button type="button" onClick={() => setCommentsOpen(true)} className="block text-[14px] text-[rgba(235,235,245,0.6)]">
             {comments === 1 ? 'Visa kommentaren' : `Visa alla ${comments} kommentarer`}
           </button>
         )}
         {commentsOpen && (signedIn
-          ? <div className="ca-dark mt-1"><CommentThread itemId={item.id} onCountChange={handleCount} /></div>
-          : <p className={`mt-2 text-[14px] ${MUTED}`}><Link to="/auth" className="font-semibold text-[#0a84ff]">Logga in</Link> för att läsa och skriva kommentarer.</p>)}
+          ? <div className="ca-dark"><CommentThread itemId={item.id} onCountChange={handleCount} /></div>
+          : <p className="text-[14px] text-[rgba(235,235,245,0.6)]"><Link to="/auth" className="font-semibold text-[#0a84ff]">Logga in</Link> för att läsa och skriva kommentarer.</p>)}
+        <p className="pt-0.5 text-[11px] uppercase tracking-[0.04em] text-[rgba(235,235,245,0.45)]">{formatTimeAgo(item.time)}</p>
       </div>
     </article>
   );
