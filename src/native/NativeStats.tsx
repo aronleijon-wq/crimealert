@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight, Lock, Sparkles } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
@@ -11,6 +11,10 @@ import { kommunPath } from '@/lib/kommunPages';
 import { areaStats, inArea, insights, kommunChanges, risingKommuner, WEEKDAYS_SHORT, type AreaStats, type StatEvent, type ThemeTrend } from './stats';
 import { useStatsEvents } from './useStatsEvents';
 import { Screen, Segmented } from './ui';
+
+// The website's analysis page, with everything it has (charts, risk, citizen reports, export),
+// under "Analys" next to the app's own trends
+const Analysis = lazy(() => import('@/pages/Analysis'));
 
 const RED = '#ff453a';
 const GREEN = '#30d158';
@@ -185,6 +189,8 @@ const toStat = (incidents: { time: string; area: string; originalType?: string }
     return at === undefined ? [] : [{ at, area: i.area, category: i.originalType ?? '' }];
   });
 
+const VIEW_OPTIONS = [{ value: 'trender', label: 'Trender' }, { value: 'analys', label: 'Analys' }];
+
 const DAY_OPTIONS = [{ value: '7', label: '7 dagar' }, { value: '30', label: '30 dagar' }];
 
 /**
@@ -197,6 +203,9 @@ const NativeStats = () => {
   const { isPremium } = useIsPremium();
   const { kommuner } = useNotificationPreferences();
   const { incidents: live } = usePoliceEvents();
+  const [params, setParams] = useSearchParams();
+  const view = params.get('vy') === 'analys' ? 'analys' : 'trender';
+  const setView = (next: string) => { setParams(next === 'analys' ? { vy: 'analys' } : {}, { replace: true }); window.dispatchEvent(new Event('ca-tab-top')); };
   const [area, setArea] = useState<string | null>(null);
   const [days, setDays] = useState('30');
   const period = Number(days);
@@ -216,6 +225,15 @@ const NativeStats = () => {
 
   return (
     <Screen title="Statistik">
+      <div className="mb-2 mt-1"><Segmented options={VIEW_OPTIONS} value={view} onChange={setView} /></div>
+      {view === 'analys' ? (
+        <div className="ca-app-analysis">
+          <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
+            <Analysis />
+          </Suspense>
+        </div>
+      ) : (
+      <>
       <div className="-mt-1 flex gap-2 overflow-x-auto px-4 pb-1 pt-2 [scrollbar-width:none]">
         {[null, ...chips].map((name) => (
           <button key={name ?? 'sverige'} type="button" onClick={() => setArea(name)}
@@ -291,6 +309,8 @@ const NativeStats = () => {
       <p className={`mx-6 mt-6 text-center text-[12px] leading-snug ${FAINT}`}>
         Källa: Polisens händelser på polisen.se. Visar vad Polisen rapporterat, inte anmälda brott.
       </p>
+      </>
+      )}
     </Screen>
   );
 };
