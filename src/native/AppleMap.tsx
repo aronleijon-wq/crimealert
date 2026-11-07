@@ -139,7 +139,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       mapkit.addEventListener('error', onError);
       map = new mapkit.Map(el.current, {
         colorScheme: mapkit.Map.ColorSchemes.Dark,
-        showsCompass: mapkit.FeatureVisibility.Adaptive,
+        showsCompass: mapkit.FeatureVisibility.Hidden,
         showsScale: mapkit.FeatureVisibility.Hidden,
         showsMapTypeControl: false,
         showsZoomControl: variant === 'web',
