@@ -346,6 +346,51 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          pro_until: string | null
+          rewarded: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          pro_until?: string | null
+          rewarded?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          pro_until?: string | null
+          rewarded?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          created_at: string
+          invitee_id: string
+          inviter_id: string
+          rewarded: boolean
+        }
+        Insert: {
+          created_at?: string
+          invitee_id: string
+          inviter_id: string
+          rewarded: boolean
+        }
+        Update: {
+          created_at?: string
+          invitee_id?: string
+          inviter_id?: string
+          rewarded?: boolean
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -749,6 +794,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_from: {
+        Args: { _code: string }
+        Returns: {
+          inviter_name: string
+          valid: boolean
+        }[]
+      }
       is_posting_banned: { Args: { _user_id: string }; Returns: boolean }
       kommun_month_counts: {
         Args: { _kommun: string; _month: string }
@@ -772,6 +824,15 @@ export type Database = {
         Returns: undefined
       }
       monitoring_summary: { Args: { _days?: number }; Returns: Json }
+      my_invite: {
+        Args: never
+        Returns: {
+          can_redeem: boolean
+          code: string
+          pro_until: string
+          rewarded: number
+        }[]
+      }
       my_report_blocks: {
         Args: never
         Returns: {
@@ -780,6 +841,7 @@ export type Database = {
         }[]
       }
       police_fetch_status: { Args: never; Returns: Json }
+      redeem_invite: { Args: { _code: string }; Returns: string }
       track_page_view: {
         Args: { _device: string; _page: string }
         Returns: undefined
