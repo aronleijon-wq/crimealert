@@ -3,6 +3,7 @@ import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
 import { Radio, Newspaper, BarChart3, Bell, CreditCard } from 'lucide-react';
 import { canSellPro, isNativeApp } from '@/lib/native';
+import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
 
 const navItems = [
   { to: '/karta', label: 'Karta', icon: Radio },
@@ -20,12 +21,22 @@ const isCurrent = (to: string, pathname: string) => pathname === to || (to === '
 
 const Header = () => {
   const location = useLocation();
+  const appBanner = useAppBanner();
   // The iPhone app has its own title bar and tabs (src/native/AppShell)
   if (isNativeApp()) return null;
 
   return (
     <>
-    <header className="border-b border-border bg-card/80 backdrop-blur-md flex items-center px-2 md:px-4 justify-between z-50 relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }}>
+    {/* The banner sits above the bar, so it takes the phone's notch space instead of the bar */}
+    {appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
+    <header
+      className="border-b border-border bg-card/80 backdrop-blur-md flex shrink-0 items-center px-2 md:px-4 justify-between z-50 relative"
+      style={
+        appBanner.visible
+          ? { minHeight: '2.75rem' }
+          : { paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }
+      }
+    >
       <Link to="/" className="flex items-center gap-2 group shrink-0">
         <img
           alt="CrimeAlert"
