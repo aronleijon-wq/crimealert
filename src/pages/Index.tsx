@@ -32,7 +32,6 @@ import { useExternalEvents } from '@/hooks/useExternalEvents';
 const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
 
 const LIST_PAGE = 60;
-// The heat view hides the markers; a constant keeps MapView from redrawing for nothing
 /** The map types on the website's map page, when the map is Apple's */
 const WEB_MAP_TYPES: { value: AppleMapType; label: string }[] = [
   { value: 'standard', label: 'Karta' },
@@ -40,6 +39,7 @@ const WEB_MAP_TYPES: { value: AppleMapType; label: string }[] = [
   { value: 'satellite', label: 'Satellit' },
 ];
 
+// The heat view hides the markers; a constant keeps MapView from redrawing for nothing
 const NO_INCIDENTS: Incident[] = [];
 
 const Index = () => {
