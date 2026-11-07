@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SocialLinks from '@/components/SocialLinks';
 
 const groups: { title: string; links: { to: string; label: string }[] }[] = [
   {
@@ -68,6 +69,7 @@ const LandingFooter = () => (
             Aron Leijon
           </Link>
         </p>
+        <SocialLinks className="mt-5" />
       </div>
 
       {groups.map((g) => (
