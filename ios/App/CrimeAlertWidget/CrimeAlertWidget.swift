@@ -15,16 +15,39 @@ private let BACKGROUND = Color(red: 0.02, green: 0.03, blue: 0.04)
 
 // MARK: - Choosing the kommun
 
-struct KommunOptions: DynamicOptionsProvider {
-    func results() async throws -> [String] { KOMMUNER }
+// A kommun to pick from a searchable list, in the way widgets do it from iOS 17
+struct KommunEntity: AppEntity {
+    let id: String
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Kommun"
+    static let defaultQuery = KommunQuery()
+
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(id)") }
+}
+
+struct KommunQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [KommunEntity] {
+        identifiers.filter { KOMMUNER.contains($0) }.map { KommunEntity(id: $0) }
+    }
+
+    func entities(matching string: String) async throws -> [KommunEntity] {
+        KOMMUNER.filter { $0.localizedCaseInsensitiveContains(string) }.map { KommunEntity(id: $0) }
+    }
+
+    func suggestedEntities() async throws -> [KommunEntity] {
+        KOMMUNER.map { KommunEntity(id: $0) }
+    }
 }
 
 struct SelectKommunIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Kommun"
     static let description = IntentDescription("Välj kommunen widgeten visar.")
 
-    @Parameter(title: "Kommun", default: "Stockholm", optionsProvider: KommunOptions())
-    var kommun: String
+    @Parameter(title: "Kommun")
+    var kommun: KommunEntity?
+
+    /** Stockholm until a kommun has been chosen */
+    var kommunName: String { kommun?.id ?? "Stockholm" }
 }
 
 // MARK: - The numbers
@@ -141,12 +164,12 @@ struct Provider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: SelectKommunIntent, in context: Context) async -> KommunEntry {
-        if context.isPreview { return KommunEntry(date: Date(), data: .placeholder(configuration.kommun)) }
-        return KommunEntry(date: Date(), data: await loadKommun(configuration.kommun))
+        if context.isPreview { return KommunEntry(date: Date(), data: .placeholder(configuration.kommunName)) }
+        return KommunEntry(date: Date(), data: await loadKommun(configuration.kommunName))
     }
 
     func timeline(for configuration: SelectKommunIntent, in context: Context) async -> Timeline<KommunEntry> {
-        let entry = KommunEntry(date: Date(), data: await loadKommun(configuration.kommun))
+        let entry = KommunEntry(date: Date(), data: await loadKommun(configuration.kommunName))
         // Every half hour; sooner again when the fetch failed
         let next = Date().addingTimeInterval(entry.data.failed ? 10 * 60 : 30 * 60)
         return Timeline(entries: [entry], policy: .after(next))
