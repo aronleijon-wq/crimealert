@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { accountCountLabel, loadAccountCount, rememberedAccountCount } from '@/lib/accountCount';
@@ -36,8 +37,12 @@ const withRetry = async (action: () => Promise<{ error: AuthError | null }>, att
 };
 
 
+/** Where a successful sign-in leads: the start page, the map in the app */
+const homeAfterSignIn = () => (isNativeApp() ? '/karta' : '/');
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,6 +55,12 @@ const Auth = () => {
   const [accountCount, setAccountCount] = useState<number | null>(() => rememberedAccountCount());
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Signed in, however it happened (e-mail, Google or Apple coming back here, or already signed
+  // in): on to the start page instead of staying on the sign-in form. Not while setting a new password.
+  useEffect(() => {
+    if (user && !forgotPassword) navigate(homeAfterSignIn(), { replace: true });
+  }, [user, forgotPassword, navigate]);
 
   const signingUp = !isLogin && !forgotPassword;
   useEffect(() => {
@@ -67,7 +78,7 @@ const Auth = () => {
   const handleAppSignIn = async (provider: 'google' | 'apple') => {
     setAppLoading(provider);
     try {
-      if (await signInInApp(provider)) navigate('/karta');
+      if (await signInInApp(provider)) navigate(homeAfterSignIn(), { replace: true });
     } catch (err) {
       toast({ title: 'Inloggningsfel', description: getErrorMessage(err) || 'Kunde inte logga in.', variant: 'destructive' });
     } finally {
@@ -117,7 +128,7 @@ const Auth = () => {
       if (isLogin) {
         await withRetry(() => supabase.auth.signInWithPassword({ email: cleanEmail, password }));
         toast({ title: 'Inloggad!' });
-        navigate('/installningar');
+        navigate(homeAfterSignIn(), { replace: true });
       } else {
         await withRetry(() => supabase.auth.signUp({ email: cleanEmail, password, options: { emailRedirectTo: window.location.origin } }));
         toast({ title: 'Konto skapat!', description: 'Kolla din e-post för att verifiera kontot.' });
