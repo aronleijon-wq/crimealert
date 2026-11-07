@@ -12,7 +12,7 @@ const links = [
   { to: '/kommun', label: 'Kommuner' },
 ];
 
-const LandingNav = () => {
+const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -33,6 +33,7 @@ const LandingNav = () => {
       }`}
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
+      {banner}
       <div className="max-w-[1400px] mx-auto px-5 md:px-10 h-14 md:h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
           <img
