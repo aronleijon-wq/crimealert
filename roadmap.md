@@ -13,5 +13,5 @@
 - Testa iPhone-push i TestFlight (Notiser → Skicka testnotis)
 - AdSense-godkännande: kontrollera status i Google-kontot
 - Beslut: mobilprestanda (canvas-markörer/kollapsad lista) och SEO-förslag
-- Nyhetsbrev: RESEND_API_KEY (och ev. RESEND_AUDIENCE_ID) saknas — utan den läggs ingen till i listan
+- Nyhetsbrev: RESEND_API_KEY sparad; RESEND_AUDIENCE_ID väntar på användaren
 - "Lägg till marknadsförings liten del" på inloggningssidan: vad den ska innehålla
