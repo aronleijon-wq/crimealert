@@ -45,6 +45,7 @@ const AppPro = lazyPage(() => import("@/native/AppPro"));
 const NativeFeed = lazyPage(() => import("@/native/NativeFeed"));
 const NativeAlerts = lazyPage(() => import("@/native/NativeAlerts"));
 const NativeProfile = lazyPage(() => import("@/native/NativeProfile"));
+const NativeStats = lazyPage(() => import("@/native/NativeStats"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
 const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
@@ -87,7 +88,7 @@ const App = () => (
           <Route path="/guider" element={<Guider />} />
           <Route path="/guider/:slug" element={<Guide />} />
           <Route path="/handelse/:id" element={<Handelse />} />
-          <Route path="/analysis" element={<Analysis />} />
+          <Route path="/analysis" element={isNativeApp() ? <NativeStats /> : <Analysis />} />
           <Route path="/alerts" element={isNativeApp() ? <NativeAlerts /> : <Alerts />} />
           <Route path="/prisplan" element={isNativeApp() ? <AppPro /> : <Prisplan />} />
           {/* Stripe sends people back here after checkout (create-checkout), and older links point here */}
