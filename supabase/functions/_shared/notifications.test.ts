@@ -7,6 +7,10 @@ import {
   reachedFreeWithin,
   safeAppPath,
   settingsFromRow,
+  settingsToRow,
+  inQuietHours,
+  nearEvent,
+  distanceKm,
   wantsEvent,
   watchedKommunFor,
   type PushEvent,
@@ -40,7 +44,7 @@ describe('areaMatchesKommun', () => {
 describe('settings', () => {
   it('defaults to everything', () => {
     expect(settingsFromRow(null)).toEqual(DEFAULT_NOTIFY_SETTINGS);
-    expect(settingsFromRow({ types: ['fire', 'bogus'], min_risk: 'nonsense' })).toEqual({ types: ['fire'], minRisk: 'low' });
+    expect(settingsFromRow({ types: ['fire', 'bogus'], min_risk: 'nonsense' })).toEqual({ types: ['fire'], minRisk: 'low', themes: null, quiet: null, near: null });
   });
 
   it('filters by type and risk', () => {
@@ -50,6 +54,50 @@ describe('settings', () => {
     expect(wantsEvent(s, { type: 'police', risk: 'low' })).toBe(false);
     expect(wantsEvent(s, { type: 'traffic', risk: 'high' })).toBe(false);
     expect(wantsEvent(DEFAULT_NOTIFY_SETTINGS, { type: 'unknown', risk: null })).toBe(true);
+  });
+});
+
+describe('kinds of crime, quiet hours and near me', () => {
+  it('lets through only the chosen kinds of crime, whatever their type', () => {
+    const s = settingsFromRow({ types: ['fire'], themes: ['inbrott', 'skjutning', 'okänd'] });
+    expect(s.themes).toEqual(['inbrott', 'skjutning']);
+    expect(wantsEvent(s, { type: 'police', risk: 'low', original_type: 'Inbrott, försök' })).toBe(true);
+    expect(wantsEvent(s, { type: 'police', risk: 'high', original_type: 'Skottlossning' })).toBe(true);
+    expect(wantsEvent(s, { type: 'fire', risk: 'high', original_type: 'Brand' })).toBe(false);
+    // "Allt annat": what belongs to no kind of crime
+    const other = settingsFromRow({ themes: ['annat'] });
+    expect(wantsEvent(other, { type: 'other', risk: 'low', original_type: 'Försvunnen person' })).toBe(true);
+    expect(wantsEvent(other, { type: 'police', risk: 'low', original_type: 'Rån' })).toBe(false);
+    // Nothing chosen is the same as everything
+    expect(settingsFromRow({ themes: [] }).themes).toBeNull();
+  });
+
+  it('keeps quiet in the chosen hours, over midnight too', () => {
+    const s = settingsFromRow({ quiet_start: 23, quiet_end: 7 });
+    expect(s.quiet).toEqual({ start: 23, end: 7 });
+    // 23.30 and 06.59 Swedish winter time (UTC+1)
+    expect(inQuietHours(s, Date.UTC(2026, 10, 7, 22, 30))).toBe(true);
+    expect(inQuietHours(s, Date.UTC(2026, 10, 8, 5, 59))).toBe(true);
+    expect(inQuietHours(s, Date.UTC(2026, 10, 8, 6, 0))).toBe(false);
+    expect(inQuietHours(s, Date.UTC(2026, 10, 7, 12, 0))).toBe(false);
+    const day = settingsFromRow({ quiet_start: 9, quiet_end: 17 });
+    expect(inQuietHours(day, Date.UTC(2026, 10, 7, 12, 0))).toBe(true);
+    expect(settingsFromRow({ quiet_start: 8, quiet_end: 8 }).quiet).toBeNull();
+    expect(inQuietHours(DEFAULT_NOTIFY_SETTINGS, Date.now())).toBe(false);
+  });
+
+  it('tells about events within the circle', () => {
+    const s = settingsFromRow({ near_lat: 59.3293, near_lng: 18.0686, near_radius_km: 5 });
+    expect(nearEvent(s, { lat: 59.3326, lng: 18.0649 })).toBe(true); // Stockholm's centre
+    expect(nearEvent(s, { lat: 59.8586, lng: 17.6389 })).toBe(false); // Uppsala, 65 km off
+    expect(nearEvent(s, { lat: null, lng: null })).toBe(false);
+    expect(nearEvent(DEFAULT_NOTIFY_SETTINGS, { lat: 59.33, lng: 18.07 })).toBe(false);
+    expect(Math.round(distanceKm(59.3293, 18.0686, 57.7089, 11.9746))).toBe(397); // Stockholm–Göteborg as the crow flies
+  });
+
+  it('stores the place to about a hundred metres', () => {
+    const s = settingsFromRow({ near_lat: 59.329312, near_lng: 18.068581, near_radius_km: 3, quiet_start: 22, quiet_end: 6, themes: ['inbrott'] });
+    expect(settingsToRow(s)).toEqual({ types: s.types, min_risk: 'low', themes: ['inbrott'], quiet_start: 22, quiet_end: 6, near_lat: 59.329, near_lng: 18.069, near_radius_km: 3 });
   });
 });
 

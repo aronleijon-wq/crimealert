@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Bell, Check, LocateFixed, MapPin, Minus, Plus, Search, Send, X } from 'lucide-react';
+import { Bell, Check, LocateFixed, MapPin, Minus, Moon, Plus, Search, Send, X } from 'lucide-react';
+import RadiusPicker from '@/components/alerts/RadiusPicker';
 import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -10,7 +11,7 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { registerFailureReason } from '@/lib/pushDiagnostics';
-import { NOTIFY_TYPES, watchedKommunFor, type NotifyType, type RiskLevel } from '../../supabase/functions/_shared/notifications';
+import { NOTIFY_THEMES, NOTIFY_TYPES, quietLabel, radiusLabel, watchedKommunFor, type NotifyType, type RiskLevel } from '../../supabase/functions/_shared/notifications';
 import { Row, Screen, Section, Switch } from './ui';
 
 const TOPICS: Record<NotifyType, string> = {
@@ -28,6 +29,19 @@ const LEVELS: { value: RiskLevel; label: string }[] = [
 ];
 
 const DAY = 24 * 60 * 60 * 1000;
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+const DEFAULT_QUIET = { start: 22, end: 7 };
+
+/** An hour chosen with iOS's own wheel: a select drawn as the grey value on the right */
+const HourPicker = ({ label, value, onChange }: { label: string; value: number; onChange: (h: number) => void }) => (
+  <label className="relative block">
+    <span className="sr-only">{label}</span>
+    <span className="pointer-events-none rounded-[6px] bg-[rgba(118,118,128,0.24)] px-2.5 py-1 text-[17px] tabular-nums">{String(value).padStart(2, '0')}:00</span>
+    <select value={value} onChange={(e) => onChange(Number(e.target.value))} className="absolute inset-0 opacity-0" aria-label={label}>
+      {HOURS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>)}
+    </select>
+  </label>
+);
 
 /** Picking a kommun, as a sheet over the screen */
 const AddKommun = ({ watched, onAdd, onClose }: { watched: string[]; onAdd: (k: string) => void; onClose: () => void }) => {
@@ -86,7 +100,8 @@ const NativeAlerts = () => {
   const { isPremium } = useIsPremium();
   const push = useNativePush(true);
   const { kommuner, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
+  const { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
+  const [picking, setPicking] = useState(false);
   const { incidents } = usePoliceEvents();
   const [adding, setAdding] = useState(false);
   const [testNote, setTestNote] = useState<string | null>(null);
@@ -129,6 +144,14 @@ const NativeAlerts = () => {
     save({ ...settings, types: on ? settings.types.filter((t) => t !== type) : NOTIFY_TYPES.filter((t) => t === type || settings.types.includes(t)) });
   };
 
+  const toggleTheme = (id: string) => {
+    const current = settings.themes ?? [];
+    const next = current.includes(id) ? current.filter((t) => t !== id) : [...current, id];
+    // At least one kind stays chosen; none would mean no notifications at all
+    if (!next.length) return;
+    save({ ...settings, themes: NOTIFY_THEMES.map((t) => t.id).filter((t) => next.includes(t)) });
+  };
+
   const blocked = push.permission === 'denied';
   const registerError = registerFailureReason(push.lastError);
 
@@ -152,7 +175,7 @@ const NativeAlerts = () => {
         {push.isSubscribed && <Row icon={Send} iconBg="#0a84ff" label="Skicka testnotis" detail={testNote ?? undefined} onClick={test} />}
       </Section>
 
-      <Section header="Kommuner" footer={kommuner.length ? undefined : 'Välj minst en kommun, annars finns det inget att få notiser om.'}>
+      <Section header="Kommuner" footer={kommuner.length || settings.near ? undefined : 'Välj minst en kommun eller Nära dig, annars finns det inget att få notiser om.'}>
         {kommuner.map((k) => (
           <Row
             key={k}
@@ -169,13 +192,40 @@ const NativeAlerts = () => {
         <Row icon={Plus} iconBg="#30d158" label="Lägg till kommun" tint onClick={() => setAdding(true)} />
       </Section>
 
+      {moreAvailable && (
+        <Section header="Nära dig" footer="Det som händer inom ett visst avstånd från en plats, utöver dina kommuner.">
+          <Row
+            icon={LocateFixed}
+            iconBg="#0a84ff"
+            label="Notiser nära dig"
+            value={settings.near ? radiusLabel(settings.near.radiusKm) : 'Av'}
+            onClick={() => setPicking(true)}
+            accessory={<span />}
+          />
+        </Section>
+      )}
+
       {available && (
         <>
-          <Section header="Notiser om" footer={saving ? 'Sparar…' : undefined}>
-            {NOTIFY_TYPES.map((t) => (
-              <Row key={t} label={TOPICS[t]} accessory={<Switch label={TOPICS[t]} checked={settings.types.includes(t)} onChange={() => toggleType(t)} />} />
-            ))}
-          </Section>
+          {moreAvailable && (
+            <Section header="Vad du vill veta" footer={settings.themes ? 'Bara de här sorterna, oavsett hur allvarliga Polisen bedömer dem.' : undefined}>
+              <Row label="Allt" onClick={() => settings.themes && save({ ...settings, themes: null })} accessory={!settings.themes ? <Check className="h-5 w-5 text-[#ff453a]" aria-label="Valt" /> : <span className="w-5" />} />
+              <Row label="Bara vissa brott" detail="Till exempel bara inbrott och skjutningar" onClick={() => !settings.themes && save({ ...settings, themes: ['inbrott', 'skjutning'] })} accessory={settings.themes ? <Check className="h-5 w-5 text-[#ff453a]" aria-label="Valt" /> : <span className="w-5" />} />
+            </Section>
+          )}
+          {settings.themes && moreAvailable ? (
+            <Section header="Brott" footer={saving ? 'Sparar…' : undefined}>
+              {NOTIFY_THEMES.map((t) => (
+                <Row key={t.id} label={t.label} accessory={<Switch label={t.label} checked={settings.themes!.includes(t.id)} onChange={() => toggleTheme(t.id)} />} />
+              ))}
+            </Section>
+          ) : (
+            <Section header="Notiser om" footer={saving ? 'Sparar…' : undefined}>
+              {NOTIFY_TYPES.map((t) => (
+                <Row key={t} label={TOPICS[t]} accessory={<Switch label={TOPICS[t]} checked={settings.types.includes(t)} onChange={() => toggleType(t)} />} />
+              ))}
+            </Section>
+          )}
           <Section header="Hur allvarligt">
             {LEVELS.map((l) => (
               <Row key={l.value} label={l.label} onClick={() => save({ ...settings, minRisk: l.value })} accessory={settings.minRisk === l.value ? <Check className="h-5 w-5 text-[#ff453a]" aria-label="Vald" /> : <span className="w-5" />} />
@@ -184,12 +234,36 @@ const NativeAlerts = () => {
         </>
       )}
 
+      {moreAvailable && (
+        <Section header="Tysta timmar" footer={settings.quiet ? `Inga notiser ${quietLabel(settings.quiet)}. Det som händer då skickas inte i efterhand.` : 'Inga notiser på natten, till exempel.'}>
+          <Row
+            icon={Moon}
+            iconBg="#5e5ce6"
+            label="Tysta timmar"
+            accessory={<Switch label="Tysta timmar" checked={!!settings.quiet} onChange={(on) => save({ ...settings, quiet: on ? DEFAULT_QUIET : null })} />}
+          />
+          {settings.quiet && (
+            <>
+              <Row label="Från" accessory={<HourPicker label="Från" value={settings.quiet.start} onChange={(h) => h !== settings.quiet!.end && save({ ...settings, quiet: { ...settings.quiet!, start: h } })} />} />
+              <Row label="Till" accessory={<HourPicker label="Till" value={settings.quiet.end} onChange={(h) => h !== settings.quiet!.start && save({ ...settings, quiet: { ...settings.quiet!, end: h } })} />} />
+            </>
+          )}
+        </Section>
+      )}
+
       {weeklyAvailable && (
         <Section footer="En sammanfattning av veckan i dina kommuner, söndag kväll.">
           <Row label="Veckosammanfattning" accessory={<Switch label="Veckosammanfattning" checked={weeklySummary} onChange={saveWeekly} />} />
         </Section>
       )}
 
+      {picking && (
+        <RadiusPicker
+          value={settings.near}
+          onSave={(near) => { save({ ...settings, near }); setPicking(false); }}
+          onClose={() => setPicking(false)}
+        />
+      )}
       {adding && <AddKommun watched={kommuner} onAdd={(k) => addKommun(k)} onClose={() => setAdding(false)} />}
     </Screen>
   );

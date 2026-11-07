@@ -5,12 +5,15 @@ import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey, type Sum
 import {
   buildPushMessage,
   freeMayNotify,
+  inQuietHours,
+  nearEvent,
   safeAppPath,
   settingsFromRow,
   wantsEvent,
   watchedKommunFor,
   type NotifySettings,
   type PushEvent,
+  type SettingsRow,
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
 import { mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
@@ -651,7 +654,7 @@ Deno.serve(async (req) => {
     const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
     const { data: recentEvents, error: eventsError } = await supabase
       .from('police_events_archive')
-      .select('id, title, area, type, risk, time, original_type')
+      .select('id, title, area, lat, lng, type, risk, time, original_type')
       .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 
@@ -665,36 +668,44 @@ Deno.serve(async (req) => {
     const { data: prefs, error: prefsError } = await supabase
       .from('notification_preferences')
       .select('user_id, kommun');
-
     if (prefsError) throw prefsError;
-    if (!prefs || prefs.length === 0) {
+
+    const userKommuner: Record<string, string[]> = {};
+    for (const pref of prefs ?? []) {
+      if (!userKommuner[pref.user_id]) userKommuner[pref.user_id] = [];
+      userKommuner[pref.user_id].push(pref.kommun);
+    }
+
+    // What each user wants to hear about. No row means everything. Before the newer columns'
+    // migration has run, the older ones are read; if none can be read, everyone gets everything.
+    const userSettings: Record<string, NotifySettings> = {};
+    let settingsRows: (SettingsRow & { user_id: string })[] | null = null;
+    const full = await supabase
+      .from('notification_settings')
+      .select('user_id, types, min_risk, themes, quiet_start, quiet_end, near_lat, near_lng, near_radius_km');
+    if (full.error) {
+      const basic = await supabase.from('notification_settings').select('user_id, types, min_risk');
+      if (basic.error) console.warn('Could not read notification settings, using defaults', basic.error.message);
+      settingsRows = basic.data;
+    } else {
+      settingsRows = full.data;
+    }
+    for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
+
+    // Those who watch kommuner, and those who only have a circle around a place
+    const watchers = new Set([...Object.keys(userKommuner), ...Object.entries(userSettings).filter(([, s]) => s.near).map(([id]) => id)]);
+    if (watchers.size === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: 'no_watchers' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const userKommuner: Record<string, string[]> = {};
-    for (const pref of prefs) {
-      if (!userKommuner[pref.user_id]) userKommuner[pref.user_id] = [];
-      userKommuner[pref.user_id].push(pref.kommun);
-    }
-
-    // What each user wants to hear about. No row means everything; if the table can't be read
-    // (e.g. before its migration has run), everyone keeps getting everything.
-    const userSettings: Record<string, NotifySettings> = {};
-    const { data: settingsRows, error: settingsError } = await supabase
-      .from('notification_settings')
-      .select('user_id, types, min_risk');
-    if (settingsError) {
-      console.warn('Could not read notification settings, using defaults', settingsError.message);
-    }
-    for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
-
     const userNotifications: Record<string, EventRow[]> = {};
     for (const event of recentEvents as EventRow[]) {
-      for (const [userId, kommuner] of Object.entries(userKommuner)) {
-        if (!watchedKommunFor(event.area, kommuner)) continue;
-        if (!wantsEvent(userSettings[userId] ?? settingsFromRow(null), event)) continue;
+      for (const userId of watchers) {
+        const settings = userSettings[userId] ?? settingsFromRow(null);
+        const inArea = watchedKommunFor(event.area, userKommuner[userId] ?? []) !== null || nearEvent(settings, event);
+        if (!inArea || !wantsEvent(settings, event)) continue;
         if (!userNotifications[userId]) userNotifications[userId] = [];
         userNotifications[userId].push(event);
       }
@@ -718,6 +729,19 @@ Deno.serve(async (req) => {
 
     for (const [userId, events] of Object.entries(userNotifications)) {
       userNotifications[userId] = events.filter((event) => !sentSet.has(`${event.id}:${userId}`));
+    }
+
+    // Quiet hours: what happens then is not sent, now or when they end, so the morning doesn't
+    // start with a pile of old events
+    const quietLog: { event_id: string; user_id: string }[] = [];
+    for (const [userId, events] of Object.entries(userNotifications)) {
+      if (!events.length || !inQuietHours(userSettings[userId] ?? settingsFromRow(null), now)) continue;
+      for (const event of events) quietLog.push({ event_id: event.id, user_id: userId });
+      userNotifications[userId] = [];
+    }
+    if (quietLog.length) {
+      const { error } = await supabase.from('sent_push_log').insert(quietLog);
+      if (error) console.warn('Could not note events kept quiet', error.message);
     }
 
     // Free accounts hear about an event when it reaches their map, 15 minutes after it happened;
