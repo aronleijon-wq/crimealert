@@ -15,7 +15,8 @@ import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { haptics } from './haptics';
 import { detentHeights, rubberBand, settle, type Detent } from './sheet';
-import { Switch } from './ui';
+import type { AppleMapType } from './AppleMap';
+import { Segmented, Switch } from './ui';
 
 const TYPES: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
 const PAGE = 60;
@@ -42,7 +43,15 @@ export interface MapChromeProps {
   timelineOpen: boolean;
   /** The timeline's panel, shown just above the sheet */
   timeline: ReactNode;
+  /** Standard, satellite or hybrid, when the map is Apple's (AppleMap) */
+  mapType?: { value: AppleMapType; onChange: (type: AppleMapType) => void };
 }
+
+const MAP_TYPES: { value: AppleMapType; label: string }[] = [
+  { value: 'standard', label: 'Karta' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'satellite', label: 'Satellit' },
+];
 
 /** One event in the sheet, as a row in an iOS list */
 const EventRow = ({ incident, selected, onClick }: { incident: Incident; selected: boolean; onClick: () => void }) => {
@@ -123,7 +132,8 @@ const SearchScreen = ({ onPick, onClose }: { onPick: (m: Municipality) => void; 
 };
 
 /** Which kinds of event the map shows, as a sheet of switches */
-const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports, onToggleCommunityReports, onClose }: {
+const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports, onToggleCommunityReports, onClose, mapType }: {
+  mapType?: MapChromeProps['mapType'];
   activeFilters: IncidentType[];
   onToggle: (type: IncidentType) => void;
   isPremium: boolean;
@@ -141,6 +151,11 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
           <span className="text-[17px] font-semibold">Visa på kartan</span>
           <button type="button" onClick={onClose} className="w-16 text-right text-[17px] font-semibold text-[#ff453a]">Klar</button>
         </div>
+        {mapType && (
+          <div className="mb-5 mt-2">
+            <Segmented options={MAP_TYPES} value={mapType.value} onChange={(v) => { haptics.selection(); mapType.onChange(v); }} />
+          </div>
+        )}
         <div className="ios-group mx-4 mt-2 overflow-hidden rounded-xl bg-[#2c2c2e]">
           {TYPES.map((type) => {
             const config = incidentTypeConfig[type];
@@ -184,7 +199,7 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
 
 const MapChrome = ({
   incidents, activeCount, loading, status, live, selectedId, onSelect, activeFilters, onToggleFilter, isPremium,
-  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline,
+  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline, mapType,
 }: MapChromeProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -350,6 +365,7 @@ const MapChrome = ({
             showCommunityReports={showCommunityReports}
             onToggleCommunityReports={onToggleCommunityReports}
             onClose={() => setFiltering(false)}
+            mapType={mapType}
           />
         </div>,
         document.body,

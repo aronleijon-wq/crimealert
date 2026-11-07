@@ -23,6 +23,7 @@ import { RefreshCw, Wifi, WifiOff, Maximize2, Minimize2, Clock, Zap, List, X, Sh
 import { useIsMobile } from '@/hooks/use-mobile';
 import { hasAppDesign13, isNativeApp } from '@/lib/native';
 import MapChrome from '@/native/MapChrome';
+import AppleMap, { type AppleMapType } from '@/native/AppleMap';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
 import { useExternalEvents } from '@/hooks/useExternalEvents';
@@ -193,6 +194,19 @@ const Index = () => {
   }, [selectedId, filtered, listCount]);
   
 
+  const appDesign = hasAppDesign13();
+  const [appleMapOk, setAppleMapOk] = useState(true);
+  const [mapType, setMapType] = useState<AppleMapType>(() => {
+    try {
+      const saved = localStorage.getItem('ca-map-type');
+      return saved === 'satellite' || saved === 'hybrid' ? saved : 'standard';
+    } catch { return 'standard'; }
+  });
+  const chooseMapType = (type: AppleMapType) => {
+    setMapType(type);
+    try { localStorage.setItem('ca-map-type', type); } catch { /* standard next time */ }
+  };
+
   const timelinePanel = historyOpen && (
     <HistoryPanel
       isPremium={isPremium}
@@ -214,18 +228,30 @@ const Index = () => {
   );
 
   // The iPhone app from 1.3: the map fills the screen and the events are in a sheet (src/native/MapChrome)
-  if (hasAppDesign13()) {
+  if (appDesign) {
     return (
       <div className="ca-dark relative h-[100dvh] overflow-hidden">
         <h1 className="sr-only">Livekarta över polishändelser och olyckor i Sverige</h1>
-        <MapView
-          incidents={showHeat ? NO_INCIDENTS : filtered}
-          selectedId={selectedId}
-          onSelectIncident={(id) => setSelectedId(id || null)}
-          isPremium={isPremium}
-          flyToLocation={flyToLocation}
-          heatPoints={showHeat ? filtered : null} />
+        {/* Apple Maps, unless it can't load or the timeline shows heat, which only the site's own map draws */}
+        {appleMapOk && !showHeat ? (
+          <AppleMap
+            incidents={filtered}
+            selectedId={selectedId}
+            onSelectIncident={(id) => setSelectedId(id || null)}
+            flyToLocation={flyToLocation}
+            mapType={mapType}
+            onUnavailable={() => setAppleMapOk(false)} />
+        ) : (
+          <MapView
+            incidents={showHeat ? NO_INCIDENTS : filtered}
+            selectedId={selectedId}
+            onSelectIncident={(id) => setSelectedId(id || null)}
+            isPremium={isPremium}
+            flyToLocation={flyToLocation}
+            heatPoints={showHeat ? filtered : null} />
+        )}
         <MapChrome
+          mapType={appleMapOk && !showHeat ? { value: mapType, onChange: chooseMapType } : undefined}
           incidents={filtered}
           activeCount={activeCount}
           loading={loading && liveIncidents.length === 0}
