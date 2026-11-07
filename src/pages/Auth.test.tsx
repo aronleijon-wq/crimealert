@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const count = vi.fn();
 vi.mock('@/lib/accountCount', async (original) => ({
@@ -13,16 +13,27 @@ vi.mock('@/integrations/lovable/index', () => ({ lovable: {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
 const native = vi.hoisted(() => ({ on: false }));
 vi.mock('@/lib/native', () => ({ isNativeApp: () => native.on, canSellPro: () => !native.on }));
+const auth = vi.hoisted(() => ({ user: null as { id: string } | null }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: auth.user }) }));
 
 const renderAuth = async (path: string) => {
   const { default: Auth } = await import('./Auth');
-  return render(<MemoryRouter initialEntries={[path]}><Auth /></MemoryRouter>);
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<p>Startsidan</p>} />
+        <Route path="/karta" element={<p>Kartan</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
 };
 
 describe('Skapa konto', () => {
   beforeEach(() => {
     count.mockReset();
     native.on = false;
+    auth.user = null;
   });
 
   it('asks you to join the others who already have an account', async () => {
@@ -54,5 +65,27 @@ describe('Skapa konto', () => {
     native.on = true;
     await renderAuth('/auth');
     expect(screen.queryByRole('button', { name: /Fortsätt med Google/ })).toBeNull();
+  });
+});
+
+describe('after signing in', () => {
+  beforeEach(() => { native.on = false; auth.user = null; count.mockResolvedValue(0); });
+
+  it('goes on to the start page instead of staying on the form', async () => {
+    auth.user = { id: 'u1' };
+    await renderAuth('/auth');
+    expect(await screen.findByText('Startsidan')).toBeInTheDocument();
+  });
+
+  it('goes to the map in the app', async () => {
+    native.on = true;
+    auth.user = { id: 'u1' };
+    await renderAuth('/auth');
+    expect(await screen.findByText('Kartan')).toBeInTheDocument();
+  });
+
+  it('shows the form while signed out', async () => {
+    await renderAuth('/auth');
+    expect(screen.getByRole('heading', { level: 1, name: 'Logga in' })).toBeInTheDocument();
   });
 });
