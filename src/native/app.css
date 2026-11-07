@@ -76,3 +76,8 @@ html.native-app input, html.native-app textarea, html.native-app [contenteditabl
 /* A page opened from a tab slides in from the right */
 @keyframes ca-app-push { from { transform: translateX(28%); opacity: 0.4; } to { transform: none; opacity: 1; } }
 html.native-app .ca-app-push { animation: ca-app-push 0.32s cubic-bezier(0.2, 0.9, 0.3, 1); }
+
+/* The website's analysis page under Statistik → Analys: it scrolls with the screen, not in a box of its own */
+html.native-app .ca-app-analysis .h-screen { height: auto; }
+html.native-app .ca-app-analysis .overflow-y-auto { overflow: visible; }
+html.native-app .ca-app-analysis h1 { font-size: 22px; }
