@@ -30,8 +30,8 @@ const part = 'grid gap-3 py-10 md:grid-cols-[160px_1fr] md:gap-8 md:py-14';
 
 const OmOss = () => {
   useSEO({
-    title: 'Om CrimeAlert – Polisens händelser på karta i hela Sverige',
-    description: `CrimeAlert grundades av ${FOUNDER.name} och visar Polisens händelser på karta i Sveriges 290 kommuner, med notiser, statistik och 60 dagars historik.`,
+    title: `Om CrimeAlert – grundad av ${FOUNDER.name}`,
+    description: `${FOUNDER.name} är grundare av CrimeAlert, som visar Polisens händelser på karta i Sveriges 290 kommuner, med notiser, statistik och 60 dagars historik. Läs om tjänsten och vem som står bakom den.`,
     canonical: 'https://crimealert.se/om-oss',
   });
 

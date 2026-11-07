@@ -62,6 +62,12 @@ const LandingFooter = () => (
           Livekarta för polisärenden, olyckor och samhällshändelser i Sverige. Data från Polisen.se,
           uppdaterad löpande.
         </p>
+        <p className="mt-3 text-[13px] text-[hsl(var(--ca-text-3))]">
+          Grundad av{' '}
+          <Link to="/om-oss" className="text-[hsl(var(--ca-text-2))] underline-offset-4 hover:text-[hsl(var(--ca-text))] hover:underline">
+            Aron Leijon
+          </Link>
+        </p>
       </div>
 
       {groups.map((g) => (
