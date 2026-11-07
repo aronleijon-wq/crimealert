@@ -5,6 +5,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
+import { newsletterEnv, removeContact } from "../_shared/newsletter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +56,9 @@ serve(async (req) => {
       const { error } = await admin.storage.from("community-reports").remove(files.map((f) => `${user.id}/${f.name}`));
       if (error) console.error("delete-account: images", error.message);
     }
+
+    // Off the newsletter list in Resend too
+    if (user.email && !(await removeContact(newsletterEnv(), user.email))) console.warn("delete-account: Resend contact not removed");
 
     const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;
