@@ -66,7 +66,7 @@ const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
   const hasPosition = item.lat !== null && item.lng !== null;
 
   return (
-    <div className={`relative h-40 overflow-hidden ${item.pinned ? 'bg-[hsl(var(--ca-red)/0.15)]' : 'bg-[hsl(var(--ca-base-3))]'}`}>
+    <div className={`relative h-56 overflow-hidden sm:h-40 ${item.pinned ? 'bg-[hsl(var(--ca-red)/0.15)]' : 'bg-[hsl(var(--ca-base-3))]'}`}>
       {showImage ? (
         <img
           src={item.image!.url}

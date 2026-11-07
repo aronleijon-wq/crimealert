@@ -73,7 +73,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
   return (
     <article
       aria-labelledby={`feed-title-${item.id}`}
-      className={`group overflow-hidden rounded-2xl border bg-card shadow-[0_1px_0_hsl(var(--ca-line)),0_20px_40px_-24px_rgba(0,0,0,0.6)] transition-colors duration-300 ${
+      className={`group overflow-hidden rounded-2xl border bg-card max-sm:rounded-none max-sm:border-x-0 max-sm:shadow-none shadow-[0_1px_0_hsl(var(--ca-line)),0_20px_40px_-24px_rgba(0,0,0,0.6)] transition-colors duration-300 ${
         item.pinned ? 'border-[hsl(var(--ca-red)/0.6)] ring-1 ring-[hsl(var(--ca-red)/0.35)]' : 'border-[hsl(var(--ca-line-strong))] hover:border-[hsl(var(--ca-steel)/0.35)]'
       }`}
     >
@@ -107,7 +107,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
 
         <h2
           id={`feed-title-${item.id}`}
-          className="mt-3 font-['Archivo',Inter,sans-serif] text-[17px] font-extrabold leading-snug tracking-[-0.01em] text-foreground sm:text-lg"
+          className="mt-3 font-['Archivo',Inter,sans-serif] text-[19px] font-extrabold leading-snug tracking-[-0.01em] text-foreground sm:text-lg"
         >
           {isNews && item.url ? (
             <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline decoration-[hsl(var(--ca-red))] underline-offset-4">
@@ -124,7 +124,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
         )}
 
         {item.body && (
-          <p className={`mt-2.5 whitespace-pre-line text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))] ${isLongBody && !expanded ? 'line-clamp-4' : ''}`}>
+          <p className={`mt-2.5 whitespace-pre-line text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))] sm:text-[13px] ${isLongBody && !expanded ? 'line-clamp-4' : ''}`}>
             {item.body}
           </p>
         )}
@@ -174,14 +174,14 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
         )}
 
         {item.related.length > 0 && (
-          <div className="mt-4 rounded-xl border border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-panel-2))] p-3">
+          <div className="mt-4 rounded-xl border border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-panel-2))] p-3 max-sm:border-0 max-sm:bg-transparent max-sm:p-0">
             <p className="ca-meta mb-2 flex items-center gap-1.5 !text-[9px]">
               <Newspaper className="h-3 w-3" /> Relaterade nyheter
             </p>
             <ul className="space-y-2">
               {item.related.map((news) => (
                 <li key={news.id} className="border-l-2 pl-2.5" style={{ borderColor: kind.accent }}>
-                  <a href={news.url ?? undefined} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium leading-snug text-foreground hover:underline">
+                  <a href={news.url ?? undefined} target="_blank" rel="noopener noreferrer" className="text-[14px] font-medium leading-snug text-foreground hover:underline sm:text-[13px]">
                     {news.title}
                   </a>
                   <p className="ca-meta mt-0.5 !text-[9px]">{sourceName(news.source)} · {formatTimeAgo(news.published_at)}</p>

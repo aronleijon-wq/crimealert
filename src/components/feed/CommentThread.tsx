@@ -12,6 +12,13 @@ interface CommentThreadProps {
   onCountChange: (count: number) => void;
 }
 
+/** A comment, with the @Name it answers in bold when it starts with one */
+const MentionText = ({ text, names }: { text: string; names: string[] }) => {
+  const name = names.filter(Boolean).sort((a, b) => b.length - a.length).find((n) => text.startsWith(`@${n}`));
+  if (!name) return <>{text}</>;
+  return <><span className="font-semibold text-primary">@{name}</span>{text.slice(name.length + 1)}</>;
+};
+
 /** Comments on one feed post (same comments as the map popup for that event). */
 const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
   const { user } = useAuth();
@@ -21,6 +28,19 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
   const [notice, setNotice] = useState<string | null>(null);
   const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
   const loadedOnce = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
+
+  /** "Svara": starts the comment with @Name, which also tells that person (send-push-notifications) */
+  const replyTo = (name: string) => {
+    const mention = `@${name} `;
+    setText((current) => (current.startsWith(mention) ? current : mention + current.replace(/^@\S+(?: \S+)?\s/, '')));
+    requestAnimationFrame(() => {
+      const field = input.current;
+      if (!field) return;
+      field.focus();
+      field.setSelectionRange(field.value.length, field.value.length);
+    });
+  };
 
   useEffect(() => {
     if (loading) loadedOnce.current = true;
@@ -68,7 +88,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
                     <span className="text-xs font-semibold text-foreground">{name}</span>
                     <span className="text-[10px] text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
                   </div>
-                  <p className="text-xs text-foreground/90 break-words mt-0.5">{c.text}</p>
+                  <p className="text-xs text-foreground/90 break-words mt-0.5"><MentionText text={c.text} names={Object.values(displayNames)} /></p>
                   <div className="flex flex-wrap items-center gap-3 mt-1">
                     <button
                       type="button"
@@ -80,6 +100,15 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
                       <Heart className={`w-3 h-3 ${c.user_has_liked ? 'fill-current' : ''}`} />
                       {c.likes_count > 0 && c.likes_count}
                     </button>
+                    {user && user.id !== c.user_id && displayNames[c.user_id] && (
+                      <button
+                        type="button"
+                        onClick={() => replyTo(displayNames[c.user_id])}
+                        className="text-[10px] font-semibold text-muted-foreground hover:text-foreground transition"
+                      >
+                        Svara
+                      </button>
+                    )}
                     {user?.id === c.user_id && (
                       <button
                         type="button"
@@ -117,6 +146,7 @@ const CommentThread = ({ itemId, onCountChange }: CommentThreadProps) => {
       {user ? (
         <form onSubmit={submit} className="flex gap-2">
           <input
+            ref={input}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Skriv en kommentar…"

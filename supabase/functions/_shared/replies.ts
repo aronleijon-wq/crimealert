@@ -34,6 +34,15 @@ export function replyRecipients(thread: ThreadComment[], comment: ThreadComment,
   return recipients.slice(0, max);
 }
 
+/** Who a comment answers: "@Anna L hörde det också" names Anna L, among those in the thread */
+export function mentionedUsers(text: string, names: Record<string, string>): string[] {
+  const match = Object.entries(names)
+    .filter(([, name]) => !!name)
+    .sort((a, b) => b[1].length - a[1].length)
+    .find(([, name]) => text.toLocaleLowerCase('sv-SE').startsWith(`@${name.toLocaleLowerCase('sv-SE')}`));
+  return match ? [match[0]] : [];
+}
+
 /** Where the notification opens: the event, or the kommun's discussion */
 export function threadPath(threadId: string): string {
   if (threadId.startsWith(KOMMUN_THREAD)) return `/kommun/${threadId.slice(KOMMUN_THREAD.length)}?chatt=1`;

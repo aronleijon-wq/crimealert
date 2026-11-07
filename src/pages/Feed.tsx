@@ -190,7 +190,7 @@ const Feed = () => {
           )}
 
           {loading ? (
-            <div className="space-y-4">
+            <div className="space-y-4 max-sm:-mx-4 max-sm:space-y-2">
               <SkeletonCard />
               <SkeletonCard />
             </div>
@@ -209,7 +209,7 @@ const Feed = () => {
                   {section.label}
                   <span className="h-px flex-1 bg-[hsl(var(--ca-line-strong))]" />
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-4 max-sm:-mx-4 max-sm:space-y-2">
                   {section.items.map((item) => (
                     <FeedCard
                       key={item.id}
