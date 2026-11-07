@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Incident } from '@/data/mockIncidents';
 
@@ -66,5 +66,25 @@ describe('Landing page', () => {
     const ld = container.querySelector('#vanliga-fragor script[type="application/ld+json"]');
     expect(JSON.parse(ld!.textContent!)['@type']).toBe('FAQPage');
     expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '#vanliga-fragor');
+  });
+
+  it('announces the iPhone app in a banner at the top, linking to the App Store', async () => {
+    localStorage.clear();
+    await renderLanding();
+    const header = screen.getByRole('banner');
+    expect(within(header).getByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toHaveAttribute(
+      'href',
+      'https://apps.apple.com/se/app/crimealert-brottsplatskarta/id6826326029',
+    );
+  });
+
+  it('keeps the app banner closed once the visitor closes it', async () => {
+    localStorage.clear();
+    const { unmount } = await renderLanding();
+    fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Stäng' }));
+    expect(screen.queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();
+    unmount();
+    await renderLanding();
+    expect(screen.queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();
   });
 });
