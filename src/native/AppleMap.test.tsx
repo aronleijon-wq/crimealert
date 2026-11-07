@@ -88,4 +88,15 @@ describe('Apple Maps in the app', () => {
     state.errorListeners[0]({ status: 'Unauthorized' });
     expect(onUnavailable).toHaveBeenCalled();
   });
+
+  it('shows Apple zoom buttons on the website map, but not in the app', async () => {
+    const { mapkit, state } = fakeMapKit();
+    window.mapkit = mapkit;
+    const props = { incidents: [], selectedId: null, onSelectIncident: vi.fn(), mapType: 'standard' as const, onUnavailable: vi.fn() };
+    render(<MemoryRouter><AppleMap {...props} variant="web" /></MemoryRouter>);
+    render(<MemoryRouter><AppleMap {...props} /></MemoryRouter>);
+    await waitFor(() => expect(state.maps).toHaveLength(2));
+    expect(state.maps[0].options.showsZoomControl).toBe(true);
+    expect(state.maps[1].options.showsZoomControl).toBe(false);
+  });
 });

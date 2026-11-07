@@ -1,6 +1,6 @@
-// Apple Maps on the map page in the iPhone app from 1.3 (MapKit JS): the same map as the Maps
-// app, with the events as CrimeAlert's own pulsing dots, drawn as on the website (lib/mapMarkers),
-// and Apple's callout with the event when one is tapped. The token comes
+// Apple Maps on the map page, on the website and in the iPhone app from 1.3 (MapKit JS): the same
+// map as the Maps app, with the events as CrimeAlert's own pulsing dots (lib/mapMarkers), and
+// Apple's callout with the event when one is tapped. The token comes
 // from mapkit-token and is kept for its day. If anything fails, onUnavailable tells the map page
 // to fall back to its own map (MapView), so the map is never empty.
 import { useEffect, useRef } from 'react';
@@ -9,7 +9,7 @@ import type { Incident } from '@/data/mockIncidents';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
-import { getJitteredPositions, isWithinDays, MARKER_PULSE_CSS, markerHtml, touchPulseIds } from '@/lib/mapMarkers';
+import { getJitteredPositions, isWithinDays, MARKER_PULSE_CSS, markerHtml, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
 export type AppleMapType = 'standard' | 'satellite' | 'hybrid';
@@ -101,9 +101,11 @@ interface AppleMapProps {
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
   mapType: AppleMapType;
   onUnavailable: () => void;
+  /** 'app': the iPhone app's full-screen map with its sheet; 'web': the website's map page, with Apple's zoom buttons */
+  variant?: 'app' | 'web';
 }
 
-const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable }: AppleMapProps) => {
+const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable, variant = 'app' }: AppleMapProps) => {
   const navigate = useNavigate();
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapKit>(null);
@@ -137,14 +139,14 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       addPulseStyles();
       map = new mapkit.Map(el.current, {
         colorScheme: mapkit.Map.ColorSchemes.Dark,
-        showsCompass: mapkit.FeatureVisibility.Adaptive,
+        showsCompass: mapkit.FeatureVisibility.Hidden,
         showsScale: mapkit.FeatureVisibility.Hidden,
         showsMapTypeControl: false,
-        showsZoomControl: false,
+        showsZoomControl: variant === 'web',
         showsUserLocationControl: false,
         isRotationEnabled: false,
-        // Room for the search field above and the sheet below (MapChrome)
-        padding: new mapkit.Padding(70, 8, 130, 8),
+        // App: room for the search field above and the sheet below (MapChrome). Web: room for the status chips
+        padding: variant === 'web' ? new mapkit.Padding(80, 8, 8, 8) : new mapkit.Padding(70, 8, 130, 8),
         region: new mapkit.CoordinateRegion(new mapkit.Coordinate(SWEDEN.lat, SWEDEN.lng), new mapkit.CoordinateSpan(SWEDEN.latSpan, SWEDEN.lngSpan)),
       });
       mapRef.current = map;
@@ -161,7 +163,8 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       mapRef.current = null;
       shown.clear();
     };
-  }, []);
+  // A page has one kind of map; only if that changed would it be made again
+  }, [variant]);
 
   useEffect(() => {
     if (mapRef.current && kitRef.current) applyType(mapRef.current, kitRef.current);
@@ -177,8 +180,10 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       // phone only the newest few pulse (every pulse is redrawn each frame while panning)
       const recent = incidents.filter((i) => Number.isFinite(i.lat) && Number.isFinite(i.lng) && isWithinDays(i.time, 7));
       const positions = getJitteredPositions(recent);
-      const pulsing = touchPulseIds(recent);
-      const wanted = new Map(recent.map((incident, index) => [incident.id, { incident, position: positions[index], pulse: pulsing.has(incident.id) }]));
+      // A computer has room for every new event to pulse, and the smaller dots, as on the website
+      const touch = variant === 'app' || ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      const pulsing = touch ? touchPulseIds(recent) : null;
+      const wanted = new Map(recent.map((incident, index) => [incident.id, { incident, position: positions[index], pulse: pulsing ? pulsing.has(incident.id) : shouldIncidentPulse(incident) }]));
       const gone: MapKit[] = [];
       for (const [id, marker] of markers.current) {
         // An event that has stopped (or started) pulsing is drawn again
@@ -189,7 +194,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       for (const [id, { incident, position, pulse }] of wanted) {
         if (markers.current.has(id)) continue;
         const community = incident.source === 'Medborgarrapport';
-        const { html, size } = markerHtml(incident, true, pulse);
+        const { html, size } = markerHtml(incident, touch, pulse);
         const marker = new mapkit.Annotation(new mapkit.Coordinate(position.lat, position.lng), () => {
           const dot = document.createElement('div');
           dot.innerHTML = html;
@@ -226,7 +231,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
     // Until MapKit has loaded, try again shortly
     const timer = setInterval(() => { if (sync()) clearInterval(timer); }, 300);
     return () => clearInterval(timer);
-  }, [incidents]);
+  }, [incidents, variant]);
 
   // An event picked in the sheet: fly there and open its callout
   useEffect(() => {
