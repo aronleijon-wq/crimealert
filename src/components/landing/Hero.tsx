@@ -21,7 +21,7 @@ const Hero = ({ live }: { live: LandingLive }) => {
   // Same rule as the checkout: signed out, or an account that never had Pro
   const offerTrial = !user || subscription.trialEligible === true;
   return (
-    <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-12 pt-24 md:items-center md:py-28">
+    <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-12 pt-[calc(6rem+var(--ca-banner-h,0px))] md:items-center md:pb-28 md:pt-[calc(7rem+var(--ca-banner-h,0px))]">
       {/* Atmosphere */}
       <div className="absolute inset-0 ca-gridlines opacity-[0.35]" />
       <div className="absolute inset-0 ca-vignette" />
@@ -32,14 +32,14 @@ const Hero = ({ live }: { live: LandingLive }) => {
       <div className="absolute inset-x-0 top-0 h-px bg-[hsl(var(--ca-line))]" />
 
       {/* Operations picture: behind the text on phones, beside it on large screens */}
-      <div className="ca-map-in absolute inset-x-0 top-14 h-[60svh] opacity-45 lg:bottom-4 lg:left-auto lg:right-0 lg:top-24 lg:h-auto lg:w-[56%] lg:opacity-100">
+      <div className="ca-map-in absolute inset-x-0 top-[calc(3.5rem+var(--ca-banner-h,0px))] h-[60svh] opacity-45 lg:bottom-4 lg:left-auto lg:right-0 lg:top-[calc(6rem+var(--ca-banner-h,0px))] lg:h-auto lg:w-[56%] lg:opacity-100">
         <OpsMap events={live.events} focus={live.focus} alignX={0.12} className="h-full w-full" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[hsl(var(--ca-base))] to-transparent lg:hidden" />
         <div className="absolute inset-y-0 left-0 hidden w-40 bg-gradient-to-r from-[hsl(var(--ca-base))] to-transparent lg:block" />
       </div>
 
       {/* HUD strip */}
-      <div className="ca-rise absolute inset-x-0 top-[76px] hidden px-10 lg:block" style={{ animationDelay: '0.2s' }}>
+      <div className="ca-rise absolute inset-x-0 top-[calc(76px+var(--ca-banner-h,0px))] hidden px-10 lg:block" style={{ animationDelay: '0.2s' }}>
         <div className="mx-auto flex max-w-[1400px] items-center justify-between border-b border-[hsl(var(--ca-line))] pb-2 ca-mono text-[10px] tracking-[0.2em] text-[hsl(var(--ca-text-3))]">
           <span className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--ca-red))] animate-pulse-dot" />

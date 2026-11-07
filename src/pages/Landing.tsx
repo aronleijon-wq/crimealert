@@ -13,6 +13,7 @@ import FinalCTA from '@/components/landing/FinalCTA';
 import LandingFooter from '@/components/landing/LandingFooter';
 import StoryStatic from '@/components/landing/StoryStatic';
 import { useLandingLive } from '@/components/landing/useLandingLive';
+import AppBanner, { APP_BANNER_HEIGHT, useAppBanner } from '@/components/landing/AppBanner';
 
 // Below the fold and the only user of framer-motion, so keep it out of the initial bundle
 const StickyStory = lazy(() => import('@/components/landing/StickyStory'));
@@ -38,6 +39,7 @@ const Landing = () => {
   );
   // One source of live events for the hero and the map preview
   const live = useLandingLive();
+  const appBanner = useAppBanner();
   const incident = new URLSearchParams(location.search).get('incident');
 
   useEffect(() => {
@@ -59,8 +61,11 @@ const Landing = () => {
   if (incident) return <Navigate to={`/karta${location.search}`} replace />;
 
   return (
-    <div className="ca-dark min-h-screen antialiased">
-      <LandingNav />
+    <div
+      className="ca-dark min-h-screen antialiased"
+      style={{ '--ca-banner-h': `${appBanner.visible ? APP_BANNER_HEIGHT : 0}px` } as React.CSSProperties}
+    >
+      <LandingNav banner={appBanner.visible ? <AppBanner onClose={appBanner.dismiss} /> : null} />
       <main>
         <Hero live={live} />
         {touch ? (
