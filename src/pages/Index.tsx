@@ -33,6 +33,13 @@ const ALL_FILTERS: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', '
 
 const LIST_PAGE = 60;
 // The heat view hides the markers; a constant keeps MapView from redrawing for nothing
+/** The map types on the website's map page, when the map is Apple's */
+const WEB_MAP_TYPES: { value: AppleMapType; label: string }[] = [
+  { value: 'standard', label: 'Karta' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'satellite', label: 'Satellit' },
+];
+
 const NO_INCIDENTS: Incident[] = [];
 
 const Index = () => {
@@ -368,13 +375,45 @@ const Index = () => {
 
         {/* Map */}
         <div className="flex-1 relative">
-          <MapView
-            incidents={showHeat ? NO_INCIDENTS : filtered}
-            selectedId={selectedId}
-            onSelectIncident={(id) => setSelectedId(id || null)}
-            isPremium={isPremium}
-            flyToLocation={flyToLocation}
-            heatPoints={showHeat ? filtered : null} />
+          {/* Apple Maps here too, unless it can't load or the timeline shows heat (only the site's own map draws that) */}
+          {appleMapOk && !showHeat ? (
+            <AppleMap
+              variant="web"
+              incidents={filtered}
+              selectedId={selectedId}
+              onSelectIncident={(id) => setSelectedId(id || null)}
+              flyToLocation={flyToLocation}
+              mapType={mapType}
+              onUnavailable={() => setAppleMapOk(false)} />
+          ) : (
+            <MapView
+              incidents={showHeat ? NO_INCIDENTS : filtered}
+              selectedId={selectedId}
+              onSelectIncident={(id) => setSelectedId(id || null)}
+              isPremium={isPremium}
+              flyToLocation={flyToLocation}
+              heatPoints={showHeat ? filtered : null} />
+          )}
+
+          {appleMapOk && !showHeat && (
+            <div
+              role="radiogroup"
+              aria-label="Karttyp"
+              className="absolute right-3 z-[1000] ca-glass rounded-md p-0.5 flex"
+              style={{ top: isFullscreen ? 'calc(3.1rem + env(safe-area-inset-top, 0px))' : '3.1rem' }}>
+              {WEB_MAP_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={mapType === t.value}
+                  onClick={() => chooseMapType(t.value)}
+                  className={`ca-mono rounded px-2 py-1 text-[9px] uppercase tracking-[0.16em] transition-colors ${mapType === t.value ? 'bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))]' : 'text-[hsl(var(--ca-text-3))] hover:text-[hsl(var(--ca-text))]'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Vinjett för nattkänsla över kartan */}
           <div

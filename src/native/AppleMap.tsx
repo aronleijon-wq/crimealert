@@ -1,4 +1,4 @@
-// Apple Maps on the map page in the iPhone app from 1.3 (MapKit JS): the same map as the Maps
+// Apple Maps on the map page, on the website and in the iPhone app from 1.3 (MapKit JS): the same map as the Maps
 // app, with the events as Apple's own markers, grouped when they crowd together. The token comes
 // from mapkit-token and is kept for its day. If anything fails, onUnavailable tells the map page
 // to fall back to its own map (MapView), so the map is never empty.
@@ -102,9 +102,11 @@ interface AppleMapProps {
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
   mapType: AppleMapType;
   onUnavailable: () => void;
+  /** 'app': the iPhone app's full-screen map with its sheet; 'web': the website's map page, with Apple's zoom buttons */
+  variant?: 'app' | 'web';
 }
 
-const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable }: AppleMapProps) => {
+const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable, variant = 'app' }: AppleMapProps) => {
   const navigate = useNavigate();
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapKit>(null);
@@ -140,11 +142,11 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
         showsCompass: mapkit.FeatureVisibility.Adaptive,
         showsScale: mapkit.FeatureVisibility.Hidden,
         showsMapTypeControl: false,
-        showsZoomControl: false,
+        showsZoomControl: variant === 'web',
         showsUserLocationControl: false,
         isRotationEnabled: false,
-        // Room for the search field above and the sheet below (MapChrome)
-        padding: new mapkit.Padding(70, 8, 130, 8),
+        // App: room for the search field above and the sheet below (MapChrome). Web: room for the status chips
+        padding: variant === 'web' ? new mapkit.Padding(80, 8, 8, 8) : new mapkit.Padding(70, 8, 130, 8),
         region: new mapkit.CoordinateRegion(new mapkit.Coordinate(SWEDEN.lat, SWEDEN.lng), new mapkit.CoordinateSpan(SWEDEN.latSpan, SWEDEN.lngSpan)),
       });
       mapRef.current = map;
