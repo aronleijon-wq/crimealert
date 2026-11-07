@@ -148,6 +148,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         <p className="mt-6 text-[13px] leading-relaxed text-[hsl(var(--ca-text-3))]">
           Genom att skapa ett konto godkänner du våra{' '}
           <button type="button" className="underline" onClick={() => { finish(); navigate('/villkor'); }}>användarvillkor</button>.
+          {' '}Vi skickar ibland nyheter om CrimeAlert via e-post, och du kan avregistrera dig när du vill.
         </p>
       </Screen>
     );

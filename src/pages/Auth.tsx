@@ -271,7 +271,7 @@ const Auth = () => {
                   <p className="mt-4 text-[11px] leading-relaxed text-[hsl(var(--ca-text-3))]">
                     Genom att skapa ett konto godkänner du våra{' '}
                     <button onClick={() => navigate('/villkor')} className="text-[hsl(var(--ca-text-2))] underline underline-offset-2 hover:text-foreground">användarvillkor</button>
-                    {' '}och samtycker till att ta emot tjänsterelaterade e-postmeddelanden.
+                    . Vi skickar ibland nyheter om CrimeAlert via e-post, och du kan avregistrera dig när du vill.
                   </p>
                 )}
                 <div className="mt-6 border-t border-[hsl(var(--ca-line))] pt-5 text-center">

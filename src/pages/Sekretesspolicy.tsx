@@ -90,6 +90,10 @@ const Sekretesspolicy = () => {
                 <li>Tillhandahålla och förbättra tjänsten – inklusive att visa brottshändelser i din närhet.</li>
                 <li>Hantera ditt konto och din prenumeration.</li>
                 <li>Skicka relevanta notiser om händelser i kommuner du bevakar.</li>
+                <li>
+                  Skicka nyheter om CrimeAlert till din e-post, till exempel när appen får nya funktioner. Varje utskick har
+                  en länk för att avregistrera sig, och du kan också mejla oss. Raderar du kontot tas adressen bort.
+                </li>
                 <li>Analysera trafik och användarmönster för att förbättra upplevelsen.</li>
                 {!app && <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>}
               </ul>
@@ -132,6 +136,9 @@ const Sekretesspolicy = () => {
                 <li>
                   <strong>Apple:</strong> Levererar notiser till iPhone-appen (Apple Push Notification service) och sköter
                   inloggning med Apple.
+                </li>
+                <li>
+                  <strong>Resend:</strong> Skickar våra e-postutskick. Får din e-postadress och om du har avregistrerat dig.
                 </li>
               </ul>
             </section>

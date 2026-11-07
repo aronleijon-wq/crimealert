@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
 import { appleProUntil, hadPro, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
+import { syncNewsletterContact } from "../_shared/newsletter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,6 +87,10 @@ serve(async (req) => {
       });
     }
     logStep("User authenticated", { email: user.email });
+
+    // The newsletter list in Resend, once per account, after the answer is on its way
+    const newsletter = syncNewsletterContact(supabaseClient, user);
+    (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime?.waitUntil?.(newsletter);
 
     // Check whitelist first
     if (FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) {

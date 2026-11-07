@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Loader2, ShieldAlert, Users } from "lucide-react";
+import { Download, Loader2, Mail, ShieldAlert, Users } from "lucide-react";
 import { toast } from "sonner";
 import HealthPanel from "@/components/admin/HealthPanel";
 import ModerationPanel from "@/components/admin/ModerationPanel";
@@ -21,6 +21,8 @@ export default function Admin() {
   const [csv, setCsv] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
@@ -75,6 +77,29 @@ export default function Admin() {
     }
   };
 
+  // Every account onto the newsletter list in Resend (newsletter-backfill), a minute at a time
+  const syncNewsletter = async () => {
+    setSyncing(true);
+    try {
+      let left = Infinity;
+      let added = 0;
+      while (left > 0) {
+        const { data, error } = await supabase.functions.invoke<{ added: number; exists: number; failed: number; remaining: number; total: number; error?: string }>('newsletter-backfill', { body: {} });
+        if (error || !data || data.error) throw new Error(data?.error || 'Kunde inte synka med Resend');
+        added += data.added + data.exists;
+        // Nothing went through this round: stop instead of trying forever
+        if (data.remaining > 0 && data.added + data.exists === 0) throw new Error(`${data.failed} gick inte att lägga till. Kontrollera nyckeln i Resend.`);
+        left = data.remaining;
+        setSyncNote(left > 0 ? `${added} tillagda, ${left} kvar…` : `Klart: ${data.total} kontakter i Resend.`);
+      }
+      toast.success('Alla användare finns nu i Resend');
+    } catch (err) {
+      toast.error(getErrorMessage(err) || 'Något gick fel');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const downloadCsv = () => {
     if (!csv) return;
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -109,6 +134,11 @@ export default function Admin() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Users className="h-4 w-4 mr-2" />}
                 {fetched ? "Uppdatera" : "Hämta användare"}
               </Button>
+              <Button variant="outline" onClick={syncNewsletter} disabled={syncing}>
+                {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                Lägg in alla i Resend
+              </Button>
+              {syncNote && <span className="text-sm text-muted-foreground">{syncNote}</span>}
               {fetched && (
                 <Button variant="outline" onClick={downloadCsv}>
                   <Download className="h-4 w-4 mr-2" />
