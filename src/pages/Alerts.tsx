@@ -8,6 +8,7 @@ import AreaPicker from '@/components/alerts/AreaPicker';
 import DeviceCard, { DeviceBadge, type DeviceState } from '@/components/alerts/DeviceCard';
 import NotificationPreview from '@/components/alerts/NotificationPreview';
 import TopicSettings from '@/components/alerts/TopicSettings';
+import MoreNotificationSettings from '@/components/alerts/MoreNotificationSettings';
 import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
@@ -118,7 +119,7 @@ const Alerts = () => {
   const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available: settingsAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
+  const { settings, available: settingsAvailable, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
   // The iPhone app gets notifications through Apple; app versions without that keep web push off
   const native = isNativeApp();
   const webPush = usePushNotifications(!native);
@@ -370,6 +371,8 @@ const Alerts = () => {
                   <TopicSettings settings={settings} saving={saving} onChange={handleSettings} />
                 </Section>
               )}
+
+              {moreAvailable && <MoreNotificationSettings settings={settings} saving={saving} onChange={handleSettings} />}
 
               {weeklyAvailable && (
                 <Section id="vecka" icon={CalendarDays} title="Veckosammanfattning" description="Söndag kväll: veckans händelser i dina områden, jämfört med veckan innan.">

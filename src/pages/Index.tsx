@@ -145,6 +145,12 @@ const Index = () => {
     // A month or more of events is easiest to read, and lightest to draw, as heat
     if (archiveDaysFor(range) > 0) setHistoryHeat(true);
   };
+  // The timeline opens as heat, as it always looked; the points are a tap away in its panel
+  const openTimeline = () => {
+    setHistoryOpen(true);
+    setHistoryHeat(true);
+    setHistoryNow(Date.now());
+  };
   const playHistory = (play: boolean) => {
     if (play && (historyEnd === null || historyEnd >= historyNow)) setHistoryEnd(firstEnd(historyRange, historyNow));
     setHistoryPlaying(play);
@@ -274,7 +280,7 @@ const Index = () => {
           onSearch={(m) => setFlyToLocation({ lat: m.lat, lng: m.lng, zoom: m.zoom, _ts: Date.now() })}
           onTimeline={() => {
             if (historyOpen) { setHistoryOpen(false); setHistoryPlaying(false); setHistoryEnd(null); }
-            else { setHistoryOpen(true); setHistoryNow(Date.now()); }
+            else openTimeline();
           }}
           timelineOpen={historyOpen}
           timeline={timelinePanel}
@@ -463,7 +469,7 @@ const Index = () => {
           {!historyOpen && (
             <button
               type="button"
-              onClick={() => { setHistoryOpen(true); setHistoryNow(Date.now()); }}
+              onClick={openTimeline}
               className="absolute left-3 z-[1000] ca-glass rounded-md px-3 py-1.5 flex items-center gap-1.5 text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
               style={{ top: isFullscreen ? 'calc(3.1rem + env(safe-area-inset-top, 0px))' : '3.1rem' }}
             >
