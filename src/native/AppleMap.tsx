@@ -1,14 +1,15 @@
 // Apple Maps on the map page in the iPhone app from 1.3 (MapKit JS): the same map as the Maps
-// app, with the events as Apple's own markers, grouped when they crowd together. The token comes
+// app, with the events as CrimeAlert's own pulsing dots, drawn as on the website (lib/mapMarkers),
+// and Apple's callout with the event when one is tapped. The token comes
 // from mapkit-token and is kept for its day. If anything fails, onUnavailable tells the map page
 // to fall back to its own map (MapView), so the map is never empty.
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
+import type { Incident } from '@/data/mockIncidents';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
-import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
+import { getJitteredPositions, isWithinDays, MARKER_PULSE_CSS, markerHtml, touchPulseIds } from '@/lib/mapMarkers';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
 export type AppleMapType = 'standard' | 'satellite' | 'hybrid';
@@ -78,15 +79,13 @@ function loadMapKit(): Promise<MapKit> {
   return loading;
 }
 
-/** The kind of event's icon, white, for inside Apple's marker */
-const glyphCache = new Map<string, string>();
-function glyph(type: string): string {
-  let url = glyphCache.get(type);
-  if (!url) {
-    url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgIcon(TYPE_ICON[type] ?? 'triangle-alert', 40, '#ffffff', 2.4).replace('style="display:inline-block;vertical-align:middle;flex-shrink:0"', ''))}`;
-    glyphCache.set(type, url);
-  }
-  return url;
+/** The pulse's animation, once for the page */
+function addPulseStyles() {
+  if (document.getElementById('ca-marker-pulse')) return;
+  const style = document.createElement('style');
+  style.id = 'ca-marker-pulse';
+  style.textContent = MARKER_PULSE_CSS;
+  document.head.appendChild(style);
 }
 
 /** A region around a point, about as wide as the website map's zoom level shows */
@@ -135,6 +134,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       kit = mapkit;
       kitRef.current = mapkit;
       mapkit.addEventListener('error', onError);
+      addPulseStyles();
       map = new mapkit.Map(el.current, {
         colorScheme: mapkit.Map.ColorSchemes.Dark,
         showsCompass: mapkit.FeatureVisibility.Adaptive,
@@ -173,23 +173,36 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       const map = mapRef.current;
       const mapkit = kitRef.current;
       if (!map || !mapkit) return false;
-      const wanted = new Map(incidents.filter((i) => Number.isFinite(i.lat) && Number.isFinite(i.lng)).map((i) => [i.id, i]));
+      // As on the website: the last seven days, crowded events spread a little apart, and on a
+      // phone only the newest few pulse (every pulse is redrawn each frame while panning)
+      const recent = incidents.filter((i) => Number.isFinite(i.lat) && Number.isFinite(i.lng) && isWithinDays(i.time, 7));
+      const positions = getJitteredPositions(recent);
+      const pulsing = touchPulseIds(recent);
+      const wanted = new Map(recent.map((incident, index) => [incident.id, { incident, position: positions[index], pulse: pulsing.has(incident.id) }]));
       const gone: MapKit[] = [];
-      for (const [id, marker] of markers.current) if (!wanted.has(id)) { gone.push(marker); markers.current.delete(id); }
+      for (const [id, marker] of markers.current) {
+        // An event that has stopped (or started) pulsing is drawn again
+        if (!wanted.has(id) || wanted.get(id)!.pulse !== marker.data.pulse) { gone.push(marker); markers.current.delete(id); }
+      }
       if (gone.length) map.removeAnnotations(gone);
       const added: MapKit[] = [];
-      for (const [id, incident] of wanted) {
+      for (const [id, { incident, position, pulse }] of wanted) {
         if (markers.current.has(id)) continue;
-        const config = incidentTypeConfig[incident.type] ?? incidentTypeConfig.other;
         const community = incident.source === 'Medborgarrapport';
-        const marker = new mapkit.MarkerAnnotation(new mapkit.Coordinate(incident.lat, incident.lng), {
-          color: community ? '#ff9f0a' : incident.type === 'other' ? '#8e8e93' : config.color,
-          glyphImage: { 1: glyph(incident.type) },
+        const { html, size } = markerHtml(incident, true, pulse);
+        const marker = new mapkit.Annotation(new mapkit.Coordinate(position.lat, position.lng), () => {
+          const dot = document.createElement('div');
+          dot.innerHTML = html;
+          dot.style.cssText = `width:${size}px;height:${size}px;`;
+          return dot;
+        }, {
+          // The dot's middle on the spot, not its bottom edge
+          anchorOffset: new DOMPoint(0, size / 2),
+          calloutOffset: new DOMPoint(0, -size / 2 + 6),
+          displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000,
           title: cleanPoliceTitle(incident.title),
           subtitle: [incident.area, formatTimeAgo(incident.time)].filter(Boolean).join(' · '),
-          clusteringIdentifier: 'events',
-          displayPriority: incident.status === 'active' ? 1000 : 500,
-          data: { id },
+          data: { id, pulse },
           // An event opens on its own page; a citizen report has none
           callout: community ? undefined : {
             calloutRightAccessoryForAnnotation: () => {
@@ -233,7 +246,8 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
     map.setRegionAnimated(regionAt(mapkit, flyToLocation.lat, flyToLocation.lng, flyToLocation.zoom), true);
   }, [flyToLocation]);
 
-  return <div ref={el} className="absolute inset-0 bg-[#1c1c1e]" aria-label="Karta" role="application" />;
+  // --pulse-scale: how far the pulse reaches, as on the website's map at a town's zoom
+  return <div ref={el} className="absolute inset-0 bg-[#1c1c1e]" style={{ ['--pulse-scale' as string]: '3' }} aria-label="Karta" role="application" />;
 };
 
 export default AppleMap;

@@ -3,6 +3,9 @@ import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Incident } from '@/data/mockIncidents';
 
+// Safari has DOMPoint, jsdom doesn't
+if (typeof DOMPoint === 'undefined') vi.stubGlobal('DOMPoint', class { constructor(public x = 0, public y = 0) {} });
+
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke: vi.fn() } } }));
 
 /** Enough of MapKit JS to see what the map is given */
@@ -21,11 +24,15 @@ function fakeMapKit() {
     setRegionAnimated(region: unknown) { this.region = region; }
     destroy() {}
   }
-  class MarkerAnnotation { constructor(public coordinate: { latitude: number; longitude: number }, public options: Record<string, unknown>) {} get data() { return this.options.data; } }
+  class Annotation {
+    static DisplayPriority = { Required: 'required' };
+    constructor(public coordinate: { latitude: number; longitude: number }, public factory: () => HTMLElement, public options: Record<string, unknown>) {}
+    get data() { return this.options.data as { id: string; pulse: boolean }; }
+  }
   const mapkit = {
     Map: Object.assign(FakeMap, { ColorSchemes: { Dark: 'dark' }, MapTypes: { Standard: 'standard', Satellite: 'satellite', Hybrid: 'hybrid' } }),
     FeatureVisibility: { Adaptive: 'adaptive', Hidden: 'hidden' },
-    MarkerAnnotation,
+    Annotation,
     Coordinate: class { constructor(public latitude: number, public longitude: number) {} },
     CoordinateSpan: class { constructor(public latitudeDelta: number, public longitudeDelta: number) {} },
     CoordinateRegion: class { constructor(public center: unknown, public span: unknown) {} },
@@ -45,17 +52,23 @@ const { default: AppleMap } = await import('./AppleMap');
 
 afterEach(() => { delete (window as { mapkit?: unknown }).mapkit; });
 
+
 describe('Apple Maps in the app', () => {
   it('shows the events as Apple markers, and only changes those that came or went', async () => {
     const { mapkit, state } = fakeMapKit();
     window.mapkit = mapkit;
     const onSelect = vi.fn();
+    // Older than a week: not on the map, as on the website
+    const old = event('old', { time: new Date(Date.now() - 9 * 86400000).toISOString() });
     const props = { selectedId: null, onSelectIncident: onSelect, flyToLocation: null, mapType: 'standard' as const, onUnavailable: vi.fn() };
-    const { rerender } = render(<MemoryRouter><AppleMap incidents={[event('a'), event('b', { type: 'police' })]} {...props} /></MemoryRouter>);
+    const { rerender } = render(<MemoryRouter><AppleMap incidents={[event('a'), event('b', { type: 'police' }), old]} {...props} /></MemoryRouter>);
     await waitFor(() => expect(state.maps[0]?.annotations).toHaveLength(2));
     const map = state.maps[0];
-    const first = map.annotations[0] as { options: Record<string, unknown> };
-    expect(first.options).toMatchObject({ title: 'Brand, Malmö', clusteringIdentifier: 'events', data: { id: 'a' } });
+    const first = map.annotations[0] as { options: Record<string, unknown>; factory: () => HTMLElement };
+    // The website's own dots, the newest pulsing, every one shown however crowded
+    expect(first.options).toMatchObject({ title: 'Brand, Malmö', displayPriority: 'required', data: { id: 'a', pulse: true } });
+    expect(first.factory().innerHTML).toContain('marker-pulse');
+    expect(document.getElementById('ca-marker-pulse')?.textContent).toContain('@keyframes marker-pulse-anim');
     expect(map.options).toMatchObject({ colorScheme: 'dark', showsZoomControl: false });
 
     rerender(<MemoryRouter><AppleMap incidents={[event('b', { type: 'police' }), event('c')]} {...props} mapType="hybrid" /></MemoryRouter>);
