@@ -44,8 +44,8 @@ const TITLES: [RegExp, string][] = [
   [/^\/admin$/, 'Admin'],
 ];
 
-// The app's own screens (NativeFeed, NativeAlerts, NativeProfile) with iOS large titles
-const LARGE_TITLES = ['/flode', '/alerts', '/installningar'];
+// The app's own screens (NativeFeed, NativeStats, NativeAlerts, NativeProfile) with iOS large titles
+const LARGE_TITLES = ['/flode', '/analysis', '/alerts', '/installningar'];
 
 const WITHOUT_TABS = /^\/(prisplan|account|auth|reset-password)$/;
 
