@@ -17,6 +17,7 @@ const renderHeader = async (path = '/karta') => {
 };
 
 beforeEach(() => {
+  sessionStorage.clear();
   auth.user = null;
   auth.subscription = { subscribed: false, productId: null, subscriptionEnd: null };
 });
@@ -55,5 +56,29 @@ describe('Header', () => {
     await renderHeader('/account');
     expect(screen.getByRole('link', { name: 'Prisplan' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Karta' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('shows the App Store banner on every page, not just the start page', async () => {
+    await renderHeader('/flode');
+    expect(screen.getByRole('link', { name: /finns nu för iPhone/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('apps.apple.com'),
+    );
+  });
+
+  it('brings the App Store banner back on the next visit after it was closed', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    const first = await renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: 'Stäng' }));
+    expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
+    first.unmount();
+    // Same visit: stays closed on the next page
+    const second = await renderHeader('/analysis');
+    expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
+    second.unmount();
+    // New visit
+    sessionStorage.clear();
+    await renderHeader();
+    expect(screen.getByRole('link', { name: /finns nu för iPhone/ })).toBeInTheDocument();
   });
 });
