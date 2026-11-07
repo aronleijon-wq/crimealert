@@ -38,8 +38,13 @@ const json = (body: unknown, status = 200) =>
 const stripHtml = (value: unknown) =>
   String(value ?? "").replace(/<[^>]*>/g, "").trim();
 
-const isPremiumUser = async (email: string): Promise<boolean> => {
+// Pro as the database counts it (has_pro: Stripe as last checked, the App Store, invites), and
+// Stripe asked directly when that says no, in case a new subscription isn't remembered yet
+// deno-lint-ignore no-explicit-any
+const isPremiumUser = async (db: any, userId: string, email: string): Promise<boolean> => {
   if (FREE_PREMIUM_EMAILS.includes(email.toLowerCase())) return true;
+  const { data: pro, error: proError } = await db.rpc("has_pro", { _user_id: userId });
+  if (!proError && pro === true) return true;
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!stripeKey) return false;
@@ -92,7 +97,7 @@ Deno.serve(async (req) => {
       return json({ error: "Ogiltig session." }, 401);
     }
 
-    if (!(await isPremiumUser(user.email))) {
+    if (!(await isPremiumUser(supabase, user.id, user.email))) {
       return json({ error: "Community-rapporter kräver Pro." }, 403);
     }
 
