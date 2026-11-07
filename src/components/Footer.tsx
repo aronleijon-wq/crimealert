@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SocialLinks from '@/components/SocialLinks';
 import { Shield, FileText, Cookie, Info, BookOpen, BarChart3 } from 'lucide-react';
 
 const Footer = () =>
@@ -33,6 +34,7 @@ const Footer = () =>
           Statistik
         </Link>
       </nav>
+      <SocialLinks size={26} />
     </div>
   </footer>;
 
