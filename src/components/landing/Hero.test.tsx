@@ -38,3 +38,13 @@ describe('the Pro trial in the hero', () => {
     expect(trialLink()).toBeNull();
   });
 });
+
+describe('the App Store badge in the hero', () => {
+  it('links to CrimeAlert in the App Store', async () => {
+    await renderHero(null);
+    expect(screen.getByRole('link', { name: 'Hämta CrimeAlert i App Store' })).toHaveAttribute(
+      'href',
+      'https://apps.apple.com/se/app/crimealert-brottsplatskarta/id6826326029',
+    );
+  });
+});

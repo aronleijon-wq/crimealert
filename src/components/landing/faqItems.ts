@@ -3,10 +3,11 @@
 // cancellation from Villkor, stored data from Sekretesspolicy.
 
 import { PRICES, TRIAL_DAYS } from '@/components/account/plans';
+import { APP_STORE_URL } from '@/lib/appStoreLink';
 
 export const CONTACT_EMAIL = 'crimealert.swe@gmail.com';
 
-/** A piece of an answer: plain text, or a link (a route like /prisplan, or a mailto: address). */
+/** A piece of an answer: plain text, or a link (a route like /prisplan, a mailto: address or a web address). */
 export type FaqPart = string | { to: string; label: string };
 
 export interface FaqItem {
@@ -78,7 +79,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     q: 'Finns det en app?',
     a: [
       'Ja, CrimeAlert finns för iPhone i ',
-      { href: APP_STORE_URL, label: 'App Store' },
+      { to: APP_STORE_URL, label: 'App Store' },
       '. På Android och dator kan du lägga till crimealert.se på hemskärmen, då öppnas den som en app ' +
         'med egen ikon och utan webbläsarens adressfält.',
     ],
