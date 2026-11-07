@@ -1,8 +1,8 @@
 import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, Newspaper, Shield, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, type LucideIcon } from 'lucide-react';
 import CommentThread from '@/components/feed/CommentThread';
-import ShareButton from '@/components/ShareButton';
+import ShareCardButton from '@/components/ShareCardButton';
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
@@ -18,8 +18,11 @@ import { sourceName } from '@/lib/externalEvents';
 import { buildFeed, filterFeed, type FeedItem } from '@/lib/feed';
 import { TILE_SIZE, tilesAround, tileUrl } from '@/lib/mapTiles';
 import { canSellPro } from '@/lib/native';
+import { eventUrl } from '@/lib/share';
+import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
+import { kommunPath } from '@/lib/kommunPages';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { Screen } from './ui';
 
@@ -188,7 +191,17 @@ const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: Post
           {comments > 0 && <span className="text-[13px] font-semibold tabular-nums text-white">{comments}</span>}
         </ActionButton>
         {item.kind === 'police' && (
-          <ShareButton event={item} compact className="flex h-10 min-w-[40px] items-center justify-center rounded-full px-1.5 text-white [&_svg]:h-[22px] [&_svg]:w-[22px]" />
+          <ShareCardButton
+            make={() => drawEventCard({ id: item.id, kind: headline(item), area: item.area, when: cardTime(item.timestamp), active: item.active, color })}
+            title={item.title}
+            text={`${item.title} – på CrimeAlert`}
+            url={eventUrl(item.id)}
+            fileName="crimealert.png"
+            label="Dela som bild"
+            className="flex h-10 min-w-[40px] items-center justify-center rounded-full px-1.5 text-white transition-transform active:scale-90"
+          >
+            <Send className="h-[23px] w-[23px]" strokeWidth={1.9} aria-hidden />
+          </ShareCardButton>
         )}
         {item.mapLink && (
           <Link to={item.mapLink} aria-label="Visa på kartan" className="ml-auto flex h-10 w-10 items-center justify-center rounded-full text-white active:scale-90 transition-transform">
@@ -279,6 +292,19 @@ const NativeFeed = () => {
         ))}
       </div>
       <div className="border-t border-[rgba(84,84,88,0.45)]" />
+
+      {story.id.startsWith('k:') && (
+        <Link to={`${kommunPath(story.label)}?chatt=1`} className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-[#1c1c1e] px-4 py-3 active:opacity-70">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ff453a]/15 text-[#ff453a]">
+            <MessagesSquare className="h-[18px] w-[18px]" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-semibold text-white">Prata om {story.label}</span>
+            <span className={`block text-[13px] ${MUTED}`}>Kommunens diskussion: fråga, tipsa, berätta vad du såg</span>
+          </span>
+          <ChevronRight className="h-5 w-5 text-[rgba(235,235,245,0.3)]" aria-hidden />
+        </Link>
+      )}
 
       {!isPremium && (
         <p className={`mx-4 mt-2.5 text-[13px] ${MUTED}`}>Polisens händelser visas 15 minuter efter att de rapporterats. Med Pro direkt.</p>

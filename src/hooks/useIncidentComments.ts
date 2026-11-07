@@ -80,6 +80,8 @@ export function useIncidentComments(incidentId: string | null, enabled = false) 
     if (error) return refusalMessage(error) ?? 'Kommentaren kunde inte skickas just nu.';
     if (data) {
       setComments(prev => [...prev, { ...data, likes_count: 0, user_has_liked: false }]);
+      // The others who have written in the thread hear of it (send-push-notifications, mode "reply")
+      supabase.functions.invoke('send-push-notifications', { body: { mode: 'reply', commentId: data.id } }).catch(() => {});
     }
     return null;
   }, [user, incidentId]);

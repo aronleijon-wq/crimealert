@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
+import { recordMoment, recordUse } from './review';
 import { screenFor, welcomed } from './screens';
 import TabBar from './TabBar';
 import TopBar from './TopBar';
@@ -19,6 +20,13 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
   // A new page starts at the top
   useEffect(() => { pageRef.current?.scrollTo(0, 0); }, [pathname]);
+
+  // For asking for a rating at a good moment (review.ts): the days the app is used, and the
+  // events and kommuner opened (also from a notification)
+  useEffect(() => { recordUse(); }, []);
+  useEffect(() => {
+    if (!showWelcome && /^\/(handelse|kommun)\/./.test(pathname)) recordMoment();
+  }, [pathname, showWelcome]);
 
   // The tab you are on, tapped again: back to the top of everything that scrolls
   useEffect(() => {

@@ -13,6 +13,7 @@ import {
   type PushEvent,
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
+import { replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -459,6 +460,58 @@ async function sendWeeklySummaries(supabase: ServiceClient, vapidPublicKey: stri
   return { sent, users: claimedUsers.size, week, expired_cleaned: expiredEndpoints.length };
 }
 
+// A comment's notifications are sent once, shortly after it was written, and only by its author
+const REPLY_WINDOW_MS = 5 * 60 * 1000;
+const repliesSent = new Set<string>();
+
+async function sendReplyNotifications(supabase: ServiceClient, authorId: string, commentId: unknown, vapidPublicKey: string, vapidPrivateKey: string) {
+  if (typeof commentId !== 'string' || !/^[0-9a-f-]{36}$/i.test(commentId)) return { sent: 0, reason: 'bad_request' };
+  if (repliesSent.has(commentId)) return { sent: 0, reason: 'already_sent' };
+  const { data: comment } = await supabase
+    .from('incident_comments').select('id, incident_id, user_id, text, created_at').eq('id', commentId).maybeSingle();
+  if (!comment || comment.user_id !== authorId) return { sent: 0, reason: 'not_found' };
+  if (Date.now() - Date.parse(comment.created_at) > REPLY_WINDOW_MS) return { sent: 0, reason: 'too_old' };
+  repliesSent.add(commentId);
+
+  const [{ data: thread }, { data: blocks }] = await Promise.all([
+    supabase.from('incident_comments').select('id, user_id, created_at').eq('incident_id', comment.incident_id).order('created_at').limit(500),
+    supabase.from('user_blocks').select('blocker_id').eq('blocked_id', authorId),
+  ]);
+  const recipients = replyRecipients((thread ?? []) as ThreadComment[], comment, new Set((blocks ?? []).map((b: { blocker_id: string }) => b.blocker_id)));
+  if (!recipients.length) return { sent: 0, reason: 'no_recipients' };
+
+  const [{ data: profile }, { data: event }, { data: subscriptions }] = await Promise.all([
+    supabase.from('profiles').select('display_name').eq('id', authorId).maybeSingle(),
+    comment.incident_id.startsWith('kommun:')
+      ? Promise.resolve({ data: null })
+      : supabase.from('police_events_archive').select('title').eq('id', comment.incident_id).maybeSingle(),
+    supabase.from('push_subscriptions').select('*').in('user_id', recipients),
+  ]);
+  const { title, body } = replyMessage({
+    author: profile?.display_name ?? '',
+    text: comment.text,
+    place: threadPlace(comment.incident_id, event?.title ?? null),
+  });
+  const payload = JSON.stringify({
+    title,
+    body,
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    tag: `reply-${comment.incident_id}`,
+    data: { url: safeAppPath(threadPath(comment.incident_id)) },
+  });
+
+  let sent = 0;
+  const expired: string[] = [];
+  for (const sub of (subscriptions ?? []) as PushSubscriptionRow[]) {
+    const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
+    if (result.ok) sent++;
+    if (result.expired) expired.push(sub.endpoint);
+  }
+  if (expired.length) await supabase.from('push_subscriptions').delete().in('endpoint', expired);
+  return { sent, recipients: recipients.length };
+}
+
 async function getRequestBody(req: Request) {
   const raw = await req.text();
   if (!raw) return {} as Record<string, unknown>;
@@ -486,7 +539,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const body = await getRequestBody(req);
-    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : 'live';
+    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : body.mode === 'reply' ? 'reply' : 'live';
     const token = getBearerToken(req);
     const isInternalCall = token === serviceRoleKey;
 
@@ -516,6 +569,15 @@ Deno.serve(async (req) => {
         });
       }
       requestUserId = data.user.id;
+    }
+
+    // Someone wrote in a thread: the others who have written there hear of it (_shared/replies)
+    if (mode === 'reply') {
+      if (!requestUserId) {
+        return new Response(JSON.stringify({ error: 'Inte inloggad.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const result = await sendReplyNotifications(supabase, requestUserId, body.commentId, vapidPublicKey, vapidPrivateKey);
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Live broadcasts may only be triggered internally (service role key).
