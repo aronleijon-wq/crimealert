@@ -49,6 +49,8 @@ const NativeAlerts = lazyPage(() => import("@/native/NativeAlerts"));
 const NativeProfile = lazyPage(() => import("@/native/NativeProfile"));
 const NativeStats = lazyPage(() => import("@/native/NativeStats"));
 const NativeInvite = lazyPage(() => import("@/native/NativeInvite"));
+const NativeReport = lazyPage(() => import("@/native/NativeReport"));
+const Rapportera = lazyPage(() => import("./pages/Rapportera"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
 const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
@@ -102,6 +104,7 @@ const App = () => (
           {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
           <Route path="/app-login" element={<AppLogin />} />
           <Route path="/inbjudan/:code" element={<Inbjudan />} />
+          <Route path="/rapportera" element={isNativeApp() ? <NativeReport /> : <Rapportera />} />
           <Route path="/bjud-in" element={isNativeApp() ? <NativeInvite /> : <Navigate to="/installningar#bjud-in" replace />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />

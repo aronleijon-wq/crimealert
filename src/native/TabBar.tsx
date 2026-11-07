@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { haptics } from './haptics';
-import { TABS } from './screens';
+import { appTabs } from './screens';
 
 /** The app's tabs, along the bottom like any iPhone app */
 const TabBar = () => (
@@ -10,7 +10,7 @@ const TabBar = () => (
     style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
   >
     <ul className="flex h-[54px]">
-      {TABS.map(({ to, label, icon: Icon }) => (
+      {appTabs().map(({ to, label, icon: Icon, prominent }) => (
         <li key={to} className="flex-1">
           <NavLink
             to={to}
@@ -27,10 +27,20 @@ const TabBar = () => (
             }
           >
             {({ isActive }) => (
-              <>
-                <Icon className="h-[23px] w-[23px]" strokeWidth={isActive ? 2.25 : 1.75} aria-hidden />
-                <span>{label}</span>
-              </>
+              prominent ? (
+                <>
+                  {/* Tinted while elsewhere, filled while open, so it never looks like the tab you are on */}
+                  <span className={`flex h-[30px] w-[42px] items-center justify-center rounded-[10px] transition-colors ${isActive ? 'bg-[hsl(var(--ca-red))] text-white' : 'bg-[hsl(var(--ca-red)/0.16)] text-[hsl(var(--ca-red))]'}`}>
+                    <Icon className="h-[19px] w-[19px]" strokeWidth={2.25} aria-hidden />
+                  </span>
+                  <span className={isActive ? '' : 'text-[hsl(var(--ca-text-2))]'}>{label}</span>
+                </>
+              ) : (
+                <>
+                  <Icon className="h-[23px] w-[23px]" strokeWidth={isActive ? 2.25 : 1.75} aria-hidden />
+                  <span>{label}</span>
+                </>
+              )
             )}
           </NavLink>
         </li>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Gift, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
+import { Bell, FileText, Gift, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import { planLabel } from '@/components/account/plans';
@@ -117,6 +117,13 @@ const NativeProfile = () => {
         {/* From app version 1.3 (NativeInvite) */}
         {hasAppDesign13() && <Row icon={Gift} iconBg="#ff2d55" label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />}
       </Section>
+
+      {/* From 1.3 Notiser is no longer a tab of its own (screens.ts) */}
+      {hasAppDesign13() && (
+        <Section>
+          <Row icon={Bell} iconBg="#ff453a" label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
+        </Section>
+      )}
 
       <Section header="Konto">
         <Row icon={UserRound} iconBg="#5e5ce6" label="Användarnamn" value={name || 'Inget'} onClick={() => setEditing(true)} />

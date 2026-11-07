@@ -161,7 +161,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <h1 className="pt-10 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Vilka kommuner vill du bevaka?</h1>
-        <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">Du kan ändra det när du vill under Notiser.</p>
+        <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">Du kan ändra det när du vill under {hasAppDesign13() ? 'Profil' : 'Notiser'}.</p>
         <div className="mt-6">
           <AreaPicker kommuner={kommuner} loading={loading} recentCounts={{}} onAdd={addKommun} onRemove={removeKommun} />
         </div>
