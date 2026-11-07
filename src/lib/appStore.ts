@@ -28,6 +28,8 @@ interface StorePlugin {
   entitlements(): Promise<{ transactionIds: string[] }>;
   restore(): Promise<{ transactionIds: string[] }>;
   manage(): Promise<void>;
+  /** Apple's rating prompt (app 1.2 and later; earlier versions reject the call) */
+  review(): Promise<{ asked: boolean }>;
   addListener(event: 'transaction', listener: (data: { transactionId: string }) => void): Promise<{ remove: () => Promise<void> }>;
 }
 

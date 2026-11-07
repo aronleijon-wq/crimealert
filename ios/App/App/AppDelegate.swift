@@ -239,7 +239,8 @@ public class CrimeAlertStorePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "entitlements", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "restore", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "manage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "review", returnType: CAPPluginReturnPromise)
     ]
 
     private var updates: Task<Void, Never>?
@@ -367,6 +368,23 @@ public class CrimeAlertStorePlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             call.resolve(["transactionIds": await currentTransactions()])
+        }
+    }
+
+    /// Apple's own "Enjoying CrimeAlert?" rating prompt. iOS decides whether it shows (at most
+    /// three times a year); the site decides when to ask (src/native/review.ts).
+    @objc func review(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let scene = self.bridge?.viewController?.view.window?.windowScene else {
+                call.resolve(["asked": false])
+                return
+            }
+            if #available(iOS 16.0, *) {
+                AppStore.requestReview(in: scene)
+            } else {
+                SKStoreReviewController.requestReview(in: scene)
+            }
+            call.resolve(["asked": true])
         }
     }
 
