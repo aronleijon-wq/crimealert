@@ -13,7 +13,7 @@ const Answer = ({ parts }: { parts: FaqPart[] }) => (
       ) : part.to.startsWith('/') ? (
         <Link key={i} to={part.to} className={linkClass}>{part.label}</Link>
       ) : (
-        <a key={i} href={part.to} className={linkClass}>{part.label}</a>
+        <a key={i} href={part.to} className={linkClass} {...(part.to.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{part.label}</a>
       ),
     )}
   </>

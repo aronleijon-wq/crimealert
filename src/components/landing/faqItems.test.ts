@@ -12,6 +12,11 @@ describe('FAQ', () => {
     expect(text).toContain(`${TRIAL_DAYS} dagar`);
   });
 
+  it('says the app is in the App Store and links there', () => {
+    const item = FAQ_ITEMS.find((i) => i.q === 'Finns det en app?')!;
+    expect(item.a).toContainEqual({ to: 'https://apps.apple.com/se/app/crimealert-brottsplatskarta/id6826326029', label: 'App Store' });
+  });
+
   it('turns links into their words for plain text', () => {
     expect(faqAnswerText(['Gå till ', { to: '/prisplan', label: 'Prisplan' }, '.'])).toBe('Gå till Prisplan.');
   });
