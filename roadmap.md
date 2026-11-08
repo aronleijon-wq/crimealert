@@ -13,6 +13,9 @@
 - [x] Notisfilter-migreringen (20261108090000_notification_filters.sql) körd exakt som skriven
 - [x] Alla 17 backendfunktioner deployade igen och stickprovstestade (7 nov 20:14)
 
+## Pågår
+- [ ] Första annonskampanjen: mål och målgrupp → kanal (Google/Facebook/Instagram) → koppla annonskonto → bilder och text → spårning → skapa
+
 ## Väntar på användaren
 - Testa iPhone-push i TestFlight (Notiser → Skicka testnotis)
 - AdSense-godkännande: kontrollera status i Google-kontot
