@@ -442,7 +442,8 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     markersRef.current.clearLayers();
     markerMapRef.current.clear();
 
-    const recentIncidents = incidents.filter((inc) => isWithinDays(inc.time, 7));
+    // An event without a place can't be drawn, and must not stop the others from being
+    const recentIncidents = incidents.filter((inc) => Number.isFinite(inc.lat) && Number.isFinite(inc.lng) && isWithinDays(inc.time, 7));
     const positions = getJitteredPositions(recentIncidents);
     // Phones animate only the newest few events: every pulsing marker is an element of its own
     // that the phone redraws each frame while panning. The rest are dots on the shared canvas.
