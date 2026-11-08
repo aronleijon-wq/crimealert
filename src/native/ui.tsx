@@ -5,9 +5,11 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 
 /** A screen of the app: black, with iOS's large title */
-export const Screen = ({ title, children }: { title?: string; children: ReactNode }) => (
+export const Screen = ({ title, action, children }: { title?: string; action?: ReactNode; children: ReactNode }) => (
   <div className="ios min-h-full bg-black pb-10 text-white">
-    {title && <h1 className="ios-large-title px-5 pb-2 pt-3">{title}</h1>}
+    {title && (action ? (
+      <div className="flex items-end justify-between gap-3 px-5 pb-2 pt-3"><h1 className="ios-large-title">{title}</h1><div className="pb-1">{action}</div></div>
+    ) : <h1 className="ios-large-title px-5 pb-2 pt-3">{title}</h1>)}
     {children}
   </div>
 );

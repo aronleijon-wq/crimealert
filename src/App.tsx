@@ -50,6 +50,9 @@ const NativeProfile = lazyPage(() => import("@/native/NativeProfile"));
 const NativeStats = lazyPage(() => import("@/native/NativeStats"));
 const NativeInvite = lazyPage(() => import("@/native/NativeInvite"));
 const NativeReport = lazyPage(() => import("@/native/NativeReport"));
+const NativeChats = lazyPage(() => import("@/native/NativeChats"));
+const NativeChatRoom = lazyPage(() => import("@/native/NativeChatRoom"));
+const ChatRedirect = lazyPage(() => import("@/native/ChatRedirect"));
 const Rapportera = lazyPage(() => import("./pages/Rapportera"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
@@ -104,6 +107,8 @@ const App = () => (
           {/* The iPhone app signs in with Google or Apple here, in its sign-in sheet (lib/appLogin) */}
           <Route path="/app-login" element={<AppLogin />} />
           <Route path="/inbjudan/:code" element={<Inbjudan />} />
+          <Route path="/chatt/:slug" element={isNativeApp() ? <NativeChatRoom /> : <ChatRedirect />} />
+          <Route path="/chattar" element={isNativeApp() ? <NativeChats /> : <Navigate to="/kommun" replace />} />
           <Route path="/rapportera" element={isNativeApp() ? <NativeReport /> : <Rapportera />} />
           <Route path="/bjud-in" element={isNativeApp() ? <NativeInvite /> : <Navigate to="/installningar#bjud-in" replace />} />
           <Route path="/cookies" element={<Cookies />} />

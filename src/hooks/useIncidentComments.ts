@@ -121,5 +121,5 @@ export function useIncidentComments(incidentId: string | null, enabled = false) 
     await supabase.from('incident_comments').delete().eq('id', commentId).eq('user_id', user.id);
   }, [user]);
 
-  return { comments, loading, addComment, toggleLike, deleteComment, reportComment, blockAuthor };
+  return { comments, loading, addComment, toggleLike, deleteComment, reportComment, blockAuthor, refetch: fetchComments };
 }

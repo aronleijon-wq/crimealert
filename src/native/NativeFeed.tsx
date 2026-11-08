@@ -23,6 +23,7 @@ import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { kommunPath } from '@/lib/kommunPages';
+import { chatPath } from './chats';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { Screen } from './ui';
 
@@ -293,7 +294,14 @@ const NativeFeed = () => {
   const hourAgo = Date.now() - HOUR;
 
   return (
-    <Screen title="Flöde">
+    <Screen
+      title="Flöde"
+      action={(
+        <Link to="/chattar" aria-label="Chattar" className="flex h-10 items-center gap-1.5 rounded-full bg-[#1c1c1e] px-3.5 text-[15px] font-semibold text-white active:opacity-60">
+          <MessagesSquare className="h-[18px] w-[18px] text-[#ff453a]" aria-hidden /> Chattar
+        </Link>
+      )}
+    >
       <div className="flex gap-1 overflow-x-auto px-3 pb-3 pt-1 [scrollbar-width:none]">
         {stories.map((s) => (
           <StoryCircle key={s.id} story={s} selected={s.id === story.id}
@@ -304,7 +312,7 @@ const NativeFeed = () => {
       <div className="border-t border-[rgba(84,84,88,0.45)]" />
 
       {story.id.startsWith('k:') && (
-        <Link to={`${kommunPath(story.label)}?chatt=1`} className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-[#1c1c1e] px-4 py-3 active:opacity-70">
+        <Link to={chatPath(story.label)} className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-[#1c1c1e] px-4 py-3 active:opacity-70">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ff453a]/15 text-[#ff453a]">
             <MessagesSquare className="h-[18px] w-[18px]" aria-hidden />
           </span>

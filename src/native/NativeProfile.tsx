@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, FileText, Gift, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
+import { Bell, FileText, Gift, Info, LogIn, Mail, MessagesSquare, Shield, Star, UserRound, Zap } from 'lucide-react';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import { planLabel } from '@/components/account/plans';
@@ -122,6 +122,7 @@ const NativeProfile = () => {
       {hasAppDesign13() && (
         <Section>
           <Row icon={Bell} iconBg="#ff453a" label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
+          <Row icon={MessagesSquare} iconBg="#bf5af2" label="Chattar" detail="Prata med grannarna i din kommun" to="/chattar" />
         </Section>
       )}
 
