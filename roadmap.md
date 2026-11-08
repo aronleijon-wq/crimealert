@@ -22,3 +22,4 @@
 - Beslut: mobilprestanda (canvas-markörer/kollapsad lista) och SEO-förslag
 
 - "Lägg till marknadsförings liten del" på inloggningssidan: vad den ska innehålla
+- [ ] Google Ads tracking via Googles befintliga cookie-ruta (ingen egen ruta)

@@ -75,12 +75,9 @@ export function saveChoice(decision: "granted" | "denied") {
 
 export async function loadGoogleAds() {
   if (typeof window === "undefined") return;
-  const allowed = await canTrackAds();
-  if (!allowed) return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { // eslint-disable-next-line prefer-rest-params
     window.dataLayer.push(arguments); };
-  updateConsent("granted");
   if (document.querySelector("script[data-google-ads]")) return;
   window.gtag("set", "developer_id.dZjgwMW", true);
   window.gtag("js", new Date());
@@ -94,7 +91,8 @@ export async function loadGoogleAds() {
 
 export async function reportConversion(sendTo: string, extra: Record<string, unknown> = {}) {
   await loadGoogleAds();
-  if (await canTrackAds()) window.gtag?.("event", "conversion", { send_to: sendTo, ...extra });
+  // Consent Mode (set by Google's cookie box) decides what Google may store or use.
+  window.gtag?.("event", "conversion", { send_to: sendTo, ...extra });
 }
 
 /** Counts a new account once, for accounts created in the last 10 minutes. */
