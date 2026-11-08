@@ -1,3 +1,4 @@
+import { reportSignupIfNew } from "@/lib/googleAds";
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthError, User, Session } from '@supabase/supabase-js';
@@ -146,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (_event === 'SIGNED_IN') reportSignupIfNew(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
         setTimeout(() => refreshSubscription(true), 0);

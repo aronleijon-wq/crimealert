@@ -15,6 +15,7 @@ import { lazyPage } from "@/lib/staleBuild";
 import Landing from "./pages/Landing";
 import NativeAppBridge from "@/components/native/NativeAppBridge";
 import InviteRedeemer from "@/components/InviteRedeemer";
+import CookieBanner from "@/components/CookieBanner";
 const Index = lazyPage(() => import("./pages/Index"));
 
 // Lazy load non-critical routes for better initial load
@@ -122,6 +123,7 @@ const App = () => (
         </ErrorBoundary>
         <BackendStatusBanner />
         <AdsController />
+        <CookieBanner />
 
       </BrowserRouter>
     </TooltipProvider>
