@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, SmilePlus, type LucideIcon } from 'lucide-react';
 import CommentThread from '@/components/feed/CommentThread';
@@ -24,10 +24,14 @@ import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { kommunPath } from '@/lib/kommunPages';
 import { chatPath } from './chats';
+import FeedNudge from './FeedNudge';
+import { pickNudge, readNudges, usageDays } from './nudges';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { Screen } from './ui';
 
 const PAGE = 25;
+/** The card about free Pro or feedback, after this many posts */
+const NUDGE_AFTER = 4;
 const HOUR = 60 * 60 * 1000;
 const MUTED = 'text-[rgba(235,235,245,0.6)]';
 
@@ -274,6 +278,8 @@ const NativeFeed = () => {
   const { kommuner } = useNotificationPreferences();
   const [storyId, setStoryId] = useState('all');
   const [count, setCount] = useState(PAGE);
+  // Decided once per visit to Flöde, so a card doesn't come and go while scrolling
+  const [nudge, setNudge] = useState(() => pickNudge({ days: usageDays(), isPremium, state: readNudges(), now: Date.now() }));
 
   const items = useMemo(() => buildFeed({ police, traffic, community, external, isPremium }), [police, traffic, community, external, isPremium]);
 
@@ -341,8 +347,13 @@ const NativeFeed = () => {
         <p className={`mt-16 px-8 text-center text-[15px] ${MUTED}`}>Inget här just nu.</p>
       ) : (
         <div className="mt-1">
-          {shown.map((item) => (
-            <Post key={item.id} item={item} engagement={engagement[item.id]} signedIn={!!user} onReact={toggleReaction} onCommentCount={setCommentCount} />
+          {shown.map((item, i) => (
+            <Fragment key={item.id}>
+              <Post item={item} engagement={engagement[item.id]} signedIn={!!user} onReact={toggleReaction} onCommentCount={setCommentCount} />
+              {i === Math.min(NUDGE_AFTER, shown.length) - 1 && nudge && !(nudge === 'invite' && isPremium) && (
+                <FeedNudge nudge={nudge} onDone={() => setNudge(null)} />
+              )}
+            </Fragment>
           ))}
         </div>
       )}

@@ -6,7 +6,7 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
 import { parseIncidentTime } from '@/lib/incidentTime';
-import { canSellPro } from '@/lib/native';
+import { canSellPro, hasAppDesign13 } from '@/lib/native';
 import { kommunPath } from '@/lib/kommunPages';
 import { areaStats, inArea, insights, kommunChanges, risingKommuner, WEEKDAYS_SHORT, type AreaStats, type StatEvent, type ThemeTrend } from './stats';
 import { useStatsEvents } from './useStatsEvents';
@@ -171,6 +171,12 @@ const ProLock = () => (
       {canSellPro() && (
         <Link to="/prisplan" className="mt-4 inline-flex h-11 items-center justify-center rounded-xl bg-[#ff453a] px-6 text-[17px] font-semibold text-white active:opacity-80">
           Prova Pro
+        </Link>
+      )}
+      {/* From 1.3: the invite page (NativeInvite) */}
+      {hasAppDesign13() && (
+        <Link to="/bjud-in" className="mt-3 block text-[15px] font-semibold text-[#0a84ff] active:opacity-60">
+          Eller få Pro gratis: bjud in vänner
         </Link>
       )}
     </div>
