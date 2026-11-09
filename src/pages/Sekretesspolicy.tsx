@@ -96,6 +96,7 @@ const Sekretesspolicy = () => {
                 </li>
                 <li>Analysera trafik och användarmönster för att förbättra upplevelsen.</li>
                 {!app && <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>}
+                {!app && <li>Mäta om våra Google Ads-annonser leder till nya konton och Pro-köp (Google Ads konverteringsspårning). Google tar emot uppgifter om besöket och konverteringen. I EU/EES sker det bara om du godkänner i cookie-rutan, och du kan ändra ditt val när som helst. Läs mer: <a href="https://business.safety.google/privacy/" className="underline" target="_blank" rel="noopener noreferrer">Googles integritetspolicy för företag</a>.</li>}
               </ul>
             </section>
 

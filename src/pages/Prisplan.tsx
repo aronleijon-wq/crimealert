@@ -1,3 +1,4 @@
+import { reportConversion, SEND_TO_PURCHASE } from "@/lib/googleAds";
 import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import { ChevronRight, Zap } from 'lucide-react';
@@ -74,6 +75,9 @@ const Prisplan = () => {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
       if (wasPolling) {
+        const sid = `${user?.id}-${subscription.subscriptionEnd ?? ''}`;
+        const k = `ca-ads-purchase-${sid}`;
+        try { if (!localStorage.getItem(k)) { localStorage.setItem(k, '1'); void reportConversion(SEND_TO_PURCHASE, { value: 159, currency: 'SEK', transaction_id: String(sid) }); } } catch { /* ignore */ }
         setShowWelcome(true);
         setWasPolling(false);
       }
