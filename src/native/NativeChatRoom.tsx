@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Copy, Flag, Heart, Reply, Trash2, UserX, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, Copy, Flag, Heart, Reply, Trash2, UserX, X } from 'lucide-react';
+import { isNativeApp } from '@/lib/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentComments, type IncidentComment } from '@/hooks/useIncidentComments';
 import { useSEO } from '@/hooks/useSEO';
@@ -247,6 +248,12 @@ const NativeChatRoom = () => {
     <div className="ios flex h-full flex-col bg-black text-white">
       {/* Whose room it is */}
       <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.08] px-4 pb-2.5 pt-0.5">
+        {/* The app has its own back button above; the website gets one here */}
+        {!isNativeApp() && (
+          <Link to="/chattar" aria-label="Alla chattar" className="-ml-2 flex h-9 w-7 items-center justify-center text-[#0a84ff]">
+            <ChevronLeft className="h-6 w-6" aria-hidden />
+          </Link>
+        )}
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9a9aa0] to-[#636366] text-[16px] font-semibold">{kommun.charAt(0)}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[17px] font-semibold leading-[22px]">{kommun}</span>

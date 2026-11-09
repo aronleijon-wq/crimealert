@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
-import { Radio, Newspaper, BarChart3, Bell, CreditCard } from 'lucide-react';
+import { Radio, Newspaper, BarChart3, Bell, CreditCard, MessagesSquare } from 'lucide-react';
 import { canSellPro, isNativeApp } from '@/lib/native';
 import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
 
 const navItems = [
   { to: '/karta', label: 'Karta', icon: Radio },
   { to: '/flode', label: 'Flöde', icon: Newspaper },
+  { to: '/chattar', label: 'Chattar', icon: MessagesSquare },
   { to: '/analysis', label: 'Analys', icon: BarChart3 },
   { to: '/alerts', label: 'Notiser', icon: Bell },
   { to: '/prisplan', label: 'Prisplan', icon: CreditCard },
@@ -17,7 +18,8 @@ const navItems = [
 // The app doesn't sell Pro (lib/native), so it has no price page in the menu
 const menuItems = () => (canSellPro() ? navItems : navItems.filter((item) => item.to !== '/prisplan'));
 
-const isCurrent = (to: string, pathname: string) => pathname === to || (to === '/prisplan' && pathname === '/account');
+const isCurrent = (to: string, pathname: string) =>
+  pathname === to || (to === '/prisplan' && pathname === '/account') || (to === '/chattar' && pathname.startsWith('/chatt/'));
 
 const Header = () => {
   const location = useLocation();

@@ -13,6 +13,30 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
 import DangerRanking from '@/components/DangerRanking';
+import { isNativeApp } from '@/lib/native';
+import NativeHistory from '@/native/NativeHistory';
+import StatsTrends from '@/native/StatsTrends';
+
+/**
+ * On the website, above the full analysis: the app's statistics, trends where you live and
+ * Sweden over the years, side by side, for everyone (Pro sees all the trends).
+ */
+const Overview = () => (
+  <section className="mx-auto max-w-7xl px-4 pt-6 md:px-6" aria-labelledby="oversikt-rubrik">
+    <h1 id="oversikt-rubrik" className="text-xl font-bold text-foreground">Analys &amp; statistik</h1>
+    <p className="mt-1 text-sm text-muted-foreground">Läget där du bor, hur brotten ändras och hur Sverige har förändrats sedan 2017.</p>
+    <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
+      <div className="ca-dark overflow-hidden rounded-3xl bg-black pb-6 text-white">
+        <h2 className="px-5 pb-1 pt-5 text-[22px] font-bold tracking-tight">Trender</h2>
+        <StatsTrends />
+      </div>
+      <div className="ca-dark overflow-hidden rounded-3xl bg-black pb-6 text-white">
+        <h2 className="px-5 pb-1 pt-5 text-[22px] font-bold tracking-tight">Sverige över tid</h2>
+        <NativeHistory />
+      </div>
+    </div>
+  </section>
+);
 
 /** Normalize "2026-02-18 22:03:10 +01:00" or "2026-02-19 7:45:12 +01:00" → valid Date */
 const parseTime = (t: string): Date => {
@@ -182,6 +206,8 @@ const Analysis = () => {
   });
   const { incidents: liveIncidents, loading: liveLoading, refetch, dataVersion, totalEverSeen, updatedAt: liveUpdatedAt } = usePoliceEvents();
   const { isPremium } = useIsPremium();
+  // In the app this page is Statistik → Analys, next to the app's own trends; on the website it has them too
+  const web = !isNativeApp();
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
@@ -373,7 +399,8 @@ const Analysis = () => {
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
-      
+      <div className={web ? 'flex-1 overflow-y-auto' : 'contents'}>
+      {web && <Overview />}
       {!isPremium ?
       <PremiumGate
         title="Riskanalys & Statistik"
@@ -381,12 +408,12 @@ const Analysis = () => {
         free={{ to: '/statistik', label: 'Se brottsutvecklingen i hela Sverige gratis' }} /> :
 
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      <div className={web ? 'p-4 md:p-6' : 'flex-1 overflow-y-auto p-4 md:p-6'}>
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  Analys & Statistik {selectedArea && <span className="text-primary">· {selectedArea}</span>}
+                <h1 className={web ? 'text-lg font-bold text-foreground' : 'text-xl font-bold text-foreground'}>
+                  {web ? 'Djupanalys' : 'Analys & Statistik'} {selectedArea && <span className="text-primary">· {selectedArea}</span>}
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {filteredIncidents.length} händelser{selectedArea ? ` i ${selectedArea}` : ''} · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
@@ -681,6 +708,7 @@ const Analysis = () => {
           </div>
         </div>
       }
+      </div>
     </div>);
 
 };
