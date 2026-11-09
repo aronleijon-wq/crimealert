@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // The iPhone app (ios/): a native shell that opens crimealert.se, so the app is always as new
 // as the site and needs no new App Store version for each change. The site sees the app by
 // "CrimeAlertApp" in the user agent and Capacitor's bridge (src/lib/native.ts), and the app's
-// version by "CrimeAlertApp/1.3": what a newer app looks like is shown only to that version
+// version by "CrimeAlertApp/1.4": what a newer app looks like is shown only to that version
 // and later, so the site can change ahead of an app still in Apple's review. Links to
 // other sites open in Safari. native/www holds the page shown when there is no connection.
 const config: CapacitorConfig = {
@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
   appName: 'CrimeAlert',
   webDir: 'native/www',
   backgroundColor: '#05080b',
-  appendUserAgent: 'CrimeAlertApp/1.3',
+  appendUserAgent: 'CrimeAlertApp/1.4',
   server: {
     url: 'https://crimealert.se/karta',
     errorPath: 'index.html',

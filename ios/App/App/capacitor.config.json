@@ -3,7 +3,7 @@
 	"appName": "CrimeAlert",
 	"webDir": "native/www",
 	"backgroundColor": "#05080b",
-	"appendUserAgent": "CrimeAlertApp/1.3",
+	"appendUserAgent": "CrimeAlertApp/1.4",
 	"server": {
 		"url": "https://crimealert.se/karta",
 		"errorPath": "index.html"
