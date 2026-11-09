@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { Activity, BellRing, CalendarDays, ChevronRight, Clock, Map as MapIcon, TrendingUp } from 'lucide-react';
-import Discussion from '@/components/community/Discussion';
 import Header from '@/components/Header';
 import SwedenLocator from '@/components/SwedenLocator';
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
@@ -15,7 +14,7 @@ import { kommunFaq, kommunFromSlug, kommunJsonLd, kommunLongName, kommunPath, ko
 import { monthLabel, reportMonths, stockholmToday } from '@/lib/monthlyReport';
 import { eventPath } from '@/lib/share';
 import { formatTimeAgo } from '@/lib/timeAgo';
-import { kommunThreadId } from '../../supabase/functions/_shared/replies';
+import { chatPath } from '@/native/chats';
 
 const PAGE = 25;
 
@@ -212,12 +211,23 @@ const Kommun = () => {
             )}
           </section>
 
-          <Discussion
-            threadId={kommunThreadId(name)}
-            title={`Prata om ${name}`}
-            intro={`Diskussionen för alla som bor i eller bryr sig om ${name}. Håll god ton, och inga namn på misstänkta.`}
-            focus={wantsChat}
-          />
+          {/* The kommun's chat has its own room, as in the app; a reply notification (?chatt) goes straight there */}
+          {wantsChat && <Navigate to={chatPath(name)} replace />}
+          <Link
+            to={chatPath(name)}
+            className="group mt-10 flex items-center gap-4 rounded-2xl border border-[hsl(var(--ca-line))] bg-card p-4 transition hover:border-[hsl(var(--ca-line-strong))]"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9a9aa0] to-[#636366] text-lg font-semibold text-white" aria-hidden>
+              {name.charAt(0)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-semibold text-foreground">Prata om {name}</span>
+              <span className="mt-0.5 block text-sm text-muted-foreground">Kommunens chatt: fråga, tipsa och berätta vad du såg.</span>
+            </span>
+            <span className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#0a84ff] px-4 text-sm font-semibold text-white transition group-hover:brightness-110">
+              Öppna chatten <ChevronRight className="h-4 w-4" aria-hidden />
+            </span>
+          </Link>
 
           {neighbours.length > 0 && (
             <section className="mt-10" aria-labelledby="grannar">
