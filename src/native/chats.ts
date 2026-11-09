@@ -41,3 +41,23 @@ export function chatOverview(rows: ThreadRow[], watched: string[], now = Date.no
 
 /** The kommun's chat room in the app (NativeChatRoom) */
 export const chatPath = (kommun: string) => `/chatt/${kommunSlug(kommun)}`;
+
+const SEEN_KEY = 'ca-chat-seen';
+
+/** When you last had each kommun's chat open, to mark the ones with something new */
+export function chatsSeen(): Record<string, number> {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SEEN_KEY) ?? 'null') as Record<string, number> | null;
+    return saved && typeof saved === 'object' ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+export function markChatSeen(kommun: string, at = Date.now()) {
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify({ ...chatsSeen(), [kommun]: at })); } catch { /* shown as new again */ }
+}
+
+/** Something new since you were last there, written by someone else */
+export const isUnread = (s: ChatSummary, seen: Record<string, number>, me: string | undefined) =>
+  !!s.last && s.last.user_id !== me && Date.parse(s.last.created_at) > (seen[s.kommun] ?? 0);

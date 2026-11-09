@@ -62,10 +62,10 @@ const FeedbackSheet = ({ initialRating = null, onClose, onSent }: Props) => {
   };
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Tyck till om CrimeAlert" className="ca-dark fixed inset-0 z-[3000] flex flex-col justify-end" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Tyck till om CrimeAlert" className="ca-dark fixed inset-0 z-[3000] flex flex-col justify-end sm:justify-center" onClick={onClose}>
       <div className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`} aria-hidden />
       <div
-        className={`relative rounded-t-[16px] bg-[#1c1c1e] text-white transition-transform duration-300 ease-out sm:mx-auto sm:mb-8 sm:w-[440px] sm:rounded-[16px] ${shown ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`relative rounded-t-[16px] bg-[#1c1c1e] text-white transition-transform duration-300 ease-out sm:mx-auto sm:w-[440px] sm:rounded-[16px] ${shown ? 'translate-y-0' : 'translate-y-full'}`}
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif' }}
         onClick={(e) => e.stopPropagation()}
       >

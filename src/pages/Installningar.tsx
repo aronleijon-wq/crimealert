@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Bell, ChevronRight, CreditCard, ExternalLink, FileText, HelpCircle, Info, LogOut, Mail, Moon, Pencil, Shield, Star, Sun, User, Zap,
+  Bell, ChevronRight, CreditCard, ExternalLink, FileText, HelpCircle, Info, LogOut, Mail, MessageSquareHeart, Moon, Pencil, Shield, Star, Sun, User, Zap,
   type LucideIcon,
 } from 'lucide-react';
 import DefaultAvatar from '@/components/DefaultAvatar';
@@ -9,6 +9,9 @@ import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import InviteFriends from '@/components/account/InviteFriends';
 import Header from '@/components/Header';
+
+// "Tyck till": the same sheet as in the app, loaded when it is opened
+const FeedbackSheet = lazy(() => import('@/native/FeedbackSheet'));
 import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { useAuth } from '@/hooks/useAuth';
@@ -177,6 +180,7 @@ const Installningar = () => {
   const { isPremium } = useIsPremium();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
+  const [feedback, setFeedback] = useState(false);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -301,6 +305,10 @@ const Installningar = () => {
           </Section>
 
           <Section id="hjalp" title="Hjälp och kontakt">
+            <button type="button" onClick={() => setFeedback(true)} className={linkRowClass}>
+              <RowText icon={MessageSquareHeart} label="Tyck till" hint="Vad ska vi göra bättre? Vi läser allt." />
+              <ChevronRight className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))]" aria-hidden />
+            </button>
             <LinkRow icon={HelpCircle} label="Vanliga frågor" to="/#vanliga-fragor" />
             <LinkRow icon={Mail} label="Kontakta oss" hint={CONTACT_EMAIL} to={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert`} />
             <LinkRow
@@ -311,6 +319,8 @@ const Installningar = () => {
               newTab
             />
           </Section>
+
+          {feedback && <Suspense fallback={null}><FeedbackSheet onClose={() => setFeedback(false)} /></Suspense>}
 
           <Section id="om" title="Om CrimeAlert">
             <LinkRow icon={Info} label="Om oss" to="/om-oss" />
