@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      feedback: {
-        Row: {
-          created_at: string
-          id: number
-          message: string | null
-          rating: number
-          source: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: never
-          message?: string | null
-          rating: number
-          source: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: never
-          message?: string | null
-          rating?: number
-          source?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       apple_subscriptions: {
         Row: {
           environment: string
@@ -280,6 +253,33 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          created_at: string
+          id: number
+          message: string | null
+          rating: number
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          message?: string | null
+          rating: number
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          message?: string | null
+          rating?: number
+          source?: string
+          user_id?: string | null
         }
         Relationships: []
       }

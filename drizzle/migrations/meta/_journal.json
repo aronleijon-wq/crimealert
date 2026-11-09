@@ -43,6 +43,13 @@
       "when": 1794078864362,
       "tag": "0005_notification_filters",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794254583982,
+      "tag": "0006_feedback",
+      "breakpoints": true
     }
   ]
 }
