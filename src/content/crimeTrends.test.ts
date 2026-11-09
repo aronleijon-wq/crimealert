@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EXPLOSIONS, REPORTED, SHOOTINGS, first, formatChange, last, percentChange, previous } from './crimeTrends';
+import { EXPLOSIONS, LETHAL_VIOLENCE, REPORTED, SHOOTINGS, SHOOTINGS_FIRST_HALF, first, formatChange, last, percentChange, previous } from './crimeTrends';
 
 describe('national crime trends', () => {
   it('cover the last three full years, oldest first, with sources', () => {
@@ -26,5 +26,27 @@ describe('national crime trends', () => {
     expect(formatChange(-57)).toBe('−57 %');
     expect(formatChange(4)).toBe('+4 %');
     expect(formatChange(0)).toBe('±0 %');
+  });
+});
+
+describe('the long series', () => {
+  it('has every first half from 2017, oldest first', () => {
+    expect(SHOOTINGS_FIRST_HALF.map((r) => r.year)).toEqual([2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]);
+    for (const r of SHOOTINGS_FIRST_HALF) expect(r.dead).toBeLessThan(r.shootings);
+  });
+
+  it('agrees with the half-year comparison and Polisen\'s −81 % since 2022', () => {
+    const at = (y: number) => SHOOTINGS_FIRST_HALF.find((r) => r.year === y)!;
+    expect(at(2026).shootings).toBe(SHOOTINGS.halfYear!.value);
+    expect(at(2025).shootings).toBe(SHOOTINGS.halfYear!.before);
+    expect(percentChange(at(2022).shootings, at(2026).shootings)).toBe(-81);
+  });
+
+  it('gives Brå\'s lethal violence, firearms part of the total', () => {
+    expect(LETHAL_VIOLENCE.map((r) => r.year)).toEqual([2022, 2023, 2024, 2025]);
+    for (const r of LETHAL_VIOLENCE) expect(r.firearm).toBeLessThan(r.total);
+    // Brå: 2025 had 8 fewer cases than 2024, 2024 had 29 fewer than 2023
+    expect(LETHAL_VIOLENCE[2].total - LETHAL_VIOLENCE[3].total).toBe(8);
+    expect(LETHAL_VIOLENCE[1].total - LETHAL_VIOLENCE[2].total).toBe(29);
   });
 });

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight, Lock, Sparkles } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -13,6 +13,8 @@ import { useStatsEvents } from './useStatsEvents';
 import ShareCardButton from '@/components/ShareCardButton';
 import { drawTrendCard } from '@/lib/shareCard';
 import { Screen, Segmented } from './ui';
+import { Card, FAINT, MUTED } from './StatCard';
+import NativeHistory from './NativeHistory';
 
 // The website's analysis page, with everything it has (charts, risk, citizen reports, export),
 // under "Analys" next to the app's own trends
@@ -20,16 +22,6 @@ const Analysis = lazy(() => import('@/pages/Analysis'));
 
 const RED = '#ff453a';
 const GREEN = '#30d158';
-const MUTED = 'text-[rgba(235,235,245,0.6)]';
-const FAINT = 'text-[rgba(235,235,245,0.3)]';
-
-const Card = ({ title, footer, children }: { title?: string; footer?: ReactNode; children: ReactNode }) => (
-  <section className="mx-4 mt-6">
-    {title && <h2 className={`mb-1.5 px-1 text-[13px] uppercase tracking-[0.02em] ${MUTED}`}>{title}</h2>}
-    <div className="rounded-2xl bg-[#1c1c1e] p-4">{children}</div>
-    {footer && <p className={`mt-1.5 px-1 text-[13px] leading-snug ${MUTED}`}>{footer}</p>}
-  </section>
-);
 
 /** "+23 %" in red for more crime, "−12 %" in green for less */
 const ChangePill = ({ value }: { value: number | null }) => {
@@ -191,7 +183,7 @@ const toStat = (incidents: { time: string; area: string; originalType?: string }
     return at === undefined ? [] : [{ at, area: i.area, category: i.originalType ?? '' }];
   });
 
-const VIEW_OPTIONS = [{ value: 'trender', label: 'Trender' }, { value: 'analys', label: 'Analys' }];
+const VIEW_OPTIONS = [{ value: 'trender', label: 'Trender' }, { value: 'over-tid', label: 'Över tid' }, { value: 'analys', label: 'Analys' }];
 
 const DAY_OPTIONS = [{ value: '7', label: '7 dagar' }, { value: '30', label: '30 dagar' }];
 
@@ -206,8 +198,8 @@ const NativeStats = () => {
   const { kommuner } = useNotificationPreferences();
   const { incidents: live } = usePoliceEvents();
   const [params, setParams] = useSearchParams();
-  const view = params.get('vy') === 'analys' ? 'analys' : 'trender';
-  const setView = (next: string) => { setParams(next === 'analys' ? { vy: 'analys' } : {}, { replace: true }); window.dispatchEvent(new Event('ca-tab-top')); };
+  const view = VIEW_OPTIONS.some((o) => o.value === params.get('vy')) ? params.get('vy')! : 'trender';
+  const setView = (next: string) => { setParams(next === 'trender' ? {} : { vy: next }, { replace: true }); window.dispatchEvent(new Event('ca-tab-top')); };
   const [area, setArea] = useState<string | null>(null);
   const [days, setDays] = useState('30');
   const period = Number(days);
@@ -228,7 +220,9 @@ const NativeStats = () => {
   return (
     <Screen title="Statistik">
       <div className="mb-2 mt-1"><Segmented options={VIEW_OPTIONS} value={view} onChange={setView} /></div>
-      {view === 'analys' ? (
+      {view === 'over-tid' ? (
+        <NativeHistory />
+      ) : view === 'analys' ? (
         <div className="ca-app-analysis">
           <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
             <Analysis />

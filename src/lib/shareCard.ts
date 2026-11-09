@@ -115,11 +115,11 @@ async function frame(ctx: CanvasRenderingContext2D, color: string) {
   ctx.fillText('ALERT', 200 + ctx.measureText('CRIME').width, 128);
 }
 
-function footer(ctx: CanvasRenderingContext2D, url: string) {
+function footer(ctx: CanvasRenderingContext2D, url: string, tagline = 'Polisens händelser i hela Sverige') {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = 'rgba(235,235,245,0.6)';
   ctx.font = `500 34px ${FONT}`;
-  ctx.fillText('Polisens händelser i hela Sverige', 80, CARD_HEIGHT - 150);
+  ctx.fillText(tagline, 80, CARD_HEIGHT - 150);
   ctx.fillStyle = '#fff';
   ctx.font = `700 40px ${FONT}`;
   ctx.fillText(url.replace(/^https?:\/\//, ''), 80, CARD_HEIGHT - 92);
@@ -216,6 +216,59 @@ export async function drawTrendCard(card: TrendCard): Promise<Blob> {
   ctx.font = `500 30px ${FONT}`;
   ctx.fillText('Jämfört med perioden före. Källa: Polisens händelser.', 80, y + 30);
   footer(ctx, card.url);
+  return toBlob(c);
+}
+
+export interface HistoryCard {
+  /** Small red line above the title: "Skjutningar · januari–juni" */
+  kicker: string;
+  title: string;
+  /** Oldest first; 'high' in red, 'low' in blue, the rest muted */
+  bars: { label: string; value: number; tone?: 'high' | 'low' }[];
+  /** Under the chart: what is counted, and whose figures */
+  note: string;
+  url: string;
+}
+
+/** A year-by-year chart of Polisen's or Brå's national figures, as on Statistik → Över tid */
+export async function drawHistoryCard(card: HistoryCard): Promise<Blob> {
+  const [c, ctx] = canvas();
+  await frame(ctx, '#0a84ff');
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = RED;
+  ctx.font = `700 36px ${FONT}`;
+  ctx.fillText(card.kicker.toUpperCase(), 80, 300);
+  ctx.fillStyle = '#fff';
+  ctx.font = `800 80px ${FONT}`;
+  const title = wrapLines((t) => ctx.measureText(t).width, card.title, CARD_WIDTH - 160, 2);
+  let y = 392;
+  for (const line of title) { ctx.fillText(line, 76, y); y += 88; }
+
+  // The chart fills what is left above the note and the address
+  const top = y + 70;
+  const base = CARD_HEIGHT - 330;
+  const max = Math.max(1, ...card.bars.map((b) => b.value));
+  const gap = card.bars.length > 6 ? 14 : 28;
+  const width = (CARD_WIDTH - 160 - gap * (card.bars.length - 1)) / Math.max(1, card.bars.length);
+  ctx.textAlign = 'center';
+  card.bars.forEach((bar, i) => {
+    const x = 80 + i * (width + gap);
+    const h = Math.max(6, ((base - top) * bar.value) / max);
+    ctx.fillStyle = bar.tone === 'high' ? RED : bar.tone === 'low' ? '#0a84ff' : 'rgba(255,255,255,0.22)';
+    roundRect(ctx, x, base - h, width, h, Math.min(14, width / 3));
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `700 ${card.bars.length > 6 ? 30 : 40}px ${FONT}`;
+    ctx.fillText(bar.value.toLocaleString('sv-SE'), x + width / 2, base - h - 14);
+    ctx.fillStyle = 'rgba(235,235,245,0.6)';
+    ctx.font = `600 ${card.bars.length > 6 ? 26 : 34}px ${FONT}`;
+    ctx.fillText(bar.label, x + width / 2, base + 42);
+  });
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(235,235,245,0.45)';
+  ctx.font = `500 30px ${FONT}`;
+  ctx.fillText(card.note, 80, base + 100);
+  footer(ctx, card.url, 'Brottsutvecklingen i Sverige');
   return toBlob(c);
 }
 
