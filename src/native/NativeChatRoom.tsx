@@ -13,6 +13,7 @@ import { kommunThreadId } from '../../supabase/functions/_shared/replies';
 import { chatItems, clock, personColor } from './chatRoom';
 import { markChatSeen } from './chats';
 import { haptics } from './haptics';
+import './chat.css';
 
 const POLL_MS = 15000;
 const MINE = '#0a84ff';

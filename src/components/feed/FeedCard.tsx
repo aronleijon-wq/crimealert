@@ -217,12 +217,13 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
             type="button"
             onClick={() => setCommentsOpen((v) => !v)}
             aria-expanded={commentsOpen}
+            aria-label={engagement?.commentCount ? `${engagement.commentCount} kommentarer` : 'Kommentera'}
             className={`ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs transition ${
               commentsOpen ? 'bg-primary/15 text-primary ring-1 ring-primary/40' : 'text-muted-foreground hover:bg-[hsl(var(--ca-panel-3))]'
             }`}
           >
             <MessageCircle className="h-4 w-4" />
-            {user ? <span className="tabular-nums">{engagement?.commentCount ?? 0}</span> : 'Kommentera'}
+            {user && engagement?.commentCount ? <span className="tabular-nums">{engagement.commentCount}</span> : 'Kommentera'}
           </button>
           {item.kind === 'police' && (
             <ShareButton

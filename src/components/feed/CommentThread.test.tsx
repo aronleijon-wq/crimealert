@@ -32,7 +32,7 @@ describe('comments', () => {
     expect(field).toHaveValue('@Anna L ');
     expect(screen.getByText(/Svarar/)).toHaveTextContent('Svarar Anna L');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Avbryt' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Avbryt svaret' }));
     expect(field).toHaveValue('');
 
     fireEvent.click(screen.getByRole('button', { name: 'Svara Anonym' }));
