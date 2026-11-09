@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Construction, Eye, Layers, Lock, MapPin, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, SmilePlus, type LucideIcon } from 'lucide-react';
 import CommentThread from '@/components/feed/CommentThread';
@@ -23,10 +23,15 @@ import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { kommunPath } from '@/lib/kommunPages';
+import { chatPath } from './chats';
+import FeedNudge from './FeedNudge';
+import { pickNudge, readNudges, usageDays } from './nudges';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { Screen } from './ui';
 
 const PAGE = 25;
+/** The card about free Pro or feedback, after this many posts */
+const NUDGE_AFTER = 4;
 const HOUR = 60 * 60 * 1000;
 const MUTED = 'text-[rgba(235,235,245,0.6)]';
 
@@ -273,6 +278,8 @@ const NativeFeed = () => {
   const { kommuner } = useNotificationPreferences();
   const [storyId, setStoryId] = useState('all');
   const [count, setCount] = useState(PAGE);
+  // Decided once per visit to Flöde, so a card doesn't come and go while scrolling
+  const [nudge, setNudge] = useState(() => pickNudge({ days: usageDays(), isPremium, state: readNudges(), now: Date.now() }));
 
   const items = useMemo(() => buildFeed({ police, traffic, community, external, isPremium }), [police, traffic, community, external, isPremium]);
 
@@ -293,7 +300,14 @@ const NativeFeed = () => {
   const hourAgo = Date.now() - HOUR;
 
   return (
-    <Screen title="Flöde">
+    <Screen
+      title="Flöde"
+      action={(
+        <Link to="/chattar" aria-label="Chattar" className="flex h-10 items-center gap-1.5 rounded-full bg-[#1c1c1e] px-3.5 text-[15px] font-semibold text-white active:opacity-60">
+          <MessagesSquare className="h-[18px] w-[18px] text-[#ff453a]" aria-hidden /> Chattar
+        </Link>
+      )}
+    >
       <div className="flex gap-1 overflow-x-auto px-3 pb-3 pt-1 [scrollbar-width:none]">
         {stories.map((s) => (
           <StoryCircle key={s.id} story={s} selected={s.id === story.id}
@@ -304,7 +318,7 @@ const NativeFeed = () => {
       <div className="border-t border-[rgba(84,84,88,0.45)]" />
 
       {story.id.startsWith('k:') && (
-        <Link to={`${kommunPath(story.label)}?chatt=1`} className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-[#1c1c1e] px-4 py-3 active:opacity-70">
+        <Link to={chatPath(story.label)} className="mx-4 mt-3 flex items-center gap-3 rounded-2xl bg-[#1c1c1e] px-4 py-3 active:opacity-70">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ff453a]/15 text-[#ff453a]">
             <MessagesSquare className="h-[18px] w-[18px]" aria-hidden />
           </span>
@@ -333,8 +347,13 @@ const NativeFeed = () => {
         <p className={`mt-16 px-8 text-center text-[15px] ${MUTED}`}>Inget här just nu.</p>
       ) : (
         <div className="mt-1">
-          {shown.map((item) => (
-            <Post key={item.id} item={item} engagement={engagement[item.id]} signedIn={!!user} onReact={toggleReaction} onCommentCount={setCommentCount} />
+          {shown.map((item, i) => (
+            <Fragment key={item.id}>
+              <Post item={item} engagement={engagement[item.id]} signedIn={!!user} onReact={toggleReaction} onCommentCount={setCommentCount} />
+              {i === Math.min(NUDGE_AFTER, shown.length) - 1 && nudge && !(nudge === 'invite' && isPremium) && (
+                <FeedNudge nudge={nudge} onDone={() => setNudge(null)} />
+              )}
+            </Fragment>
           ))}
         </div>
       )}

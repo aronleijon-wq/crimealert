@@ -80,6 +80,46 @@ export const EXPLOSIONS: Trend = {
   sources: [POLISEN_STATISTIK, POLISEN_2025, POLISEN_H1_2026],
 };
 
+/** One value per year with the dead and injured, for the long first-half series */
+export interface HalfYearRow {
+  year: number;
+  shootings: number;
+  dead: number;
+  injured: number;
+}
+
+/**
+ * Shootings January–June every year since Polisen began counting (2017), as Polisen gave them in
+ * July 2026. The only series that compares every year the same way: full years differ between
+ * Polisen's releases as the preliminary figures are revised.
+ */
+export const SHOOTINGS_FIRST_HALF: HalfYearRow[] = [
+  { year: 2017, shootings: 114, dead: 18, injured: 40 },
+  { year: 2018, shootings: 139, dead: 22, injured: 66 },
+  { year: 2019, shootings: 168, dead: 22, injured: 55 },
+  { year: 2020, shootings: 181, dead: 22, injured: 60 },
+  { year: 2021, shootings: 147, dead: 20, injured: 40 },
+  { year: 2022, shootings: 205, dead: 34, injured: 49 },
+  { year: 2023, shootings: 187, dead: 23, injured: 58 },
+  { year: 2024, shootings: 149, dead: 18, injured: 29 },
+  { year: 2025, shootings: 86, dead: 27, injured: 20 },
+  { year: 2026, shootings: 39, dead: 8, injured: 15 },
+];
+export const SHOOTINGS_FIRST_HALF_SOURCES: Source[] = [POLISEN_H1_2026, POLISEN_STATISTIK];
+
+export const BRA_LETHAL: Source = {
+  label: 'Brå: Konstaterade fall av dödligt våld',
+  url: 'https://bra.se/statistik/statistik-om-rattsvasendet/konstaterade-fall-av-dodligt-vald',
+};
+
+/** Brå's confirmed cases of lethal violence, and those where a firearm was used */
+export const LETHAL_VIOLENCE: { year: number; total: number; firearm: number }[] = [
+  { year: 2022, total: 116, firearm: 63 },
+  { year: 2023, total: 121, firearm: 53 },
+  { year: 2024, total: 92, firearm: 45 },
+  { year: 2025, total: 84, firearm: 42 },
+];
+
 export interface ReportedCrime {
   label: string;
   /** 2024 and 2025, as in Brå's final statistics for 2025 */

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Gift, Link2, Share } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyInvite } from '@/hooks/useMyInvite';
@@ -6,6 +6,7 @@ import { useSEO } from '@/hooks/useSEO';
 import { daysLeftToEarn, friendsLabel, INVITE_DAYS, INVITE_MAX_FRIENDS, inviteUrl, redeemMessage } from '@/lib/invite';
 import { copyLink } from '@/lib/share';
 import { haptics } from './haptics';
+import { NEVER, readNudges, saveNudges } from './nudges';
 import { Row, Screen, Section } from './ui';
 
 /** Bjud in vänner in the iPhone app (from 1.3), under Profil */
@@ -17,6 +18,12 @@ const NativeInvite = () => {
   const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
   const [answer, setAnswer] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Here already: the card in Flöde waits its weeks, and once every friend has counted it stays away
+  const maxed = (invite?.rewarded ?? 0) >= INVITE_MAX_FRIENDS;
+  useEffect(() => {
+    saveNudges({ ...readNudges(), inviteClosedAt: maxed ? NEVER : Date.now() });
+  }, [maxed]);
 
   if (!user) {
     return (

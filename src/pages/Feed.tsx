@@ -14,6 +14,9 @@ import { useSEO } from '@/hooks/useSEO';
 import { useTrafikverketEvents } from '@/hooks/useTrafikverketEvents';
 import { sourceName } from '@/lib/externalEvents';
 import { buildFeed, filterFeed, groupByDay, type FeedFilter } from '@/lib/feed';
+import FeedNudge from '@/native/FeedNudge';
+import { pickNudge, readNudges, usageDays } from '@/native/nudges';
+import { recordUse } from '@/native/review';
 
 const PAGE_SIZE = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -61,6 +64,9 @@ const Feed = () => {
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // The card about free Pro or feedback (native/nudges), decided once per visit: days of use are
+  // counted here on the website, as the app counts them when it opens
+  const [nudge, setNudge] = useState(() => { recordUse(); return pickNudge({ days: usageDays(), isPremium, state: readNudges(), now: Date.now() }); });
 
   const items = useMemo(
     () => buildFeed({ police, traffic, community, external, isPremium }),
@@ -68,6 +74,7 @@ const Feed = () => {
   );
   const filtered = useMemo(() => filterFeed(items, filter, kommuner), [items, filter, kommuner]);
   const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+  const nudgeAfterId = visible[Math.min(4, visible.length) - 1]?.id;
   const sections = useMemo(() => groupByDay(visible), [visible]);
   const visibleIds = useMemo(() => visible.map((i) => i.id), [visible]);
   const { engagement, toggleReaction, setCommentCount } = useEngagementCounts(visibleIds);
@@ -211,13 +218,17 @@ const Feed = () => {
                 </h2>
                 <div className="space-y-4 max-sm:-mx-4 max-sm:space-y-2">
                   {section.items.map((item) => (
-                    <FeedCard
-                      key={item.id}
-                      item={item}
-                      engagement={engagement[item.id]}
-                      onToggleReaction={toggleReaction}
-                      onCommentCount={setCommentCount}
-                    />
+                    <Fragment key={item.id}>
+                      <FeedCard
+                        item={item}
+                        engagement={engagement[item.id]}
+                        onToggleReaction={toggleReaction}
+                        onCommentCount={setCommentCount}
+                      />
+                      {item.id === nudgeAfterId && nudge && !(nudge === 'invite' && isPremium) && (
+                        <FeedNudge variant="web" nudge={nudge} onDone={() => setNudge(null)} />
+                      )}
+                    </Fragment>
                   ))}
                 </div>
               </Fragment>

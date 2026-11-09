@@ -120,3 +120,14 @@ html.app-13 .ca-app-tabbar a[aria-current='page'] svg { fill: currentColor; fill
 @media (prefers-reduced-motion: reduce) {
   .ca-intro-ring, .ca-intro-ping, .ca-intro-drop, html.native-app .ca-app-sheet, html.native-app .ca-app-fade { animation: none; }
 }
+
+/* The chat room (NativeChatRoom): a new message rises into place, a like pops, the menu grows from the message */
+@keyframes ca-msg-in { from { transform: translateY(10px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes ca-like-pop { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes ca-menu-in { from { transform: scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+.ca-msg-in { animation: ca-msg-in 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+.ca-like-pop { animation: ca-like-pop 0.36s cubic-bezier(0.32, 0.72, 0, 1); }
+.ca-menu-backdrop { animation: ca-app-fade 0.2s ease-out; }
+.ca-menu-in { animation: ca-menu-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); transform-origin: var(--origin, center); }
+@media (prefers-reduced-motion: reduce) { .ca-msg-in, .ca-like-pop, .ca-menu-backdrop { animation: ca-app-fade 0.2s ease-out; }
+.ca-menu-in { animation: none; } }

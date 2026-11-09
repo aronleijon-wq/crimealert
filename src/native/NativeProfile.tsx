@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, FileText, Gift, Info, LogIn, Mail, Shield, Star, UserRound, Zap } from 'lucide-react';
+import { Bell, FileText, Gift, Info, LogIn, Mail, MessageSquareHeart, MessagesSquare, Shield, Star, UserRound, Zap } from 'lucide-react';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import { planLabel } from '@/components/account/plans';
@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
 import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { Row, Screen, Section } from './ui';
+import FeedbackSheet from './FeedbackSheet';
+import { readNudges, saveNudges } from './nudges';
 
 /** Changing the name shown with comments, as an iOS alert with a text field */
 const NameSheet = ({ userId, current, onDone }: { userId: string; current: string; onDone: (name: string | null) => void }) => {
@@ -56,6 +58,7 @@ const NativeProfile = () => {
   const [name, setName] = useState('');
   const [editing, setEditing] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [feedback, setFeedback] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -71,6 +74,7 @@ const NativeProfile = () => {
   const about = (
     <>
       <Section header="Hjälp">
+        <Row icon={MessageSquareHeart} iconBg="#30d158" label="Tyck till" detail="Vad ska vi göra bättre?" onClick={() => setFeedback(true)} />
         <Row icon={Mail} iconBg="#0a84ff" label="Kontakta oss" href={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert`} />
         <Row icon={Star} iconBg="#ff9f0a" label="Betygsätt CrimeAlert" href={TRUSTPILOT_REVIEW_URL} />
       </Section>
@@ -79,6 +83,9 @@ const NativeProfile = () => {
         <Row icon={FileText} iconBg="#8e8e93" label="Användarvillkor" to="/villkor" />
         <Row icon={Shield} iconBg="#8e8e93" label="Sekretesspolicy" to="/sekretesspolicy" />
       </Section>
+      {feedback && (
+        <FeedbackSheet onClose={() => setFeedback(false)} onSent={() => saveNudges({ ...readNudges(), feedbackSentAt: Date.now() })} />
+      )}
     </>
   );
 
@@ -122,6 +129,7 @@ const NativeProfile = () => {
       {hasAppDesign13() && (
         <Section>
           <Row icon={Bell} iconBg="#ff453a" label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
+          <Row icon={MessagesSquare} iconBg="#bf5af2" label="Chattar" detail="Prata med grannarna i din kommun" to="/chattar" />
         </Section>
       )}
 

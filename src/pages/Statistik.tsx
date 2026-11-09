@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ExternalLink } from 'lucide-react';
+import ShareCardButton from '@/components/ShareCardButton';
+import { drawHistoryCard } from '@/lib/shareCard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
 import { TrendTile } from '@/components/TrendTiles';
 import {
-  BRA_2025, EXPLOSIONS, REPORTED, REPORTED_YEARS, SHOOTINGS, first, formatChange, formatNumber, headlineTiles, last, percentChange,
+  BRA_2025, BRA_LETHAL, EXPLOSIONS, LETHAL_VIOLENCE, REPORTED, REPORTED_YEARS, SHOOTINGS, SHOOTINGS_FIRST_HALF, SHOOTINGS_FIRST_HALF_SOURCES,
+  first, formatChange, formatNumber, headlineTiles, last, percentChange,
   type Source, type Trend,
 } from '@/content/crimeTrends';
 
@@ -23,7 +27,7 @@ const jsonLd = () =>
       author: { '@type': 'Organization', name: 'CrimeAlert', url: 'https://crimealert.se' },
       publisher: { '@id': 'https://crimealert.se/#organization' },
       mainEntityOfPage: URL,
-      citation: [...SHOOTINGS.sources, BRA_2025].map((s) => s.url),
+      citation: [...SHOOTINGS.sources, BRA_2025, BRA_LETHAL].map((s) => s.url),
     },
   ]);
 
@@ -115,11 +119,131 @@ const TrendSection = ({ trend, index }: { trend: Trend; index: number }) => {
   );
 };
 
+const MEASURES = [
+  { value: 'shootings', label: 'Skjutningar', noun: 'skjutningar' },
+  { value: 'dead', label: 'Döda', noun: 'döda' },
+  { value: 'injured', label: 'Skadade', noun: 'skadade' },
+] as const;
+type Measure = (typeof MEASURES)[number]['value'];
+
+/** Shootings January–June every year since 2017: the peak in red, the newest low in blue */
+const SinceSeventeen = () => {
+  const [measure, setMeasure] = useState<Measure>('shootings');
+  const { label, noun } = MEASURES.find((m) => m.value === measure)!;
+  const values = SHOOTINGS_FIRST_HALF.map((r) => r[measure]);
+  const max = Math.max(...values);
+  const peakIndex = values.indexOf(max);
+  const peak = SHOOTINGS_FIRST_HALF[peakIndex];
+  const newest = SHOOTINGS_FIRST_HALF[SHOOTINGS_FIRST_HALF.length - 1];
+  const newestLow = newest[measure] <= Math.min(...values.slice(peakIndex));
+  const tone = (i: number): 'high' | 'low' | undefined => (i === peakIndex ? 'high' : i === values.length - 1 && newestLow ? 'low' : undefined);
+  const title = `${formatNumber(newest[measure])} ${noun} första halvåret ${newest.year}`;
+  const bars = SHOOTINGS_FIRST_HALF.map((r, i) => ({ label: String(r.year), value: r[measure], tone: tone(i) }));
+  return (
+    <section id="sedan-2017" aria-labelledby="sedan-2017-rubrik" className="grid gap-8 py-10 md:grid-cols-[1fr_1.1fr] md:py-14">
+      <div>
+        <p className="ca-meta">02 / Polisen</p>
+        <h2 id="sedan-2017-rubrik" className="ca-display mt-2 text-2xl text-foreground md:text-3xl">Skjutningar sedan 2017</h2>
+        <p className="mt-3 text-[15px] text-[hsl(var(--ca-text-2))]">
+          <span className="font-semibold text-foreground">{formatNumber(newest[measure])}</span> {noun} januari–juni {newest.year}, mot{' '}
+          <span className="font-semibold text-foreground">{formatNumber(peak[measure])}</span> under toppåret {peak.year} ({formatChange(percentChange(peak[measure], newest[measure]))}).
+        </p>
+        <div className="mt-4 space-y-3 text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
+          <p>Polisen började räkna skjutningar 2017. Här jämförs samma halvår varje år, januari till juni, så att alla år räknas på samma sätt. Första halvåret 2026 är den lägsta nivån sedan statistiken började.</p>
+          {measure === 'dead' && <p>Antalet döda 2025 sticker ut: i siffran ingår skjutningen på Campus Risbergska i Örebro i februari.</p>}
+        </div>
+        <SourceLinks sources={SHOOTINGS_FIRST_HALF_SOURCES} />
+      </div>
+      <div className="ca-tac p-5">
+        <div role="tablist" aria-label="Visa" className="mb-5 inline-flex rounded-md border border-[hsl(var(--ca-line-strong))] p-0.5">
+          {MEASURES.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              role="tab"
+              aria-selected={m.value === measure}
+              onClick={() => setMeasure(m.value)}
+              className={`rounded px-3 py-1.5 text-[13px] font-medium transition ${m.value === measure ? 'bg-[hsl(var(--ca-panel-3))] text-foreground' : 'text-[hsl(var(--ca-text-2))] hover:text-foreground'}`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <div role="img" aria-label={`${label} januari–juni: ${bars.map((b) => `${b.label} ${formatNumber(b.value)}`).join(', ')}`}>
+          <div className="flex h-56 items-end gap-1.5 border-b border-[hsl(var(--ca-line-strong))] sm:gap-2">
+            {bars.map((b) => (
+              <div key={b.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+                <span className={`mb-1.5 text-[11px] font-semibold tabular-nums sm:text-[12px] ${b.tone ? 'text-foreground' : 'text-[hsl(var(--ca-text-3))]'}`}>{formatNumber(b.value)}</span>
+                <span
+                  className={`w-full max-w-7 rounded-t-[4px] ${b.tone === 'high' ? 'bg-[hsl(var(--ca-red))]' : b.tone === 'low' ? 'bg-[#0a84ff]' : 'bg-[hsl(var(--ca-text-3)/0.45)]'}`}
+                  style={{ height: `${Math.max(2, (b.value / max) * 170)}px` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-1.5 pt-2 sm:gap-2">
+            {bars.map((b) => <span key={b.label} className="ca-meta min-w-0 flex-1 text-center">{`’${b.label.slice(2)}`}</span>)}
+          </div>
+        </div>
+        <ShareCardButton
+          make={() => drawHistoryCard({ kicker: `${label} · januari–juni`, title, bars, note: `${label} januari–juni varje år. Källa: Polisen (preliminärt).`, url: URL })}
+          title={`${label} i Sverige sedan 2017`}
+          text={`${title}. Så har det sett ut sedan 2017 – på CrimeAlert`}
+          url={URL}
+          fileName="crimealert-skjutningar.png"
+          className="mt-5 inline-flex h-10 items-center gap-2 rounded-md border border-[hsl(var(--ca-line-strong))] px-4 text-sm font-medium text-foreground transition hover:bg-[hsl(var(--ca-panel-3))]"
+        />
+      </div>
+    </section>
+  );
+};
+
+/** Brå's lethal violence: every case, and those with a firearm */
+const LethalViolence = () => {
+  const max = Math.max(...LETHAL_VIOLENCE.map((r) => r.total));
+  const newest = LETHAL_VIOLENCE[LETHAL_VIOLENCE.length - 1];
+  const before = LETHAL_VIOLENCE[LETHAL_VIOLENCE.length - 2];
+  return (
+    <section id="dodligt-vald" aria-labelledby="dodligt-rubrik" className="grid gap-8 py-10 md:grid-cols-[1fr_1.1fr] md:py-14">
+      <div>
+        <p className="ca-meta">04 / Brå</p>
+        <h2 id="dodligt-rubrik" className="ca-display mt-2 text-2xl text-foreground md:text-3xl">Dödligt våld</h2>
+        <p className="mt-3 text-[15px] text-[hsl(var(--ca-text-2))]">
+          <span className="font-semibold text-foreground">{newest.total}</span> fall {newest.year}, {before.total - newest.total} färre än {before.year}.
+          Skjutvapen användes i <span className="font-semibold text-foreground">{newest.firearm}</span> av dem.
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
+          Skjutvapen är fortfarande det vanligaste sättet, i ungefär hälften av alla fall. Antalet fall har minskat varje år sedan {LETHAL_VIOLENCE[1].year}.
+        </p>
+        <SourceLinks sources={[BRA_LETHAL]} />
+      </div>
+      <div className="ca-tac p-5">
+        <ul className="space-y-3.5">
+          {LETHAL_VIOLENCE.map((r) => (
+            <li key={r.year} className="grid grid-cols-[44px_1fr_40px] items-center gap-3" aria-label={`${r.year}: ${r.total} fall, varav ${r.firearm} med skjutvapen`}>
+              <span className="text-sm tabular-nums text-[hsl(var(--ca-text-2))]">{r.year}</span>
+              <span className="relative h-6 overflow-hidden rounded bg-[hsl(var(--ca-panel-3))]" aria-hidden>
+                <span className="absolute inset-y-0 left-0 rounded bg-[hsl(var(--ca-text-3)/0.45)]" style={{ width: `${(r.total / max) * 100}%` }} />
+                <span className="absolute inset-y-0 left-0 flex items-center rounded bg-[hsl(var(--ca-red))] pl-2 text-[11px] font-semibold tabular-nums text-white" style={{ width: `${(r.firearm / max) * 100}%` }}>{r.firearm}</span>
+              </span>
+              <span className="text-right text-sm font-semibold tabular-nums text-foreground">{r.total}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex gap-4 text-[12px] text-[hsl(var(--ca-text-2))]" aria-hidden>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-3 rounded-sm bg-[hsl(var(--ca-text-3)/0.45)]" />Totalt</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-3 rounded-sm bg-[hsl(var(--ca-red))]" />Med skjutvapen</span>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const ReportedCrimes = () => {
   const { before, after } = REPORTED_YEARS;
   return (
     <section id="anmalda-brott" aria-labelledby="anmalda-rubrik" className="py-10 md:py-14">
-      <p className="ca-meta">03 / Brå</p>
+      <p className="ca-meta">05 / Brå</p>
       <h2 id="anmalda-rubrik" className="ca-display mt-2 text-2xl text-foreground md:text-3xl">Anmälda brott</h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
         Under {after} anmäldes knappt 1,44 miljoner brott i Sverige, 3 % färre än {before}. Stölder och inbrott minskade mest, medan
@@ -191,7 +315,9 @@ const Statistik = () => {
 
         <div className="mx-auto max-w-5xl divide-y divide-[hsl(var(--ca-line))] px-4">
           <TrendSection trend={SHOOTINGS} index={1} />
-          <TrendSection trend={EXPLOSIONS} index={2} />
+          <SinceSeventeen />
+          <TrendSection trend={EXPLOSIONS} index={3} />
+          <LethalViolence />
           <ReportedCrimes />
 
           <section aria-labelledby="las-rubrik" className="py-10 md:py-14">

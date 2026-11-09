@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import { hasAppDesign13 } from '@/lib/native';
 import { recordMoment, recordUse } from './review';
@@ -14,12 +14,20 @@ import './app.css';
  * welcome the first time. Only the app loads it (App.tsx); the website looks as before.
  */
 const AppShell = ({ children }: { children: ReactNode }) => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
   const screen = screenFor(pathname);
   const [showWelcome, setShowWelcome] = useState(() => !welcomed());
   const pageRef = useRef<HTMLDivElement>(null);
   // From 1.3 the map reaches up under the status bar, with its own search on top (MapChrome)
   const fullBleed = hasAppDesign13() && pathname === '/karta';
+
+  // From 1.3 a kommun's discussion opens as a chat room, also from a reply notification
+  // ("/kommun/nacka?chatt=1")
+  useEffect(() => {
+    const kommun = /^\/kommun\/([^/]+)$/.exec(pathname);
+    if (kommun && hasAppDesign13() && new URLSearchParams(search).has('chatt')) navigate(`/chatt/${kommun[1]}`, { replace: true });
+  }, [pathname, search, navigate]);
 
   // A new page starts at the top
   useEffect(() => { pageRef.current?.scrollTo(0, 0); }, [pathname]);

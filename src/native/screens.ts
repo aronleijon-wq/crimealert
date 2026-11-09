@@ -61,21 +61,23 @@ const TITLES: [RegExp, string][] = [
   [/^\/cookies$/, 'Cookies'],
   [/^\/admin$/, 'Admin'],
   [/^\/inbjudan\//, 'Inbjudan'],
+  [/^\/chatt\//, 'Chatt'],
 ];
 
 // The app's own screens (NativeFeed, NativeStats, NativeAlerts, NativeProfile) with iOS large titles
 const LARGE_TITLES = ['/flode', '/analysis', '/alerts', '/installningar', '/rapportera'];
 // Pages under a tab that show their own large title
-const OWN_LARGE_TITLES = ['/bjud-in'];
+const OWN_LARGE_TITLES = ['/bjud-in', '/chattar'];
 
-const WITHOUT_TABS = /^\/(prisplan|account|auth|reset-password)$/;
+// The chat room needs the whole screen for its messages and the keyboard
+const WITHOUT_TABS = /^\/(prisplan|account|auth|reset-password)$|^\/chatt\//;
 
 export function screenFor(pathname: string, tabs: AppTab[] = appTabs()): AppScreen {
   const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
   const tab = tabs.find((t) => t.to === path);
   if (tab) return { title: tab.to === '/karta' ? 'CrimeAlert' : tab.label, tab: true, tabBar: true, ...(LARGE_TITLES.includes(tab.to) ? { largeTitle: true } : {}) };
   const title = TITLES.find(([pattern]) => pattern.test(path))?.[1] ?? 'CrimeAlert';
-  return { title, tab: false, tabBar: !WITHOUT_TABS.test(path), ...(OWN_LARGE_TITLES.includes(path) || LARGE_TITLES.includes(path) ? { largeTitle: true } : {}) };
+  return { title, tab: false, tabBar: !WITHOUT_TABS.test(path), ...(OWN_LARGE_TITLES.includes(path) || LARGE_TITLES.includes(path) || path.startsWith('/chatt/') ? { largeTitle: true } : {}) };
 }
 
 export const WELCOME_DONE_KEY = 'ca-app-welcomed';

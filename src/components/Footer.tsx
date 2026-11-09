@@ -1,8 +1,14 @@
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SocialLinks from '@/components/SocialLinks';
-import { Shield, FileText, Cookie, Info, BookOpen, BarChart3 } from 'lucide-react';
+import { Shield, FileText, Cookie, Info, BookOpen, BarChart3, MessageSquareHeart } from 'lucide-react';
 
-const Footer = () =>
+// "Tyck till": the same sheet as in the app, loaded when it is opened
+const FeedbackSheet = lazy(() => import('@/native/FeedbackSheet'));
+
+const Footer = () => {
+  const [feedback, setFeedback] = useState(false);
+  return (
 <footer className="border-t border-border bg-card px-4 my-0 py-[2px]">
     <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
       <span className="text-[10px] text-muted-foreground font-mono">
@@ -33,10 +39,17 @@ const Footer = () =>
           <BarChart3 className="w-3 h-3" />
           Statistik
         </Link>
+        <button type="button" onClick={() => setFeedback(true)} className="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted-foreground hover:text-foreground transition">
+          <MessageSquareHeart className="w-3 h-3" />
+          Tyck till
+        </button>
       </nav>
       <SocialLinks size={26} />
     </div>
-  </footer>;
+    {feedback && <Suspense fallback={null}><FeedbackSheet onClose={() => setFeedback(false)} /></Suspense>}
+  </footer>
+  );
+};
 
 
 export default Footer;

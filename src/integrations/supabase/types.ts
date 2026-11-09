@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      feedback: {
+        Row: {
+          created_at: string
+          id: number
+          message: string | null
+          rating: number
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          message?: string | null
+          rating: number
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          message?: string | null
+          rating?: number
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       apple_subscriptions: {
         Row: {
           environment: string
@@ -878,6 +905,10 @@ export type Database = {
       }
       police_fetch_status: { Args: never; Returns: Json }
       redeem_invite: { Args: { _code: string }; Returns: string }
+      send_feedback: {
+        Args: { _message: string; _rating: number; _source: string }
+        Returns: string
+      }
       track_page_view: {
         Args: { _device: string; _page: string }
         Returns: undefined
