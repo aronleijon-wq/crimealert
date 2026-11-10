@@ -21,15 +21,15 @@ export const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/7sY28q57o6
 export const TRIAL_DAYS = 7;
 
 /** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads). */
-export const PRO_FEATURES: { icon: LucideIcon; text: string }[] = [
-  { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning' },
-  { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner' },
-  { icon: FileText, text: 'Hela beskrivningen av varje händelse' },
-  { icon: ListChecks, text: 'Risknivå, status, Polisens kategori och platsens precision' },
-  { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 60 dagar bakåt' },
-  { icon: FileDown, text: 'Export till PDF och CSV' },
-  { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna' },
-  { icon: EyeOff, text: 'Ingen reklam' },
+export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] = [
+  { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning', short: 'Händelser direkt, utan 15 min väntan' },
+  { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner', short: 'Notiser direkt i dina kommuner' },
+  { icon: FileText, text: 'Hela beskrivningen av varje händelse', short: 'Hela beskrivningen av varje händelse' },
+  { icon: ListChecks, text: 'Risknivå, status, Polisens kategori och platsens precision', short: 'Risknivå, status och kategori' },
+  { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 60 dagar bakåt', short: 'Analys och statistik, 60 dagar bakåt' },
+  { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
+  { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
+  { icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' },
 ];
 
 /** The plan in words: "Gratis", "Pro livstid", "Provperiod t.o.m. 2026-10-12" and so on. */
