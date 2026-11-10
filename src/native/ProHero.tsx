@@ -3,7 +3,8 @@
 // welcome after a purchase.
 import './pro.css';
 
-export const PRO_LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
+// The mark alone, without the app icon's dark square, so it sits in the light instead of on top of it
+export const PRO_LOGO = '/logo-mark.png';
 
 const BLIPS = [
   { left: '8%', top: '30%', color: '#4aa1ff', delay: '0s' },
@@ -19,7 +20,7 @@ const ProHero = ({ size = 148 }: { size?: number }) => (
     {BLIPS.map((b) => (
       <span key={b.delay} className="ca-pro-blip" style={{ left: b.left, top: b.top, ['--c' as string]: b.color, ['--d' as string]: b.delay }} />
     ))}
-    <img src={PRO_LOGO} alt="" className="ca-pro-logo" width={72} height={72} />
+    <img src={PRO_LOGO} alt="" className="ca-pro-logo" width={104} height={104} />
   </div>
 );
 

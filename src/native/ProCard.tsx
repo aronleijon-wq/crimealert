@@ -26,7 +26,7 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
     <span className="ca-pro-light ca-pro-light-red" aria-hidden />
     {isPremium ? (
       <span className="relative flex items-center gap-3.5 px-4 py-3.5">
-        <img src={PRO_LOGO} alt="" width={44} height={44} className="h-11 w-11 rounded-[13px] shadow-[0_0_0_1px_rgba(255,255,255,0.12)]" />
+        <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(120,150,255,0.5)]" />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 text-[17px] font-semibold text-white">
             Du har <span className="ca-pro-text">Pro</span>
@@ -39,7 +39,7 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
     ) : (
       <span className="relative block p-4">
         <span className="flex items-center gap-3">
-          <img src={PRO_LOGO} alt="" width={44} height={44} className="h-11 w-11 rounded-[13px] shadow-[0_0_0_1px_rgba(255,255,255,0.12)]" />
+          <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(120,150,255,0.5)]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[19px] font-bold leading-tight tracking-tight text-white">CrimeAlert <span className="ca-pro-text">Pro</span></span>
             <span className="block text-[14px] text-white/65">Allt som händer, direkt när det händer</span>

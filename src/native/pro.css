@@ -16,11 +16,11 @@
   background: conic-gradient(from 0deg, rgba(47,143,255,0) 0deg, rgba(47,143,255,0.95) 52deg, rgba(47,143,255,0) 70deg, rgba(255,74,61,0) 180deg, rgba(255,74,61,0.95) 232deg, rgba(255,74,61,0) 250deg, rgba(255,74,61,0) 360deg);
   -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); }
 @keyframes ca-pro-turn { to { transform: rotate(360deg); } }
-.ca-pro-ring { position: absolute; inset: 22px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.5); opacity: 0; animation: ca-pro-ring 3.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; animation-delay: var(--d, 0s); }
+.ca-pro-ring { position: absolute; inset: 18px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.5); opacity: 0; animation: ca-pro-ring 3.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; animation-delay: var(--d, 0s); }
 @keyframes ca-pro-ring { 0% { transform: scale(0.6); opacity: 0; } 15% { opacity: 0.55; } 100% { transform: scale(1.75); opacity: 0; } }
 .ca-pro-blip { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--c, #fff); box-shadow: 0 0 10px var(--c, #fff); opacity: 0; animation: ca-pro-blip 4.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes ca-pro-blip { 0%, 55%, 100% { opacity: 0; transform: scale(0.3); } 65% { opacity: 1; transform: scale(1.25); } 80% { opacity: 0.9; transform: scale(1); } }
-.ca-pro-logo { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 21px; box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.12); animation: ca-pro-float 4.5s ease-in-out infinite; }
+.ca-pro-logo { position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; filter: drop-shadow(0 0 14px rgba(120,150,255,0.45)) drop-shadow(0 4px 10px rgba(0,0,0,0.5)); animation: ca-pro-float 4.5s ease-in-out infinite; }
 @keyframes ca-pro-float { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(-4px); } }
 
 /* Words in the lights' colours, drifting slowly from blue to red */
