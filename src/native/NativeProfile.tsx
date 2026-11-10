@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, FileText, Gift, Info, LogIn, Mail, MessageSquareHeart, MessagesSquare, Shield, Star, UserRound, Zap } from 'lucide-react';
+import { Bell, FileText, Gift, Info, LogIn, Mail, MessageSquareHeart, MessagesSquare, Shield, Star, UserRound } from 'lucide-react';
 import BlockedUsers from '@/components/account/BlockedUsers';
 import DeleteAccount from '@/components/account/DeleteAccount';
 import { planLabel } from '@/components/account/plans';
@@ -8,13 +8,17 @@ import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
-import { hasAppDesign13 } from '@/lib/native';
+import { canSellPro, hasAppDesign13 } from '@/lib/native';
 import { supabase } from '@/integrations/supabase/client';
 import { BLOCKED_WORDS_MESSAGE, hasBlockedWords, isBlockedWordsError } from '@/lib/moderation';
 import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { Row, Screen, Section } from './ui';
 import FeedbackSheet from './FeedbackSheet';
 import { readNudges, saveNudges } from './nudges';
+import ProCard from './ProCard';
+
+/** "Pro t.o.m. 2026-12-01" → "t.o.m. 2026-12-01", "Provperiod t.o.m. …" → "provperiod t.o.m. …", plain "Pro" → nothing */
+const proPlan = (label: string) => label.replace(/^Pro ?/, '').replace(/^Provperiod/, 'provperiod') || undefined;
 
 /** Changing the name shown with comments, as an iOS alert with a text field */
 const NameSheet = ({ userId, current, onDone }: { userId: string; current: string; onDone: (name: string | null) => void }) => {
@@ -95,9 +99,7 @@ const NativeProfile = () => {
         <Section footer="Med ett gratis konto väljer du kommuner att bevaka och får notiser.">
           <Row icon={LogIn} label="Logga in eller skapa konto" to="/auth" />
         </Section>
-        <Section>
-          <Row icon={Zap} label="CrimeAlert Pro" to="/prisplan" />
-        </Section>
+        <ProCard isPremium={false} canBuy={canSellPro()} />
         {about}
       </Screen>
     );
@@ -119,11 +121,14 @@ const NativeProfile = () => {
         </div>
       </Section>
 
-      <Section>
-        <Row icon={Zap} label="CrimeAlert Pro" value={isPremium ? planLabel(true, subscription).replace(/^Pro /, '') : 'Skaffa'} to="/prisplan" />
-        {/* From app version 1.3 (NativeInvite) */}
-        {hasAppDesign13() && <Row icon={Gift} iconBg="#ff2d55" label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />}
-      </Section>
+      <ProCard isPremium={isPremium} plan={isPremium ? proPlan(planLabel(true, subscription)) : undefined} canBuy={canSellPro()} />
+
+      {/* From app version 1.3 (NativeInvite) */}
+      {hasAppDesign13() && (
+        <Section>
+          <Row icon={Gift} iconBg="#ff2d55" label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />
+        </Section>
+      )}
 
       {/* From 1.3 Notiser is no longer a tab of its own (screens.ts) */}
       {hasAppDesign13() && (
