@@ -848,6 +848,15 @@ export type Database = {
         Args: { _author: string; _id: string; _type: string }
         Returns: boolean
       }
+      crime_atlas: {
+        Args: { _days?: number }
+        Returns: {
+          area: string
+          before_count: number
+          category: string
+          now_count: number
+        }[]
+      }
       has_blocked_words: { Args: { _text: string }; Returns: boolean }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
