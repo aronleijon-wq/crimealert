@@ -255,7 +255,7 @@ const NativeChatRoom = () => {
             <ChevronLeft className="h-6 w-6" aria-hidden />
           </Link>
         )}
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9a9aa0] to-[#636366] text-[16px] font-semibold">{kommun.charAt(0)}</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#636366] text-[16px] font-semibold">{kommun.charAt(0)}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[17px] font-semibold leading-[22px]">{kommun}</span>
           <span className={`block text-[12px] ${MUTED}`}>{people ? `${people} ${people === 1 ? 'person' : 'personer'} i chatten` : 'Kommunens chatt'}</span>

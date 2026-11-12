@@ -26,6 +26,7 @@ export const Section = ({ header, footer, children }: { header?: string; footer?
 interface RowProps {
   icon?: LucideIcon;
   /** The icon's square, coloured as Settings does */
+  /** The icon's colour: grey unless it says something (a category, a state) */
   iconBg?: string;
   label: ReactNode;
   /** A second, smaller line */
@@ -42,13 +43,13 @@ interface RowProps {
 }
 
 /** One row of a list: a link, a button, or a label with a control on the right */
-export const Row = ({ icon: Icon, iconBg = '#ff453a', label, detail, value, to, href, onClick, accessory, tint, destructive, center }: RowProps) => {
+export const Row = ({ icon: Icon, iconBg = 'rgba(235,235,245,0.6)', label, detail, value, to, href, onClick, accessory, tint, destructive, center }: RowProps) => {
   const pressable = Boolean(to || href || onClick);
   const content = (
     <span className={`ios-row flex min-h-[44px] w-full items-center gap-3 pl-4 text-left ${pressable ? 'active:bg-[#2c2c2e]' : ''}`}>
       {Icon && (
-        <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[7px]" style={{ background: iconBg }}>
-          <Icon className="h-[18px] w-[18px] text-white" strokeWidth={2} aria-hidden />
+        <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center" style={{ color: iconBg }}>
+          <Icon className="h-[21px] w-[21px]" strokeWidth={1.9} aria-hidden />
         </span>
       )}
       <span className="ios-row-body flex min-h-[44px] min-w-0 flex-1 items-center gap-2 py-2.5 pr-4">

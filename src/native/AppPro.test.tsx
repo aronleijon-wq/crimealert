@@ -50,7 +50,6 @@ describe('CrimeAlert Pro in the app', () => {
     expect(plans[0]).toHaveTextContent('Årsvis');
     expect(plans[0]).toHaveTextContent('199,00 kr/år');
     expect(plans[0]).toHaveTextContent('Spara 13 %');
-    expect(plans[0]).toHaveTextContent('1 vecka gratis först');
     expect(plans[1]).toHaveTextContent('19,00 kr/månad');
     expect(screen.getByRole('button', { name: 'Prova gratis i 1 vecka' })).toBeEnabled();
     expect(screen.getByText(/Gratis i 1 vecka, sedan 199,00 kr per år\. Prenumerationen förnyas automatiskt/)).toBeInTheDocument();

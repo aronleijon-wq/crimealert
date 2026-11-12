@@ -27,7 +27,7 @@ function when(iso: string, now = Date.now()): string {
 
 const Avatar = ({ name, size = 52 }: { name: string; size?: number }) => (
   <span
-    className="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#9a9aa0] to-[#636366] font-semibold text-white"
+    className="flex shrink-0 items-center justify-center rounded-full bg-[#636366] font-semibold text-white"
     style={{ width: size, height: size, fontSize: size * 0.4 }}
     aria-hidden
   >

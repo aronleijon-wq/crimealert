@@ -12,6 +12,9 @@ import ProCelebration from './ProCelebration';
 import ProHero from './ProHero';
 import './pro.css';
 
+/** What the page leads with for those without Pro: the five that matter most */
+const HIGHLIGHTS = [0, 1, 2, 4, 7].map((i) => PRO_FEATURES[i]);
+
 /** The place in the order things rise into view (pro.css) */
 const rise = (i: number) => ({ ['--i' as string]: i });
 
@@ -114,26 +117,22 @@ const AppPro = () => {
   };
 
   return (
-    <div className="ca-dark ca-pro relative min-h-full overflow-hidden bg-[hsl(var(--ca-base))] px-5 pb-10 pt-3 text-white">
-      <div className="ca-pro-light ca-pro-light-blue" aria-hidden />
-      <div className="ca-pro-light ca-pro-light-red" aria-hidden />
+    <div className="ca-dark ca-pro relative min-h-full bg-black px-5 pb-10 pt-4 text-white">
 
       <div className="relative mx-auto max-w-md">
         <div className="ca-pro-rise" style={rise(0)}><ProHero /></div>
         <div className="ca-pro-rise text-center" style={rise(1)}>
-          <h1 className="font-bold tracking-tight">CrimeAlert <span className="ca-pro-text">Pro</span></h1>
-          <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[16px] text-white/70">
+          <h1 className="font-bold tracking-tight">CrimeAlert Pro</h1>
+          <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[16px] text-white/60">
             {isPremium && <BadgeCheck className="h-[18px] w-[18px] text-[#30d158]" aria-hidden />}
             {isPremium ? `Ditt konto har ${planLabel(true, subscription)}.` : 'Allt som händer, direkt när det händer.'}
           </p>
         </div>
 
-        <ul className="mt-6 space-y-2.5" aria-label="Det här ingår i Pro">
-          {PRO_FEATURES.map(({ icon: Icon, short }, i) => (
-            <li key={short} className="ca-pro-rise flex items-center gap-3 text-[15px] font-medium leading-snug" style={rise(i + 2)}>
-              <span className="ca-pro-icon flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full">
-                <Icon className="h-[15px] w-[15px] text-white" strokeWidth={2.4} aria-hidden />
-              </span>
+        <ul className="mt-7 space-y-3.5 px-1" aria-label="Det här ingår i Pro">
+          {(isPremium ? PRO_FEATURES : HIGHLIGHTS).map(({ icon: Icon, short }, i) => (
+            <li key={short} className="ca-pro-rise flex items-center gap-3.5 text-[16px] leading-snug" style={rise(i + 2)}>
+              <Icon className="h-[20px] w-[20px] shrink-0 text-[#ff453a]" strokeWidth={2} aria-hidden />
               <span className="min-w-0 flex-1">{short}</span>
               {isPremium && <Check className="h-4 w-4 shrink-0 text-[#30d158]" strokeWidth={3} aria-label="Ingår" />}
             </li>
@@ -143,7 +142,7 @@ const AppPro = () => {
         {isPremium ? (
           <div className="ca-pro-rise mt-7 space-y-3" style={rise(11)}>
             {subscription.store === 'apple' ? (
-              <button type="button" onClick={manage} disabled={busy !== null} className="flex h-[52px] w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-[17px] font-semibold transition active:scale-[0.97]">
+              <button type="button" onClick={manage} disabled={busy !== null} className="flex h-[52px] w-full items-center justify-center rounded-[14px] bg-[#1c1c1e] text-[17px] font-semibold transition active:scale-[0.97]">
                 Hantera prenumeration
               </button>
             ) : subscription.store === 'invite' ? (
@@ -190,10 +189,9 @@ const AppPro = () => {
                     <span className="mt-0.5 block whitespace-nowrap text-[21px] font-bold leading-tight tracking-tight tabular-nums">
                       {p.price}<span className="text-[13px] font-medium text-white/60">/{periodLabel(p.period)}</span>
                     </span>
-                    <span className="mt-1 block text-[12px] leading-snug text-white/60">
+                    <span className="mt-1 block text-[12px] leading-snug text-white/50">
                       {isYear && p.amount > 0 ? `${money(p.amount / 12, p.currency)}/mån` : 'Avsluta när du vill'}
                     </span>
-                    {p.trial && <span className="ca-pro-text mt-0.5 block text-[12px] font-semibold leading-snug">{periodLabel(p.trial, true)} gratis först</span>}
                   </button>
                 );
               })}

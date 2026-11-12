@@ -59,10 +59,8 @@ const NativeInvite = () => {
 
   return (
     <Screen title="Bjud in vänner">
-      <div className="mx-4 mt-4 overflow-hidden rounded-[20px] bg-gradient-to-br from-[#3a0d0b] via-[#1c1c1e] to-[#1c1c1e] p-5">
-        <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#ff453a]">
-          <Gift className="h-6 w-6 text-white" aria-hidden />
-        </span>
+      <div className="mx-4 mt-4 rounded-2xl bg-[#1c1c1e] p-5">
+        <Gift className="h-7 w-7 text-[#ff453a]" strokeWidth={1.9} aria-hidden />
         <p className="mt-4 text-[22px] font-bold leading-tight tracking-[-0.01em]">{INVITE_DAYS} dagar Pro för varje vän</p>
         <p className="mt-1.5 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
           När en vän skapar ett konto via din länk får du {INVITE_DAYS} dagar Pro. Upp till {INVITE_MAX_FRIENDS} vänner, {INVITE_DAYS * INVITE_MAX_FRIENDS} dagar.

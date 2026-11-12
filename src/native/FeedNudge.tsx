@@ -39,12 +39,9 @@ const FeedNudge = ({ nudge, onDone, variant = 'app' }: { nudge: Nudge; onDone: (
     >
       {nudge === 'invite' ? (
         <>
-          <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[#ff2d55] opacity-[0.16] blur-3xl" aria-hidden />
           <span className={look.title}><Close onClick={() => close('inviteClosedAt')} /></span>
           <div className="relative flex gap-3.5 p-4 pr-11">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-[#ff2d55]">
-              <Gift className="h-[22px] w-[22px] text-white" aria-hidden />
-            </span>
+            <Gift className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[#ff453a]" strokeWidth={1.9} aria-hidden />
             <div className="min-w-0">
               <p className={`text-[16px] font-semibold leading-snug ${look.title}`}>Få Pro gratis</p>
               <p className={`mt-0.5 text-[14px] leading-snug ${look.muted}`}>
