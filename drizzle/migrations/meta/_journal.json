@@ -57,6 +57,13 @@
       "when": 1794497063247,
       "tag": "0007_crime_atlas",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794502581052,
+      "tag": "0008_archive_daily_counts",
+      "breakpoints": true
     }
   ]
 }
