@@ -2,16 +2,21 @@
 // is most common, per inhabitant. From Polisen's published events, summed in the database
 // (crime_atlas), and SCB's population (data/kommunPopulation). Polisen publishes a selection of
 // what happens, so this is what Polisen has reported, not all crime.
-import { SWEDISH_KOMMUNER } from '@/data/kommuner';
+import { KOMMUN_COORDINATES, SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { KOMMUN_POPULATION } from '@/data/kommunPopulation';
 import { kommunMatcher } from '../../supabase/functions/_shared/notifications';
 import { THEMES, themeOf, type Theme } from '../../supabase/functions/_shared/themes';
 
 export { THEMES, type Theme };
 
-/** One sum from crime_atlas: events in a place and category, in the period and the one before */
+/** One sum from crime_atlas(_places): events in a place and category, in the period and the one before */
 export interface AtlasRow {
   area: string;
+  /** The town at the end of Polisen's title, "Södertälje" (crime_atlas_places) */
+  place?: string | null;
+  /** Where the events were, when better known than the län's middle (crime_atlas_places) */
+  lat?: number | null;
+  lng?: number | null;
   category: string;
   now_count: number;
   before_count: number;
@@ -75,6 +80,41 @@ export function kommunOfArea(area: string): string | null {
   return found;
 }
 
+const isLan = (name: string | null | undefined) => !!name && /\blän$/i.test(name.trim());
+
+// A position belongs to the nearest kommun's middle, if one is this close; further out it may as
+// well be the next one, and the event is better left out than put in the wrong place
+const NEAREST_KM = 25;
+
+export function nearestKommun(lat: number, lng: number): string | null {
+  let best: string | null = null;
+  let bestKm = NEAREST_KM;
+  const cos = Math.cos((lat * Math.PI) / 180);
+  for (const k of KOMMUN_COORDINATES) {
+    const km = Math.hypot(k.lat - lat, (k.lng - lng) * cos) * 111;
+    if (km < bestKm) { bestKm = km; best = k.name; }
+  }
+  return best;
+}
+
+/**
+ * The kommun a sum belongs to: the area when it is a kommun, else the town in Polisen's title,
+ * else the nearest kommun to where it happened. Polisen puts many events on a whole län
+ * ("Stockholms län"), and without this Stockholm had almost none.
+ */
+export function kommunOfRow(row: Pick<AtlasRow, 'area' | 'place' | 'lat' | 'lng'>): string | null {
+  if (!isLan(row.area)) {
+    const k = kommunOfArea(row.area);
+    if (k) return k;
+  }
+  if (row.place && !isLan(row.place)) {
+    const k = kommunOfArea(row.place);
+    if (k) return k;
+  }
+  if (row.lat != null && row.lng != null) return nearestKommun(row.lat, row.lng);
+  return null;
+}
+
 const add = (map: Map<string, Counts>, key: string, row: AtlasRow) => {
   const c = map.get(key) ?? { now: 0, before: 0 };
   c.now += row.now_count;
@@ -86,7 +126,7 @@ export function buildAtlas(rows: AtlasRow[]): Atlas {
   const byKommun = new Map<string, Map<string, Counts>>();
   const sweden = new Map<string, Counts>();
   for (const row of rows) {
-    const kommun = kommunOfArea(row.area);
+    const kommun = kommunOfRow(row);
     if (!kommun) continue;
     const themes = byKommun.get(kommun) ?? new Map<string, Counts>();
     byKommun.set(kommun, themes);

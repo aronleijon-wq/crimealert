@@ -24,7 +24,7 @@ describe('Brottsatlas', () => {
   it('starts with your kommun, what is most common there and how it compares with Sweden', async () => {
     show();
     expect(await screen.findByText(/^Stölder är [\d,]+× vanligare i Nacka än i Sverige$/)).toBeInTheDocument();
-    expect(rpc).toHaveBeenCalledWith('crime_atlas', { _days: expect.any(Number) });
+    expect(rpc).toHaveBeenCalledWith('crime_atlas_places', { _days: expect.any(Number) });
     expect(screen.getByText('Vanligast i Nacka')).toBeInTheDocument();
     expect(screen.getByText('Jämfört med grannarna')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Chatten/ })).toHaveAttribute('href', '/chatt/nacka');
