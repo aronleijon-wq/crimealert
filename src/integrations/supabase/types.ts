@@ -859,6 +859,15 @@ export type Database = {
         Args: { _author: string; _id: string; _type: string }
         Returns: boolean
       }
+      crime_atlas: {
+        Args: { _days?: number }
+        Returns: {
+          area: string
+          before_count: number
+          category: string
+          now_count: number
+        }[]
+      }
       crime_atlas_places: {
         Args: { _days?: number }
         Returns: {
@@ -869,15 +878,6 @@ export type Database = {
           lng: number
           now_count: number
           place: string
-        }[]
-      }
-      crime_atlas: {
-        Args: { _days?: number }
-        Returns: {
-          area: string
-          before_count: number
-          category: string
-          now_count: number
         }[]
       }
       has_blocked_words: { Args: { _text: string }; Returns: boolean }
