@@ -859,18 +859,6 @@ export type Database = {
         Args: { _author: string; _id: string; _type: string }
         Returns: boolean
       }
-      crime_atlas_places: {
-        Args: { _days?: number }
-        Returns: {
-          area: string
-          before_count: number
-          category: string
-          lat: number
-          lng: number
-          now_count: number
-          place: string
-        }[]
-      }
       crime_atlas: {
         Args: { _days?: number }
         Returns: {
