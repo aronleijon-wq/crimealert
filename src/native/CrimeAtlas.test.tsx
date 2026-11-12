@@ -9,8 +9,10 @@ const rows = [
   { area: 'Stockholm', category: 'Rån', now_count: 12, before_count: 6 },
   { area: 'Bjurholm', category: 'Inbrott', now_count: 3, before_count: 0 },
 ];
-const rpc = vi.fn(() => Promise.resolve({ data: rows, error: null }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: (...a: unknown[]) => rpc(...(a as [])) } }));
+const rpc = vi.fn();
+const range = vi.fn((from: number) => Promise.resolve({ data: from === 0 ? rows : [], error: null }));
+const query = { order: () => query, range };
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: (...a: unknown[]) => { rpc(...a); return query; } } }));
 vi.mock('@/hooks/useNotificationPreferences', () => ({ useNotificationPreferences: () => ({ kommuner: ['Nacka'] }) }));
 vi.mock('@/lib/shareCard', () => ({ drawHistoryCard: vi.fn(), shareCard: vi.fn() }));
 
