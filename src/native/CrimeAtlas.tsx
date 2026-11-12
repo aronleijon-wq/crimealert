@@ -162,12 +162,11 @@ const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: str
         )}
       </Card>
 
-      <Card title={`Vanligast i ${kommun}`} footer="Jämfört med Sverige per invånare. Under tre händelser är för få att jämföra.">
+      <Card title={`Vanligast i ${kommun}`} footer="Jämfört med Sverige, per invånare.">
         {top.length ? top.map((t) => (
           <div key={t.theme.id} className="border-b border-[rgba(84,84,88,0.65)] py-2.5 first:pt-0 last:border-0 last:pb-0">
             <div className="flex items-center gap-3">
               <span className="min-w-0 flex-1 text-[16px]">{t.theme.label}</span>
-              <Change value={t.change} />
               <span className="w-8 text-right text-[15px] font-semibold tabular-nums">{t.count}</span>
               <span className="w-[92px] text-right"><RatioPill ratio={t.ratio} /></span>
             </div>
@@ -194,7 +193,7 @@ const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: str
         )}
       </Card>
 
-      <Card title="Jämfört med grannarna" footer={`Alla händelser ${PER} invånare. Tryck för att byta kommun.`}>
+      <Card title="Jämfört med grannarna" footer={`Händelser ${PER} invånare.`}>
         {neighbours.map(({ k, p }) => (
           <button key={k} type="button" onClick={() => { if (k !== kommun) { haptics.selection(); onPick(k); } }} className="flex w-full items-center gap-3 py-1.5 text-left active:opacity-60">
             <span className={`w-28 truncate text-[15px] ${k === kommun ? 'font-semibold text-white' : MUTED}`}>{k}</span>
@@ -245,7 +244,7 @@ const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas
         ))}
       </div>
 
-      <Card title={`${theme.label} i Sverige · ${days} dagar`} footer="Större prick: fler händelser. Rödare: fler per invånare. Tryck på en prick.">
+      <Card title={`${theme.label} i Sverige · ${days} dagar`} footer="Större prick: fler händelser. Rödare: fler per invånare.">
         <div className="flex items-baseline gap-2">
           <span className="text-[30px] font-bold tabular-nums">{total.toLocaleString('sv-SE')}</span>
           <span className={`text-[14px] ${MUTED}`}>{theme.plural} rapporterade · {formatRate((total / atlas.population) * 100_000)} {PER}</span>

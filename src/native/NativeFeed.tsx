@@ -61,7 +61,7 @@ const StoryCircle = ({ story, selected, fresh, onPick }: { story: Story; selecte
   return (
     <button type="button" onClick={onPick} className="flex w-[70px] shrink-0 flex-col items-center gap-1.5 active:opacity-70" aria-pressed={selected}>
       <span className="rounded-full p-[2.5px]"
-        style={{ background: fresh ? 'linear-gradient(45deg, #ffd60a, #ff9f0a 35%, #ff453a 65%, #bf5af2)' : selected ? '#fff' : 'rgba(118,118,128,0.4)' }}>
+        style={{ background: fresh ? '#ff453a' : selected ? '#fff' : 'rgba(118,118,128,0.4)' }}>
         <span className="flex h-[60px] w-[60px] items-center justify-center rounded-full border-[3px] border-black bg-[#1c1c1e]">
           <Icon className={`h-6 w-6 ${selected ? 'text-white' : 'text-[rgba(235,235,245,0.75)]'}`} strokeWidth={1.8} aria-hidden />
         </span>
@@ -86,7 +86,6 @@ const MapPicture = ({ lat, lng, color }: { lat: number; lng: number; color: stri
         ))}
       </div>
       <div className="absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2" aria-hidden>
-        <span className="absolute -inset-16 rounded-full opacity-25" style={{ background: `radial-gradient(circle, ${color}, transparent 70%)` }} />
         <span className="absolute -inset-3 animate-ping rounded-full opacity-40" style={{ background: color }} />
         <span className="relative block h-4 w-4 rounded-full ring-[3px] ring-white" style={{ background: color }} />
       </div>
@@ -95,8 +94,8 @@ const MapPicture = ({ lat, lng, color }: { lat: number; lng: number; color: stri
 };
 
 const Art = ({ icon: Icon, color }: { icon: LucideIcon; color: string }) => (
-  <div className="absolute inset-0" style={{ background: `radial-gradient(100% 80% at 75% 15%, ${color}, #0b0b0c 72%)` }} aria-hidden>
-    <Icon className="absolute right-7 top-7 h-20 w-20 text-white/15" strokeWidth={1.2} />
+  <div className="absolute inset-0 bg-[#141416]" aria-hidden>
+    <Icon className="absolute right-7 top-7 h-20 w-20" style={{ color, opacity: 0.35 }} strokeWidth={1.2} />
   </div>
 );
 
@@ -171,7 +170,7 @@ const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: Post
   return (
     <article className="pb-6">
       <header className="flex items-center gap-2.5 px-3 py-2">
-        <span className="rounded-full p-[2px]" style={{ background: item.active ? 'linear-gradient(45deg, #ffd60a, #ff453a 60%, #bf5af2)' : 'transparent' }}>
+        <span className="rounded-full p-[2px]" style={{ background: item.active ? '#ff453a' : 'transparent' }}>
           <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-black" style={{ background: KIND[item.kind].color }}>
             <KindIcon className="h-4 w-4 text-white" strokeWidth={2.2} aria-hidden />
           </span>

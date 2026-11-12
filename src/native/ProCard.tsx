@@ -1,16 +1,9 @@
-// CrimeAlert Pro at the top of Profil: for those without Pro, what it gives and a way to get it,
-// lit by the emergency lights (pro.css); for those with Pro, that they have it and until when.
+// CrimeAlert Pro on Profil, as a row in the same grouped style as the rest of the page: what it
+// gives and a way to get it for those without Pro, that they have it and until when for members.
 import { Link } from 'react-router-dom';
-import { BadgeCheck, BellRing, ChevronRight, FileText, Zap } from 'lucide-react';
+import { BadgeCheck, ChevronRight } from 'lucide-react';
 import { haptics } from './haptics';
 import { PRO_LOGO } from './ProHero';
-import './pro.css';
-
-const PERKS = [
-  { icon: Zap, text: 'Händelser direkt' },
-  { icon: BellRing, text: 'Notiser utan väntan' },
-  { icon: FileText, text: 'Hela beskrivningen' },
-];
 
 interface Props {
   isPremium: boolean;
@@ -21,43 +14,30 @@ interface Props {
 }
 
 const ProCard = ({ isPremium, plan, canBuy }: Props) => (
-  <Link to="/prisplan" onClick={() => haptics.impact()} className="ca-pro ca-pro-card mx-4 mt-4 block transition active:scale-[0.98]" aria-label={isPremium ? 'CrimeAlert Pro, ditt medlemskap' : 'CrimeAlert Pro, se vad som ingår'}>
-    <span className="ca-pro-light ca-pro-light-blue" aria-hidden />
-    <span className="ca-pro-light ca-pro-light-red" aria-hidden />
-    {isPremium ? (
-      <span className="relative flex items-center gap-3.5 px-4 py-3.5">
-        <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(255,90,80,0.45)]" />
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 text-[17px] font-semibold text-white">
-            Du har <span className="ca-pro-text">Pro</span>
-            <BadgeCheck className="h-[18px] w-[18px] text-[#30d158]" aria-hidden />
-          </span>
-          <span className="block truncate text-[13px] text-white/60">{plan ? `Gäller ${plan}` : 'Allt är upplåst'}</span>
+  <section className="mx-4 mt-7 first:mt-4">
+    <Link
+      to="/prisplan"
+      onClick={() => haptics.impact()}
+      className="flex items-center gap-3.5 rounded-xl bg-[#1c1c1e] px-4 py-3.5 active:bg-[#2c2c2e]"
+      aria-label={isPremium ? 'CrimeAlert Pro, ditt medlemskap' : 'CrimeAlert Pro, se vad som ingår'}
+    >
+      <img src={PRO_LOGO} alt="" width={40} height={40} className="h-10 w-10 shrink-0" />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-[17px] font-semibold text-white">
+          {isPremium ? 'Du har Pro' : 'CrimeAlert Pro'}
+          {isPremium && <BadgeCheck className="h-[17px] w-[17px] text-[#30d158]" aria-hidden />}
         </span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-white/35" aria-hidden />
-      </span>
-    ) : (
-      <span className="relative block p-4">
-        <span className="flex items-center gap-3">
-          <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(255,90,80,0.45)]" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[19px] font-bold leading-tight tracking-tight text-white">CrimeAlert <span className="ca-pro-text">Pro</span></span>
-            <span className="block text-[14px] text-white/65">Allt som händer, direkt när det händer</span>
-          </span>
-        </span>
-        <span className="mt-3.5 flex flex-wrap gap-1.5">
-          {PERKS.map(({ icon: Icon, text }) => (
-            <span key={text} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] px-2.5 py-1 text-[12.5px] font-medium text-white/85">
-              <Icon className="h-3.5 w-3.5 text-[#ff6b61]" strokeWidth={2.4} aria-hidden />{text}
-            </span>
-          ))}
-        </span>
-        <span className="ca-pro-cta mt-4 flex h-11 w-full items-center justify-center text-[16px] font-semibold text-white">
-          {canBuy ? 'Skaffa Pro' : 'Se vad som ingår'}
+        <span className="block truncate text-[14px] text-[rgba(235,235,245,0.6)]">
+          {isPremium ? (plan ? `Gäller ${plan}` : 'Allt är upplåst') : 'Händelser och notiser direkt'}
         </span>
       </span>
-    )}
-  </Link>
+      {!isPremium && canBuy ? (
+        <span className="shrink-0 rounded-full bg-[#ff453a] px-3.5 py-1.5 text-[14px] font-semibold text-white">Skaffa</span>
+      ) : (
+        <ChevronRight className="h-5 w-5 shrink-0 text-[rgba(235,235,245,0.3)]" aria-hidden />
+      )}
+    </Link>
+  </section>
 );
 
 export default ProCard;

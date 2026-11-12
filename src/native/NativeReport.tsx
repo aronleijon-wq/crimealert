@@ -249,7 +249,7 @@ const NativeReport = () => {
             </button>
           </div>
         ) : (
-          <Row icon={Camera} iconBg="#5e5ce6" label="Lägg till bild" onClick={() => fileRef.current?.click()} />
+          <Row icon={Camera} label="Lägg till bild" onClick={() => fileRef.current?.click()} />
         )}
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickImage(e.target.files?.[0])} aria-hidden tabIndex={-1} />
       </Section>

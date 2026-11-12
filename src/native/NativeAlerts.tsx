@@ -76,7 +76,7 @@ const AddKommun = ({ watched, onAdd, onClose }: { watched: string[]; onAdd: (k: 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {!query && (
             <Section>
-              <Row icon={LocateFixed} iconBg="#0a84ff" label={locating ? 'Letar…' : 'Nära mig'} onClick={locate} />
+              <Row icon={LocateFixed} label={locating ? 'Letar…' : 'Nära mig'} onClick={locate} />
             </Section>
           )}
           <Section header={query ? 'Träffar' : near ? 'Nära dig' : 'Förslag'}>
@@ -172,7 +172,7 @@ const NativeAlerts = () => {
           label="Notiser"
           accessory={<Switch label="Notiser" checked={push.isSubscribed} disabled={!push.checked || push.loading || push.available === false} onChange={toggle} />}
         />
-        {push.isSubscribed && <Row icon={Send} iconBg="#0a84ff" label="Skicka testnotis" detail={testNote ?? undefined} onClick={test} />}
+        {push.isSubscribed && <Row icon={Send} label="Skicka testnotis" detail={testNote ?? undefined} onClick={test} />}
       </Section>
 
       <Section header="Kommuner" footer={kommuner.length || settings.near ? undefined : 'Välj minst en kommun eller Nära dig, annars finns det inget att få notiser om.'}>
@@ -189,14 +189,14 @@ const NativeAlerts = () => {
             )}
           />
         ))}
-        <Row icon={Plus} iconBg="#30d158" label="Lägg till kommun" tint onClick={() => setAdding(true)} />
+        <Row icon={Plus} label="Lägg till kommun" tint onClick={() => setAdding(true)} />
       </Section>
 
       {moreAvailable && (
         <Section header="Nära dig" footer="Det som händer inom ett visst avstånd från en plats, utöver dina kommuner.">
           <Row
             icon={LocateFixed}
-            iconBg="#0a84ff"
+           
             label="Notiser nära dig"
             value={settings.near ? radiusLabel(settings.near.radiusKm) : 'Av'}
             onClick={() => setPicking(true)}
@@ -238,7 +238,7 @@ const NativeAlerts = () => {
         <Section header="Tysta timmar" footer={settings.quiet ? `Inga notiser ${quietLabel(settings.quiet)}. Det som händer då skickas inte i efterhand.` : 'Inga notiser på natten, till exempel.'}>
           <Row
             icon={Moon}
-            iconBg="#5e5ce6"
+           
             label="Tysta timmar"
             accessory={<Switch label="Tysta timmar" checked={!!settings.quiet} onChange={(on) => save({ ...settings, quiet: on ? DEFAULT_QUIET : null })} />}
           />

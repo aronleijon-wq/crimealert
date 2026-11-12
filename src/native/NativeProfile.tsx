@@ -78,14 +78,14 @@ const NativeProfile = () => {
   const about = (
     <>
       <Section header="Hjälp">
-        <Row icon={MessageSquareHeart} iconBg="#30d158" label="Tyck till" detail="Vad ska vi göra bättre?" onClick={() => setFeedback(true)} />
-        <Row icon={Mail} iconBg="#0a84ff" label="Kontakta oss" href={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert`} />
-        <Row icon={Star} iconBg="#ff9f0a" label="Betygsätt CrimeAlert" href={TRUSTPILOT_REVIEW_URL} />
+        <Row icon={MessageSquareHeart} label="Tyck till" detail="Vad ska vi göra bättre?" onClick={() => setFeedback(true)} />
+        <Row icon={Mail} label="Kontakta oss" href={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert`} />
+        <Row icon={Star} label="Betygsätt CrimeAlert" href={TRUSTPILOT_REVIEW_URL} />
       </Section>
       <Section header="Om CrimeAlert">
-        <Row icon={Info} iconBg="#8e8e93" label="Om oss" to="/om-oss" />
-        <Row icon={FileText} iconBg="#8e8e93" label="Användarvillkor" to="/villkor" />
-        <Row icon={Shield} iconBg="#8e8e93" label="Sekretesspolicy" to="/sekretesspolicy" />
+        <Row icon={Info} label="Om oss" to="/om-oss" />
+        <Row icon={FileText} label="Användarvillkor" to="/villkor" />
+        <Row icon={Shield} label="Sekretesspolicy" to="/sekretesspolicy" />
       </Section>
       {feedback && (
         <FeedbackSheet onClose={() => setFeedback(false)} onSent={() => saveNudges({ ...readNudges(), feedbackSentAt: Date.now() })} />
@@ -111,7 +111,7 @@ const NativeProfile = () => {
     <Screen title="Profil">
       <Section>
         <div className="flex items-center gap-3.5 px-4 py-3">
-          <span className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#8e8e93] to-[#636366] text-[26px] font-semibold">
+          <span className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full bg-[#636366] text-[26px] font-semibold">
             {shown.charAt(0).toUpperCase()}
           </span>
           <span className="min-w-0">
@@ -126,20 +126,20 @@ const NativeProfile = () => {
       {/* From app version 1.3 (NativeInvite) */}
       {hasAppDesign13() && (
         <Section>
-          <Row icon={Gift} iconBg="#ff2d55" label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />
+          <Row icon={Gift} label="Bjud in vänner" detail="7 dagar Pro för varje vän" to="/bjud-in" />
         </Section>
       )}
 
       {/* From 1.3 Notiser is no longer a tab of its own (screens.ts) */}
       {hasAppDesign13() && (
         <Section>
-          <Row icon={Bell} iconBg="#ff453a" label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
-          <Row icon={MessagesSquare} iconBg="#bf5af2" label="Chattar" detail="Prata med grannarna i din kommun" to="/chattar" />
+          <Row icon={Bell} label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
+          <Row icon={MessagesSquare} label="Chattar" detail="Prata med grannarna i din kommun" to="/chattar" />
         </Section>
       )}
 
       <Section header="Konto">
-        <Row icon={UserRound} iconBg="#5e5ce6" label="Användarnamn" value={name || 'Inget'} onClick={() => setEditing(true)} />
+        <Row icon={UserRound} label="Användarnamn" value={name || 'Inget'} onClick={() => setEditing(true)} />
       </Section>
 
       <Section header="Integritet">

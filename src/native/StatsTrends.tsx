@@ -4,7 +4,7 @@
 // others see today. On Statistik → Trender in the app, and on the website's Analys page.
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDownRight, ArrowUpRight, Lock, Sparkles } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Lock } from 'lucide-react';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -246,10 +246,7 @@ const StatsTrends = () => {
             <Card title="Insikter">
               <ul className="space-y-3">
                 {lines.map((line) => (
-                  <li key={line} className="flex gap-3 text-[15px] leading-snug">
-                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#ffd60a]" aria-hidden />
-                    <span>{line}</span>
-                  </li>
+                  <li key={line} className="border-l-2 border-[#ff453a] pl-3 text-[15px] leading-snug">{line}</li>
                 ))}
               </ul>
             </Card>
