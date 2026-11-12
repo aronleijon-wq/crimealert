@@ -32,6 +32,31 @@ export interface Atlas {
 
 export const ALL = 'alla';
 
+/** The first day the archive holds Polisen's events for (police_events_archive) */
+export const ARCHIVE_START = '2026-09-28';
+
+/** Whole days from the archive's first day to now, so "Sedan start" asks for all of it */
+export const daysSinceStart = (now = Date.now()) => Math.max(1, Math.ceil((now - Date.parse(`${ARCHIVE_START}T00:00:00+02:00`)) / 86_400_000));
+
+export interface Period {
+  days: number;
+  /** "30 dagar", "sedan 28 sep" */
+  short: string;
+  /** "de senaste 30 dagarna", "sedan 28 september" */
+  long: string;
+}
+
+export function periodOf(choice: string, now = Date.now()): Period {
+  if (choice === 'start') {
+    const date = new Date(`${ARCHIVE_START}T12:00:00Z`);
+    const day = date.getUTCDate();
+    const month = date.toLocaleDateString('sv-SE', { month: 'long', timeZone: 'UTC' });
+    return { days: daysSinceStart(now), short: `sedan ${day} ${month.slice(0, 3)}`, long: `sedan ${day} ${month}` };
+  }
+  const days = Number(choice) || 30;
+  return { days, short: `${days} dagar`, long: `de senaste ${days} dagarna` };
+}
+
 /** Fewer events than this say too little to compare */
 export const MIN_EVENTS = 3;
 

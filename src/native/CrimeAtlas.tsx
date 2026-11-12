@@ -11,8 +11,8 @@ import { POPULATION_YEAR } from '@/data/kommunPopulation';
 import { useCrimeAtlas } from '@/hooks/useCrimeAtlas';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import {
-  formatRate, formatRatio, kommunProfile, mostCommon, ratioSentence, risingMost, themeRanking, THEMES,
-  type Atlas, type KommunRate,
+  formatRate, formatRatio, kommunProfile, periodOf, mostCommon, ratioSentence, risingMost, themeRanking, THEMES,
+  type Atlas, type KommunRate, type Period,
 } from '@/lib/crimeAtlas';
 import { kommunPath, neighbourKommuner } from '@/lib/kommunPages';
 import { drawHistoryCard } from '@/lib/shareCard';
@@ -127,7 +127,7 @@ const KommunSearch = ({ value, onPick }: { value: string; onPick: (k: string) =>
   );
 };
 
-const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: string; days: number; onPick: (k: string) => void }) => {
+const KommunView = ({ atlas, kommun, period, onPick }: { atlas: Atlas; kommun: string; period: Period; onPick: (k: string) => void }) => {
   const profile = useMemo(() => kommunProfile(atlas, kommun), [atlas, kommun]);
   const neighbours = useMemo(() => {
     const names = [kommun, ...neighbourKommuner(kommun, 5)];
@@ -150,7 +150,7 @@ const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: str
         <div className="mt-4 flex items-end gap-6">
           <div>
             <div className="text-[34px] font-bold leading-none tabular-nums">{profile.total.toLocaleString('sv-SE')}</div>
-            <div className={`mt-1 text-[13px] ${MUTED}`}>händelser, {days} dagar</div>
+            <div className={`mt-1 text-[13px] ${MUTED}`}>händelser, {period.short}</div>
           </div>
           <div>
             <div className="text-[34px] font-bold leading-none tabular-nums">{formatRate(profile.rate)}</div>
@@ -174,14 +174,14 @@ const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: str
               <div className="h-full rounded-full bg-[#ff453a]" style={{ width: `${Math.max(3, t.share * 100)}%` }} />
             </div>
           </div>
-        )) : <p className={`text-[15px] ${MUTED}`}>Polisen har inte rapporterat något av de här slagen i {kommun} de senaste {days} dagarna.</p>}
+        )) : <p className={`text-[15px] ${MUTED}`}>Polisen har inte rapporterat något av de här slagen i {kommun} {period.long}.</p>}
         {top.length > 0 && (
           <ShareCardButton
             make={() => drawHistoryCard({
               kicker: `Brottsatlas · ${kommun}`,
               title,
               bars: top.slice(0, 5).map((t, i) => ({ label: shortName(t.theme.label), value: t.count, tone: i === 0 ? 'high' : undefined })),
-              note: `Polisens händelser i ${kommun}, senaste ${days} dagarna.`,
+              note: `Polisens händelser i ${kommun}, ${period.long}.`,
               url: URL,
             })}
             title={`Brotten i ${kommun}`}
@@ -217,7 +217,7 @@ const KommunView = ({ atlas, kommun, days, onPick }: { atlas: Atlas; kommun: str
   );
 };
 
-const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas: Atlas; themeId: string; setThemeId: (t: string) => void; days: number; chosen: string; onPick: (k: string) => void }) => {
+const ThemeView = ({ atlas, themeId, setThemeId, period, chosen, onPick }: { atlas: Atlas; themeId: string; setThemeId: (t: string) => void; period: Period; chosen: string; onPick: (k: string) => void }) => {
   const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
   const ranking = useMemo(() => themeRanking(atlas, theme.id), [atlas, theme.id]);
   const common = mostCommon(ranking);
@@ -244,7 +244,7 @@ const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas
         ))}
       </div>
 
-      <Card title={`${theme.label} i Sverige · ${days} dagar`} footer="Större prick: fler händelser. Rödare: fler per invånare.">
+      <Card title={`${theme.label} i Sverige · ${period.short}`} footer="Större prick: fler händelser. Rödare: fler per invånare.">
         <div className="flex items-baseline gap-2">
           <span className="text-[30px] font-bold tabular-nums">{total.toLocaleString('sv-SE')}</span>
           <span className={`text-[14px] ${MUTED}`}>{theme.plural} rapporterade · {formatRate((total / atlas.population) * 100_000)} {PER}</span>
@@ -272,14 +272,14 @@ const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas
             </span>
             <span className="w-12 text-right text-[14px] tabular-nums">{formatRate(r.rate)}</span>
           </button>
-        )) : <p className={`text-[15px] ${MUTED}`}>För få {theme.plural} de senaste {days} dagarna för att jämföra kommuner.</p>}
+        )) : <p className={`text-[15px] ${MUTED}`}>För få {theme.plural} {period.long} för att jämföra kommuner.</p>}
         {common.length > 0 && (
           <ShareCardButton
             make={() => drawHistoryCard({
               kicker: `Brottsatlas · ${theme.label}`,
               title,
               bars: common.slice(0, 5).map((r, i) => ({ label: shortName(r.kommun), value: Math.round(r.rate * 10) / 10, tone: i === 0 ? 'high' : undefined })),
-              note: `${theme.label} ${PER} invånare, senaste ${days} dagarna.`,
+              note: `${theme.label} ${PER} invånare, ${period.long}.`,
               url: URL,
             })}
             title={title}
@@ -292,7 +292,7 @@ const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas
       </Card>
 
       {rising.length > 0 && (
-        <Card title="Ökat mest" footer={`Jämfört med de ${days} dagarna före, bland kommuner med minst fem ${theme.plural} då.`}>
+        <Card title="Ökat mest" footer={`Jämfört med lika lång tid före, bland kommuner med minst fem ${theme.plural} då.`}>
           {rising.map((r) => (
             <button key={r.kommun} type="button" onClick={() => onPick(r.kommun)} className="flex w-full items-center gap-3 border-b border-[rgba(84,84,88,0.65)] py-2.5 text-left last:border-0 active:opacity-60">
               <span className="min-w-0 flex-1 truncate text-[16px]">{r.kommun}</span>
@@ -307,16 +307,18 @@ const ThemeView = ({ atlas, themeId, setThemeId, days, chosen, onPick }: { atlas
 };
 
 const VIEWS = [{ value: 'kommun', label: 'Kommun' }, { value: 'brott', label: 'Brott' }] as const;
-const PERIODS = [{ value: '7', label: '7 dagar' }, { value: '30', label: '30 dagar' }];
+const PERIODS = [{ value: '7', label: '7 dagar' }, { value: '30', label: '30 dagar' }, { value: 'start', label: 'Sedan start' }];
 
 const CrimeAtlas = () => {
   const { kommuner } = useNotificationPreferences();
   const [view, setView] = useState<'kommun' | 'brott'>('kommun');
-  const [days, setDays] = useState('30');
+  // All the archive by default: the more events, the steadier each kommun's numbers
+  const [days, setDays] = useState('start');
   const [picked, setPicked] = useState<string | null>(null);
   const [themeId, setThemeId] = useState('inbrott');
   const kommun = picked ?? kommuner[0] ?? 'Stockholm';
-  const { atlas, loading, error } = useCrimeAtlas(Number(days));
+  const period = useMemo(() => periodOf(days), [days]);
+  const { atlas, loading, error } = useCrimeAtlas(period.days);
 
   const pick = (k: string) => { setPicked(k); setView('kommun'); };
 
@@ -333,9 +335,9 @@ const CrimeAtlas = () => {
           {[140, 260, 180].map((h) => <div key={h} className="animate-pulse rounded-2xl bg-[#1c1c1e]" style={{ height: h }} />)}
         </div>
       ) : view === 'kommun' ? (
-        <KommunView atlas={atlas} kommun={kommun} days={Number(days)} onPick={pick} />
+        <KommunView atlas={atlas} kommun={kommun} period={period} onPick={pick} />
       ) : (
-        <ThemeView atlas={atlas} themeId={themeId} setThemeId={setThemeId} days={Number(days)} chosen={kommun} onPick={pick} />
+        <ThemeView atlas={atlas} themeId={themeId} setThemeId={setThemeId} period={period} chosen={kommun} onPick={pick} />
       )}
 
       <p className={`mx-6 mt-6 text-center text-[12px] leading-snug ${FAINT}`}>

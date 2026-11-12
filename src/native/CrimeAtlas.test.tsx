@@ -24,7 +24,7 @@ describe('Brottsatlas', () => {
   it('starts with your kommun, what is most common there and how it compares with Sweden', async () => {
     show();
     expect(await screen.findByText(/^Stölder är [\d,]+× vanligare i Nacka än i Sverige$/)).toBeInTheDocument();
-    expect(rpc).toHaveBeenCalledWith('crime_atlas', { _days: 30 });
+    expect(rpc).toHaveBeenCalledWith('crime_atlas', { _days: expect.any(Number) });
     expect(screen.getByText('Vanligast i Nacka')).toBeInTheDocument();
     expect(screen.getByText('Jämfört med grannarna')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Chatten/ })).toHaveAttribute('href', '/chatt/nacka');
@@ -42,12 +42,12 @@ describe('Brottsatlas', () => {
     show();
     await screen.findByText('Vanligast i Nacka');
     fireEvent.click(screen.getByRole('tab', { name: 'Brott' }));
-    expect(screen.getByText('Inbrott i Sverige · 30 dagar')).toBeInTheDocument();
+    expect(screen.getByText('Inbrott i Sverige · sedan 28 sep')).toBeInTheDocument();
     const list = screen.getByText('Vanligast per invånare').parentElement!;
     const names = [...list.querySelectorAll('button')].map((b) => b.textContent);
     expect(names[0]).toContain('Bjurholm');
     fireEvent.click(screen.getByRole('tab', { name: 'Rån' }));
-    await waitFor(() => expect(screen.getByText('Rån i Sverige · 30 dagar')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Rån i Sverige · sedan 28 sep')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: /Stockholm/ })[0]);
     expect(await screen.findByText('Vanligast i Stockholm')).toBeInTheDocument();
   });

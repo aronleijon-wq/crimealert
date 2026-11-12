@@ -45,3 +45,13 @@ describe('the crime atlas', () => {
     expect(ratioSentence(theme, 'Nacka', 0.5)).toBe('Inbrott är 2,0× ovanligare i Nacka än i Sverige');
   });
 });
+
+describe('the periods', () => {
+  it('reaches back to the archive\'s first day for "Sedan start"', async () => {
+    const { periodOf, daysSinceStart } = await import('./crimeAtlas');
+    const now = Date.parse('2026-11-12T18:00:00+01:00');
+    expect(daysSinceStart(now)).toBe(46);
+    expect(periodOf('start', now)).toEqual({ days: 46, short: 'sedan 28 sep', long: 'sedan 28 september' });
+    expect(periodOf('7', now)).toEqual({ days: 7, short: '7 dagar', long: 'de senaste 7 dagarna' });
+  });
+});
