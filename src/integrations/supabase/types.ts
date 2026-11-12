@@ -868,6 +868,18 @@ export type Database = {
           now_count: number
         }[]
       }
+      crime_atlas_places: {
+        Args: { _days?: number }
+        Returns: {
+          area: string
+          before_count: number
+          category: string
+          lat: number
+          lng: number
+          now_count: number
+          place: string
+        }[]
+      }
       has_blocked_words: { Args: { _text: string }; Returns: boolean }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
