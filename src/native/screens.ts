@@ -55,6 +55,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/guider\/.+/, 'Guide'],
   [/^\/guider$/, 'Guider'],
   [/^\/statistik$/, 'Sverige i siffror'],
+  [/^\/brottsatlas$/, 'Brottsatlas'],
   [/^\/om-oss$/, 'Om CrimeAlert'],
   [/^\/villkor$/, 'Användarvillkor'],
   [/^\/(sekretesspolicy|privacy)$/, 'Sekretesspolicy'],

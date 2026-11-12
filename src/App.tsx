@@ -53,6 +53,7 @@ const NativeInvite = lazyPage(() => import("@/native/NativeInvite"));
 const NativeReport = lazyPage(() => import("@/native/NativeReport"));
 const NativeChats = lazyPage(() => import("@/native/NativeChats"));
 const NativeChatRoom = lazyPage(() => import("@/native/NativeChatRoom"));
+const Brottsatlas = lazyPage(() => import("@/pages/Brottsatlas"));
 const WebChatList = lazyPage(() => import("@/pages/WebChats").then((m) => ({ default: m.WebChatList })));
 const WebChatRoom = lazyPage(() => import("@/pages/WebChats").then((m) => ({ default: m.WebChatRoom })));
 const Rapportera = lazyPage(() => import("./pages/Rapportera"));
@@ -110,6 +111,7 @@ const App = () => (
           <Route path="/app-login" element={<AppLogin />} />
           <Route path="/inbjudan/:code" element={<Inbjudan />} />
           <Route path="/chatt/:slug" element={isNativeApp() ? <NativeChatRoom /> : <WebChatRoom />} />
+          <Route path="/brottsatlas" element={isNativeApp() ? <Navigate to="/analysis?vy=atlas" replace /> : <Brottsatlas />} />
           <Route path="/chattar" element={isNativeApp() ? <NativeChats /> : <WebChatList />} />
           <Route path="/rapportera" element={isNativeApp() ? <NativeReport /> : <Rapportera />} />
           <Route path="/bjud-in" element={isNativeApp() ? <NativeInvite /> : <Navigate to="/installningar#bjud-in" replace />} />
