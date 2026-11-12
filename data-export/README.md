@@ -1,1 +1,1 @@
-Fetched 2026-11-12T16:49:31Z (UTC) via the crime_atlas RPC (_days 30 and 7); police_events_archive oldest-time query returned HTTP 200 with an empty array for the anon key (likely RLS), so oldest.json is omitted.
+Fetched 2026-11-12T16:50:24Z (UTC) via the crime_atlas RPC, paged 1000 rows at a time ordered by area, category: atlas-30.json has 1290 rows, atlas-7.json has 432 rows; the police_events_archive oldest-time query returned an empty array for the anon key (likely RLS), so oldest.json is omitted.

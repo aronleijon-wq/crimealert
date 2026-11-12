@@ -1,432 +1,2594 @@
-[{"area":"Vänersborg","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Borlänge","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Vellinge","category":"Knivlagen","now_count":0,"before_count":1}, 
- {"area":"Arboga","category":"Kontroll","now_count":0,"before_count":1}, 
- {"area":"Kristianstad","category":"Trafikolycka","now_count":3,"before_count":0}, 
- {"area":"Norrköping","category":"Trafikolycka","now_count":2,"before_count":2}, 
- {"area":"Örnsköldsvik","category":"Arbetsplatsolycka","now_count":1,"before_count":1}, 
- {"area":"Västerås","category":"Stöld/inbrott","now_count":2,"before_count":0}, 
- {"area":"Halmstad","category":"Trafikolycka, vilt","now_count":1,"before_count":0}, 
- {"area":"Köping","category":"Kontroll","now_count":0,"before_count":1}, 
- {"area":"Arvika","category":"Trafikolycka","now_count":0,"before_count":2}, 
- {"area":"Botkyrka","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Höganäs","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Vindeln","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Sigtuna","category":"Stöld","now_count":1,"before_count":0}, 
- {"area":"Kiruna","category":"Trafikolycka","now_count":1,"before_count":2}, 
- {"area":"Kiruna","category":"Knivlagen","now_count":0,"before_count":1}, 
- {"area":"Kristianstad","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Arboga","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Oskarshamn","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Västerås","category":"Kontroll","now_count":1,"before_count":0}, 
- {"area":"Haninge","category":"Olaga frihetsberövande/människorov","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Trafikolycka","now_count":5,"before_count":2}, 
- {"area":"Knivsta","category":"Motorfordon, stöld","now_count":1,"before_count":0}, 
- {"area":"Eskilstuna","category":"Stöld","now_count":1,"before_count":0}, 
- {"area":"Emmaboda","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Kramfors","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Sigtuna","category":"Narkotikabrott","now_count":0,"before_count":1}, 
- {"area":"Lycksele","category":"Trafikolycka","now_count":0,"before_count":2}, 
- {"area":"Säffle","category":"Sjukdom/olycksfall","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Stöld/inbrott","now_count":1,"before_count":1}, 
- {"area":"Sundsvall","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Lidköping","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Ockelbo","category":"Stöld/inbrott","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Försvunnen person","now_count":1,"before_count":2}, 
- {"area":"Burlöv","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Tierp","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Köping","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Vimmerby","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Kävlinge","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Sigtuna","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Burlöv","category":"Våld/hot mot tjänsteman","now_count":0,"before_count":1}, 
- {"area":"Solna","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Söderhamn","category":"Stöld/inbrott","now_count":1,"before_count":0}, 
- {"area":"Nybro","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Katrineholm","category":"Bedrägeri","now_count":1,"before_count":0}, 
- {"area":"Malmö","category":"Försvunnen person","now_count":1,"before_count":2}, 
- {"area":"Köping","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Lindesberg","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Rån","now_count":1,"before_count":0}, 
- {"area":"Kil","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Härnösand","category":"Rattfylleri","now_count":0,"before_count":2}, 
- {"area":"Halmstad","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Huddinge","category":"Arbetsplatsolycka","now_count":0,"before_count":1}, 
- {"area":"Älvsbyn","category":"Inbrott","now_count":0,"before_count":1}, 
- {"area":"Östersund","category":"Övrigt","now_count":2,"before_count":0}, 
- {"area":"Örkelljunga","category":"Kontroll","now_count":0,"before_count":1}, 
- {"area":"Enköping","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Sjöbo","category":"Övrigt","now_count":0,"before_count":1}, 
- {"area":"Norberg","category":"Bedrägeri","now_count":0,"before_count":1}, 
- {"area":"Norrköping","category":"Olaga hot","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Rån","now_count":0,"before_count":1}, 
- {"area":"Sundbyberg","category":"Mord/dråp, försök","now_count":1,"before_count":0}, 
- {"area":"Åstorp","category":"Trafikolycka","now_count":2,"before_count":1}, 
- {"area":"Östersund","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Säffle","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Karlskoga","category":"Trafikolycka, singel","now_count":0,"before_count":2}, 
- {"area":"Habo","category":"Anträffad död","now_count":1,"before_count":0}, 
- {"area":"Vimmerby","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Luleå","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Nässjö","category":"Trafikolycka","now_count":2,"before_count":1}, 
- {"area":"Oskarshamn","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Malmö","category":"Bråk","now_count":1,"before_count":0}, 
- {"area":"Mönsterås","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Fylleri","now_count":1,"before_count":1}, 
- {"area":"Karlstad","category":"Trafikolycka","now_count":3,"before_count":2}, 
- {"area":"Hässleholm","category":"Misshandel, grov","now_count":0,"before_count":1}, 
- {"area":"Strömsund","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Örnsköldsvik","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Sundsvall","category":"Bedrägeri","now_count":0,"before_count":2}, 
- {"area":"Hultsfred","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Krokom","category":"Fylleri","now_count":0,"before_count":1}, 
- {"area":"Härjedalen","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Mordbrand","now_count":1,"before_count":0}, 
- {"area":"Skellefteå","category":"Trafikolycka, vilt","now_count":1,"before_count":0}, 
- {"area":"Borgholm","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Västerås","category":"Vapenlagen","now_count":1,"before_count":0}, 
- {"area":"Falköping","category":"Mord/dråp, försök","now_count":1,"before_count":0}, 
- {"area":"Malmö","category":"Brand","now_count":2,"before_count":0}, 
- {"area":"Surahammar","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Brand","now_count":2,"before_count":0}, 
- {"area":"Växjö","category":"Trafikolycka","now_count":4,"before_count":1}, 
- {"area":"Bollnäs","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Järfälla","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Falkenberg","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Haninge","category":"Rån","now_count":0,"before_count":1}, 
- {"area":"Storuman","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Smällar","now_count":0,"before_count":1}, 
- {"area":"Karlskrona","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Södertälje","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Åre","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Vingåker","category":"Bedrägeri","now_count":1,"before_count":0}, 
- {"area":"Hudiksvall","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Ludvika","category":"Mord/dråp","now_count":0,"before_count":1}, 
- {"area":"Helsingborg","category":"Olovlig körning","now_count":0,"before_count":1}, 
- {"area":"Norrköping","category":"Försvunnen person","now_count":1,"before_count":0}, 
- {"area":"Kungsbacka","category":"Trafikolycka, personskada","now_count":1,"before_count":0}, 
- {"area":"Danderyd","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Skellefteå","category":"Inbrott","now_count":2,"before_count":0}, 
- {"area":"Västerås","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Umeå","category":"Stöld","now_count":0,"before_count":2}, 
- {"area":"Piteå","category":"Arbetsplatsolycka","now_count":1,"before_count":0}, 
- {"area":"Emmaboda","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Hässleholm","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Linköping","category":"Trafikhinder","now_count":1,"before_count":1}, 
- {"area":"Östersund","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Borlänge","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Krokom","category":"Olovlig körning","now_count":0,"before_count":1}, 
- {"area":"Vallentuna","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Pajala","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Karlshamn","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Östersund","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Östersund","category":"Skadegörelse","now_count":0,"before_count":1}, 
- {"area":"Vaxholm","category":"Trafikolycka, personskada","now_count":1,"before_count":0}, 
- {"area":"Nordanstig","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Mölndal","category":"Olaga intrång","now_count":0,"before_count":1}, 
- {"area":"Värnamo","category":"Vapenlagen","now_count":0,"before_count":1}, 
- {"area":"Vara","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Sollefteå","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Sollefteå","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Karlskoga","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Göteborg","category":"Trafikolycka","now_count":1,"before_count":2}, 
- {"area":"Köping","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Ovanåker","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Borås","category":"Misshandel, grov","now_count":1,"before_count":0}, 
- {"area":"Mölndal","category":"Trafikolycka, personskada","now_count":1,"before_count":0}, 
- {"area":"Skellefteå","category":"Trafikolycka","now_count":2,"before_count":2}, 
- {"area":"Umeå","category":"Trafikbrott","now_count":1,"before_count":1}, 
- {"area":"Sundsvall","category":"Narkotikabrott","now_count":1,"before_count":2}, 
- {"area":"Malmö","category":"Polisinsats/kommendering","now_count":0,"before_count":1}, 
- {"area":"Ystad","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Uppvidinge","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Markaryd","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Sundsvall","category":"Trafikolycka, smitning från","now_count":0,"before_count":1}, 
- {"area":"Härjedalen","category":"Arbetsplatsolycka","now_count":1,"before_count":0}, 
- {"area":"Mölndal","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Täby","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Linköping","category":"Motorfordon, stöld","now_count":1,"before_count":0}, 
- {"area":"Torsby","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Krokom","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Ängelholm","category":"Rattfylleri","now_count":1,"before_count":2}, 
- {"area":"Botkyrka","category":"Mordbrand","now_count":1,"before_count":0}, 
- {"area":"Örnsköldsvik","category":"Trafikolycka","now_count":2,"before_count":2}, 
- {"area":"Lund","category":"Arbetsplatsolycka","now_count":1,"before_count":0}, 
- {"area":"Härnösand","category":"Stöld","now_count":1,"before_count":0}, 
- {"area":"Västerås","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Nynäshamn","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Norrtälje","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Skellefteå","category":"Olaga intrång","now_count":0,"before_count":1}, 
- {"area":"Sölvesborg","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Ljungby","category":"Trafikolycka","now_count":0,"before_count":2}, 
- {"area":"Norrköping","category":"Trafikhinder","now_count":0,"before_count":1}, 
- {"area":"Nordanstig","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Mark","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Sundsvall","category":"Fylleri","now_count":1,"before_count":0}, 
- {"area":"Hässleholm","category":"Sexualbrott","now_count":1,"before_count":0}, 
- {"area":"Värmdö","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Håbo","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Falun","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Göteborg","category":"Motorfordon, stöld","now_count":0,"before_count":1}, 
- {"area":"Dals-ed","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Karlskrona","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Sunne","category":"Information","now_count":1,"before_count":0}, 
- {"area":"Gällivare","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Österåker","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Luleå","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Älvsbyn","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Skurup","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Uddevalla","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Knivsta","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Söderhamn","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Osby","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Krokom","category":"Övrigt","now_count":1,"before_count":0}, 
- {"area":"Sundsvall","category":"Ofredande/förargelse","now_count":0,"before_count":1}, 
- {"area":"Vindeln","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Helsingborg","category":"Misshandel","now_count":1,"before_count":1}, 
- {"area":"Karlskrona","category":"Trafikolycka, smitning från","now_count":0,"before_count":1}, 
- {"area":"Sollefteå","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Hultsfred","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Narkotikabrott","now_count":1,"before_count":0}, 
- {"area":"Örnsköldsvik","category":"Trafikkontroll","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Övrigt","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Sundbyberg","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Karlshamn","category":"Rattfylleri","now_count":2,"before_count":0}, 
- {"area":"Karlskrona","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Trafikhinder","now_count":1,"before_count":0}, 
- {"area":"Norrtälje","category":"Försvunnen person","now_count":1,"before_count":0}, 
- {"area":"Boden","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Helsingborg","category":"Brand","now_count":1,"before_count":2}, 
- {"area":"Ronneby","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Västerås","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Stenungsund","category":"Olovlig körning","now_count":1,"before_count":0}, 
- {"area":"Nybro","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Sölvesborg","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Järfälla","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Trafikolycka","now_count":7,"before_count":3}, 
- {"area":"Göteborg","category":"Information","now_count":1,"before_count":0}, 
- {"area":"Nordmaling","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Boden","category":"Fylleri","now_count":0,"before_count":2}, 
- {"area":"Laholm","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Torsås","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Mord/dråp","now_count":1,"before_count":0}, 
- {"area":"Sölvesborg","category":"Trafikhinder","now_count":0,"before_count":1}, 
- {"area":"Staffanstorp","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Sundsvall","category":"Knivlagen","now_count":0,"before_count":1}, 
- {"area":"Borås","category":"Rån","now_count":1,"before_count":0}, 
- {"area":"Malmö","category":"Olaga hot","now_count":0,"before_count":1}, 
- {"area":"Tierp","category":"Försvunnen person","now_count":0,"before_count":1}, 
- {"area":"Kalix","category":"Olovlig körning","now_count":1,"before_count":1}, 
- {"area":"Växjö","category":"Rattfylleri","now_count":1,"before_count":1}, 
- {"area":"Härnösand","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Årjäng","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Polisinsats/kommendering","now_count":0,"before_count":1}, 
- {"area":"Klippan","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Falun","category":"Trafikolycka","now_count":2,"before_count":2}, 
- {"area":"Malmö","category":"Trafikhinder","now_count":1,"before_count":0}, 
- {"area":"Malmö","category":"Misshandel","now_count":2,"before_count":3}, 
- {"area":"Sundsvall","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Sala","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Trelleborg","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Östhammar","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Mönsterås","category":"Våld/hot mot tjänsteman","now_count":1,"before_count":0}, 
- {"area":"Kungälv","category":"Ekobrott","now_count":1,"before_count":0}, 
- {"area":"Helsingborg","category":"Rån","now_count":0,"before_count":1}, 
- {"area":"Helsingborg","category":"Trafikolycka","now_count":0,"before_count":7}, 
- {"area":"Kramfors","category":"Brand","now_count":1,"before_count":1}, 
- {"area":"Nässjö","category":"Trafikolycka, smitning från","now_count":1,"before_count":0}, 
- {"area":"Tingsryd","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Kiruna","category":"Trafikolycka, vilt","now_count":1,"before_count":1}, 
- {"area":"Vetlanda","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Sundsvall","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Bromölla","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Mörbylånga","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Torsby","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Hässleholm","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Västerås","category":"Ofredande/förargelse","now_count":1,"before_count":0}, 
- {"area":"Norrköping","category":"Rattfylleri","now_count":1,"before_count":1}, 
- {"area":"Forshaga","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Landskrona","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Sandviken","category":"Stöld/inbrott","now_count":1,"before_count":0}, 
- {"area":"Kramfors","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Nyköping","category":"Misshandel, grov","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Explosion","now_count":0,"before_count":1}, 
- {"area":"Skellefteå","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Södertälje","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Hagfors","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Strängnäs","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Österåker","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Vellinge","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Arjeplog","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Lerum","category":"Försvunnen person","now_count":1,"before_count":0}, 
- {"area":"Eskilstuna","category":"Trafikolycka","now_count":1,"before_count":2}, 
- {"area":"Västervik","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Arboga","category":"Bråk","now_count":1,"before_count":0}, 
- {"area":"Göteborg","category":"Försvunnen person","now_count":0,"before_count":1}, 
- {"area":"Linköping","category":"Anträffad död","now_count":0,"before_count":1}, 
- {"area":"Köping","category":"Stöld/inbrott","now_count":0,"before_count":1}, 
- {"area":"Bollnäs","category":"Skadegörelse","now_count":1,"before_count":0}, 
- {"area":"Skellefteå","category":"Knivlagen","now_count":1,"before_count":0}, 
- {"area":"Filipstad","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Söderhamn","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Ronneby","category":"Skadegörelse","now_count":0,"before_count":1}, 
- {"area":"Kiruna","category":"Arbetsplatsolycka","now_count":0,"before_count":1}, 
- {"area":"Vellinge","category":"Trafikolycka, smitning från","now_count":1,"before_count":0}, 
- {"area":"Sala","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Trafikolycka, personskada","now_count":2,"before_count":0}, 
- {"area":"Uddevalla","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Älmhult","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Eskilstuna","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Motorfordon, anträffat stulet","now_count":0,"before_count":1}, 
- {"area":"Trelleborg","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Lund","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Burlöv","category":"Försvunnen person","now_count":1,"before_count":0}, 
- {"area":"Ystad","category":"Häleri","now_count":1,"before_count":0}, 
- {"area":"Årjäng","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Kristianstad","category":"Brand","now_count":2,"before_count":1}, 
- {"area":"Bollnäs","category":"Trafikkontroll","now_count":1,"before_count":0}, 
- {"area":"Alvesta","category":"Skadegörelse","now_count":0,"before_count":1}, 
- {"area":"Lomma","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Malmö","category":"Rattfylleri","now_count":1,"before_count":1}, 
- {"area":"Hässleholm","category":"Trafikhinder","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Smällar","now_count":1,"before_count":0}, 
- {"area":"Södertälje","category":"Misshandel, grov","now_count":0,"before_count":1}, 
- {"area":"Östersund","category":"Narkotikabrott","now_count":0,"before_count":1}, 
- {"area":"Ljungby","category":"Trafikolycka, singel","now_count":0,"before_count":1}, 
- {"area":"Hässleholm","category":"Övrigt","now_count":0,"before_count":1}, 
- {"area":"Karlskoga","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Norrtälje","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Ystad","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Härnösand","category":"Misshandel, grov","now_count":0,"before_count":1}, 
- {"area":"Skinnskatteberg","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Helsingborg","category":"Misshandel, grov","now_count":0,"before_count":2}, 
- {"area":"Sundsvall","category":"Trafikhinder","now_count":0,"before_count":1}, 
- {"area":"Leksand","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Nyköping","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Linköping","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Eda","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Staffanstorp","category":"Rån","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Arbetsplatsolycka","now_count":1,"before_count":0}, 
- {"area":"Södertälje","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Göteborg","category":"Farligt föremål, misstänkt","now_count":0,"before_count":1}, 
- {"area":"Haparanda","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Bjurholm","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Högsby","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Kumla","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Sandviken","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Falun","category":"Arbetsplatsolycka","now_count":0,"before_count":1}, 
- {"area":"Luleå","category":"Inbrott","now_count":1,"before_count":0}, 
- {"area":"Älmhult","category":"Vapenlagen","now_count":1,"before_count":0}, 
- {"area":"Sollentuna","category":"Mord/dråp","now_count":0,"before_count":1}, 
- {"area":"Boden","category":"Trafikkontroll","now_count":1,"before_count":0}, 
- {"area":"Enköping","category":"Trafikolycka, personskada","now_count":1,"before_count":0}, 
- {"area":"Arvidsjaur","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Strömsund","category":"Stöld","now_count":1,"before_count":0}, 
- {"area":"Vimmerby","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Helsingborg","category":"Våld/hot mot tjänsteman","now_count":0,"before_count":1}, 
- {"area":"Luleå","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Karlstad","category":"Brand","now_count":1,"before_count":1}, 
- {"area":"Borås","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Västervik","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Västerås","category":"Trafikkontroll","now_count":1,"before_count":0}, 
- {"area":"Alvesta","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Landskrona","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Hörby","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Nacka","category":"Arbetsplatsolycka","now_count":1,"before_count":0}, 
- {"area":"Linköping","category":"Trafikolycka, vilt","now_count":1,"before_count":0}, 
- {"area":"Oskarshamn","category":"Våld/hot mot tjänsteman","now_count":1,"before_count":0}, 
- {"area":"Linköping","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Nordmaling","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Lund","category":"Trafikolycka","now_count":2,"before_count":1}, 
- {"area":"Vimmerby","category":"Trafikbrott","now_count":1,"before_count":0}, 
- {"area":"Nora","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Ludvika","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Motala","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Växjö","category":"Misshandel, grov","now_count":1,"before_count":1}, 
- {"area":"Härnösand","category":"Övrigt","now_count":1,"before_count":0}, 
- {"area":"Berg","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Kristianstad","category":"Rån","now_count":1,"before_count":0}, 
- {"area":"Malung-Sälen","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Kristinehamn","category":"Trafikolycka","now_count":2,"before_count":1}, 
- {"area":"Luleå","category":"Fylleri","now_count":0,"before_count":1}, 
- {"area":"Övertorneå","category":"Trafikbrott","now_count":0,"before_count":1}, 
- {"area":"Sigtuna","category":"Knivlagen","now_count":0,"before_count":1}, 
- {"area":"Östersund","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Kalix","category":"Trafikolycka","now_count":1,"before_count":1}, 
- {"area":"Hässleholm","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Ystad","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Vännäs","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Luleå","category":"Trafikkontroll","now_count":1,"before_count":0}, 
- {"area":"Boden","category":"Stöld","now_count":1,"before_count":1}, 
- {"area":"Kalix","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Skellefteå","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Osby","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Västerås","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Strömsund","category":"Skadegörelse","now_count":0,"before_count":1}, 
- {"area":"Sundsvall","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Eslöv","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Kumla","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Smedjebacken","category":"Trafikolycka, singel","now_count":1,"before_count":0}, 
- {"area":"Kungsör","category":"Olaga intrång","now_count":1,"before_count":0}, 
- {"area":"Arvika","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Olovlig körning","now_count":2,"before_count":0}, 
- {"area":"Kungsbacka","category":"Rån","now_count":1,"before_count":0}, 
- {"area":"Malmö","category":"Smällar","now_count":1,"before_count":0}, 
- {"area":"Sala","category":"Djur","now_count":0,"before_count":1}, 
- {"area":"Sundsvall","category":"Skadegörelse","now_count":0,"before_count":1}, 
- {"area":"Alvesta","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Bollnäs","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Lekeberg","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Bengtsfors","category":"Våld/hot mot tjänsteman","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Farligt föremål, misstänkt","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Inbrott","now_count":0,"before_count":1}, 
- {"area":"Åre","category":"Fjällräddning","now_count":1,"before_count":0}, 
- {"area":"Katrineholm","category":"Trafikhinder","now_count":0,"before_count":1}, 
- {"area":"Timrå","category":"Trafikolycka","now_count":0,"before_count":2}, 
- {"area":"Umeå","category":"Trafikkontroll","now_count":2,"before_count":0}, 
- {"area":"Norrköping","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Huddinge","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Västerås","category":"Fylleri","now_count":0,"before_count":1}, 
- {"area":"Boden","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Söderhamn","category":"Bedrägeri","now_count":1,"before_count":0}, 
- {"area":"Boden","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Lomma","category":"Stöld","now_count":0,"before_count":1}, 
- {"area":"Åtvidaberg","category":"Misshandel","now_count":0,"before_count":1}, 
- {"area":"Lund","category":"Stöld, försök","now_count":1,"before_count":0}, 
- {"area":"Norrtälje","category":"Alkohollagen","now_count":0,"before_count":1}, 
- {"area":"Berg","category":"Trafikolycka","now_count":2,"before_count":0}, 
- {"area":"Nacka","category":"Misshandel","now_count":0,"before_count":2}, 
- {"area":"Karlshamn","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Rattfylleri","now_count":1,"before_count":1}, 
- {"area":"Höör","category":"Olovlig körning","now_count":1,"before_count":0}, 
- {"area":"Karlstad","category":"Information","now_count":0,"before_count":1}, 
- {"area":"Kinda","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Motorfordon, stöld","now_count":0,"before_count":1}, 
- {"area":"Östhammar","category":"Trafikolycka, vilt","now_count":0,"before_count":1}, 
- {"area":"Malmö","category":"Trafikolycka, personskada","now_count":0,"before_count":1}, 
- {"area":"Södertälje","category":"Trafikolycka, personskada","now_count":1,"before_count":0}, 
- {"area":"Eskilstuna","category":"Räddningsinsats","now_count":1,"before_count":0}, 
- {"area":"Boden","category":"Inbrott","now_count":1,"before_count":0}, 
- {"area":"Sigtuna","category":"Rattfylleri","now_count":1,"before_count":0}, 
- {"area":"Umeå","category":"Sexualbrott","now_count":0,"before_count":1}, 
- {"area":"Huddinge","category":"Trafikolycka, smitning från","now_count":1,"before_count":0}, 
- {"area":"Höganäs","category":"Brand","now_count":0,"before_count":1}, 
- {"area":"Fagersta","category":"Trafikkontroll","now_count":1,"before_count":0}, 
- {"area":"Solna","category":"Olaga intrång","now_count":1,"before_count":0}, 
- {"area":"Kiruna","category":"Övrigt","now_count":0,"before_count":1}, 
- {"area":"Luleå","category":"Trafikolycka, smitning från","now_count":0,"before_count":1}, 
- {"area":"Oskarshamn","category":"Trafikolycka, vilt","now_count":1,"before_count":0}, 
- {"area":"Knivsta","category":"Rattfylleri","now_count":0,"before_count":1}, 
- {"area":"Botkyrka","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Tierp","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Kävlinge","category":"Försvunnen person","now_count":1,"before_count":0}, 
- {"area":"Luleå","category":"Trafikolycka","now_count":1,"before_count":0}, 
- {"area":"Skellefteå","category":"Brand","now_count":1,"before_count":0}, 
- {"area":"Mönsterås","category":"Trafikolycka","now_count":0,"before_count":1}, 
- {"area":"Umeå","category":"Trafikolycka, vilt","now_count":1,"before_count":0}, 
- {"area":"Lund","category":"Misshandel","now_count":1,"before_count":0}, 
- {"area":"Lindesberg","category":"Brand","now_count":1,"before_count":0}]
+[
+{
+"area": "Älmhult",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Älmhult",
+"category": "Vapenlagen",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Alvesta",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Alvesta",
+"category": "Skadegörelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Alvesta",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Älvsbyn",
+"category": "Inbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Älvsbyn",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Ängelholm",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Arboga",
+"category": "Bråk",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Arboga",
+"category": "Kontroll",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Arboga",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Åre",
+"category": "Fjällräddning",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Åre",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Årjäng",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Årjäng",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Arjeplog",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Arvidsjaur",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Arvika",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Arvika",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Åstorp",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 1
+},
+{
+"area": "Åtvidaberg",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Bengtsfors",
+"category": "Våld/hot mot tjänsteman",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Berg",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Berg",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Bjurholm",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Boden",
+"category": "Fylleri",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Boden",
+"category": "Inbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Boden",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Boden",
+"category": "Stöld",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Boden",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Boden",
+"category": "Trafikkontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Boden",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Bollnäs",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Bollnäs",
+"category": "Trafikkontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Bollnäs",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Bollnäs",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Borås",
+"category": "Misshandel, grov",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Borås",
+"category": "Rån",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Borås",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Borgholm",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Borlänge",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Borlänge",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Botkyrka",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Botkyrka",
+"category": "Mordbrand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Botkyrka",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Bromölla",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Burlöv",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Burlöv",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Burlöv",
+"category": "Våld/hot mot tjänsteman",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Dals-ed",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Danderyd",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Eda",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Emmaboda",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Emmaboda",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Enköping",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Enköping",
+"category": "Trafikolycka, personskada",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Eskilstuna",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Eskilstuna",
+"category": "Räddningsinsats",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Eskilstuna",
+"category": "Stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Eskilstuna",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Eslöv",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Fagersta",
+"category": "Trafikkontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Falkenberg",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Falköping",
+"category": "Mord/dråp, försök",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Falun",
+"category": "Arbetsplatsolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Falun",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 2
+},
+{
+"area": "Falun",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Filipstad",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Forshaga",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Gällivare",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Brand",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Göteborg",
+"category": "Farligt föremål, misstänkt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Försvunnen person",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Information",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Göteborg",
+"category": "Motorfordon, stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Övrigt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Polisinsats/kommendering",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Göteborg",
+"category": "Smällar",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Göteborg",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Göteborg",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Göteborg",
+"category": "Trafikolycka, personskada",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Habo",
+"category": "Anträffad död",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Håbo",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hagfors",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Halmstad",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Halmstad",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Haninge",
+"category": "Olaga frihetsberövande/människorov",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Haninge",
+"category": "Rån",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Haparanda",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Härjedalen",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Härjedalen",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Härnösand",
+"category": "Misshandel, grov",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Härnösand",
+"category": "Övrigt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Härnösand",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Härnösand",
+"category": "Stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Härnösand",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Misshandel, grov",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Övrigt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Sexualbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Hässleholm",
+"category": "Trafikhinder",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Hässleholm",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Helsingborg",
+"category": "Brand",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Helsingborg",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Helsingborg",
+"category": "Misshandel, grov",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Helsingborg",
+"category": "Olovlig körning",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Helsingborg",
+"category": "Rån",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Helsingborg",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 7
+},
+{
+"area": "Helsingborg",
+"category": "Våld/hot mot tjänsteman",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Höganäs",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Höganäs",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Högsby",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Höör",
+"category": "Olovlig körning",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Hörby",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Huddinge",
+"category": "Arbetsplatsolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Huddinge",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Huddinge",
+"category": "Trafikolycka, smitning från",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Hudiksvall",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Hultsfred",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Hultsfred",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Järfälla",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Järfälla",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kalix",
+"category": "Olovlig körning",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Kalix",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kalix",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Karlshamn",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Karlshamn",
+"category": "Rattfylleri",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Karlshamn",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Karlskoga",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Karlskoga",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Karlskoga",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Karlskrona",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Karlskrona",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Karlskrona",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Karlskrona",
+"category": "Trafikolycka, smitning från",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Karlstad",
+"category": "Brand",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Karlstad",
+"category": "Information",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Karlstad",
+"category": "Trafikolycka",
+"now_count": 3,
+"before_count": 2
+},
+{
+"area": "Katrineholm",
+"category": "Bedrägeri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Katrineholm",
+"category": "Trafikhinder",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kävlinge",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kävlinge",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Kil",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kinda",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kiruna",
+"category": "Arbetsplatsolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kiruna",
+"category": "Knivlagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kiruna",
+"category": "Övrigt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kiruna",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Kiruna",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Klippan",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Knivsta",
+"category": "Motorfordon, stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Knivsta",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Knivsta",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Köping",
+"category": "Kontroll",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Köping",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Köping",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Köping",
+"category": "Stöld/inbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Köping",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kramfors",
+"category": "Brand",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Kramfors",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kramfors",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Kristianstad",
+"category": "Brand",
+"now_count": 2,
+"before_count": 1
+},
+{
+"area": "Kristianstad",
+"category": "Rån",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kristianstad",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kristianstad",
+"category": "Trafikolycka",
+"now_count": 3,
+"before_count": 0
+},
+{
+"area": "Kristinehamn",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 1
+},
+{
+"area": "Krokom",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Krokom",
+"category": "Fylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Krokom",
+"category": "Olovlig körning",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Krokom",
+"category": "Övrigt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kumla",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kumla",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Kungälv",
+"category": "Ekobrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kungsbacka",
+"category": "Rån",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kungsbacka",
+"category": "Trafikolycka, personskada",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Kungsör",
+"category": "Olaga intrång",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Laholm",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Landskrona",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Landskrona",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lekeberg",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Leksand",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Lerum",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lidköping",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lindesberg",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lindesberg",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Linköping",
+"category": "Anträffad död",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Linköping",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Linköping",
+"category": "Motorfordon, stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Linköping",
+"category": "Trafikhinder",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Linköping",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Linköping",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ljungby",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Ljungby",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Lomma",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Lomma",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Ludvika",
+"category": "Mord/dråp",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Ludvika",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Fylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Luleå",
+"category": "Inbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Luleå",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Trafikkontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Luleå",
+"category": "Trafikolycka, smitning från",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Lund",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lund",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lund",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Lund",
+"category": "Stöld, försök",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Lund",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 1
+},
+{
+"area": "Lycksele",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Malmö",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Bråk",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Brand",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Explosion",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Malmö",
+"category": "Farligt föremål, misstänkt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Malmö",
+"category": "Misshandel",
+"now_count": 2,
+"before_count": 3
+},
+{
+"area": "Malmö",
+"category": "Mordbrand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Olaga hot",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Malmö",
+"category": "Polisinsats/kommendering",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Malmö",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Malmö",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Smällar",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Malmö",
+"category": "Trafikhinder",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Malmö",
+"category": "Trafikolycka",
+"now_count": 7,
+"before_count": 3
+},
+{
+"area": "Malmö",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Malung-Sälen",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Mark",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Markaryd",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Mölndal",
+"category": "Olaga intrång",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Mölndal",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Mölndal",
+"category": "Trafikolycka, personskada",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Mönsterås",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Mönsterås",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Mönsterås",
+"category": "Våld/hot mot tjänsteman",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Mörbylånga",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Motala",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nacka",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Nacka",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Nässjö",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 1
+},
+{
+"area": "Nässjö",
+"category": "Trafikolycka, smitning från",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Nora",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norberg",
+"category": "Bedrägeri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nordanstig",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Nordanstig",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nordmaling",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Nordmaling",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrköping",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrköping",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Mord/dråp",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrköping",
+"category": "Olaga hot",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrköping",
+"category": "Rån",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Smällar",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Stöld/inbrott",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Trafikhinder",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrköping",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 2
+},
+{
+"area": "Norrtälje",
+"category": "Alkohollagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Norrtälje",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrtälje",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Norrtälje",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nybro",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Nybro",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Nyköping",
+"category": "Misshandel, grov",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nyköping",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Nynäshamn",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Ockelbo",
+"category": "Stöld/inbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Örkelljunga",
+"category": "Kontroll",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Örnsköldsvik",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Örnsköldsvik",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Örnsköldsvik",
+"category": "Trafikkontroll",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Örnsköldsvik",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 2
+},
+{
+"area": "Osby",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Osby",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Oskarshamn",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Oskarshamn",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Oskarshamn",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Oskarshamn",
+"category": "Våld/hot mot tjänsteman",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Österåker",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Österåker",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östersund",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Östersund",
+"category": "Narkotikabrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östersund",
+"category": "Övrigt",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Östersund",
+"category": "Skadegörelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östersund",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östersund",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östersund",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Östhammar",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Östhammar",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Ovanåker",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Övertorneå",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Pajala",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Piteå",
+"category": "Arbetsplatsolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ronneby",
+"category": "Skadegörelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Ronneby",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Säffle",
+"category": "Sjukdom/olycksfall",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Säffle",
+"category": "Trafikolycka, singel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sala",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sala",
+"category": "Djur",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sala",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sandviken",
+"category": "Stöld/inbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sandviken",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sigtuna",
+"category": "Knivlagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sigtuna",
+"category": "Narkotikabrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sigtuna",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sigtuna",
+"category": "Stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sigtuna",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sjöbo",
+"category": "Övrigt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Skellefteå",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Skellefteå",
+"category": "Inbrott",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Skellefteå",
+"category": "Knivlagen",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Skellefteå",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Skellefteå",
+"category": "Olaga intrång",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Skellefteå",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Skellefteå",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 2
+},
+{
+"area": "Skellefteå",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Skinnskatteberg",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Skurup",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Smedjebacken",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Söderhamn",
+"category": "Bedrägeri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Söderhamn",
+"category": "Stöld/inbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Söderhamn",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Söderhamn",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Södertälje",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Södertälje",
+"category": "Misshandel, grov",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Södertälje",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Södertälje",
+"category": "Trafikolycka, personskada",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Södertälje",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sollefteå",
+"category": "Skadegörelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sollefteå",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sollefteå",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sollentuna",
+"category": "Mord/dråp",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Solna",
+"category": "Olaga intrång",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Solna",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sölvesborg",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sölvesborg",
+"category": "Trafikhinder",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sölvesborg",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Staffanstorp",
+"category": "Rån",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Staffanstorp",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Stenungsund",
+"category": "Olovlig körning",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Storuman",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Strängnäs",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Strömsund",
+"category": "Skadegörelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Strömsund",
+"category": "Stöld",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Strömsund",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Sundbyberg",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundbyberg",
+"category": "Mord/dråp, försök",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sundsvall",
+"category": "Bedrägeri",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Sundsvall",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Fylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Sundsvall",
+"category": "Knivlagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Narkotikabrott",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Sundsvall",
+"category": "Ofredande/förargelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Skadegörelse",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Trafikhinder",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sundsvall",
+"category": "Trafikolycka",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Sundsvall",
+"category": "Trafikolycka, smitning från",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Sunne",
+"category": "Information",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Surahammar",
+"category": "Trafikbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Täby",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Tierp",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Tierp",
+"category": "Försvunnen person",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Tierp",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Timrå",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Tingsryd",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Torsås",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Torsby",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Torsby",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Trelleborg",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Trelleborg",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Uddevalla",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Uddevalla",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Försvunnen person",
+"now_count": 1,
+"before_count": 2
+},
+{
+"area": "Umeå",
+"category": "Fylleri",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Inbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Motorfordon, anträffat stulet",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Motorfordon, stöld",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Narkotikabrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Umeå",
+"category": "Olovlig körning",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Umeå",
+"category": "Rån",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Umeå",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Sexualbrott",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Stöld",
+"now_count": 0,
+"before_count": 2
+},
+{
+"area": "Umeå",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Umeå",
+"category": "Trafikhinder",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Umeå",
+"category": "Trafikkontroll",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Umeå",
+"category": "Trafikolycka",
+"now_count": 5,
+"before_count": 2
+},
+{
+"area": "Umeå",
+"category": "Trafikolycka, vilt",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Uppvidinge",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vallentuna",
+"category": "Trafikolycka, personskada",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vänersborg",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vännäs",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vara",
+"category": "Trafikolycka",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Värmdö",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Värnamo",
+"category": "Vapenlagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Västerås",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Västerås",
+"category": "Fylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Västerås",
+"category": "Kontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Västerås",
+"category": "Misshandel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Västerås",
+"category": "Ofredande/förargelse",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Västerås",
+"category": "Rattfylleri",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Västerås",
+"category": "Stöld/inbrott",
+"now_count": 2,
+"before_count": 0
+},
+{
+"area": "Västerås",
+"category": "Trafikkontroll",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Västerås",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Västerås",
+"category": "Vapenlagen",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Västervik",
+"category": "Brand",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Västervik",
+"category": "Misshandel",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vaxholm",
+"category": "Trafikolycka, personskada",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Växjö",
+"category": "Misshandel, grov",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Växjö",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Växjö",
+"category": "Trafikolycka",
+"now_count": 4,
+"before_count": 1
+},
+{
+"area": "Vellinge",
+"category": "Knivlagen",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vellinge",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vellinge",
+"category": "Trafikolycka, smitning från",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vetlanda",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vimmerby",
+"category": "Trafikbrott",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vimmerby",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Vimmerby",
+"category": "Trafikolycka, singel",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vimmerby",
+"category": "Trafikolycka, vilt",
+"now_count": 0,
+"before_count": 1
+},
+{
+"area": "Vindeln",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Vindeln",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+},
+{
+"area": "Vingåker",
+"category": "Bedrägeri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ystad",
+"category": "Brand",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ystad",
+"category": "Häleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ystad",
+"category": "Rattfylleri",
+"now_count": 1,
+"before_count": 0
+},
+{
+"area": "Ystad",
+"category": "Trafikolycka",
+"now_count": 1,
+"before_count": 1
+}
+]
