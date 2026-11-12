@@ -246,7 +246,8 @@ public class CrimeAlertAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticat
             call.reject("Ogiltig adress")
             return
         }
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "crimealert") { [weak self] callback, error in
                 self?.session = nil
                 if let callback = callback {
@@ -296,7 +297,7 @@ public class CrimeAlertStorePlugin: CAPPlugin, CAPBridgedPlugin {
                 guard case .verified(let transaction) = result else { continue }
                 await transaction.finish()
                 let id = String(transaction.id)
-                DispatchQueue.main.async {
+                await MainActor.run { [weak self] in
                     self?.notifyListeners("transaction", data: ["transactionId": id], retainUntilConsumed: true)
                 }
             }
@@ -448,3 +449,7 @@ public class CrimeAlertStorePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 }
+
+// The plugin is only touched on the main thread, apart from the transaction listener, which hands
+// each transaction to the main thread (MainActor.run) before it reaches the site.
+extension CrimeAlertStorePlugin: @unchecked Sendable {}
