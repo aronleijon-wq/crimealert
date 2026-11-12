@@ -848,6 +848,15 @@ export type Database = {
         Args: { _author: string; _id: string; _type: string }
         Returns: boolean
       }
+      crime_atlas: {
+        Args: { _days?: number }
+        Returns: {
+          area: string
+          before_count: number
+          category: string
+          now_count: number
+        }[]
+      }
       has_blocked_words: { Args: { _text: string }; Returns: boolean }
       has_pro: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
@@ -904,15 +913,6 @@ export type Database = {
         }[]
       }
       police_fetch_status: { Args: never; Returns: Json }
-      crime_atlas: {
-        Args: { _days?: number }
-        Returns: {
-          area: string
-          before_count: number
-          category: string
-          now_count: number
-        }[]
-      }
       redeem_invite: { Args: { _code: string }; Returns: string }
       send_feedback: {
         Args: { _message: string; _rating: number; _source: string }
