@@ -123,7 +123,7 @@ const AppPro = () => {
         <div className="ca-pro-rise text-center" style={rise(1)}>
           <h1 className="font-bold tracking-tight">CrimeAlert <span className="ca-pro-text">Pro</span></h1>
           <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[16px] text-white/70">
-            {isPremium && <BadgeCheck className="h-[18px] w-[18px] text-[#4aa1ff]" aria-hidden />}
+            {isPremium && <BadgeCheck className="h-[18px] w-[18px] text-[#30d158]" aria-hidden />}
             {isPremium ? `Ditt konto har ${planLabel(true, subscription)}.` : 'Allt som händer, direkt när det händer.'}
           </p>
         </div>

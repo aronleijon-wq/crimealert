@@ -6,7 +6,7 @@ import { haptics } from './haptics';
 import ProHero from './ProHero';
 import './pro.css';
 
-const COLORS = ['#4aa1ff', '#ff5b4f', '#ffffff', '#9382ff'];
+const COLORS = ['#ff453a', '#ffffff', '#ff8a4a', '#4aa1ff'];
 
 /** The same confetti every time: spread across the width, each piece with its own drift, turn and wait */
 const PIECES = Array.from({ length: 44 }, (_, i) => ({

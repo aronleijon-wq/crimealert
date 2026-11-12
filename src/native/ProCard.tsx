@@ -26,11 +26,11 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
     <span className="ca-pro-light ca-pro-light-red" aria-hidden />
     {isPremium ? (
       <span className="relative flex items-center gap-3.5 px-4 py-3.5">
-        <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(120,150,255,0.5)]" />
+        <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(255,90,80,0.45)]" />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 text-[17px] font-semibold text-white">
             Du har <span className="ca-pro-text">Pro</span>
-            <BadgeCheck className="h-[18px] w-[18px] text-[#4aa1ff]" aria-hidden />
+            <BadgeCheck className="h-[18px] w-[18px] text-[#30d158]" aria-hidden />
           </span>
           <span className="block truncate text-[13px] text-white/60">{plan ? `Gäller ${plan}` : 'Allt är upplåst'}</span>
         </span>
@@ -39,7 +39,7 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
     ) : (
       <span className="relative block p-4">
         <span className="flex items-center gap-3">
-          <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(120,150,255,0.5)]" />
+          <img src={PRO_LOGO} alt="" width={44} height={44} className="h-12 w-12 drop-shadow-[0_0_8px_rgba(255,90,80,0.45)]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[19px] font-bold leading-tight tracking-tight text-white">CrimeAlert <span className="ca-pro-text">Pro</span></span>
             <span className="block text-[14px] text-white/65">Allt som händer, direkt när det händer</span>
@@ -48,7 +48,7 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
         <span className="mt-3.5 flex flex-wrap gap-1.5">
           {PERKS.map(({ icon: Icon, text }) => (
             <span key={text} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] px-2.5 py-1 text-[12.5px] font-medium text-white/85">
-              <Icon className="h-3.5 w-3.5 text-[#8fb8ff]" strokeWidth={2.4} aria-hidden />{text}
+              <Icon className="h-3.5 w-3.5 text-[#ff6b61]" strokeWidth={2.4} aria-hidden />{text}
             </span>
           ))}
         </span>
