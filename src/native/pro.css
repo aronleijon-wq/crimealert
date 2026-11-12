@@ -1,14 +1,17 @@
-/* CrimeAlert Pro in the app (AppPro, ProCard): blue lights. The emergency lights' blue and red
-   breathe slowly behind the page, beams turn around the logo like a beacon, and everything
-   rises into place. Nothing flashes: the slowest change takes seconds. */
+/* CrimeAlert Pro in the app (AppPro, ProCard): CrimeAlert's own red, alive. Red light breathes
+   slowly behind the page with a little of the emergency lights' blue beside it, beams turn around
+   the logo like a beacon, and everything rises into place. Nothing flashes: the slowest change
+   takes seconds. */
 
-.ca-pro { --pro-blue: #2f8fff; --pro-violet: #8472ff; --pro-red: #ff4a3d; --pro-grad: linear-gradient(100deg, var(--pro-blue), var(--pro-violet) 48%, var(--pro-red)); }
+.ca-pro { --pro-red: #ff453a; --pro-hot: #ff2d55; --pro-amber: #ff7a3d; --pro-grad: linear-gradient(100deg, var(--pro-hot), var(--pro-red) 45%, var(--pro-amber)); }
 
 /* The two lights behind the page, taking turns */
 .ca-pro-light { position: absolute; width: 340px; height: 340px; border-radius: 50%; filter: blur(70px); pointer-events: none; animation: ca-pro-breathe 5.6s ease-in-out infinite; }
-.ca-pro-light-blue { left: -150px; top: -60px; background: #0a6cff; }
+.ca-pro-light-blue { left: -190px; top: -120px; background: #0a4fd0; }
 .ca-pro-light-red { right: -150px; top: 40px; background: #ff2d3a; animation-delay: -2.8s; }
-@keyframes ca-pro-breathe { 0%, 100% { opacity: 0.16; transform: scale(0.92); } 50% { opacity: 0.5; transform: scale(1.08); } }
+@keyframes ca-pro-breathe { 0%, 100% { opacity: 0.14; transform: scale(0.92); } 50% { opacity: 0.42; transform: scale(1.08); } }
+.ca-pro-light-blue { animation-name: ca-pro-breathe-faint; }
+@keyframes ca-pro-breathe-faint { 0%, 100% { opacity: 0.08; transform: scale(0.92); } 50% { opacity: 0.26; transform: scale(1.08); } }
 
 /* The logo with its beacon: two beams turning, radar rings going out, and events blipping */
 .ca-pro-hero { position: relative; width: 148px; height: 148px; margin: 0 auto; }
@@ -20,37 +23,37 @@
 @keyframes ca-pro-ring { 0% { transform: scale(0.6); opacity: 0; } 15% { opacity: 0.55; } 100% { transform: scale(1.75); opacity: 0; } }
 .ca-pro-blip { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--c, #fff); box-shadow: 0 0 10px var(--c, #fff); opacity: 0; animation: ca-pro-blip 4.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes ca-pro-blip { 0%, 55%, 100% { opacity: 0; transform: scale(0.3); } 65% { opacity: 1; transform: scale(1.25); } 80% { opacity: 0.9; transform: scale(1); } }
-.ca-pro-logo { position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; filter: drop-shadow(0 0 14px rgba(120,150,255,0.45)) drop-shadow(0 4px 10px rgba(0,0,0,0.5)); animation: ca-pro-float 4.5s ease-in-out infinite; }
+.ca-pro-logo { position: absolute; left: 50%; top: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; filter: drop-shadow(0 0 14px rgba(255,90,80,0.4)) drop-shadow(0 4px 10px rgba(0,0,0,0.5)); animation: ca-pro-float 4.5s ease-in-out infinite; }
 @keyframes ca-pro-float { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(-4px); } }
 
 /* Words in the lights' colours, drifting slowly from blue to red */
-.ca-pro-text { background: linear-gradient(100deg, #4aa1ff, #9382ff 40%, #ff5b4f 70%, #4aa1ff); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: ca-pro-drift 7s ease-in-out infinite alternate; }
+.ca-pro-text { background: linear-gradient(100deg, #ff5a4f, #ff2d55 40%, #ff8a4a 70%, #ff5a4f); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: ca-pro-drift 7s ease-in-out infinite alternate; }
 @keyframes ca-pro-drift { from { background-position: 0% 0; } to { background-position: 100% 0; } }
 
 /* Each part rises into place, one after the other (--i) */
 .ca-pro-rise { animation: ca-pro-rise 0.55s cubic-bezier(0.2, 0.9, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
 @keyframes ca-pro-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-.ca-pro-icon { background: var(--pro-grad); box-shadow: 0 4px 14px rgba(132,114,255,0.35); }
+.ca-pro-icon { background: var(--pro-grad); box-shadow: 0 4px 14px rgba(255,69,58,0.35); }
 
 /* A plan to choose: the chosen one gets the lights as its border, and a small bounce */
-.ca-pro-plan { position: relative; border: 2px solid transparent; border-radius: 20px; background: linear-gradient(#141823, #141823) padding-box, linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.1)) border-box; transition: box-shadow 0.3s, transform 0.2s; }
+.ca-pro-plan { position: relative; border: 2px solid transparent; border-radius: 20px; background: linear-gradient(#151517, #151517) padding-box, linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.1)) border-box; transition: box-shadow 0.3s, transform 0.2s; }
 .ca-pro-plan:active { transform: scale(0.97); }
-.ca-pro-plan[aria-checked='true'] { background: linear-gradient(#181c2b, #181c2b) padding-box, var(--pro-grad) border-box; box-shadow: 0 10px 34px rgba(90,100,255,0.28); animation: ca-pro-pop 0.34s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.ca-pro-plan[aria-checked='true'] { background: linear-gradient(#1c1517, #1c1517) padding-box, var(--pro-grad) border-box; box-shadow: 0 10px 34px rgba(255,69,58,0.25); animation: ca-pro-pop 0.34s cubic-bezier(0.3, 1.5, 0.5, 1); }
 @keyframes ca-pro-pop { 0% { transform: scale(0.96); } 100% { transform: scale(1); } }
 .ca-pro-check { background: var(--pro-grad); animation: ca-pro-check 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes ca-pro-check { from { transform: scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .ca-pro-badge { background: var(--pro-grad); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
 /* The button: the lights as a pill, glowing, with a gleam passing over it now and then */
-.ca-pro-cta { position: relative; overflow: hidden; border-radius: 999px; background: var(--pro-grad); background-size: 160% 100%; box-shadow: 0 10px 30px rgba(110,100,255,0.45), 0 2px 0 rgba(255,255,255,0.18) inset; transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.2s; animation: ca-pro-drift 5s ease-in-out infinite alternate; }
+.ca-pro-cta { position: relative; overflow: hidden; border-radius: 999px; background: var(--pro-grad); background-size: 160% 100%; box-shadow: 0 10px 30px rgba(255,59,48,0.45), 0 2px 0 rgba(255,255,255,0.18) inset; transition: transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.2s; animation: ca-pro-drift 5s ease-in-out infinite alternate; }
 .ca-pro-cta:active { transform: scale(0.96); }
 .ca-pro-cta:disabled { opacity: 0.55; box-shadow: none; }
 .ca-pro-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 34%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent); animation: ca-pro-gleam 3.8s ease-in-out infinite; }
 @keyframes ca-pro-gleam { 0%, 62% { left: -40%; } 100% { left: 120%; } }
 
 /* The Pro card on Profil: the lights along its edge */
-.ca-pro-card { position: relative; overflow: hidden; border: 1.5px solid transparent; border-radius: 22px; background: linear-gradient(135deg, #10172b, #17131f 60%, #1d1114) padding-box, var(--pro-grad) border-box; }
+.ca-pro-card { position: relative; overflow: hidden; border: 1.5px solid transparent; border-radius: 22px; background: linear-gradient(135deg, #14151c, #19121a 55%, #241012) padding-box, var(--pro-grad) border-box; }
 .ca-pro-card .ca-pro-light { width: 190px; height: 190px; filter: blur(46px); }
 .ca-pro-card .ca-pro-light-blue { left: -80px; top: -90px; }
 .ca-pro-card .ca-pro-light-red { right: -80px; top: auto; bottom: -100px; }

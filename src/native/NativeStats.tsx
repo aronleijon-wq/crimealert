@@ -5,13 +5,15 @@ import { Screen, Segmented } from './ui';
 import NativeHistory from './NativeHistory';
 import StatsTrends from './StatsTrends';
 
+const CrimeAtlas = lazy(() => import('./CrimeAtlas'));
+
 // The website's analysis page, with everything it has (charts, risk, citizen reports, export),
 // under "Analys" next to the app's own trends
 const Analysis = lazy(() => import('@/pages/Analysis'));
 
-const VIEW_OPTIONS = [{ value: 'trender', label: 'Trender' }, { value: 'over-tid', label: 'Över tid' }, { value: 'analys', label: 'Analys' }];
+const VIEW_OPTIONS = [{ value: 'trender', label: 'Trender' }, { value: 'atlas', label: 'Atlas' }, { value: 'over-tid', label: 'Över tid' }, { value: 'analys', label: 'Analys' }];
 
-/** Statistik in the iPhone app: the trends where you live, Sweden over the years, and the full analysis */
+/** Statistik in the iPhone app: the trends where you live, the crime atlas, Sweden over the years, and the full analysis */
 const NativeStats = () => {
   useSEO({ title: 'Statistik | CrimeAlert', description: 'Polisens händelser i siffror.', noindex: true });
   const [params, setParams] = useSearchParams();
@@ -21,7 +23,11 @@ const NativeStats = () => {
   return (
     <Screen title="Statistik">
       <div className="mb-2 mt-1"><Segmented options={VIEW_OPTIONS} value={view} onChange={setView} /></div>
-      {view === 'over-tid' ? (
+      {view === 'atlas' ? (
+        <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
+          <CrimeAtlas />
+        </Suspense>
+      ) : view === 'over-tid' ? (
         <NativeHistory />
       ) : view === 'analys' ? (
         <div className="ca-app-analysis">

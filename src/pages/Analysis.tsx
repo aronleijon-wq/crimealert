@@ -13,6 +13,8 @@ import { useIsPremium } from '@/hooks/useIsPremium';
 import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
 import DangerRanking from '@/components/DangerRanking';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Map as MapIcon } from 'lucide-react';
 import { isNativeApp } from '@/lib/native';
 import NativeHistory from '@/native/NativeHistory';
 import StatsTrends from '@/native/StatsTrends';
@@ -25,6 +27,17 @@ const Overview = () => (
   <section className="mx-auto max-w-7xl px-4 pt-6 md:px-6" aria-labelledby="oversikt-rubrik">
     <h1 id="oversikt-rubrik" className="text-xl font-bold text-foreground">Analys &amp; statistik</h1>
     <p className="mt-1 text-sm text-muted-foreground">Läget där du bor, hur brotten ändras och hur Sverige har förändrats sedan 2017.</p>
+    <Link
+      to="/brottsatlas"
+      className="mt-4 flex items-center gap-4 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-4 transition hover:border-[hsl(var(--ca-red)/0.5)]"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--ca-red)/0.15)] text-[hsl(var(--ca-red))]"><MapIcon className="h-5 w-5" aria-hidden /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-base font-semibold text-foreground">Brottsatlas</span>
+        <span className="block text-sm text-muted-foreground">Sök en kommun och se vad som är vanligast där, eller välj ett brott och se var det är vanligast.</span>
+      </span>
+      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+    </Link>
     <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
       <div className="ca-dark overflow-hidden rounded-3xl bg-black pb-6 text-white">
         <h2 className="px-5 pb-1 pt-5 text-[22px] font-bold tracking-tight">Trender</h2>
