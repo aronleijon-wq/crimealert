@@ -828,6 +828,17 @@ export type Database = {
     }
     Functions: {
       account_count: { Args: never; Returns: number }
+      archive_daily_counts: {
+        Args: { _days?: number }
+        Returns: {
+          day: string
+          kommun: number
+          lan: number
+          no_area: number
+          summaries: number
+          total: number
+        }[]
+      }
       block_report_author: { Args: { _report_id: string }; Returns: undefined }
       community_reports_visible: {
         Args: never
