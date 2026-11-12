@@ -55,3 +55,29 @@ describe('the periods', () => {
     expect(periodOf('7', now)).toEqual({ days: 7, short: '7 dagar', long: 'de senaste 7 dagarna' });
   });
 });
+
+describe('placing events Polisen put on a whole län', () => {
+  it('takes the kommun from the area, then the title, then the position', async () => {
+    const { kommunOfRow, nearestKommun } = await import('./crimeAtlas');
+    expect(kommunOfRow({ area: 'Nacka' })).toBe('Nacka');
+    expect(kommunOfRow({ area: 'Stockholms län', place: 'Södertälje' })).toBe('Södertälje');
+    // Södermalm, with the title only saying the län
+    expect(kommunOfRow({ area: 'Stockholms län', place: 'Stockholms län', lat: 59.31, lng: 18.07 })).toBe('Stockholm');
+    // Only the län, nowhere better: left out rather than guessed
+    expect(kommunOfRow({ area: 'Stockholms län', place: 'Stockholms län' })).toBeNull();
+    // Far out at sea is no kommun's
+    expect(nearestKommun(57.0, 20.5)).toBeNull();
+  });
+
+  it('counts Stockholm from its län events', async () => {
+    const { buildAtlas } = await import('./crimeAtlas');
+    const atlas = buildAtlas([
+      { area: 'Stockholms län', place: 'Stockholms län', lat: 59.33, lng: 18.06, category: 'Rån', now_count: 4, before_count: 1 },
+      { area: 'Stockholms län', place: 'Huddinge', lat: null, lng: null, category: 'Inbrott', now_count: 2, before_count: 0 },
+      { area: 'Stockholms län', place: 'Stockholms län', lat: null, lng: null, category: 'Brand', now_count: 9, before_count: 0 },
+    ]);
+    expect(atlas.byKommun.get('Stockholm')!.get('ran')!.now).toBe(4);
+    expect(atlas.byKommun.get('Huddinge')!.get('inbrott')!.now).toBe(2);
+    expect(atlas.sweden.get('alla')!.now).toBe(6);
+  });
+});
