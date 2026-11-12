@@ -77,7 +77,7 @@ const Prisplan = () => {
       if (wasPolling) {
         const sid = `${user?.id}-${subscription.subscriptionEnd ?? ''}`;
         const k = `ca-ads-purchase-${sid}`;
-        try { if (!localStorage.getItem(k)) { localStorage.setItem(k, '1'); void reportConversion(SEND_TO_PURCHASE, { value: 159, currency: 'SEK', transaction_id: String(sid) }); } } catch { /* ignore */ }
+        try { if (!localStorage.getItem(k)) { localStorage.setItem(k, '1'); void reportConversion(SEND_TO_PURCHASE, { value: 199, currency: 'SEK', transaction_id: String(sid) }); } } catch { /* ignore */ }
         setShowWelcome(true);
         setWasPolling(false);
       }
