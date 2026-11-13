@@ -6,6 +6,11 @@
       window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
       gtag('consent','default',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});
       gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500,region:['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','CA-QC']});
+      // Google tag (AW-18563415709) first in <head>, as Google asks, so its tag check finds it. Not in the iPhone app.
+      if(!/\bCrimeAlertApp\b/.test(navigator.userAgent)){
+        gtag('set','developer_id.dZjgwMW',true);gtag('js',new Date());gtag('config','AW-18563415709');
+        var t=document.createElement('script');t.async=true;t.src='https://www.googletagmanager.com/gtag/js?id=AW-18563415709';t.setAttribute('data-google-ads','');document.head.appendChild(t);
+      }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0a" />
