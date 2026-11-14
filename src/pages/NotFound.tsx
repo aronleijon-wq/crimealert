@@ -1,20 +1,40 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, MapPin, Map as MapIcon } from "lucide-react";
 import Header from "@/components/Header";
 import { useSEO } from "@/hooks/useSEO";
+import { recoverFromStaleBuild } from "@/lib/staleBuild";
 
 const primaryButton = 'inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_0_24px_-8px_hsl(var(--ca-red))] transition hover:bg-primary/90';
 const secondaryButton = 'inline-flex h-11 items-center gap-2 rounded-xl border border-[hsl(var(--ca-line-strong))] px-5 text-sm font-medium text-foreground transition hover:border-primary/50';
 
-/** Links that no longer lead anywhere: kept out of search results, with the way back to the map */
+/**
+ * Links that no longer lead anywhere: kept out of search results, with the way back to the map.
+ * A browser that keeps the site offline may still run an older version, one without a page that
+ * was added since (a link in an e-mail to a new page, say). So before saying the page is gone,
+ * the site is loaded fresh once (lib/staleBuild, at most once a minute): if the page exists in the
+ * new version it opens, and if not this shows again.
+ */
 const NotFound = () => {
   const location = useLocation();
   useSEO({ title: 'Sidan finns inte | CrimeAlert', description: 'Sidan du letar efter finns inte på CrimeAlert.', noindex: true });
+  const [checking, setChecking] = useState(() => typeof navigator !== 'undefined' && Boolean(navigator.serviceWorker?.controller));
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    if (!(navigator.serviceWorker?.controller && recoverFromStaleBuild())) setChecking(false);
+  }, []);
+
+  useEffect(() => {
+    if (!checking) console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+  }, [checking, location.pathname]);
+
+  if (checking) {
+    return (
+      <div className="ca-dark h-screen flex items-center justify-center bg-background">
+        <p className="text-[15px] text-muted-foreground">Hämtar den senaste versionen av CrimeAlert…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="ca-dark h-screen flex flex-col bg-background">
