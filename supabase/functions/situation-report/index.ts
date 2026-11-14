@@ -2,7 +2,8 @@
 // events and kept for twelve hours (situation_reports), so each kommun costs at most two texts a
 // day whoever asks. Quiet weeks, and any trouble reaching the model, get the plain count instead.
 //
-// ANTHROPIC_API_KEY enables the text; SITUATION_MODEL picks the model (claude-opus-5-5 unless set).
+// ANTHROPIC_API_KEY enables the text; SITUATION_MODEL picks the model (claude-haiku-5-5 unless set:
+// a few plain sentences from counted facts don't need a larger one, at a fortieth of the cost).
 import Anthropic from 'npm:@anthropic-ai/sdk@^0.136.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.97.0';
 import { SWEDISH_MUNICIPALITIES } from '../_shared/data/municipalities.ts';
@@ -18,7 +19,7 @@ const corsHeaders = {
 const KEEP_MS = 12 * 60 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 const KOMMUNER = new Set(SWEDISH_MUNICIPALITIES.map((m) => m.name));
-const MODEL = Deno.env.get('SITUATION_MODEL') || 'claude-opus-5-5';
+const MODEL = Deno.env.get('SITUATION_MODEL') || 'claude-haiku-5-5';
 const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
 
@@ -48,7 +49,8 @@ async function writeSummary(prompt: string): Promise<string | null> {
       system: SITUATION_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
       output_config: { effort: 'low' },
-      // A declined request is run again on a fallback model; Haiku has none
+      // A declined request is run again on a fallback model where the model has one (Haiku has
+      // none: a declined Haiku request gives the plain count)
       ...(MODEL.startsWith('claude-haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }),
     });
     if (response.stop_reason === 'refusal') {
