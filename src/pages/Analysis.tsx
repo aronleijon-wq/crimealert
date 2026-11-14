@@ -211,6 +211,9 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 
 };
 
+/** Events in the kommun's history shown before "Visa alla" */
+const HISTORY_SHOWN = 15;
+
 const Analysis = () => {
   useSEO({
     title: 'Brottsanalys & statistik — CrimeAlert',
@@ -225,6 +228,9 @@ const Analysis = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  // The kommun's event history shows the latest first, the rest on request
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  useEffect(() => setShowAllHistory(false), [selectedArea, timeRange]);
 
   // Fetch archive data for 7, 30 and 60 days (with pagination to bypass 1000-row limit)
   const archiveDays = timeRange === '24h' ? 0 : RANGE_DAYS[timeRange];
@@ -648,8 +654,9 @@ const Analysis = () => {
                     <p className="text-[10px] text-muted-foreground mb-4">
                       {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : `${RANGE_DAYS[timeRange]} dagarna`}
                     </p>
-                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                      {filteredIncidents.map((inc) => {
+                    {/* No scroll inside the page's scroll: on iPhone such a list can draw over what follows */}
+                    <div className="space-y-2">
+                      {(showAllHistory ? filteredIncidents : filteredIncidents.slice(0, HISTORY_SHOWN)).map((inc) => {
                         const t = parseTime(inc.time);
                         const dateStr = t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
                         const timeStr = t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
@@ -680,6 +687,15 @@ const Analysis = () => {
                         );
                       })}
                     </div>
+                    {filteredIncidents.length > HISTORY_SHOWN && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllHistory((v) => !v)}
+                        className="mt-3 w-full rounded-lg border border-border py-2.5 text-xs font-semibold text-foreground transition hover:bg-muted/50"
+                      >
+                        {showAllHistory ? 'Visa färre' : `Visa alla ${filteredIncidents.length} händelser`}
+                      </button>
+                    )}
                   </div>
                 )}
 
