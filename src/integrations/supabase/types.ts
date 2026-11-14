@@ -41,6 +41,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ask_log: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_events: {
         Row: {
           created_at: string

@@ -85,6 +85,13 @@
       "when": 1794658893493,
       "tag": "0011_situation_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794660634352,
+      "tag": "0012_ask_log",
+      "breakpoints": true
     }
   ]
 }
