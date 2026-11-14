@@ -81,4 +81,19 @@ describe('Header', () => {
     await renderHeader();
     expect(screen.getByRole('link', { name: /finns nu för iPhone/ })).toBeInTheDocument();
   });
+
+  it('keeps Rapportera, Chattar and Notiser under Mer', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    await renderHeader('/karta');
+    expect(screen.queryByRole('link', { name: /Rapportera/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Mer' }));
+    expect(screen.getByRole('menuitem', { name: /Rapportera/ })).toHaveAttribute('href', '/rapportera');
+    expect(screen.getByRole('menuitem', { name: /Chattar/ })).toHaveAttribute('href', '/chattar');
+    expect(screen.getByRole('menuitem', { name: /Notiser/ })).toHaveAttribute('href', '/alerts');
+  });
+
+  it('marks Mer when the page is one of its own', async () => {
+    await renderHeader('/chatt/uppsala');
+    expect(screen.getByRole('button', { name: 'Mer' }).className).toMatch(/text-primary/);
+  });
 });
