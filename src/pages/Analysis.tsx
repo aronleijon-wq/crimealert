@@ -10,7 +10,6 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import type { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
-import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
 import DangerRanking from '@/components/DangerRanking';
 import { Link } from 'react-router-dom';
@@ -211,6 +210,9 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
 
 };
 
+/** Events in the kommun's history shown before "Visa alla" */
+const HISTORY_SHOWN = 15;
+
 const Analysis = () => {
   useSEO({
     title: 'Brottsanalys & statistik — CrimeAlert',
@@ -225,6 +227,9 @@ const Analysis = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  // The kommun's event history shows the latest first, the rest on request
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  useEffect(() => setShowAllHistory(false), [selectedArea, timeRange]);
 
   // Fetch archive data for 7, 30 and 60 days (with pagination to bypass 1000-row limit)
   const archiveDays = timeRange === '24h' ? 0 : RANGE_DAYS[timeRange];
@@ -648,8 +653,9 @@ const Analysis = () => {
                     <p className="text-[10px] text-muted-foreground mb-4">
                       {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : `${RANGE_DAYS[timeRange]} dagarna`}
                     </p>
-                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                      {filteredIncidents.map((inc) => {
+                    {/* No scroll inside the page's scroll: on iPhone such a list can draw over what follows */}
+                    <div className="space-y-2">
+                      {(showAllHistory ? filteredIncidents : filteredIncidents.slice(0, HISTORY_SHOWN)).map((inc) => {
                         const t = parseTime(inc.time);
                         const dateStr = t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
                         const timeStr = t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
@@ -680,37 +686,21 @@ const Analysis = () => {
                         );
                       })}
                     </div>
+                    {filteredIncidents.length > HISTORY_SHOWN && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllHistory((v) => !v)}
+                        className="mt-3 w-full rounded-lg border border-border py-2.5 text-xs font-semibold text-foreground transition hover:bg-muted/50"
+                      >
+                        {showAllHistory ? 'Visa färre' : `Visa alla ${filteredIncidents.length} händelser`}
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {/* Export */}
                 <ExportData liveIncidents={liveIncidents} selectedArea={selectedArea} />
 
-                {/* Community Reports */}
-                <div className="space-y-3">
-                  <div className="ca-hud border border-border rounded-lg p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[10px] font-mono text-primary tracking-widest">// MEDBORGARRAPPORTER</span>
-                        <h2 className="text-base font-bold text-foreground mt-1 tracking-tight">
-                          Lokal information från boende
-                        </h2>
-                      </div>
-                      <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Belysning</span>
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Skadegörelse</span>
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" />Aktivitet</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-3xl">
-                      Komplement till polisdata. Rapporteras av Pro-användare och läses av alla. Visas som orange markörer på kartan.
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/70 mt-3 leading-relaxed">
-                      Vid akut fara: ring 112. För övriga polisärenden: 114 14.
-                    </p>
-                  </div>
-                  <CommunityReports />
-                </div>
 
 
                 <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
