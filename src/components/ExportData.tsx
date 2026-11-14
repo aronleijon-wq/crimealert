@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Download, FileText, Table2, Calendar, Loader2 } from 'lucide-react';
 import { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import { useToast } from '@/hooks/use-toast';
 
@@ -129,17 +130,28 @@ function downloadPDF(incidents: Incident[], range: string) {
   return true;
 }
 
-type Range = '24h' | '7d' | '30d' | '60d';
+/** 'alla' is the whole archive, for admins only */
+type Range = '24h' | '7d' | '30d' | '60d' | 'alla';
+
+const RANGES: { value: Range; label: string; admin?: boolean }[] = [
+  { value: '24h', label: 'Senaste 24h' },
+  { value: '7d', label: '7 dagar' },
+  { value: '30d', label: '30 dagar' },
+  { value: '60d', label: '60 dagar' },
+  { value: 'alla', label: 'Sedan start', admin: true },
+];
 
 const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   const { isPremium } = useIsPremium();
+  const isAdmin = useIsAdmin();
+  const allowed = isPremium || isAdmin;
   const [range, setRange] = useState<Range>('24h');
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
   const needsArchive = range !== '24h';
-  const archiveDays = range === '60d' ? 60 : range === '30d' ? 30 : 7;
-  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, needsArchive && isPremium);
+  const archiveDays = range === 'alla' ? null : range === '60d' ? 60 : range === '30d' ? 30 : 7;
+  const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, needsArchive && allowed && (range !== 'alla' || isAdmin));
 
   const filtered24h = useMemo(() => {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
@@ -154,10 +166,10 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
     if (!selectedArea) return timeFiltered;
     return timeFiltered.filter((i) => i.area === selectedArea);
   }, [timeFiltered, selectedArea]);
-  const rangeLabel = range === '24h' ? 'Senaste 24h' : `Senaste ${archiveDays} dagar`;
+  const rangeLabel = range === '24h' ? 'Senaste 24h' : archiveDays === null ? 'Sedan start' : `Senaste ${archiveDays} dagar`;
 
   const handleExport = (format: 'csv' | 'pdf') => {
-    if (!isPremium) return;
+    if (!allowed) return;
     if (sourceIncidents.length === 0) {
       toast({
         title: 'Inga händelser',
@@ -187,7 +199,7 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
     }
   };
 
-  if (!isPremium) return null;
+  if (!allowed) return null;
 
   return (
     <div className="bg-card border border-border rounded-lg p-4">
@@ -195,13 +207,8 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
         <span className="text-xs font-bold text-foreground">Exportera händelsedata</span>
       </div>
 
-      <div className="flex gap-1 mb-3">
-        {([
-          ['24h', 'Senaste 24h'],
-          ['7d', '7 dagar'],
-          ['30d', '30 dagar'],
-          ['60d', '60 dagar'],
-        ] as const).map(([value, label]) => (
+      <div className="flex flex-wrap gap-1 mb-3">
+        {RANGES.filter((r) => !r.admin || isAdmin).map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setRange(value)}
