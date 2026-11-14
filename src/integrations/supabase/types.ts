@@ -709,6 +709,33 @@ export type Database = {
         }
         Relationships: []
       }
+      situation_reports: {
+        Row: {
+          generated_at: string
+          kommun: string
+          last_week: number
+          model: string | null
+          summary: string
+          this_week: number
+        }
+        Insert: {
+          generated_at?: string
+          kommun: string
+          last_week?: number
+          model?: string | null
+          summary: string
+          this_week?: number
+        }
+        Update: {
+          generated_at?: string
+          kommun?: string
+          last_week?: number
+          model?: string | null
+          summary?: string
+          this_week?: number
+        }
+        Relationships: []
+      }
       traffic_sources: {
         Row: {
           day: string

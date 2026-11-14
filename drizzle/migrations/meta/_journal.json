@@ -78,6 +78,13 @@
       "when": 1794657797611,
       "tag": "0010_watch_places",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794658893493,
+      "tag": "0011_situation_reports",
+      "breakpoints": true
     }
   ]
 }
