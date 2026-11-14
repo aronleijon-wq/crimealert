@@ -4,17 +4,24 @@ import { APP_STORE_URL } from '@/lib/appStoreLink';
 import { isNativeApp } from '@/lib/native';
 import { AppleLogo } from './AppStoreBadge';
 
-// Closing lasts for this visit only, so everyone sees the banner again next time they come
-const STORAGE_KEY = 'ca-app-banner-closed-visit';
+// Closing is remembered on this device, so the banner only shows until the visitor has closed it once
+const STORAGE_KEY = 'ca-app-banner-closed';
+// Older key that only lasted one visit; still honoured so nobody who closed it today sees it again
+const OLD_SESSION_KEY = 'ca-app-banner-closed-visit';
 /** Height of the strip, so the page below can make room for it */
 export const APP_BANNER_HEIGHT = 40;
 
-/** Whether the iPhone app banner shows: on every page of the site, not inside the app itself, and not after the visitor closed it during this visit */
+/** Whether the iPhone app banner shows: on every page of the site, not inside the app itself, and never again after the visitor has closed it once */
 export const useAppBanner = () => {
   const [visible, setVisible] = useState(() => {
     if (isNativeApp()) return false;
     try {
-      return sessionStorage.getItem(STORAGE_KEY) !== '1';
+      if (localStorage.getItem(STORAGE_KEY) === '1') return false;
+      if (sessionStorage.getItem(OLD_SESSION_KEY) === '1') {
+        localStorage.setItem(STORAGE_KEY, '1');
+        return false;
+      }
+      return true;
     } catch {
       return true;
     }
@@ -22,7 +29,7 @@ export const useAppBanner = () => {
   const dismiss = useCallback(() => {
     setVisible(false);
     try {
-      sessionStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(STORAGE_KEY, '1');
     } catch {
       /* storage blocked: closes on this page only */
     }
