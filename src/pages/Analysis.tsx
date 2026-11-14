@@ -10,7 +10,6 @@ import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import type { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
-import CommunityReports from '@/components/CommunityReports';
 import ExportData from '@/components/ExportData';
 import DangerRanking from '@/components/DangerRanking';
 import { Link } from 'react-router-dom';
@@ -702,31 +701,6 @@ const Analysis = () => {
                 {/* Export */}
                 <ExportData liveIncidents={liveIncidents} selectedArea={selectedArea} />
 
-                {/* Community Reports */}
-                <div className="space-y-3">
-                  <div className="ca-hud border border-border rounded-lg p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[10px] font-mono text-primary tracking-widest">// MEDBORGARRAPPORTER</span>
-                        <h2 className="text-base font-bold text-foreground mt-1 tracking-tight">
-                          Lokal information från boende
-                        </h2>
-                      </div>
-                      <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Belysning</span>
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Skadegörelse</span>
-                        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" />Aktivitet</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-3xl">
-                      Komplement till polisdata. Rapporteras av Pro-användare och läses av alla. Visas som orange markörer på kartan.
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/70 mt-3 leading-relaxed">
-                      Vid akut fara: ring 112. För övriga polisärenden: 114 14.
-                    </p>
-                  </div>
-                  <CommunityReports />
-                </div>
 
 
                 <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
