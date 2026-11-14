@@ -8,7 +8,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@^0.136.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.97.0';
 import { SWEDISH_MUNICIPALITIES } from '../_shared/data/municipalities.ts';
 import {
-  cleanSummary, plainText, situationFacts, situationPrompt, SITUATION_SYSTEM, tooQuiet, type SituationEvent,
+  cleanSummary, numbersFromFacts, plainText, situationFacts, situationPrompt, SITUATION_SYSTEM, tooQuiet, type SituationEvent,
 } from '../_shared/situation.ts';
 
 const corsHeaders = {
@@ -48,7 +48,8 @@ async function writeSummary(prompt: string): Promise<string | null> {
       max_tokens: 4000,
       system: SITUATION_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
-      output_config: { effort: 'low' },
+      // Medium is Haiku's default and costs fractions of a cent more; it reads the events more carefully
+      output_config: { effort: 'medium' },
       // A declined request is run again on a fallback model where the model has one (Haiku has
       // none: a declined Haiku request gives the plain count)
       ...(MODEL.startsWith('claude-haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }),
@@ -57,8 +58,12 @@ async function writeSummary(prompt: string): Promise<string | null> {
       console.warn('Lägesbild declined', JSON.stringify(response.stop_details ?? null));
       return null;
     }
-    const text = response.content.map((block) => (block.type === 'text' ? block.text : '')).join('');
-    return cleanSummary(text);
+    const text = cleanSummary(response.content.map((block) => (block.type === 'text' ? block.text : '')).join(''));
+    if (text && !numbersFromFacts(text, prompt)) {
+      console.warn('Lägesbild had a number not in the facts; using the count instead:', text);
+      return null;
+    }
+    return text;
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) console.warn('Lägesbild rate limited');
     else if (error instanceof Anthropic.APIError) console.error(`Lägesbild API error ${error.status}:`, error.message);

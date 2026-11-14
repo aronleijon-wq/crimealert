@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanSummary, plainText, situationFacts, situationPrompt, tooQuiet, type SituationEvent } from './situation';
+import { cleanSummary, numbersFromFacts, plainText, situationFacts, situationPrompt, tooQuiet, type SituationEvent } from './situation';
 
 const NOW = Date.parse('2026-11-14T12:00:00Z');
 const DAY = 24 * 60 * 60 * 1000;
@@ -66,5 +66,19 @@ describe('cleanSummary', () => {
     expect(cleanSummary('**Lägesbild**\n\nPolisen har rapporterat 12 händelser.\n- Flest inbrott.')).toBe('Lägesbild Polisen har rapporterat 12 händelser. Flest inbrott.');
     expect(cleanSummary('# Rubrik\nPolisen har rapporterat 3 händelser i Lund.')).toBe('Polisen har rapporterat 3 händelser i Lund.');
     expect(cleanSummary('  ')).toBeNull();
+  });
+});
+
+describe('numbersFromFacts', () => {
+  const prompt = 'Händelser senaste 7 dagarna: 38 (veckan innan: 31)\n- Trafikolyckor: 12 (veckan innan 8)\n- tis 11 nov, Trafikolycka: Olycka på E4 vid väg 55.';
+  it('accepts a text whose numbers were all given', () => {
+    expect(numbersFromFacts('Polisen har rapporterat 38 händelser, fler än veckan innan (31). Tolv trafikolyckor, flera på E4 och väg 55.', prompt)).toBe(true);
+  });
+  it('rejects a number that was not given, such as one from the example', () => {
+    expect(numbersFromFacts('Polisen har rapporterat 24 händelser i Uppsala.', prompt)).toBe(false);
+    expect(numbersFromFacts('Det var 13 trafikolyckor.', prompt)).toBe(false);
+  });
+  it('leaves numbers inside words alone', () => {
+    expect(numbersFromFacts('Flera olyckor på E6 och E20.', prompt)).toBe(true);
   });
 });

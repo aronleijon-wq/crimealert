@@ -106,7 +106,10 @@ Börja med det viktigaste: hur många händelser Polisen har rapporterat och om 
 
 Skriv aldrig ut namn, ålder, kön eller annat som pekar ut personer. Spekulera inte om gärningsmän och skriv inte om trygghet i allmänhet.
 
-Polisen publicerar ett urval av det som händer, så skriv till exempel "Polisen har rapporterat", inte att brottsligheten har ökat.`;
+Polisen publicerar ett urval av det som händer, så skriv till exempel "Polisen har rapporterat", inte att brottsligheten har ökat.
+
+Exempel på ton och längd, från en annan kommun (kopiera inga uppgifter härifrån):
+Polisen har rapporterat 24 händelser i Gävle den senaste veckan, färre än veckan innan (31). Flest var trafikolyckorna, sex stycken, varav tre på E4 vid Skutskär. Det har också varit fyra inbrott i Sätra, alla i källarförråd under helgen.`;
 
 /** The facts as the model reads them */
 export function situationPrompt(facts: SituationFacts): string {
@@ -124,6 +127,17 @@ Händelserna senaste 7 dagarna, nyast först:
 ${recent}
 
 Skriv lägesbilden för ${facts.kommun}.`;
+}
+
+/**
+ * Whether every number in the text is one the model was given. A number it made up, or took
+ * from the example in the instructions, means the text is not used. Numbers inside words, such
+ * as the road E4, are left alone.
+ */
+export function numbersFromFacts(summary: string, prompt: string): boolean {
+  const numbers = (text: string) => text.match(/(?<![\p{L}\d])\d+(?![\p{L}\d])/gu) ?? [];
+  const given = new Set(numbers(prompt));
+  return numbers(summary).every((n) => given.has(n));
 }
 
 /** The model's text, as one plain paragraph without markdown, or null when it is unusable */
