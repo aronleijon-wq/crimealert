@@ -3,7 +3,7 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, ChevronRight } from 'lucide-react';
 import { haptics } from './haptics';
-import { PRO_LOGO } from './ProHero';
+import LogoMark from './LogoMark';
 
 interface Props {
   isPremium: boolean;
@@ -21,7 +21,7 @@ const ProCard = ({ isPremium, plan, canBuy }: Props) => (
       className="flex items-center gap-3.5 rounded-xl bg-[#1c1c1e] px-4 py-3.5 active:bg-[#2c2c2e]"
       aria-label={isPremium ? 'CrimeAlert Pro, ditt medlemskap' : 'CrimeAlert Pro, se vad som ingår'}
     >
-      <img src={PRO_LOGO} alt="" width={40} height={40} className="h-10 w-10 shrink-0" />
+      <LogoMark size={40} className="shrink-0" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5 text-[17px] font-semibold text-white">
           {isPremium ? 'Du har Pro' : 'CrimeAlert Pro'}

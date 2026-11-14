@@ -1,0 +1,43 @@
+/* The welcome's pictures: a lit logo, a radar sweeping, Sweden with events lighting up, a lock
+   screen with a notification. Richer than the rest of the app on purpose: it is the first thing
+   anyone sees. Everything stands still for those who ask for less motion. */
+
+/* The logo: the red arcs glow, the rings turn slowly, the pin's dot breathes */
+.ca-logo-lit { overflow: visible; filter: drop-shadow(0 0 14px rgba(255, 69, 58, 0.45)); }
+.ca-logo-turn { transform-origin: 50px 50px; animation: ca-logo-turn 14s linear infinite; }
+.ca-logo-turn-back { transform-origin: 50px 50px; animation: ca-logo-turn 22s linear infinite reverse; }
+.ca-logo-dot { transform-origin: 50px 45.5px; animation: ca-logo-dot 2.4s ease-in-out infinite; }
+@keyframes ca-logo-turn { to { transform: rotate(360deg); } }
+@keyframes ca-logo-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* Behind every step: a faint grid of dots, strongest under the picture, and a red light above */
+.ca-welcome-bg {
+  background-color: #000;
+  background-image:
+    radial-gradient(ellipse 70% 38% at 50% 22%, rgba(255, 69, 58, 0.16), transparent 70%),
+    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1.2px);
+  background-size: 100% 100%, 22px 22px;
+}
+
+/* The radar: a sweep going round, and blips lighting up where it passes */
+.ca-radar-sweep {
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 290deg, rgba(255, 69, 58, 0.05) 300deg, rgba(255, 69, 58, 0.38) 359deg, transparent 360deg);
+  animation: ca-logo-turn 4.5s linear infinite;
+}
+.ca-blip { opacity: 0; animation: ca-blip 4.5s linear infinite; }
+@keyframes ca-blip { 0% { opacity: 0; transform: scale(0.4); } 6% { opacity: 1; transform: scale(1); } 45% { opacity: 0.25; } 100% { opacity: 0; } }
+
+/* Sweden: events light up one after another, and a line scans down the country */
+.ca-signal { opacity: 0; transform-box: fill-box; transform-origin: center; animation: ca-signal 3.6s ease-out infinite; }
+@keyframes ca-signal { 0% { opacity: 0; transform: scale(0.3); } 10% { opacity: 1; transform: scale(1.15); } 18% { transform: scale(1); } 70% { opacity: 1; } 100% { opacity: 0.15; } }
+.ca-scan { animation: ca-scan 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+@keyframes ca-scan { from { transform: translateY(-10%); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { transform: translateY(400px); opacity: 0; } }
+
+/* The main button glows faintly red */
+.ca-welcome-cta { box-shadow: 0 10px 32px -10px rgba(255, 69, 58, 0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-logo-turn, .ca-logo-turn-back, .ca-logo-dot, .ca-radar-sweep, .ca-scan { animation: none; }
+  .ca-blip, .ca-signal { animation: none; opacity: 1; }
+  .ca-scan { display: none; }
+}

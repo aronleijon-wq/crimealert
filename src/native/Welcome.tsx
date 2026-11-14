@@ -10,11 +10,10 @@ import { getErrorMessage } from '@/lib/errors';
 import { nativeAuth, signInInApp } from '@/lib/nativeApp';
 import { hasAppDesign13 } from '@/lib/native';
 import Intro from './Intro';
+import LogoMark from './LogoMark';
 import { WELCOME_DONE_KEY } from './screens';
 import { Section } from './ui';
 
-/** The mark alone, without the app icon's square, as on the Pro page */
-const MARK = '/logo-mark.png';
 const MUTED = 'text-[rgba(235,235,245,0.6)]';
 const POPULAR = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Västerås', 'Örebro'];
 
@@ -31,7 +30,7 @@ const Feature = ({ icon: Icon, title, text }: { icon: LucideIcon; title: string;
 );
 
 // One look for every step: the same buttons, the same red, the same heading
-const primary = 'flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80 disabled:bg-[#1c1c1e] disabled:text-[rgba(235,235,245,0.3)]';
+const primary = 'ca-welcome-cta disabled:shadow-none flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80 disabled:bg-[#1c1c1e] disabled:text-[rgba(235,235,245,0.3)]';
 const secondary = 'flex h-[54px] w-full items-center justify-center gap-2.5 rounded-[14px] bg-[#1c1c1e] text-[17px] font-semibold text-white transition active:opacity-70 disabled:opacity-40';
 const apple = 'flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-white text-[17px] font-semibold text-black transition active:opacity-80 disabled:opacity-40';
 const quiet = `h-11 w-full text-[17px] ${MUTED} active:opacity-50`;
@@ -197,7 +196,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <Heading
-          picture={<img src={MARK} alt="" className="h-24 w-24" width={96} height={96} />}
+          picture={<LogoMark size={110} lit />}
           title="Se vad som händer där du bor"
           text="Polisens händelser i hela Sverige, på en karta och som notiser till din telefon."
         />
@@ -237,7 +236,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <Heading
-          picture={<img src={MARK} alt="" className="h-20 w-20" width={80} height={80} />}
+          picture={<LogoMark size={110} lit />}
           title="Skapa ditt konto"
           text="Det är gratis. Välj kommuner att bevaka och få en notis när något händer där."
         />
@@ -276,7 +275,15 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <Heading
-          picture={<BellRing className="h-16 w-16 text-[#ff453a]" strokeWidth={1.5} aria-hidden />}
+          picture={(
+            <span className="relative flex h-28 w-28 items-center justify-center" aria-hidden>
+              <span className="ca-intro-ring absolute inset-0 rounded-full border border-[rgba(255,69,58,0.5)]" />
+              <span className="ca-intro-ring absolute inset-0 rounded-full border border-[rgba(255,69,58,0.5)]" style={{ animationDelay: '2.4s' }} />
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border border-white/[0.1] bg-[#1c1c1e] shadow-[0_0_40px_-4px_rgba(255,69,58,0.55)]">
+                <BellRing className="h-9 w-9 text-[#ff453a]" strokeWidth={1.7} />
+              </span>
+            </span>
+          )}
           title="Få en notis när något händer"
           text={kommuner.length
             ? `Vi hör av oss när Polisen rapporterar något i ${kommuner.length === 1 ? kommuner[0] : 'dina kommuner'}.`
@@ -291,7 +298,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
       role="dialog"
       aria-modal="true"
       aria-label="Välkommen till CrimeAlert"
-      className="ca-dark fixed inset-0 z-[3000] flex flex-col bg-[hsl(var(--ca-base))] text-foreground"
+      className="ca-dark ca-welcome-bg fixed inset-0 z-[3000] flex flex-col text-foreground"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="min-h-0 flex-1">{content}</div>

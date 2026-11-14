@@ -2,11 +2,12 @@
 // each with a small moving picture of what CrimeAlert does, before the account, kommuner and
 // notifications (Welcome). Older app versions keep their single welcome page.
 import { useEffect, useRef, useState } from 'react';
+import { fitSweden, SWEDEN_SHAPES } from '@/components/landing/swedenGeo';
 import { haptics } from './haptics';
+import LogoMark from './LogoMark';
+import './intro.css';
 
 const LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
-/** The mark alone, without the app icon's square, as on the Pro page */
-const MARK = '/logo-mark.png';
 
 /** Example notifications for the picture on the second page */
 const EXAMPLES = [
@@ -15,17 +16,72 @@ const EXAMPLES = [
   { title: 'Trafikolycka, flera fordon', place: 'E6 vid Mölndal', when: 'nu' },
 ];
 
-/** The logo with slow rings going out from it, like a radar */
+const SWEEP = 4.5;
+/** Where blips light up on the radar: angle clockwise from the top, and distance from the middle */
+const BLIPS = [{ a: 38, d: 0.78 }, { a: 112, d: 0.55 }, { a: 205, d: 0.86 }, { a: 290, d: 0.62 }, { a: 330, d: 0.9 }];
+
+/** The lit logo in the middle of a radar, sweeping round, with events lighting up as it passes */
 const Radar = () => (
-  <div className="relative flex h-64 w-64 items-center justify-center" aria-hidden>
-    {[0, 1].map((i) => (
-      <span key={i} className="ca-intro-ring absolute inset-0 rounded-full border border-white/25" style={{ animationDelay: `${i * 2.4}s` }} />
+  <div className="relative h-[270px] w-[270px]" aria-hidden>
+    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,69,58,0.18),transparent_65%)]" />
+    {[1, 0.72, 0.44].map((f) => (
+      <span key={f} className="absolute rounded-full border border-white/[0.09]" style={{ inset: `${((1 - f) / 2) * 100}%` }} />
     ))}
-    <img src={MARK} alt="" className="relative h-28 w-28" width={112} height={112} />
+    <span className="absolute inset-x-0 top-1/2 h-px bg-white/[0.06]" />
+    <span className="absolute inset-y-0 left-1/2 w-px bg-white/[0.06]" />
+    <div className="ca-radar-sweep absolute inset-0 rounded-full" />
+    {BLIPS.map((b) => {
+      const rad = ((b.a - 90) * Math.PI) / 180;
+      return (
+        <span key={b.a} className="ca-blip absolute h-2.5 w-2.5 rounded-full bg-[#ff453a] shadow-[0_0_12px_3px_rgba(255,69,58,0.7)]"
+          style={{ left: `calc(${50 + Math.cos(rad) * b.d * 50}% - 5px)`, top: `calc(${50 + Math.sin(rad) * b.d * 50}% - 5px)`, animationDelay: `${(b.a / 360) * SWEEP}s` }} />
+      );
+    })}
+    <div className="absolute inset-0 flex items-center justify-center">
+      <LogoMark size={128} lit />
+    </div>
   </div>
 );
 
-/** A notification coming down onto a lock screen, one example after another */
+// Sweden in a 180×400 box, with real towns to light up
+const { toPixel } = fitSweden(180, 400, 6);
+const SWEDEN_PATH = SWEDEN_SHAPES.map((shape) => `M${shape.map(([lat, lng]) => toPixel(lat, lng).map((n) => n.toFixed(1)).join(' ')).join(' L')} Z`).join(' ');
+const TOWNS: [number, number, number][] = [
+  [59.33, 18.07, 0], [57.71, 11.97, 0.5], [55.6, 13.0, 1.0], [59.86, 17.64, 1.5], [62.39, 17.31, 2.0], [65.58, 22.15, 2.5],
+  [59.27, 15.21, 0.3], [58.41, 15.62, 1.2], [63.83, 20.26, 2.2], [67.86, 20.23, 3.0], [56.88, 14.81, 1.7], [60.67, 17.14, 0.8],
+];
+
+/** Sweden, drawn in light, with events lighting up across the country and a line scanning down */
+const Sweden = ({ height = 280 }: { height?: number }) => (
+  <svg viewBox="0 0 180 400" height={height} className="overflow-visible" aria-hidden>
+    <defs>
+      <pattern id="ca-intro-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+        <circle cx="1" cy="1" r="0.55" fill="rgba(255,255,255,0.22)" />
+      </pattern>
+      <clipPath id="ca-intro-clip"><path d={SWEDEN_PATH} /></clipPath>
+      <linearGradient id="ca-intro-scan" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#ff453a" stopOpacity="0" />
+        <stop offset="1" stopColor="#ff453a" stopOpacity="0.5" />
+      </linearGradient>
+      <filter id="ca-intro-glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="3" /></filter>
+    </defs>
+    <path d={SWEDEN_PATH} fill="rgba(255,255,255,0.035)" />
+    <rect width="180" height="400" fill="url(#ca-intro-grid)" clipPath="url(#ca-intro-clip)" />
+    <g clipPath="url(#ca-intro-clip)"><rect className="ca-scan" y="-40" width="180" height="40" fill="url(#ca-intro-scan)" /></g>
+    <path d={SWEDEN_PATH} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.9" strokeLinejoin="round" />
+    {TOWNS.map(([lat, lng, delay]) => {
+      const [x, y] = toPixel(lat, lng);
+      return (
+        <g key={`${lat}-${lng}`} className="ca-signal" style={{ animationDelay: `${delay}s` }}>
+          <circle cx={x} cy={y} r="7" fill="#ff453a" opacity="0.55" filter="url(#ca-intro-glow)" />
+          <circle cx={x} cy={y} r="2.6" fill="#ff6b61" />
+        </g>
+      );
+    })}
+  </svg>
+);
+
+/** A lock screen over a dimmed map of Sweden, with notifications coming down one after another */
 const Notification = ({ active }: { active: boolean }) => {
   const [index, setIndex] = useState(0);
   useEffect(() => {
@@ -39,52 +95,30 @@ const Notification = ({ active }: { active: boolean }) => {
   const clock = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
   const day = now.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
-    <div className="relative h-64 w-[290px] overflow-hidden rounded-[34px] bg-[#1c1c1e]" aria-hidden>
-      <p className="pt-7 text-center text-[52px] font-light leading-none tracking-tight text-white/90">{clock}</p>
-      <p className="mt-1 text-center text-[13px] font-medium text-white/60">{day}</p>
-      {active && <div key={index} className="ca-intro-drop absolute inset-x-3 top-[124px] flex items-start gap-2.5 text-left rounded-[18px] bg-[#2c2c2e] p-3">
-        <img src={LOGO} alt="" className="h-9 w-9 shrink-0 rounded-[9px]" width={36} height={36} />
+    <div className="relative h-[300px] w-[270px] overflow-hidden rounded-[40px] border border-white/[0.12] bg-[#07080b] shadow-[0_30px_80px_-20px_rgba(255,69,58,0.35)]" aria-hidden>
+      <div className="absolute inset-0 flex justify-center pt-6 opacity-50"><Sweden height={330} /></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
+      <p className="relative pt-7 text-center text-[54px] font-light leading-none tracking-tight text-white">{clock}</p>
+      <p className="relative mt-1 text-center text-[13px] font-medium capitalize text-white/70">{day}</p>
+      {active && <div key={index} className="ca-intro-drop absolute inset-x-3 top-[132px] flex items-start gap-2.5 rounded-[20px] border border-white/[0.12] bg-white/[0.14] p-3 text-left backdrop-blur-xl">
+        <img src={LOGO} alt="" className="h-9 w-9 shrink-0 rounded-[9px] object-cover" width={36} height={36} />
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="text-[13px] font-semibold uppercase tracking-wide text-white/70">CrimeAlert</span>
-            <span className="text-[12px] text-white/50">{example.when}</span>
+            <span className="text-[13px] font-semibold uppercase tracking-wide text-white/75">CrimeAlert</span>
+            <span className="text-[12px] text-white/55">{example.when}</span>
           </span>
           <span className="block truncate text-[15px] font-semibold text-white">{example.title}</span>
-          <span className="block truncate text-[14px] text-white/75">{example.place}</span>
+          <span className="block truncate text-[14px] text-white/80">{example.place}</span>
         </span>
       </div>}
     </div>
   );
 };
 
-/** A dark map with events lighting up one after another */
-const MapPicture = () => {
-  const dots = [
-    { x: 30, y: 38, s: 14, d: 0 }, { x: 62, y: 26, s: 10, d: 0.6 }, { x: 48, y: 58, s: 18, d: 1.2 },
-    { x: 72, y: 66, s: 12, d: 1.8 }, { x: 22, y: 70, s: 10, d: 2.4 }, { x: 56, y: 82, s: 14, d: 3 },
-  ];
-  return (
-    <div className="relative h-64 w-64 overflow-hidden rounded-[34px] bg-[#1c1c1e]" aria-hidden>
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-        <path d="M-5 30 Q30 20 50 40 T105 35" stroke="#3a3a3c" strokeWidth="1.4" fill="none" />
-        <path d="M-5 75 Q40 60 60 75 T105 70" stroke="#3a3a3c" strokeWidth="1.4" fill="none" />
-        <path d="M40 -5 Q45 40 35 105" stroke="#2c2c2e" strokeWidth="1" fill="none" />
-        <path d="M75 -5 Q70 50 80 105" stroke="#2c2c2e" strokeWidth="1" fill="none" />
-      </svg>
-      {dots.map((dot) => (
-        <span key={`${dot.x}-${dot.y}`} className="absolute" style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: dot.s, height: dot.s, margin: -dot.s / 2 }}>
-          <span className="ca-intro-ping absolute inset-0 rounded-full bg-[#ff453a]" style={{ animationDelay: `${dot.d}s` }} />
-          <span className="relative block h-full w-full rounded-full border-2 border-[#1c1c1e] bg-[#ff453a]" />
-        </span>
-      ))}
-    </div>
-  );
-};
-
 const PAGES = [
-  { title: 'Välkommen till CrimeAlert', text: 'Polisens händelser i hela Sverige, samlade på ett ställe. Lugnt och sakligt.', picture: 'radar' },
-  { title: 'Få veta när något händer', text: 'En notis när Polisen rapporterar något där du bor, jobbar eller där familjen finns.', picture: 'notification' },
-  { title: 'Allt på en karta', text: 'Brott, bränder, olyckor och VMA, uppdaterat var femte minut. Dra upp listan för att se allt.', picture: 'map' },
+  { kicker: 'Realtid', title: 'Välkommen till CrimeAlert', text: 'Polisens händelser i hela Sverige, samlade på ett ställe.', picture: 'radar' },
+  { kicker: 'Notiser', title: 'Få veta direkt', text: 'En notis när något händer där du bor, jobbar eller där familjen finns.', picture: 'notification' },
+  { kicker: 'Karta och statistik', title: 'Hela Sverige på en karta', text: 'Se var det händer och vad som är vanligast i din kommun.', picture: 'map' },
 ] as const;
 
 const Intro = ({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) => {
@@ -116,11 +150,12 @@ const Intro = ({ onStart, onSkip }: { onStart: () => void; onSkip: () => void })
       <div ref={scroller} onScroll={onScroll} className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {PAGES.map((p, i) => (
           <section key={p.title} aria-hidden={i !== page} className="flex w-full shrink-0 snap-center flex-col items-center justify-center px-8 text-center">
-            <div className="flex flex-1 items-end pb-10">
-              {p.picture === 'radar' ? <Radar /> : p.picture === 'notification' ? <Notification active={i === page} /> : <MapPicture />}
+            <div className="flex flex-[1.15] items-end pb-8">
+              {p.picture === 'radar' ? <Radar /> : p.picture === 'notification' ? <Notification active={i === page} /> : <Sweden />}
             </div>
             <div className="flex-1">
-              <h1 className="text-[32px] font-bold leading-[1.1] tracking-[-0.02em] text-white">{p.title}</h1>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#ff453a]">{p.kicker}</p>
+              <h1 className="mt-2 text-[32px] font-bold leading-[1.1] tracking-[-0.02em] text-white">{p.title}</h1>
               <p className="mx-auto mt-3 max-w-[320px] text-[17px] leading-[1.45] text-[rgba(235,235,245,0.6)]">{p.text}</p>
             </div>
           </section>
@@ -136,14 +171,14 @@ const Intro = ({ onStart, onSkip }: { onStart: () => void; onSkip: () => void })
               aria-selected={i === page}
               aria-label={`Sida ${i + 1} av ${PAGES.length}`}
               onClick={() => go(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${i === page ? 'w-6 bg-white' : 'w-2 bg-white/25'}`}
+              className={`h-2 rounded-full transition-all duration-300 ${i === page ? 'w-6 bg-[#ff453a]' : 'w-2 bg-white/25'}`}
             />
           ))}
         </div>
         <button
           type="button"
           onClick={() => { haptics.impact('medium'); if (last) onStart(); else go(page + 1); }}
-          className="flex h-[54px] w-full items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80"
+          className="ca-welcome-cta flex h-[54px] w-full items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80"
         >
           {last ? 'Kom igång' : 'Fortsätt'}
         </button>
