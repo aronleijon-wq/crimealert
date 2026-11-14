@@ -71,6 +71,13 @@
       "when": 1794504857301,
       "tag": "0009_crime_atlas_places",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794657797611,
+      "tag": "0010_watch_places",
+      "breakpoints": true
     }
   ]
 }
