@@ -37,7 +37,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
 
   const [filtersVisible, setFiltersVisible] = useState(() => {
     const stored = sessionStorage.getItem('filtersVisible');
-    return stored !== null ? stored === 'true' : true;
+    return stored !== null ? stored === 'true' : false;
   });
 
   useEffect(() => {
