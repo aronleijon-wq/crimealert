@@ -1,5 +1,5 @@
 import type { SubscriptionState } from '@/hooks/useAuth';
-import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Users, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Sparkles, Users, Zap, type LucideIcon } from 'lucide-react';
 
 // Must match the active prices in Stripe (create-checkout charges whatever is active there)
 const MONTHLY_KR = 19;
@@ -20,7 +20,7 @@ export const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/7sY28q57o6
 /** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
 export const TRIAL_DAYS = 7;
 
-/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads). */
+/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads, ask-crimealert). */
 export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] = [
   { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning', short: 'Händelser direkt, utan 15 min väntan' },
   { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner', short: 'Notiser direkt i dina kommuner' },
@@ -30,6 +30,7 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line,
   { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
   { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
   { icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' },
+  { icon: Sparkles, text: 'Fråga AI utan gräns, med utförligare svar (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
 ];
 
 /** The plan in words: "Gratis", "Pro livstid", "Provperiod t.o.m. 2026-10-12" and so on. */

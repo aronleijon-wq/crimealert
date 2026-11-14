@@ -13,7 +13,7 @@ import ProHero from './ProHero';
 import './pro.css';
 
 /** What the page leads with for those without Pro: the five that matter most */
-const HIGHLIGHTS = [0, 1, 2, 4, 7].map((i) => PRO_FEATURES[i]);
+const HIGHLIGHTS = [0, 1, 2, 8, 4, 7].map((i) => PRO_FEATURES[i]);
 
 /** The place in the order things rise into view (pro.css) */
 const rise = (i: number) => ({ ['--i' as string]: i });
