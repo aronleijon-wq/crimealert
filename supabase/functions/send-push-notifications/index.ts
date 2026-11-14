@@ -4,9 +4,13 @@ import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStat
 import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey, type SummaryEvent } from '../_shared/weeklySummary.ts';
 import {
   buildPushMessage,
+  FREE_PLACES,
   freeMayNotify,
   inQuietHours,
   nearEvent,
+  placeForEvent,
+  placeFromRow,
+  placesInUse,
   safeAppPath,
   settingsFromRow,
   wantsEvent,
@@ -14,6 +18,8 @@ import {
   type NotifySettings,
   type PushEvent,
   type SettingsRow,
+  type WatchPlace,
+  type WatchPlaceRow,
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
 import { mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
@@ -654,7 +660,7 @@ Deno.serve(async (req) => {
     const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
     const { data: recentEvents, error: eventsError } = await supabase
       .from('police_events_archive')
-      .select('id, title, area, lat, lng, type, risk, time, original_type')
+      .select('id, title, area, lat, lng, type, risk, time, original_type, location_precision')
       .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 
@@ -692,8 +698,24 @@ Deno.serve(async (req) => {
     }
     for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
 
-    // Those who watch kommuner, and those who only have a circle around a place
-    const watchers = new Set([...Object.keys(userKommuner), ...Object.entries(userSettings).filter(([, s]) => s.near).map(([id]) => id)]);
+    // Mina platser (watch_places): none before its migration has run. Free accounts are
+    // notified about their first place, Pro about up to five.
+    const userPlaces: Record<string, WatchPlace[]> = {};
+    const placesRead = await supabase.from('watch_places').select('id, user_id, label, kind, lat, lng, radius_km, created_at');
+    if (placesRead.error) console.warn('Could not read watch places', placesRead.error.message);
+    for (const row of (placesRead.data ?? []) as (WatchPlaceRow & { user_id: string })[]) {
+      const place = placeFromRow(row);
+      if (place) (userPlaces[row.user_id] ??= []).push(place);
+    }
+    const placesPro = await findProUsers(supabase, Object.keys(userPlaces).filter((id) => userPlaces[id].length > FREE_PLACES), now);
+    for (const userId of Object.keys(userPlaces)) userPlaces[userId] = placesInUse(userPlaces[userId], placesPro.has(userId));
+
+    // Those who watch kommuner, a circle around a place, or places of their own
+    const watchers = new Set([
+      ...Object.keys(userKommuner),
+      ...Object.entries(userSettings).filter(([, s]) => s.near).map(([id]) => id),
+      ...Object.keys(userPlaces),
+    ]);
     if (watchers.size === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: 'no_watchers' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -704,10 +726,12 @@ Deno.serve(async (req) => {
     for (const event of recentEvents as EventRow[]) {
       for (const userId of watchers) {
         const settings = userSettings[userId] ?? settingsFromRow(null);
-        const inArea = watchedKommunFor(event.area, userKommuner[userId] ?? []) !== null || nearEvent(settings, event);
+        const near = placeForEvent(userPlaces[userId] ?? [], event);
+        const inArea = near !== null || watchedKommunFor(event.area, userKommuner[userId] ?? []) !== null || nearEvent(settings, event);
         if (!inArea || !wantsEvent(settings, event)) continue;
         if (!userNotifications[userId]) userNotifications[userId] = [];
-        userNotifications[userId].push(event);
+        // Each user's own copy, saying which of their places it is near
+        userNotifications[userId].push(near ? { ...event, near } : event);
       }
     }
 
