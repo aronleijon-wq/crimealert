@@ -7,8 +7,6 @@ export interface AppTab {
   to: string;
   label: string;
   icon: LucideIcon;
-  /** Drawn larger, in the middle, as the tab for doing something rather than looking */
-  prominent?: boolean;
 }
 
 export const TABS: AppTab[] = [
@@ -26,7 +24,7 @@ export const TABS: AppTab[] = [
 export const TABS_13: AppTab[] = [
   { to: '/karta', label: 'Karta', icon: Map },
   { to: '/flode', label: 'Flöde', icon: Newspaper },
-  { to: '/rapportera', label: 'Rapportera', icon: Megaphone, prominent: true },
+  { to: '/rapportera', label: 'Rapportera', icon: Megaphone },
   { to: '/analysis', label: 'Statistik', icon: BarChart3 },
   { to: '/installningar', label: 'Profil', icon: UserRound },
 ];
