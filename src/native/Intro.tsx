@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import { haptics } from './haptics';
 
 const LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
+/** The mark alone, without the app icon's square, as on the Pro page */
+const MARK = '/logo-mark.png';
 
 /** Example notifications for the picture on the second page */
 const EXAMPLES = [
@@ -13,14 +15,13 @@ const EXAMPLES = [
   { title: 'Trafikolycka, flera fordon', place: 'E6 vid Mölndal', when: 'nu' },
 ];
 
-/** The logo with rings going out from it, like a radar */
+/** The logo with slow rings going out from it, like a radar */
 const Radar = () => (
   <div className="relative flex h-64 w-64 items-center justify-center" aria-hidden>
-    {[0, 1, 2].map((i) => (
-      <span key={i} className="ca-intro-ring absolute inset-0 rounded-full border border-[rgba(255,69,58,0.45)]" style={{ animationDelay: `${i * 1.1}s` }} />
+    {[0, 1].map((i) => (
+      <span key={i} className="ca-intro-ring absolute inset-0 rounded-full border border-white/25" style={{ animationDelay: `${i * 2.4}s` }} />
     ))}
-    <div className="absolute inset-16 rounded-full bg-[rgba(255,69,58,0.25)] blur-3xl" />
-    <img src={LOGO} alt="" className="relative h-24 w-24 rounded-[26px] shadow-[0_20px_60px_rgba(0,0,0,0.6)]" width={96} height={96} />
+    <img src={MARK} alt="" className="relative h-28 w-28" width={112} height={112} />
   </div>
 );
 
@@ -38,10 +39,10 @@ const Notification = ({ active }: { active: boolean }) => {
   const clock = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
   const day = now.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
-    <div className="relative h-64 w-[290px] overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-b from-[#1a1f2b] to-[#0b0d12]" aria-hidden>
+    <div className="relative h-64 w-[290px] overflow-hidden rounded-[34px] bg-[#1c1c1e]" aria-hidden>
       <p className="pt-7 text-center text-[52px] font-light leading-none tracking-tight text-white/90">{clock}</p>
       <p className="mt-1 text-center text-[13px] font-medium text-white/60">{day}</p>
-      {active && <div key={index} className="ca-intro-drop absolute inset-x-3 top-[124px] flex items-start gap-2.5 text-left rounded-[18px] bg-[rgba(60,60,67,0.55)] p-3 backdrop-blur-xl">
+      {active && <div key={index} className="ca-intro-drop absolute inset-x-3 top-[124px] flex items-start gap-2.5 text-left rounded-[18px] bg-[#2c2c2e] p-3">
         <img src={LOGO} alt="" className="h-9 w-9 shrink-0 rounded-[9px]" width={36} height={36} />
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
@@ -56,24 +57,24 @@ const Notification = ({ active }: { active: boolean }) => {
   );
 };
 
-/** A dark map of points lighting up, in the colours of the kinds of event */
+/** A dark map with events lighting up one after another */
 const MapPicture = () => {
   const dots = [
-    { x: 30, y: 38, c: '#0a84ff', d: 0 }, { x: 62, y: 26, c: '#ff453a', d: 0.6 }, { x: 48, y: 58, c: '#30d158', d: 1.2 },
-    { x: 72, y: 66, c: '#ff9f0a', d: 1.8 }, { x: 22, y: 70, c: '#bf5af2', d: 2.4 }, { x: 56, y: 82, c: '#0a84ff', d: 3 },
+    { x: 30, y: 38, s: 14, d: 0 }, { x: 62, y: 26, s: 10, d: 0.6 }, { x: 48, y: 58, s: 18, d: 1.2 },
+    { x: 72, y: 66, s: 12, d: 1.8 }, { x: 22, y: 70, s: 10, d: 2.4 }, { x: 56, y: 82, s: 14, d: 3 },
   ];
   return (
-    <div className="relative h-64 w-64 overflow-hidden rounded-[34px] border border-white/10 bg-[#0b0e13]" aria-hidden>
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full opacity-40">
-        <path d="M-5 30 Q30 20 50 40 T105 35" stroke="#3a3f4b" strokeWidth="1.4" fill="none" />
-        <path d="M-5 75 Q40 60 60 75 T105 70" stroke="#3a3f4b" strokeWidth="1.4" fill="none" />
-        <path d="M40 -5 Q45 40 35 105" stroke="#2c313b" strokeWidth="1" fill="none" />
-        <path d="M75 -5 Q70 50 80 105" stroke="#2c313b" strokeWidth="1" fill="none" />
+    <div className="relative h-64 w-64 overflow-hidden rounded-[34px] bg-[#1c1c1e]" aria-hidden>
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+        <path d="M-5 30 Q30 20 50 40 T105 35" stroke="#3a3a3c" strokeWidth="1.4" fill="none" />
+        <path d="M-5 75 Q40 60 60 75 T105 70" stroke="#3a3a3c" strokeWidth="1.4" fill="none" />
+        <path d="M40 -5 Q45 40 35 105" stroke="#2c2c2e" strokeWidth="1" fill="none" />
+        <path d="M75 -5 Q70 50 80 105" stroke="#2c2c2e" strokeWidth="1" fill="none" />
       </svg>
       {dots.map((dot) => (
-        <span key={`${dot.x}-${dot.y}`} className="absolute -ml-2 -mt-2" style={{ left: `${dot.x}%`, top: `${dot.y}%` }}>
-          <span className="ca-intro-ping absolute h-4 w-4 rounded-full" style={{ background: dot.c, animationDelay: `${dot.d}s` }} />
-          <span className="relative block h-4 w-4 rounded-full border-2 border-[#0b0e13]" style={{ background: dot.c }} />
+        <span key={`${dot.x}-${dot.y}`} className="absolute" style={{ left: `${dot.x}%`, top: `${dot.y}%`, width: dot.s, height: dot.s, margin: -dot.s / 2 }}>
+          <span className="ca-intro-ping absolute inset-0 rounded-full bg-[#ff453a]" style={{ animationDelay: `${dot.d}s` }} />
+          <span className="relative block h-full w-full rounded-full border-2 border-[#1c1c1e] bg-[#ff453a]" />
         </span>
       ))}
     </div>

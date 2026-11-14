@@ -104,8 +104,8 @@ html.app-13 .ca-app-tabbar { border-top-color: rgba(84, 84, 88, 0.45); backgroun
 html.app-13 .ca-app-tabbar a[aria-current='page'] svg { fill: currentColor; fill-opacity: 0.18; }
 
 /* The welcome's pictures (Intro) */
-@keyframes ca-intro-ring { from { transform: scale(0.35); opacity: 0.9; } to { transform: scale(1); opacity: 0; } }
-.ca-intro-ring { animation: ca-intro-ring 3.3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+@keyframes ca-intro-ring { 0% { transform: scale(0.4); opacity: 0; } 20% { opacity: 0.8; } 100% { transform: scale(1); opacity: 0; } }
+.ca-intro-ring { opacity: 0; animation: ca-intro-ring 4.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
 @keyframes ca-intro-drop {
   0% { transform: translateY(-140%) scale(0.96); opacity: 0; }
   14% { transform: translateY(6%) scale(1); opacity: 1; }

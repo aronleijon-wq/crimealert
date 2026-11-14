@@ -30,7 +30,6 @@ const Latest = ({ reports }: { reports: PublicReport[] | null }) => {
             <Row
               key={r.id}
               icon={c.icon}
-              iconBg={c.color}
               label={<span className="block truncate">{r.title}</span>}
               detail={<span className="block truncate">{[c.label, r.area, formatTimeAgo(r.created_at)].filter(Boolean).join(' · ')}</span>}
             />
@@ -143,7 +142,7 @@ const NativeReport = () => {
   if (sent) {
     return (
       <Screen title="Rapportera">
-        <div className="mx-4 mt-6 flex flex-col items-center rounded-[20px] bg-[#1c1c1e] px-6 py-8 text-center">
+        <div className="mx-4 mt-6 flex flex-col items-center rounded-[14px] bg-[#1c1c1e] px-6 py-8 text-center">
           <CheckCircle2 className="h-14 w-14 text-[#30d158]" aria-hidden />
           <p className="mt-4 text-[22px] font-bold">Tack för din rapport</p>
           <p className="mt-1.5 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
@@ -163,11 +162,9 @@ const NativeReport = () => {
     return (
       <Screen title="Rapportera">
         {intro}
-        <div className="mx-4 mt-5 rounded-[20px] bg-gradient-to-br from-[#3a1a05] via-[#1c1c1e] to-[#1c1c1e] p-5">
-          <span className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-[#ff9f0a]">
-            <Megaphone className="h-6 w-6 text-white" aria-hidden />
-          </span>
-          <p className="mt-4 text-[20px] font-bold leading-tight">Var grannarnas ögon</p>
+        <div className="mx-4 mt-5 rounded-[14px] bg-[#1c1c1e] p-5">
+          <Megaphone className="h-7 w-7 text-[#ff453a]" strokeWidth={1.8} aria-hidden />
+          <p className="mt-3 text-[20px] font-bold leading-tight">Var grannarnas ögon</p>
           <p className="mt-1.5 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
             Trasig belysning, en otrygg plats eller något misstänkt: rapportera det med en bild, så syns det på kartan för alla med Pro i närheten.
           </p>
@@ -195,7 +192,6 @@ const NativeReport = () => {
           <Row
             key={c.value}
             icon={c.icon}
-            iconBg={c.color}
             label={c.label}
             detail={c.hint}
             onClick={() => { haptics.selection(); set({ category: c.value }); }}
@@ -207,15 +203,15 @@ const NativeReport = () => {
       <Section header="Var?" footer={draft.lat !== null ? undefined : 'Din position används bara för att placera rapporten på kartan.'}>
         <Row
           icon={draft.lat !== null ? MapPin : LocateFixed}
-          iconBg={draft.lat !== null ? '#30d158' : '#0a84ff'}
+          iconBg={draft.lat !== null ? '#30d158' : undefined}
           label={draft.lat !== null ? draft.area || 'Platsen är vald' : 'Använd min position'}
           detail={draft.lat !== null ? 'Tryck för att använda din position igen' : undefined}
           onClick={useMyPosition}
           accessory={locating ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[rgba(235,235,245,0.6)]" aria-label="Hämtar position" /> : <span />}
         />
         <div className="ios-row flex items-center gap-3 pl-4">
-          <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[7px] bg-[#636366]">
-            <Search className="h-[17px] w-[17px] text-white" aria-hidden />
+          <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center text-[rgba(235,235,245,0.6)]">
+            <Search className="h-[21px] w-[21px]" strokeWidth={1.9} aria-hidden />
           </span>
           <span className="ios-row-body flex min-h-[44px] flex-1 items-center gap-2 py-2 pr-4">
             <input value={query} onChange={(e) => search(e.target.value.slice(0, 80))} placeholder="Eller sök en adress" aria-label="Sök en adress" enterKeyHint="search" className={field} />

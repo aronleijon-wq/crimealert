@@ -12,14 +12,15 @@ import { hasAppDesign13 } from '@/lib/native';
 import Intro from './Intro';
 import { WELCOME_DONE_KEY } from './screens';
 
-const LOGO = '/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png';
+/** The mark alone, without the app icon's square, as on the Pro page */
+const MARK = '/logo-mark.png';
 
 type Step = 'intro' | 'account' | 'areas' | 'notify';
 
 const Feature = ({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) => (
   <li className="flex items-start gap-4">
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[hsl(var(--ca-red)/0.14)] text-[hsl(var(--ca-red))]">
-      <Icon className="h-[22px] w-[22px]" aria-hidden />
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center text-[hsl(var(--ca-text-2))]">
+      <Icon className="h-[22px] w-[22px]" strokeWidth={1.9} aria-hidden />
     </span>
     <span className="pt-0.5">
       <span className="block text-[16px] font-semibold text-foreground">{title}</span>
@@ -102,10 +103,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <div className="flex flex-col items-center pt-6 text-center">
-          <div className="relative">
-            <div className="absolute inset-[-28px] rounded-full bg-[hsl(var(--ca-red)/0.25)] blur-2xl" aria-hidden />
-            <img src={LOGO} alt="" className="relative h-20 w-20 rounded-[22px] shadow-2xl" width={80} height={80} />
-          </div>
+          <img src={MARK} alt="" className="h-24 w-24" width={96} height={96} />
           <h1 className="mt-8 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Se vad som händer där du bor</h1>
           <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">
             Polisens händelser i hela Sverige, på en karta och som notiser till din telefon.
@@ -181,9 +179,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         }
       >
         <div className="flex flex-col items-center pt-14 text-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(var(--ca-red)/0.14)] text-[hsl(var(--ca-red))]">
-            <BellRing className="h-10 w-10" aria-hidden />
-          </span>
+          <BellRing className="h-14 w-14 text-[hsl(var(--ca-red))]" strokeWidth={1.6} aria-hidden />
           <h1 className="mt-8 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Få en notis när något händer</h1>
           <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">
             {kommuner.length
@@ -205,7 +201,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
     >
       {!swipeIntro && <div className="flex justify-center gap-1.5 pt-3" aria-hidden>
         {steps.map((s) => (
-          <span key={s} className={`h-1.5 rounded-full transition-all ${s === step ? 'w-6 bg-[hsl(var(--ca-red))]' : 'w-1.5 bg-[hsl(var(--ca-line-strong))]'}`} />
+          <span key={s} className={`h-1.5 rounded-full transition-all ${s === step ? 'w-6 bg-white' : 'w-1.5 bg-white/25'}`} />
         ))}
       </div>}
       <div className="min-h-0 flex-1">{content}</div>
