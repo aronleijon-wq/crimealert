@@ -35,7 +35,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
       { feature: 'Pushnotiser för dina kommuner', free: 'Med konto, efter 15 min', pro: 'Direkt' },
       { feature: 'Välj vilka händelser du får notiser om', free: 'Med konto', pro: true },
       { feature: 'Gilla och kommentera', free: 'Med konto', pro: true },
-      { feature: 'Fråga AI om brotten där du bor', free: '3 frågor per dag, med konto', pro: 'Obegränsat' },
+      { feature: 'Fråga AI om brotten där du bor', free: '3 frågor per dag, med konto', pro: 'Obegränsat, utförligare svar' },
     ],
   },
   {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  cleanHistory, FREE_QUESTIONS_PER_DAY, kommunEvents, kommunNamed, kommunOfEvent, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
+  betterLeft, cleanHistory, FREE_QUESTIONS_PER_DAY, modelTier, kommunEvents, kommunNamed, kommunOfEvent, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
 } from './ask';
 
 const NOW = Date.parse('2026-11-14T12:00:00Z');
@@ -21,6 +21,14 @@ describe('counting questions', () => {
     expect(questionsLeft(5, false)).toBe(0);
     expect(questionsLeft(40, true)).toBeNull();
     expect(questionsLeft(100, true)).toBe(0);
+  });
+
+  it('answers Pro\'s first five a day with the better model, the rest and all free ones with the fast one', () => {
+    expect([0, 1, 4, 5, 9].map((n) => modelTier(n, true))).toEqual(['better', 'better', 'better', 'fast', 'fast']);
+    expect(modelTier(0, false)).toBe('fast');
+    expect(betterLeft(2, true)).toBe(3);
+    expect(betterLeft(7, true)).toBe(0);
+    expect(betterLeft(0, false)).toBeNull();
   });
 });
 

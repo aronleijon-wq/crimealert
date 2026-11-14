@@ -43,14 +43,16 @@ const Fraga = () => {
   const [error, setError] = useState<string | null>(null);
   const [left, setLeft] = useState<number | null | undefined>(undefined);
   const [pro, setPro] = useState(false);
+  // Pro's answers from the larger model left today (the first five a day)
+  const [better, setBetter] = useState<number | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
 
   // How many questions are left today, before the first one
   useEffect(() => {
     if (!user) return;
-    supabase.functions.invoke<{ left: number | null; pro: boolean }>('ask-crimealert', { body: { quota: true } })
-      .then(({ data }) => { if (data) { setLeft(data.left); setPro(data.pro); } })
+    supabase.functions.invoke<{ left: number | null; pro: boolean; better: number | null }>('ask-crimealert', { body: { quota: true } })
+      .then(({ data }) => { if (data) { setLeft(data.left); setPro(data.pro); setBetter(data.better ?? null); } })
       .catch(() => {});
   }, [user]);
 
@@ -68,13 +70,14 @@ const Fraga = () => {
     setError(null);
     setBusy(true);
     if (input.current) input.current.style.height = '';
-    const { data, error: failed } = await supabase.functions.invoke<{ answer?: string; left: number | null; pro: boolean; error?: string }>('ask-crimealert', { body: { messages: next } })
+    const { data, error: failed } = await supabase.functions.invoke<{ answer?: string; left: number | null; pro: boolean; better?: number | null; error?: string }>('ask-crimealert', { body: { messages: next } })
       .catch((e) => ({ data: null, error: e }));
     setBusy(false);
     if (data?.answer) {
       setTurns([...next, { role: 'assistant', content: data.answer }]);
       setLeft(data.left);
       setPro(data.pro);
+      setBetter(data.better ?? null);
       return;
     }
     // Not answered: the question goes back in the field
@@ -163,7 +166,9 @@ const Fraga = () => {
               </div>
             </form>
             <p className={`mt-1.5 px-1 text-center text-[12px] ${MUTED}`}>
-              {left === undefined || left === null ? 'Svar utifrån Polisens händelser. AI kan ha fel.' : `${left} ${left === 1 ? 'fråga' : 'frågor'} kvar idag${pro ? '' : ' · obegränsat med Pro'}`}
+              {pro && better !== null
+                ? better > 0 ? `Pro: ${better} ${better === 1 ? 'utförligt svar' : 'utförliga svar'} kvar idag, sedan snabbare svar` : 'Pro: obegränsat, med snabbare svar resten av dagen'
+                : left === undefined || left === null ? 'Svar utifrån Polisens händelser. AI kan ha fel.' : `${left} ${left === 1 ? 'fråga' : 'frågor'} kvar idag · obegränsat med Pro`}
             </p>
           </>
         )}

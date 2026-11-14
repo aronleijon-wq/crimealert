@@ -30,7 +30,7 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line,
   { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
   { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
   { icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' },
-  { icon: Sparkles, text: 'Fråga AI utan gräns (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
+  { icon: Sparkles, text: 'Fråga AI utan gräns, med utförligare svar (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
 ];
 
 /** The plan in words: "Gratis", "Pro livstid", "Provperiod t.o.m. 2026-10-12" and so on. */

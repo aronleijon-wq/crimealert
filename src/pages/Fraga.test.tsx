@@ -44,4 +44,10 @@ describe('Fråga AI', () => {
     expect(screen.getByRole('link', { name: 'Fråga obegränsat med Pro' })).toHaveAttribute('href', '/prisplan');
     await waitFor(() => expect(screen.queryByLabelText('Din fråga')).not.toBeInTheDocument());
   });
+
+  it('tells Pro how many of the day\'s better answers are left', async () => {
+    invoke.mockResolvedValue({ data: { left: null, pro: true, better: 4 }, error: null });
+    page();
+    expect(await screen.findByText('Pro: 4 utförliga svar kvar idag, sedan snabbare svar')).toBeInTheDocument();
+  });
 });

@@ -1,7 +1,7 @@
 // Fråga CrimeAlert: questions about crime where you live, answered by Claude from Polisen's events.
 // The model gets two tools that count the archive (police_events_archive) and answers only from
-// what they return. Three questions a day without Pro, as many as you like with Pro (a hundred,
-// so a stuck script can't run up a bill). The ask-crimealert edge function runs it; the parts
+// what they return. Three questions a day without Pro, answered by Haiku; as many as you like
+// with Pro (a hundred, so a stuck script can't run up a bill), the first five a day by Sonnet. The ask-crimealert edge function runs it; the parts
 // here are plain functions so they can be tested.
 import { SWEDISH_MUNICIPALITIES } from './data/municipalities.ts';
 import { kommunMatcher } from './notifications.ts';
@@ -35,6 +35,15 @@ export function stockholmMidnight(now: number): number {
   const offset = wall - Math.floor(now / 1000) * 1000;
   return Date.UTC(+parts.year, +parts.month - 1, +parts.day) - offset;
 }
+
+/** Pro's first questions each day get the larger model (Sonnet); the rest, and all free ones, Haiku */
+export const PRO_BETTER_PER_DAY = 5;
+
+/** Which model answers the next question: 'better' for Pro's first five a day */
+export const modelTier = (used: number, isPro: boolean): 'better' | 'fast' => (isPro && used < PRO_BETTER_PER_DAY ? 'better' : 'fast');
+
+/** Of Pro's better answers, how many are left today (null without Pro) */
+export const betterLeft = (used: number, isPro: boolean): number | null => (isPro ? Math.max(0, PRO_BETTER_PER_DAY - used) : null);
 
 /** Questions left today; null means as many as you like (Pro) */
 export function questionsLeft(used: number, isPro: boolean): number | null {
