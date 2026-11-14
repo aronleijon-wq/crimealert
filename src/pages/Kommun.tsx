@@ -1,3 +1,4 @@
+import SituationCard from '@/components/SituationCard';
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { Activity, BellRing, CalendarDays, ChevronRight, Clock, Map as MapIcon, TrendingUp } from 'lucide-react';
@@ -162,6 +163,8 @@ const Kommun = () => {
               <BellRing className="h-4 w-4" /> Bevaka {name}
             </Link>
           </div>
+
+          <SituationCard kommun={name} variant="web" className="mt-6" />
 
           {stats.byType.length > 0 && (
             <section className="mt-8" aria-labelledby="typer">

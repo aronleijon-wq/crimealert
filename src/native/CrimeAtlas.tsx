@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight, ChevronRight, MessagesSquare, Search, X } from 'lucide-react';
+import SituationCard from '@/components/SituationCard';
 import ShareCardButton from '@/components/ShareCardButton';
 import { fitSweden, SWEDEN_SHAPES } from '@/components/landing/swedenGeo';
 import { KOMMUN_COORDINATES, searchKommuner } from '@/data/kommuner';
@@ -161,6 +162,8 @@ const KommunView = ({ atlas, kommun, period, onPick }: { atlas: Atlas; kommun: s
           <p className="mt-4 rounded-xl bg-[rgba(255,69,58,0.12)] px-3 py-2.5 text-[15px] font-semibold leading-snug text-[#ff6961]">{title}</p>
         )}
       </Card>
+
+      <SituationCard kommun={kommun} className="mx-4 mt-3" />
 
       <Card title={`Vanligast i ${kommun}`} footer="Jämfört med Sverige, per invånare.">
         {top.length ? top.map((t) => (

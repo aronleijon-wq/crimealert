@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Construction, Eye, Lock, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, SmilePlus, type LucideIcon } from 'lucide-react';
 import CommentThread from '@/components/feed/CommentThread';
 import ShareCardButton from '@/components/ShareCardButton';
+import SituationCard from '@/components/SituationCard';
 import { incidentTypeConfig } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommunityReports } from '@/hooks/useCommunityReports';
@@ -282,6 +283,7 @@ const NativeFeed = () => {
           <ChevronRight className="h-5 w-5 text-[rgba(235,235,245,0.3)]" aria-hidden />
         </Link>
       )}
+      {story.id.startsWith('k:') && <SituationCard kommun={story.label} className="mx-4 mt-3" />}
 
       {!isPremium && (
         <p className={`mx-4 mt-2.5 text-[13px] ${MUTED}`}>Polisens händelser visas 15 minuter efter att de rapporterats. Med Pro direkt.</p>
