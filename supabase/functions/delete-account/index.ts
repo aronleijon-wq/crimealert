@@ -68,6 +68,6 @@ serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("delete-account failed:", msg);
-    return json({ error: "Kontot kunde inte raderas just nu. Försök igen eller mejla crimealert.swe@gmail.com." }, 500);
+    return json({ error: "Kontot kunde inte raderas just nu. Försök igen eller mejla kontakt@crimealert.se." }, 500);
   }
 });

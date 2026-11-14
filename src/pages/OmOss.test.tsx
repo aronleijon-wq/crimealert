@@ -28,7 +28,7 @@ describe('Om oss', () => {
   it('asks for feedback by mail and on Trustpilot', async () => {
     await renderPage();
     expect(screen.getByText(/Vi ser alltid fram emot feedback och åsikter om sidan/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /crimealert\.swe@gmail\.com/ })).toHaveAttribute('href', 'mailto:crimealert.swe@gmail.com');
+    expect(screen.getByRole('link', { name: /kontakt@crimealert\.se/ })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se');
     const trustpilot = screen.getByRole('link', { name: /Trustpilot/ });
     expect(trustpilot).toHaveAttribute('href', 'https://se.trustpilot.com/evaluate/crimealert.se');
     expect(trustpilot).toHaveAttribute('target', '_blank');

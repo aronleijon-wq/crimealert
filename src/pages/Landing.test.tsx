@@ -62,7 +62,7 @@ describe('Landing page', () => {
     expect(within(faq).getByText('Kostar det något?')).toBeInTheDocument();
     expect(within(faq).getByRole('link', { name: 'din profil' })).toHaveAttribute('href', '/installningar');
     expect(within(faq).getByRole('link', { name: 'Jämför Gratis och Pro' })).toHaveAttribute('href', '/prisplan');
-    expect(within(faq).getByRole('link', { name: 'crimealert.swe@gmail.com' })).toHaveAttribute('href', 'mailto:crimealert.swe@gmail.com');
+    expect(within(faq).getByRole('link', { name: 'kontakt@crimealert.se' })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se');
     const ld = container.querySelector('#vanliga-fragor script[type="application/ld+json"]');
     expect(JSON.parse(ld!.textContent!)['@type']).toBe('FAQPage');
     expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '#vanliga-fragor');

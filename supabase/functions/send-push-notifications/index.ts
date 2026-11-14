@@ -49,7 +49,7 @@ const apnsKey: ApnsKey | null = (() => {
 /** One notification to one device: the iPhone app's through Apple, the rest as web push. */
 async function sendPush(subscription: PushSubscriptionRow, payload: string, vapidPublicKey: string, vapidPrivateKey: string): Promise<PushResult> {
   const apns = parseApnsEndpoint(subscription.endpoint);
-  if (!apns) return sendWebPush(subscription, payload, vapidPublicKey, vapidPrivateKey, 'mailto:push@crimealert.se');
+  if (!apns) return sendWebPush(subscription, payload, vapidPublicKey, vapidPrivateKey, 'mailto:kontakt@crimealert.se');
   // Without the key the app's tokens are kept, for when it is added
   if (!apnsKey) return { ok: false, status: null, expired: false, error: 'APNS_KEY_ID, APNS_TEAM_ID eller APNS_PRIVATE_KEY saknas.' };
   try {

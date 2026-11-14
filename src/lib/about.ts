@@ -3,7 +3,7 @@
 export const FOUNDER = { name: 'Aron Leijon', role: 'Grundare' };
 /** One id for the founder everywhere, so search engines tie the name to CrimeAlert. */
 export const FOUNDER_ID = 'https://crimealert.se/om-oss#aron-leijon';
-export const ABOUT_CONTACT = 'crimealert.swe@gmail.com';
+export const ABOUT_CONTACT = 'kontakt@crimealert.se';
 
 /** AboutPage with the organisation and its founder, as schema.org JSON-LD. */
 export const aboutJsonLd = () =>
