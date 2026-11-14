@@ -10,6 +10,11 @@ import {
   settingsToRow,
   inQuietHours,
   nearEvent,
+  placeDistance,
+  placeForEvent,
+  placeFromRow,
+  placesInUse,
+  type WatchPlace,
   distanceKm,
   wantsEvent,
   watchedKommunFor,
@@ -156,5 +161,57 @@ describe('free delay', () => {
     expect(reachedFreeWithin('2026-10-03T11:40:00+00:00', now, window)).toBe(true);
     expect(reachedFreeWithin('2026-10-03T11:30:00+00:00', now, window)).toBe(false);
     expect(reachedFreeWithin('2026-10-03T11:50:00+00:00', now, window)).toBe(false);
+  });
+});
+
+describe('Mina platser', () => {
+  const place = (id: string, lat: number, lng: number, radiusKm: number, createdAt: string, label = id): WatchPlace =>
+    ({ id, label, kind: 'other', lat, lng, radiusKm, createdAt });
+  const home = place('Hem', 59.3133, 18.0726, 1, '2026-11-01T00:00:00Z'); // Södermalm
+  const work = place('Jobbet', 59.3326, 18.0649, 2, '2026-11-02T00:00:00Z'); // City
+  const school = place('Skolan', 59.8586, 17.6389, 1, '2026-11-03T00:00:00Z'); // Uppsala
+
+  it('reads a row, and leaves out one that cannot be used', () => {
+    expect(placeFromRow({ id: 'p', label: '  Hem ', kind: 'home', lat: 59.31, lng: 18.07, radius_km: 1, created_at: 't' }))
+      .toEqual({ id: 'p', label: 'Hem', kind: 'home', lat: 59.31, lng: 18.07, radiusKm: 1, createdAt: 't' });
+    expect(placeFromRow({ id: 'p', label: '', kind: 'bogus', lat: 59.31, lng: 18.07, radius_km: 80, created_at: 't' }))
+      .toMatchObject({ label: 'Min plats', kind: 'other', radiusKm: 50 });
+    expect(placeFromRow({ id: 'p', label: 'x', kind: 'home', lat: 59.31, lng: 18.07, radius_km: 0, created_at: 't' })).toBeNull();
+  });
+
+  it('uses the first place for free accounts and five with Pro', () => {
+    const many = [school, work, home, place('a', 1, 1, 1, '2026-11-04'), place('b', 1, 1, 1, '2026-11-05'), place('c', 1, 1, 1, '2026-11-06')];
+    expect(placesInUse(many, false).map((p) => p.id)).toEqual(['Hem']);
+    expect(placesInUse(many, true).map((p) => p.id)).toEqual(['Hem', 'Jobbet', 'Skolan', 'a', 'b']);
+  });
+
+  it('finds the nearest place the event lies within', () => {
+    // Götgatan, 300 m from home and 2 km from work: home it is
+    const event = { lat: 59.3160, lng: 18.0720, location_precision: 'street' };
+    const match = placeForEvent([work, home, school], event);
+    expect(match?.label).toBe('Hem');
+    expect(match?.km).toBeCloseTo(0.3, 1);
+    expect(placeForEvent([school], event)).toBeNull();
+    expect(placeForEvent([home], { lat: null, lng: null })).toBeNull();
+  });
+
+  it('tells the distance only when Polisen gave the street', () => {
+    expect(placeForEvent([work], { lat: 59.3326, lng: 18.0649, location_precision: 'api' })).toEqual({ label: 'Jobbet', km: null });
+    expect(placeDistance({ label: 'Hem', km: 0.32 })).toBe('300 m från Hem');
+    expect(placeDistance({ label: 'Hem', km: 0.02 })).toBe('100 m från Hem');
+    expect(placeDistance({ label: 'Jobbet', km: 2.44 })).toBe('2,4 km från Jobbet');
+    expect(placeDistance({ label: 'Skolan', km: null })).toBe('nära Skolan');
+  });
+
+  it('says in the notification which place an event is near', () => {
+    const base = { title: '14 november, Inbrott, Stockholm', area: 'Stockholm', type: 'police', risk: 'medium', original_type: 'Inbrott' };
+    const one = buildPushMessage([{ id: 'e1', time: '2026-11-14T13:05:00Z', ...base, near: { label: 'Hem', km: 0.6 } }]);
+    expect(one.title).toBe('🚨 Inbrott · 600 m från Hem');
+    expect(one.body).toBe('Kl. 14:05 · Polisen rapporterar en ny händelse i Stockholm. Tryck för att se den på kartan.');
+    const two = buildPushMessage([
+      { id: 'e1', time: '2026-11-14T13:05:00Z', ...base, near: { label: 'Hem', km: null } },
+      { id: 'e2', time: '2026-11-14T12:00:00Z', ...base, area: 'Solna' },
+    ]);
+    expect(two.body.split('\n')).toEqual(['🚨 Inbrott · nära Hem (14:05)', '🚨 Inbrott · Solna (13:00)']);
   });
 });

@@ -1,10 +1,15 @@
-// The website's Notiser page (pages/Alerts): notifications near a place, only some kinds of
-// crime, and quiet hours. The app has the same in its own lists (native/NativeAlerts).
+// The website's Notiser page (pages/Alerts): Mina platser, only some kinds of crime, and quiet
+// hours. The app has the same in its own lists (native/NativeAlerts).
 import { useState, type ReactNode } from 'react';
-import { Filter, LocateFixed, Moon, type LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Filter, MapPin, Moon, Plus, type LucideIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import RadiusPicker from './RadiusPicker';
-import { NOTIFY_THEMES, quietLabel, radiusLabel, type NotifySettings } from '../../../supabase/functions/_shared/notifications';
+import { useWatchPlaces } from '@/hooks/useWatchPlaces';
+import { PLACE_ICONS } from '@/lib/placeIcons';
+import PlaceEditor from './PlaceEditor';
+import {
+  FREE_PLACES, NOTIFY_THEMES, PRO_PLACES, quietLabel, radiusLabel, type NotifySettings, type PlaceKind, type WatchPlace,
+} from '../../../supabase/functions/_shared/notifications';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const pad = (h: number) => `${String(h).padStart(2, '0')}:00`;
@@ -26,8 +31,65 @@ const Card = ({ icon: Icon, title, description, children }: { icon: LucideIcon; 
 
 const select = 'h-10 rounded-lg border border-[hsl(var(--ca-line-strong))] bg-background px-3 text-sm text-foreground tabular-nums';
 
-const MoreNotificationSettings = ({ settings, saving, onChange }: { settings: NotifySettings; saving: boolean; onChange: (next: NotifySettings) => void }) => {
-  const [picking, setPicking] = useState(false);
+/** Mina platser: home, work, the school, each with its own distance */
+const Places = ({ isPremium }: { isPremium: boolean }) => {
+  const { places, savePlace, removePlace } = useWatchPlaces();
+  const [editing, setEditing] = useState<{ place: WatchPlace | null; kind?: PlaceKind } | null>(null);
+  const limit = isPremium ? PRO_PLACES : FREE_PLACES;
+  const full = places.length >= limit;
+  return (
+    <Card icon={MapPin} title="Mina platser" description="Det som händer nära dina platser, utöver kommunerna. Notisen säger vilken plats det gäller.">
+      {places.length > 0 && (
+        <ul className="divide-y divide-[hsl(var(--ca-line))] overflow-hidden rounded-xl border border-[hsl(var(--ca-line-strong))]">
+          {places.map((p, i) => {
+            const Icon = PLACE_ICONS[p.kind];
+            return (
+              <li key={p.id}>
+                <button type="button" onClick={() => setEditing({ place: p })} className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-[hsl(var(--ca-panel-3))]">
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-foreground">{p.label}</span>
+                    <span className="block text-xs text-muted-foreground">{i >= limit ? 'Pausad, ingår i Pro' : `Notiser inom ${radiusLabel(p.radiusKm)}`}</span>
+                  </span>
+                  <span className="text-xs font-medium text-primary">Ändra</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className={`flex flex-wrap items-center gap-2 ${places.length ? 'mt-3' : ''}`}>
+        {!full && (places.length ? ['other'] as PlaceKind[] : ['home', 'work', 'school'] as PlaceKind[]).slice(0, limit - places.length).map((kind) => (
+          <button key={kind} type="button" onClick={() => setEditing({ place: null, kind })}
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
+            <Plus className="h-4 w-4" aria-hidden />
+            {kind === 'other' ? 'Lägg till plats' : `Lägg till ${({ home: 'hem', work: 'jobbet', school: 'skolan' } as Record<string, string>)[kind]}`}
+          </button>
+        ))}
+        {full && !isPremium && (
+          <p className="text-xs text-muted-foreground">
+            Med gratiskonto får du notiser för en plats. <Link to="/prisplan" className="font-semibold text-primary">Med Pro upp till {PRO_PLACES}</Link>, till exempel hem, jobbet och skolan.
+          </p>
+        )}
+      </div>
+      {editing && (
+        <PlaceEditor
+          place={editing.place}
+          kind={editing.kind}
+          onSave={async (draft) => {
+            const problem = await savePlace(draft, editing.place?.id);
+            if (!problem) setEditing(null);
+            return problem;
+          }}
+          onRemove={editing.place ? () => { removePlace(editing.place!.id); setEditing(null); } : undefined}
+          onClose={() => setEditing(null)}
+        />
+      )}
+    </Card>
+  );
+};
+
+const MoreNotificationSettings = ({ settings, saving, onChange, isPremium = false }: { settings: NotifySettings; saving: boolean; onChange: (next: NotifySettings) => void; isPremium?: boolean }) => {
   const themes = settings.themes;
 
   const toggleTheme = (id: string) => {
@@ -38,14 +100,7 @@ const MoreNotificationSettings = ({ settings, saving, onChange }: { settings: No
 
   return (
     <>
-      <Card icon={LocateFixed} title="Nära dig" description="Det som händer inom ett visst avstånd från en plats, utöver dina kommuner.">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm text-foreground">{settings.near ? `Inom ${radiusLabel(settings.near.radiusKm)}` : 'Av'}</span>
-          <button type="button" onClick={() => setPicking(true)} className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90">
-            {settings.near ? 'Ändra' : 'Välj plats och avstånd'}
-          </button>
-        </div>
-      </Card>
+      <Places isPremium={isPremium} />
 
       <Card icon={Filter} title="Bara vissa brott" description="Till exempel bara inbrott och skjutningar. Gäller i stället för valen ovan.">
         <label className="flex cursor-pointer items-center justify-between gap-4">
@@ -93,9 +148,6 @@ const MoreNotificationSettings = ({ settings, saving, onChange }: { settings: No
         )}
       </Card>
 
-      {picking && (
-        <RadiusPicker value={settings.near} onSave={(near) => { onChange({ ...settings, near }); setPicking(false); }} onClose={() => setPicking(false)} />
-      )}
     </>
   );
 };

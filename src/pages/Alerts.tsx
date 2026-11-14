@@ -372,7 +372,7 @@ const Alerts = () => {
                 </Section>
               )}
 
-              {moreAvailable && <MoreNotificationSettings settings={settings} saving={saving} onChange={handleSettings} />}
+              {moreAvailable && <MoreNotificationSettings settings={settings} saving={saving} onChange={handleSettings} isPremium={isPremium} />}
 
               {weeklyAvailable && (
                 <Section id="vecka" icon={CalendarDays} title="Veckosammanfattning" description="Söndag kväll: veckans händelser i dina områden, jämfört med veckan innan.">

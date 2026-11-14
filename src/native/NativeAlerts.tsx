@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Bell, Check, LocateFixed, MapPin, Minus, Moon, Plus, Search, Send, X } from 'lucide-react';
-import RadiusPicker from '@/components/alerts/RadiusPicker';
 import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -9,9 +8,11 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useSEO } from '@/hooks/useSEO';
+import { useWatchPlaces } from '@/hooks/useWatchPlaces';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import { registerFailureReason } from '@/lib/pushDiagnostics';
-import { NOTIFY_THEMES, NOTIFY_TYPES, quietLabel, radiusLabel, watchedKommunFor, type NotifyType, type RiskLevel } from '../../supabase/functions/_shared/notifications';
+import { NOTIFY_THEMES, NOTIFY_TYPES, quietLabel, watchedKommunFor, type NotifyType, type RiskLevel } from '../../supabase/functions/_shared/notifications';
+import PlacesSection from './PlacesSection';
 import { Row, Screen, Section, Switch } from './ui';
 
 const TOPICS: Record<NotifyType, string> = {
@@ -101,7 +102,7 @@ const NativeAlerts = () => {
   const push = useNativePush(true);
   const { kommuner, addKommun, removeKommun } = useNotificationPreferences();
   const { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
-  const [picking, setPicking] = useState(false);
+  const watch = useWatchPlaces();
   const { incidents } = usePoliceEvents();
   const [adding, setAdding] = useState(false);
   const [testNote, setTestNote] = useState<string | null>(null);
@@ -175,7 +176,7 @@ const NativeAlerts = () => {
         {push.isSubscribed && <Row icon={Send} label="Skicka testnotis" detail={testNote ?? undefined} onClick={test} />}
       </Section>
 
-      <Section header="Kommuner" footer={kommuner.length || settings.near ? undefined : 'Välj minst en kommun eller Nära dig, annars finns det inget att få notiser om.'}>
+      <Section header="Kommuner" footer={kommuner.length || watch.places.length || settings.near ? undefined : 'Välj minst en kommun eller en plats, annars finns det inget att få notiser om.'}>
         {kommuner.map((k) => (
           <Row
             key={k}
@@ -192,18 +193,7 @@ const NativeAlerts = () => {
         <Row icon={Plus} label="Lägg till kommun" tint onClick={() => setAdding(true)} />
       </Section>
 
-      {moreAvailable && (
-        <Section header="Nära dig" footer="Det som händer inom ett visst avstånd från en plats, utöver dina kommuner.">
-          <Row
-            icon={LocateFixed}
-           
-            label="Notiser nära dig"
-            value={settings.near ? radiusLabel(settings.near.radiusKm) : 'Av'}
-            onClick={() => setPicking(true)}
-            accessory={<span />}
-          />
-        </Section>
-      )}
+      {moreAvailable && <PlacesSection isPremium={isPremium} watch={watch} />}
 
       {available && (
         <>
@@ -257,13 +247,6 @@ const NativeAlerts = () => {
         </Section>
       )}
 
-      {picking && (
-        <RadiusPicker
-          value={settings.near}
-          onSave={(near) => { save({ ...settings, near }); setPicking(false); }}
-          onClose={() => setPicking(false)}
-        />
-      )}
       {adding && <AddKommun watched={kommuner} onAdd={(k) => addKommun(k)} onClose={() => setAdding(false)} />}
     </Screen>
   );

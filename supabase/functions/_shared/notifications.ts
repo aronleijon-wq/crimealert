@@ -41,9 +41,6 @@ export interface NotifySettings {
 /** Everything, as before settings existed. Users without a settings row get this. */
 export const DEFAULT_NOTIFY_SETTINGS: NotifySettings = { types: [...NOTIFY_TYPES], minRisk: 'low', themes: null, quiet: null, near: null };
 
-/** The distances to choose between for "near me", in km */
-export const NEAR_RADII_KM = [1, 2, 3, 5, 10, 15, 20, 30, 50];
-
 /** "800 m", "5 km" */
 export const radiusLabel = (km: number) => (km < 1 ? `${Math.round(km * 1000)} m` : `${km} km`);
 
@@ -149,6 +146,99 @@ export function nearEvent(settings: NotifySettings, event: { lat?: number | null
   return distanceKm(settings.near.lat, settings.near.lng, event.lat, event.lng) <= settings.near.radiusKm;
 }
 
+// ---- Mina platser: named places, each with its own distance (watch_places) ----
+
+export const PLACE_KINDS = [
+  { id: 'home', label: 'Hem' },
+  { id: 'work', label: 'Jobbet' },
+  { id: 'school', label: 'Skolan' },
+  { id: 'family', label: 'Familjen' },
+  { id: 'other', label: 'Annan plats' },
+] as const;
+export type PlaceKind = typeof PLACE_KINDS[number]['id'];
+
+/** Places a free account is notified about, and a Pro account */
+export const FREE_PLACES = 1;
+export const PRO_PLACES = 5;
+
+/** The distances to choose between for a place, in km */
+export const PLACE_RADII_KM = [0.5, 1, 2, 3, 5, 10, 20];
+
+export interface WatchPlace {
+  id: string;
+  label: string;
+  kind: PlaceKind;
+  lat: number;
+  lng: number;
+  radiusKm: number;
+  createdAt: string;
+}
+
+export interface WatchPlaceRow {
+  id: string;
+  label: string;
+  kind: string;
+  lat: number;
+  lng: number;
+  radius_km: number;
+  created_at: string;
+}
+
+const isPlaceKind = (value: string): value is PlaceKind => PLACE_KINDS.some((k) => k.id === value);
+
+export const placeKind = (kind: PlaceKind) => PLACE_KINDS.find((k) => k.id === kind) ?? PLACE_KINDS[PLACE_KINDS.length - 1];
+
+/** A place from a watch_places row, or null when it can't be used */
+export function placeFromRow(row: WatchPlaceRow): WatchPlace | null {
+  if (!row || typeof row.lat !== 'number' || typeof row.lng !== 'number' || !(row.radius_km > 0)) return null;
+  if (Math.abs(row.lat) > 90 || Math.abs(row.lng) > 180) return null;
+  return {
+    id: row.id,
+    label: (row.label ?? '').trim() || 'Min plats',
+    kind: isPlaceKind(row.kind) ? row.kind : 'other',
+    lat: row.lat,
+    lng: row.lng,
+    radiusKm: Math.min(row.radius_km, 50),
+    createdAt: row.created_at,
+  };
+}
+
+/** The places an account is notified about: the first one free, the first five with Pro */
+export function placesInUse(places: WatchPlace[], isPro: boolean): WatchPlace[] {
+  return [...places].sort((a, b) => a.createdAt.localeCompare(b.createdAt)).slice(0, isPro ? PRO_PLACES : FREE_PLACES);
+}
+
+export interface PlaceMatch {
+  label: string;
+  /** How far from the place, or null when Polisen only gave the town and the distance can't be told */
+  km: number | null;
+}
+
+// Polisen's position is often only the town's middle; only a geocoded street tells the distance
+const PRECISE = new Set(['street', 'exact']);
+
+/** The place an event is nearest to, among those it lies within, or null */
+export function placeForEvent(
+  places: WatchPlace[],
+  event: { lat?: number | null; lng?: number | null; location_precision?: string | null },
+): PlaceMatch | null {
+  if (typeof event.lat !== 'number' || typeof event.lng !== 'number') return null;
+  let best: { place: WatchPlace; km: number } | null = null;
+  for (const place of places) {
+    const km = distanceKm(place.lat, place.lng, event.lat, event.lng);
+    if (km <= place.radiusKm && (!best || km < best.km)) best = { place, km };
+  }
+  if (!best) return null;
+  return { label: best.place.label, km: PRECISE.has(event.location_precision ?? '') ? best.km : null };
+}
+
+/** "600 m från Hem", "2,4 km från Jobbet", or "nära Skolan" when the distance isn't known */
+export function placeDistance(match: PlaceMatch): string {
+  if (match.km === null) return `nära ${match.label}`;
+  if (match.km < 1) return `${Math.max(100, Math.round((match.km * 1000) / 100) * 100)} m från ${match.label}`;
+  return `${match.km.toLocaleString('sv-SE', { maximumFractionDigits: 1 })} km från ${match.label}`;
+}
+
 const stockholmHour = (nowMs: number) =>
   Number(new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', hourCycle: 'h23' }).format(nowMs));
 
@@ -198,6 +288,9 @@ export interface PushEvent {
   risk: string | null;
   time: string;
   original_type: string | null;
+  location_precision?: string | null;
+  /** The user's place the event is near, when it is near one */
+  near?: PlaceMatch | null;
 }
 
 export interface PushMessage {
@@ -232,7 +325,8 @@ export function buildPushMessage(events: PushEvent[]): PushMessage {
   if (sorted.length === 1) {
     const time = clockTime(first.time);
     return {
-      title: `${iconOf(first)} ${categoryOf(first)} · ${area}`,
+      // Near one of the user's places: the title says which, as that is why it matters
+      title: `${iconOf(first)} ${categoryOf(first)} · ${first.near ? placeDistance(first.near) : area}`,
       body: `${time ? `Kl. ${time} · ` : ''}Polisen rapporterar en ny händelse i ${area}. Tryck för att se den på kartan.`,
       url: `/karta?incident=${encodeURIComponent(first.id)}`,
       tag: `crimealert-incident-${first.id}`,
@@ -242,7 +336,7 @@ export function buildPushMessage(events: PushEvent[]): PushMessage {
 
   const lines = sorted.slice(0, 3).map((e) => {
     const time = clockTime(e.time);
-    return `${iconOf(e)} ${categoryOf(e)} · ${e.area || 'okänd plats'}${time ? ` (${time})` : ''}`;
+    return `${iconOf(e)} ${categoryOf(e)} · ${e.near ? placeDistance(e.near) : e.area || 'okänd plats'}${time ? ` (${time})` : ''}`;
   });
   if (sorted.length > 3) lines.push(`och ${sorted.length - 3} till`);
   return {
