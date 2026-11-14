@@ -50,6 +50,16 @@ function escapeHtml(value: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+const PRECISION_LABELS: Record<string, string> = {
+  exact: 'Exakt',
+  street: 'Gata',
+  district: 'Stadsdel',
+  area: 'Ort',
+  api: 'Polisens position (kommun eller län)',
+};
+
+const policeLink = (url?: string) => (!url ? '' : url.startsWith('http') ? url : `https://polisen.se${url}`);
+
 // Neutralize spreadsheet formula injection (=, +, -, @, tab, CR)
 function csvCell(value: unknown): string {
   let str = String(value ?? '');
@@ -57,8 +67,10 @@ function csvCell(value: unknown): string {
   return `"${str.replace(/"/g, '""')}"`;
 }
 
-function generateCSV(incidents: Incident[]): string {
-  const header = ['Tid', 'Typ', 'Titel', 'Område', 'Beskrivning', 'Risk', 'Status', 'Lat', 'Lng', 'Källa'];
+/** Admins also get Polisen's own kind, how exact the position is and the link to the event */
+function generateCSV(incidents: Incident[], admin = false): string {
+  const header = ['Tid', 'Typ', 'Titel', 'Område', 'Beskrivning', 'Risk', 'Status', 'Lat', 'Lng', 'Källa',
+    ...(admin ? ['Polisens sort', 'Platsnoggrannhet', 'Länk'] : [])];
   const rows = incidents.map((incident) => [
     csvCell(formatTime(incident.time)),
     csvCell(TYPE_LABELS[incident.type] || incident.type),
@@ -70,12 +82,18 @@ function generateCSV(incidents: Incident[]): string {
     csvCell(incident.lat),
     csvCell(incident.lng),
     csvCell(incident.source || ''),
+    ...(admin ? [
+      csvCell(incident.originalType || ''),
+      csvCell(PRECISION_LABELS[incident.locationPrecision ?? ''] || incident.locationPrecision || ''),
+      csvCell(policeLink(incident.url)),
+    ] : []),
   ]);
 
   return [header.map(csvCell).join(','), ...rows.map((row) => row.join(','))].join('\n');
 }
 
-function generatePDFHtml(incidents: Incident[], range: string): string {
+/** With texts (admins), each event is followed by Polisen's full description */
+function generatePDFHtml(incidents: Incident[], range: string, withText = false): string {
   const now = new Date().toLocaleString('sv-SE');
   const rows = incidents
     .map(
@@ -87,7 +105,8 @@ function generatePDFHtml(incidents: Incident[], range: string): string {
       <td>${escapeHtml(incident.area || '—')}</td>
       <td>${escapeHtml(RISK_LABELS[incident.risk] || incident.risk)}</td>
       <td>${escapeHtml(incident.status === 'active' ? 'Aktiv' : 'Avslutad')}</td>
-    </tr>`
+    </tr>${withText && incident.description ? `
+    <tr class="text"><td colspan="6">${escapeHtml(incident.description)}${incident.url ? `<div class="link">${escapeHtml(policeLink(incident.url))}</div>` : ''}</td></tr>` : ''}`
     )
     .join('');
 
@@ -99,7 +118,8 @@ function generatePDFHtml(incidents: Incident[], range: string): string {
   table{width:100%;border-collapse:collapse;margin-top:8px}
   th,td{border:1px solid #ddd;padding:5px 7px;text-align:left}
   th{background:#f4f4f4;font-weight:600;font-size:10px;text-transform:uppercase}
-  tr:nth-child(even){background:#fafafa}
+  tbody tr{page-break-inside:avoid}
+  ${withText ? 'tbody tr:not(.text){background:#f4f4f4;font-weight:600}tr.text td{white-space:pre-wrap;line-height:1.45;font-size:10.5px;padding-bottom:9px}.link{color:#777;font-size:9px;margin-top:4px}' : 'tr:nth-child(even){background:#fafafa}'}
 </style></head><body>
   <h1>CrimeAlert — Händelserapport</h1>
   <div class="meta">${escapeHtml(range)} · Exporterad ${escapeHtml(now)} · ${incidents.length} händelser</div>
@@ -118,8 +138,8 @@ function downloadFile(content: string, filename: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-function downloadPDF(incidents: Incident[], range: string) {
-  const html = generatePDFHtml(incidents, range);
+function downloadPDF(incidents: Incident[], range: string, withText = false) {
+  const html = generatePDFHtml(incidents, range, withText);
   const printWindow = window.open('', '_blank');
   if (!printWindow) return false;
   printWindow.document.write(html);
@@ -183,12 +203,12 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
     try {
       const dateStr = new Date().toISOString().slice(0, 10);
       if (format === 'csv') {
-        downloadFile(generateCSV(sourceIncidents), `crimealert-${range}-${dateStr}.csv`, 'text/csv;charset=utf-8');
+        downloadFile(generateCSV(sourceIncidents, isAdmin), `crimealert-${range}-${dateStr}.csv`, 'text/csv;charset=utf-8');
         toast({ title: 'CSV exporterad', description: `${sourceIncidents.length} händelser nedladdade.` });
         return;
       }
 
-      const ok = downloadPDF(sourceIncidents, rangeLabel);
+      const ok = downloadPDF(sourceIncidents, rangeLabel, isAdmin);
       if (!ok) {
         toast({ title: 'Popup blockerad', description: 'Tillåt popups för att skriva ut PDF.', variant: 'destructive' });
       } else {
