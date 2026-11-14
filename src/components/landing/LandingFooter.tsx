@@ -29,7 +29,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
       { to: '/statistik', label: 'Brottsstatistik' },
       { to: '#vanliga-fragor', label: 'Vanliga frågor' },
       { to: '/auth?mode=signup', label: 'Skapa konto' },
-      { to: 'mailto:crimealert.swe@gmail.com', label: 'Kontakta oss' },
+      { to: 'mailto:kontakt@crimealert.se', label: 'Kontakta oss' },
     ],
   },
   {

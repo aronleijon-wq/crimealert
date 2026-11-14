@@ -5,7 +5,7 @@
 import { PRICES, TRIAL_DAYS } from '@/components/account/plans';
 import { APP_STORE_URL } from '@/lib/appStoreLink';
 
-export const CONTACT_EMAIL = 'crimealert.swe@gmail.com';
+export const CONTACT_EMAIL = 'kontakt@crimealert.se';
 
 /** A piece of an answer: plain text, or a link (a route like /prisplan, a mailto: address or a web address). */
 export type FaqPart = string | { to: string; label: string };

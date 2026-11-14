@@ -66,7 +66,7 @@ describe('Header', () => {
     );
   });
 
-  it('brings the App Store banner back on the next visit after it was closed', async () => {
+  it('keeps the App Store banner closed once it was closed, also on later visits', async () => {
     const { fireEvent } = await import('@testing-library/react');
     const first = await renderHeader();
     fireEvent.click(screen.getByRole('button', { name: 'Stäng' }));
@@ -76,10 +76,12 @@ describe('Header', () => {
     const second = await renderHeader('/analysis');
     expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
     second.unmount();
-    // New visit
+    // A new visit: still closed on this device
     sessionStorage.clear();
-    await renderHeader();
-    expect(screen.getByRole('link', { name: /finns nu för iPhone/ })).toBeInTheDocument();
+    const third = await renderHeader();
+    expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
+    third.unmount();
+    localStorage.removeItem('ca-app-banner-closed');
   });
 
   it('keeps Rapportera, Chattar and Notiser under Mer', async () => {
