@@ -766,39 +766,6 @@ export type Database = {
         }
         Relationships: []
       }
-      watch_places: {
-        Row: {
-          created_at: string
-          id: string
-          kind: string
-          label: string
-          lat: number
-          lng: number
-          radius_km: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          kind?: string
-          label: string
-          lat: number
-          lng: number
-          radius_km: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          kind?: string
-          label?: string
-          lat?: number
-          lng?: number
-          radius_km?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
       weekly_summary_log: {
         Row: {
           sent_at: string
