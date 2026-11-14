@@ -92,6 +92,13 @@
       "when": 1794660634352,
       "tag": "0012_ask_log",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794674316221,
+      "tag": "0013_admin_reads_whole_archive",
+      "breakpoints": true
     }
   ]
 }
