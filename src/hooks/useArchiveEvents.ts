@@ -5,10 +5,11 @@ import type { Tables } from '@/integrations/supabase/types';
 import { getErrorMessage } from '@/lib/errors';
 
 /**
- * Fetches events from police_events_archive for a given number of days.
+ * Fetches events from police_events_archive for a given number of days, or all of them when
+ * days is null (the admin export; the database lets only admins read past 65 days).
  * Uses pagination to bypass the default 1000-row limit.
  */
-export function useArchiveEvents(days: number, enabled: boolean) {
+export function useArchiveEvents(days: number | null, enabled: boolean) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +20,7 @@ export function useArchiveEvents(days: number, enabled: boolean) {
     setError(null);
 
     try {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - days);
-      const cutoffStr = cutoff.toISOString();
+      const cutoffStr = days === null ? null : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
       const PAGE_SIZE = 1000;
       let allRows: Tables<'police_events_archive'>[] = [];
@@ -29,11 +28,10 @@ export function useArchiveEvents(days: number, enabled: boolean) {
       let hasMore = true;
 
       while (hasMore) {
-        const { data, error: fetchError } = await supabase
-          .from('police_events_archive')
-          .select('*')
-          .gte('time', cutoffStr)
+        const base = supabase.from('police_events_archive').select('*');
+        const { data, error: fetchError } = await (cutoffStr ? base.gte('time', cutoffStr) : base)
           .order('time', { ascending: false })
+          .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
 
         if (fetchError) throw fetchError;
