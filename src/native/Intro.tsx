@@ -126,7 +126,7 @@ const Intro = ({ onStart, onSkip }: { onStart: () => void; onSkip: () => void })
           </section>
         ))}
       </div>
-      <div className="shrink-0 px-6 pb-4 pt-2">
+      <div className="shrink-0 px-6 pb-3 pt-2">
         <div className="mb-5 flex justify-center gap-2" role="tablist" aria-label="Sidor">
           {PAGES.map((p, i) => (
             <button
@@ -143,7 +143,7 @@ const Intro = ({ onStart, onSkip }: { onStart: () => void; onSkip: () => void })
         <button
           type="button"
           onClick={() => { haptics.impact('medium'); if (last) onStart(); else go(page + 1); }}
-          className="flex h-[54px] w-full items-center justify-center rounded-[16px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:scale-[0.98] active:opacity-90"
+          className="flex h-[54px] w-full items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80"
         >
           {last ? 'Kom igång' : 'Fortsätt'}
         </button>

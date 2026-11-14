@@ -1,8 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellRing, Mail, Map, ShieldCheck, type LucideIcon } from 'lucide-react';
-import AreaPicker from '@/components/alerts/AreaPicker';
+import { BellRing, Check, Loader2, LocateFixed, Mail, Map, Plus, Search, ShieldCheck, X, type LucideIcon } from 'lucide-react';
 import { AppleIcon, GoogleIcon } from '@/components/account/SignInIcons';
+import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 import { useAuth } from '@/hooks/useAuth';
 import { useNativePush } from '@/hooks/useNativePush';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
@@ -11,34 +11,130 @@ import { nativeAuth, signInInApp } from '@/lib/nativeApp';
 import { hasAppDesign13 } from '@/lib/native';
 import Intro from './Intro';
 import { WELCOME_DONE_KEY } from './screens';
+import { Section } from './ui';
 
 /** The mark alone, without the app icon's square, as on the Pro page */
 const MARK = '/logo-mark.png';
+const MUTED = 'text-[rgba(235,235,245,0.6)]';
+const POPULAR = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Västerås', 'Örebro'];
 
 type Step = 'intro' | 'account' | 'areas' | 'notify';
 
 const Feature = ({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) => (
   <li className="flex items-start gap-4">
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center text-[hsl(var(--ca-text-2))]">
-      <Icon className="h-[22px] w-[22px]" strokeWidth={1.9} aria-hidden />
-    </span>
-    <span className="pt-0.5">
-      <span className="block text-[16px] font-semibold text-foreground">{title}</span>
-      <span className="mt-0.5 block text-[14px] leading-snug text-[hsl(var(--ca-text-2))]">{text}</span>
+    <Icon className="mt-0.5 h-[24px] w-[24px] shrink-0 text-[#ff453a]" strokeWidth={1.8} aria-hidden />
+    <span>
+      <span className="block text-[17px] font-semibold text-white">{title}</span>
+      <span className={`mt-0.5 block text-[15px] leading-snug ${MUTED}`}>{text}</span>
     </span>
   </li>
 );
 
-const primary = 'flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[hsl(var(--ca-red))] text-[17px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60';
-const secondary = 'flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-panel-2))] text-[17px] font-semibold text-foreground transition active:scale-[0.98] disabled:opacity-60';
-const quiet = 'h-11 w-full text-[15px] font-medium text-[hsl(var(--ca-text-2))]';
+// One look for every step: the same buttons, the same red, the same heading
+const primary = 'flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white transition active:opacity-80 disabled:bg-[#1c1c1e] disabled:text-[rgba(235,235,245,0.3)]';
+const secondary = 'flex h-[54px] w-full items-center justify-center gap-2.5 rounded-[14px] bg-[#1c1c1e] text-[17px] font-semibold text-white transition active:opacity-70 disabled:opacity-40';
+const apple = 'flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-white text-[17px] font-semibold text-black transition active:opacity-80 disabled:opacity-40';
+const quiet = `h-11 w-full text-[17px] ${MUTED} active:opacity-50`;
 
-const Screen = ({ children, actions }: { children: ReactNode; actions: ReactNode }) => (
-  <div className="flex h-full flex-col">
-    <div className="flex-1 overflow-y-auto px-6 pt-6">{children}</div>
-    <div className="space-y-2 px-6 pb-4 pt-3">{actions}</div>
+const Heading = ({ picture, title, text }: { picture?: ReactNode; title: string; text?: ReactNode }) => (
+  <div className="flex flex-col items-center text-center">
+    {picture && <div className="mb-6">{picture}</div>}
+    <h1 className="text-[30px] font-bold leading-[1.12] tracking-[-0.02em] text-white">{title}</h1>
+    {text && <p className={`mx-auto mt-3 max-w-[330px] text-[17px] leading-[1.4] ${MUTED}`}>{text}</p>}
   </div>
 );
+
+/** A step: its content, centred in the space or from the top, and the buttons at the bottom */
+const Screen = ({ children, actions, center = false }: { children: ReactNode; actions: ReactNode; center?: boolean }) => (
+  <div className="flex h-full flex-col">
+    <div className={`flex flex-1 flex-col overflow-y-auto px-6 ${center ? 'justify-center pb-6' : 'pt-12'}`}>{children}</div>
+    <div className="space-y-2.5 px-6 pb-3 pt-3">{actions}</div>
+  </div>
+);
+
+/** Which kommuner to watch, the iPhone's way: a search field, then rows to tick */
+const KommunPicker = ({ kommuner, onAdd, onRemove }: { kommuner: string[]; onAdd: (k: string) => void; onRemove: (k: string) => void }) => {
+  const [query, setQuery] = useState('');
+  const [near, setNear] = useState<string[] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const results = useMemo(() => searchKommuner(query), [query]);
+
+  const toggle = (k: string) => (kommuner.includes(k) ? onRemove(k) : onAdd(k));
+  const locate = () => {
+    if (!('geolocation' in navigator)) { setLocateError('Telefonen kan inte dela din position.'); return; }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setNear(nearestKommuner(pos.coords.latitude, pos.coords.longitude)); setLocating(false); },
+      () => { setLocateError('Kunde inte hämta din position. Sök på din kommun i stället.'); setLocating(false); },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 10 * 60 * 1000 },
+    );
+  };
+
+  const row = (k: string, detail?: string) => {
+    const on = kommuner.includes(k);
+    return (
+      <button key={k} type="button" onClick={() => { toggle(k); setQuery(''); }} aria-pressed={on} className="ios-row flex w-full items-center pl-4 text-left active:bg-[#2c2c2e]">
+        <span className="ios-row-body flex min-h-[48px] flex-1 items-center gap-3 py-2.5 pr-4">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[17px] text-white">{k}</span>
+            {detail && <span className={`block text-[13px] ${MUTED}`}>{detail}</span>}
+          </span>
+          {on
+            ? <Check className="h-5 w-5 shrink-0 text-[#ff453a]" strokeWidth={2.5} aria-label="Bevakas" />
+            : <Plus className="h-5 w-5 shrink-0 text-[rgba(235,235,245,0.3)]" strokeWidth={2.2} aria-hidden />}
+        </span>
+      </button>
+    );
+  };
+
+  const suggestions = (near ?? POPULAR).filter((k) => !kommuner.includes(k)).slice(0, near ? 3 : 4);
+
+  return (
+    <div className="-mx-4 mt-6">
+      <div className="mx-4 flex h-10 items-center gap-1.5 rounded-[10px] bg-[rgba(118,118,128,0.24)] px-2.5">
+        <Search className={`h-[18px] w-[18px] shrink-0 ${MUTED}`} aria-hidden />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Sök kommun"
+          aria-label="Sök kommun att bevaka"
+          enterKeyHint="search"
+          className="min-w-0 flex-1 bg-transparent text-[17px] text-white outline-none placeholder:text-[rgba(235,235,245,0.6)] [&::-webkit-search-cancel-button]:hidden"
+        />
+        {query && (
+          <button type="button" onClick={() => setQuery('')} aria-label="Rensa" className="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(235,235,245,0.6)]">
+            <X className="h-3 w-3 text-black" strokeWidth={3} aria-hidden />
+          </button>
+        )}
+      </div>
+
+      {query.trim() ? (
+        results.length
+          ? <Section>{results.map((k) => row(k))}</Section>
+          : <p className={`mt-8 text-center text-[15px] ${MUTED}`}>Ingen kommun heter så</p>
+      ) : (
+        <>
+          {kommuner.length > 0 && <Section header="Du bevakar">{kommuner.map((k) => row(k))}</Section>}
+          <Section header={near ? 'Nära dig' : 'Förslag'} footer={locateError ?? undefined}>
+            {!near && (
+              <button type="button" onClick={locate} disabled={locating} className="ios-row flex w-full items-center gap-3 pl-4 text-left active:bg-[#2c2c2e]">
+                <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center text-[#ff453a]">
+                  {locating ? <Loader2 className="h-[20px] w-[20px] animate-spin" aria-hidden /> : <LocateFixed className="h-[21px] w-[21px]" strokeWidth={1.9} aria-hidden />}
+                </span>
+                <span className="ios-row-body flex min-h-[48px] flex-1 items-center py-2.5 pr-4 text-[17px] text-[#ff453a]">Hitta kommuner nära mig</span>
+              </button>
+            )}
+            {suggestions.map((k) => row(k))}
+            {near && suggestions.length === 0 && <p className={`px-4 py-3 text-[15px] ${MUTED}`}>Du bevakar redan kommunerna nära dig.</p>}
+          </Section>
+        </>
+      )}
+    </div>
+  );
+};
 
 /**
  * The first thing the app shows, once: what CrimeAlert is, an account, which kommuner to watch
@@ -84,8 +180,6 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
     finish();
   };
 
-  const steps: Step[] = user ? ['intro', 'areas', 'notify'] : ['intro', 'account', 'areas', 'notify'];
-
   // From app version 1.3 the welcome opens with pages to swipe through (Intro)
   const swipeIntro = step === 'intro' && hasAppDesign13();
 
@@ -102,13 +196,11 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
           </>
         }
       >
-        <div className="flex flex-col items-center pt-6 text-center">
-          <img src={MARK} alt="" className="h-24 w-24" width={96} height={96} />
-          <h1 className="mt-8 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Se vad som händer där du bor</h1>
-          <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-            Polisens händelser i hela Sverige, på en karta och som notiser till din telefon.
-          </p>
-        </div>
+        <Heading
+          picture={<img src={MARK} alt="" className="h-24 w-24" width={96} height={96} />}
+          title="Se vad som händer där du bor"
+          text="Polisens händelser i hela Sverige, på en karta och som notiser till din telefon."
+        />
         <ul className="mt-10 space-y-6">
           <Feature icon={Map} title="Karta över hela Sverige" text="Polisens händelser, VMA och trafik, uppdaterat var femte minut." />
           <Feature icon={BellRing} title="Notiser för dina kommuner" text="Välj var du vill hålla koll, så hör vi av oss när något händer." />
@@ -119,11 +211,12 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
   } else if (step === 'account') {
     content = (
       <Screen
+        center
         actions={
           <>
             {appSignIn && (
               <>
-                <button type="button" disabled={busy !== null} onClick={() => signIn('apple')} className="flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-white text-[17px] font-semibold text-black transition active:scale-[0.98] disabled:opacity-60">
+                <button type="button" disabled={busy !== null} onClick={() => signIn('apple')} className={apple}>
                   <AppleIcon /> {busy === 'apple' ? 'Vänta…' : 'Fortsätt med Apple'}
                 </button>
                 <button type="button" disabled={busy !== null} onClick={() => signIn('google')} className={secondary}>
@@ -135,40 +228,44 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
               <Mail className="h-5 w-5" aria-hidden /> Fortsätt med e-post
             </button>
             <button type="button" className={quiet} onClick={finish}>Inte nu</button>
+            <p className={`px-4 text-center text-[12px] leading-[1.45] ${MUTED}`}>
+              Genom att fortsätta godkänner du våra{' '}
+              <button type="button" className="underline" onClick={() => { finish(); navigate('/villkor'); }}>användarvillkor</button>.
+              {' '}Vi skickar ibland nyheter via e-post, och du kan avregistrera dig när du vill.
+            </p>
           </>
         }
       >
-        <h1 className="pt-10 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Skapa ditt konto</h1>
-        <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-          Det är gratis. Med ett konto väljer du kommuner att bevaka och får en notis när något händer där.
-        </p>
-        {error && <p role="alert" className="mt-5 rounded-xl bg-[hsl(var(--ca-red)/0.12)] px-4 py-3 text-[14px] text-[hsl(var(--ca-red))]">{error}</p>}
-        <p className="mt-6 text-[13px] leading-relaxed text-[hsl(var(--ca-text-3))]">
-          Genom att skapa ett konto godkänner du våra{' '}
-          <button type="button" className="underline" onClick={() => { finish(); navigate('/villkor'); }}>användarvillkor</button>.
-          {' '}Vi skickar ibland nyheter om CrimeAlert via e-post, och du kan avregistrera dig när du vill.
-        </p>
+        <Heading
+          picture={<img src={MARK} alt="" className="h-20 w-20" width={80} height={80} />}
+          title="Skapa ditt konto"
+          text="Det är gratis. Välj kommuner att bevaka och få en notis när något händer där."
+        />
+        {error && <p role="alert" className="mt-6 rounded-[12px] bg-[rgba(255,69,58,0.14)] px-4 py-3 text-center text-[15px] text-[#ff6961]">{error}</p>}
       </Screen>
     );
   } else if (step === 'areas') {
+    const next = () => (push.available === false ? finish() : setStep('notify'));
     content = (
       <Screen
         actions={
-          <button type="button" className={primary} onClick={() => (push.available === false ? finish() : setStep('notify'))} disabled={!user}>
-            {kommuner.length ? 'Fortsätt' : 'Hoppa över'}
-          </button>
+          <>
+            <button type="button" className={primary} onClick={next} disabled={!user || kommuner.length === 0}>Fortsätt</button>
+            {/* Kept in its place while hidden, so the button above doesn't move */}
+            <button type="button" className={`${quiet} ${kommuner.length ? 'invisible' : ''}`} onClick={next} tabIndex={kommuner.length ? -1 : 0}>Hoppa över</button>
+          </>
         }
       >
-        <h1 className="pt-10 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Vilka kommuner vill du bevaka?</h1>
-        <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">Du kan ändra det när du vill under {hasAppDesign13() ? 'Profil' : 'Notiser'}.</p>
-        <div className="mt-6">
-          <AreaPicker kommuner={kommuner} loading={loading} recentCounts={{}} onAdd={addKommun} onRemove={removeKommun} />
-        </div>
+        <Heading title="Vilka kommuner vill du bevaka?" text={`Där du bor, jobbar eller där familjen finns. Du kan ändra det under ${hasAppDesign13() ? 'Profil' : 'Notiser'}.`} />
+        {loading
+          ? <div className="mt-8 flex justify-center"><Loader2 className={`h-6 w-6 animate-spin ${MUTED}`} aria-label="Hämtar dina kommuner" /></div>
+          : <KommunPicker kommuner={kommuner} onAdd={addKommun} onRemove={removeKommun} />}
       </Screen>
     );
   } else {
     content = (
       <Screen
+        center
         actions={
           <>
             <button type="button" className={primary} disabled={busy !== null} onClick={enableNotifications}>
@@ -178,15 +275,13 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
           </>
         }
       >
-        <div className="flex flex-col items-center pt-14 text-center">
-          <BellRing className="h-14 w-14 text-[hsl(var(--ca-red))]" strokeWidth={1.6} aria-hidden />
-          <h1 className="mt-8 text-[30px] font-bold leading-[1.1] tracking-tight text-foreground">Få en notis när något händer</h1>
-          <p className="mt-3 text-[16px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-            {kommuner.length
-              ? `Vi hör av oss när Polisen rapporterar något i ${kommuner.length === 1 ? kommuner[0] : 'dina kommuner'}.`
-              : 'Vi hör av oss när Polisen rapporterar något i kommunerna du bevakar.'}
-          </p>
-        </div>
+        <Heading
+          picture={<BellRing className="h-16 w-16 text-[#ff453a]" strokeWidth={1.5} aria-hidden />}
+          title="Få en notis när något händer"
+          text={kommuner.length
+            ? `Vi hör av oss när Polisen rapporterar något i ${kommuner.length === 1 ? kommuner[0] : 'dina kommuner'}.`
+            : 'Vi hör av oss när Polisen rapporterar något i kommunerna du bevakar.'}
+        />
       </Screen>
     );
   }
@@ -199,11 +294,6 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
       className="ca-dark fixed inset-0 z-[3000] flex flex-col bg-[hsl(var(--ca-base))] text-foreground"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {!swipeIntro && <div className="flex justify-center gap-1.5 pt-3" aria-hidden>
-        {steps.map((s) => (
-          <span key={s} className={`h-1.5 rounded-full transition-all ${s === step ? 'w-6 bg-white' : 'w-1.5 bg-white/25'}`} />
-        ))}
-      </div>}
       <div className="min-h-0 flex-1">{content}</div>
     </div>
   );
