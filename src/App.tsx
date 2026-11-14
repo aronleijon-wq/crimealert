@@ -57,6 +57,7 @@ const Brottsatlas = lazyPage(() => import("@/pages/Brottsatlas"));
 const WebChatList = lazyPage(() => import("@/pages/WebChats").then((m) => ({ default: m.WebChatList })));
 const WebChatRoom = lazyPage(() => import("@/pages/WebChats").then((m) => ({ default: m.WebChatRoom })));
 const Rapportera = lazyPage(() => import("./pages/Rapportera"));
+const Fraga = lazyPage(() => import("./pages/Fraga"));
 
 /** The iPhone app shows the pages in its own frame, with tabs; the website shows them as they are */
 const InApp = ({ children }: { children: ReactNode }) => (isNativeApp() ? <AppShell>{children}</AppShell> : <>{children}</>);
@@ -114,6 +115,7 @@ const App = () => (
           <Route path="/brottsatlas" element={isNativeApp() ? <Navigate to="/analysis?vy=atlas" replace /> : <Brottsatlas />} />
           <Route path="/chattar" element={isNativeApp() ? <NativeChats /> : <WebChatList />} />
           <Route path="/rapportera" element={isNativeApp() ? <NativeReport /> : <Rapportera />} />
+          <Route path="/fraga" element={<Fraga />} />
           <Route path="/bjud-in" element={isNativeApp() ? <NativeInvite /> : <Navigate to="/installningar#bjud-in" replace />} />
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/sekretesspolicy" element={<Sekretesspolicy />} />

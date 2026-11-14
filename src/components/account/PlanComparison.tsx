@@ -1,4 +1,4 @@
-import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Zap, type LucideIcon } from 'lucide-react';
+import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
@@ -9,6 +9,7 @@ const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: Newspaper, text: 'Flöde med händelser och nyheter från SVT med flera' },
   { icon: Bell, text: 'Pushnotiser för dina kommuner (med gratis konto, 15 min fördröjning)' },
   { icon: MessageCircle, text: 'Gilla och kommentera (med gratis konto)' },
+  { icon: Sparkles, text: 'Fråga AI om brotten där du bor: 3 frågor per dag (med gratis konto)' },
 ];
 
 type Cell = boolean | string;
@@ -34,6 +35,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
       { feature: 'Pushnotiser för dina kommuner', free: 'Med konto, efter 15 min', pro: 'Direkt' },
       { feature: 'Välj vilka händelser du får notiser om', free: 'Med konto', pro: true },
       { feature: 'Gilla och kommentera', free: 'Med konto', pro: true },
+      { feature: 'Fråga AI om brotten där du bor', free: '3 frågor per dag, med konto', pro: 'Obegränsat' },
     ],
   },
   {

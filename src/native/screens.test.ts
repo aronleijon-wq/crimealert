@@ -27,7 +27,7 @@ describe('app screens', () => {
   });
 
   it('has Rapportera as a tab of its own from 1.3, and Notiser under Profil', () => {
-    expect(TABS_13.map((t) => t.label)).toEqual(['Karta', 'Flöde', 'Rapportera', 'Statistik', 'Profil']);
+    expect(TABS_13.map((t) => t.label)).toEqual(['Karta', 'Flöde', 'Rapportera', 'Fråga AI', 'Statistik', 'Profil']);
     expect(screenFor('/rapportera', TABS_13)).toEqual({ title: 'Rapportera', tab: true, tabBar: true, largeTitle: true });
     // Notiser opened from Profil: a way back, and still its large title
     expect(screenFor('/alerts', TABS_13)).toEqual({ title: 'CrimeAlert', tab: false, tabBar: true, largeTitle: true });
