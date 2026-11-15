@@ -7,7 +7,7 @@ import { SWEDISH_MUNICIPALITIES } from './data/municipalities.ts';
 import { KOMMUN_POPULATION, POPULATION_YEAR } from './data/population.ts';
 import { kommunMatcher } from './notifications.ts';
 import { THEMES, themeOf } from './themes.ts';
-import { BRA_LATEST, BRA_TYPE_IDS } from './braStats.ts';
+import { STAT_TYPE_IDS } from './kommunStats.ts';
 
 export const FREE_QUESTIONS_PER_DAY = 3;
 /** "Obegränsat" for Pro, but not without end */
@@ -144,7 +144,7 @@ export const ASK_TOOLS = [
   },
   {
     name: 'kommun_statistik',
-    description: `Brå:s statistik över alla anmälda brott i en kommun under ${BRA_LATEST}, per 100 000 invånare, för 16 sorters brott (bland annat totalt, våldsbrott, bostadsinbrott inklusive källare, vind och fritidshus, stöld, skadegörelse, narkotika, personrån, sexualbrott). För varje sort: kommunens nivå, året innan, hela landets nivå, hur många gånger rikets nivå det är och kommunens plats bland alla kommuner. Använd för frågor om hur mycket brott det är i en kommun, eller hur den står sig mot riket.`,
+    description: 'Statistik för en kommun per 100 000 invånare: Brå:s alla anmälda brott 2025 för 16 sorter (bland annat totalt, våldsbrott, bostadsinbrott inklusive källare, vind och fritidshus, stöld, skadegörelse, narkotika, personrån, bilbrott), och räddningstjänstens insatser (MCF) till bränder i byggnad och trafikolyckor. För varje sort: kommunens nivå, förändringen mot ett tidigare år, hela landets nivå, hur många gånger rikets nivå det är och kommunens plats bland alla kommuner. Använd för frågor om hur mycket brott eller bränder det är i en kommun, eller hur den står sig mot riket.',
     strict: true,
     input_schema: {
       type: 'object' as const,
@@ -157,12 +157,12 @@ export const ASK_TOOLS = [
   },
   {
     name: 'sverige_statistik',
-    description: `Rangordnar alla kommuner efter Brå:s anmälda brott under ${BRA_LATEST} per 100 000 invånare, för en sort, högst eller lägst först, och ger hela landets nivå. Använd för frågor om var i Sverige ett brott är vanligast eller ovanligast, till exempel var det är minst bostadsinbrott per invånare.`,
+    description: 'Rangordnar alla kommuner per 100 000 invånare för en sort, högst eller lägst först, och ger hela landets nivå: Brå:s anmälda brott 2025, eller räddningstjänstens insatser till bränder i byggnad och trafikolyckor. Använd för frågor om var i Sverige något är vanligast eller ovanligast, till exempel var det är minst bostadsinbrott per invånare.',
     strict: true,
     input_schema: {
       type: 'object' as const,
       properties: {
-        sort: { type: 'string', enum: BRA_TYPE_IDS, description: 'Vilken sorts brott.' },
+        sort: { type: 'string', enum: STAT_TYPE_IDS, description: 'Vilken sort: ett brott enligt Brå, eller byggnadsbrander och trafikolyckor_raddningsinsats från räddningstjänsten.' },
         ordning: { type: 'string', enum: ['hogst', 'lagst'], description: '"hogst" eller "lagst" först.' },
         min_invanare: { type: 'integer', description: 'Ta bara med kommuner med minst så många invånare, 0 för alla. Använd till exempel 20000 eller 50000 för jämförbara svar.' },
       },
@@ -276,7 +276,7 @@ export function askSystem(now: number): string {
 
 Hämta alltid uppgifter med verktygen innan du svarar på en fråga om brott eller händelser, och svara bara utifrån det verktygen ger.
 
-Du har två sorters underlag. Brå:s statistik (kommun_statistik, sverige_statistik) räknar alla anmälda brott under ett helt år, per kommun och invånare; den visar nivån, alltså var det är mycket eller lite brott, och är det rätta underlaget för frågor som "var är det minst inbrott per invånare" eller "är det mycket brott i X". Polisens händelser (kommun_events, sweden_ranking) är ett urval av vad som hänt de senaste dagarna och veckorna; de visar vad som händer just nu, var och när. Använd båda när frågan gäller både läget nu och nivån, och säg vilken källa en siffra kommer från. Frågar någon per 1 000 invånare, dela talen per 100 000 med 100. Finns inget svar där, säg det rakt ut. Polisens händelser finns från den 28 september 2026; Brå:s statistik gäller hela år.
+Du har två sorters underlag. Statistiken (kommun_statistik, sverige_statistik) räknar alla anmälda brott under ett helt år enligt Brå, och räddningstjänstens insatser till bränder och trafikolyckor, per kommun och invånare; den visar nivån, alltså var det är mycket eller lite brott, och är det rätta underlaget för frågor som "var är det minst inbrott per invånare" eller "är det mycket brott i X". Polisens händelser (kommun_events, sweden_ranking) är ett urval av vad som hänt de senaste dagarna och veckorna; de visar vad som händer just nu, var och när. Använd båda när frågan gäller både läget nu och nivån, och säg vilken källa en siffra kommer från. Frågar någon per 1 000 invånare, dela talen per 100 000 med 100. Finns inget svar där, säg det rakt ut. Polisens händelser finns från den 28 september 2026; Brå:s statistik gäller hela år.
 
 Tänk igenom vad frågan egentligen kräver innan du svarar, och hämta det som behövs för att dra en slutsats, gärna med flera verktygsanrop. Jämför när det hjälper: med perioden innan, med andra kommuner och med hela landet per invånare. Frågar någon var något är vanligast eller ovanligast, räkna per invånare med sweden_ranking och välj en rimlig minsta kommunstorlek, så att en liten kommun med en enda händelse inte avgör svaret. Säg vad siffrorna pekar på och hur säkert det är; med få händelser, säg att skillnaderna kan vara slumpen.
 

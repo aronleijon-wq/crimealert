@@ -12,7 +12,7 @@ import Stripe from 'https://esm.sh/stripe@18.5.0';
 import {
   ASK_TOOLS, askSystem, betterLeft, cleanHistory, kommunEvents, kommunNamed, modelTier, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
 } from '../_shared/ask.ts';
-import { braKommun, braRanking } from '../_shared/braStats.ts';
+import { kommunStats, statsRanking } from '../_shared/kommunStats.ts';
 import { isFreePremiumEmail, isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 
 const corsHeaders = {
@@ -89,9 +89,9 @@ async function runTool(name: string, input: Record<string, unknown>, now: number
   }
   if (name === 'kommun_statistik') {
     const kommun = kommunNamed(String(input.kommun ?? ''));
-    return JSON.stringify(kommun ? braKommun(kommun) : { error: `Ingen svensk kommun heter "${String(input.kommun ?? '')}".` });
+    return JSON.stringify(kommun ? kommunStats(kommun) : { error: `Ingen svensk kommun heter "${String(input.kommun ?? '')}".` });
   }
-  if (name === 'sverige_statistik') return JSON.stringify(braRanking(input));
+  if (name === 'sverige_statistik') return JSON.stringify(statsRanking(input));
   return JSON.stringify({ error: `Okänt verktyg: ${name}` });
 }
 
