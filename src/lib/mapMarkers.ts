@@ -32,6 +32,50 @@ export const isWithinDays = (timeStr: string, days: number) => {
 export const getJitteredPositions = (items: Incident[]) =>
   items.map((item) => (item.source === 'Medborgarrapport' ? { lat: item.lat, lng: item.lng } : spreadPoint(item.id, item.lat, item.lng)));
 
+/** The largest hit area, as a radius in pixels: 44 px across on a phone (Apple's minimum), 28 on a computer */
+export const MAX_HIT_RADIUS = { touch: 22, mouse: 14 } as const;
+
+/**
+ * How far out each marker can be tapped, in pixels: as large as there is room for, up to
+ * maxRadius, never smaller than the dot itself, and never more than half the way to the nearest
+ * other marker, so two markers never claim the same tap. Points are the markers' positions on
+ * screen; neighbours are found on a grid, so a map with thousands of markers stays quick.
+ */
+export function hitRadii(points: { x: number; y: number }[], dotRadii: number[], maxRadius: number): number[] {
+  const cell = maxRadius * 2;
+  const grid = new Map<string, number[]>();
+  points.forEach((p, i) => {
+    const key = `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
+    const list = grid.get(key);
+    if (list) list.push(i);
+    else grid.set(key, [i]);
+  });
+  return points.map((p, i) => {
+    let nearest = Infinity;
+    const cx = Math.floor(p.x / cell);
+    const cy = Math.floor(p.y / cell);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (const j of grid.get(`${cx + dx}:${cy + dy}`) ?? []) {
+          if (j === i) continue;
+          const d = Math.hypot(points[j].x - p.x, points[j].y - p.y);
+          if (d < nearest) nearest = d;
+        }
+      }
+    }
+    return Math.max(dotRadii[i], Math.min(maxRadius, nearest / 2));
+  });
+}
+
+/** Sets a marker's tap area (the .marker-hit ring markerHtml draws) to a radius in pixels */
+export function setHitArea(el: HTMLElement | null | undefined, radius: number) {
+  const hit = el?.querySelector<HTMLElement>('.marker-hit');
+  if (!hit) return;
+  const d = `${Math.round(radius * 2)}px`;
+  hit.style.width = d;
+  hit.style.height = d;
+}
+
 const isMissingPersonIncident = (incident: Incident) => {
   const haystack = `${incident.title} ${incident.description} ${incident.originalType || ''}`.toLowerCase();
   return /försvunnen|saknad|borttappad|efterlyst person|person försvunnen/.test(haystack);
@@ -73,6 +117,7 @@ export function markerHtml(incident: Incident, touch: boolean, pulse = shouldInc
     return {
       html: `
         <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+          <div class="marker-hit" style="position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);border-radius:50%;"></div>
           ${shouldPulse ? `<div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>` : ''}
           <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
           <span style="position:absolute;z-index:3;display:flex;pointer-events:none;">${svgIcon('eye', touch ? 13 : 10, '#fff', 2.5)}</span>
@@ -88,6 +133,7 @@ export function markerHtml(incident: Incident, touch: boolean, pulse = shouldInc
   return {
     html: `
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
+        <div class="marker-hit" style="position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);border-radius:50%;"></div>
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
         <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>

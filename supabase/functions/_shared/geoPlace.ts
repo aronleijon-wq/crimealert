@@ -247,3 +247,62 @@ export function spreadPoint(id: string, lat: number, lng: number, minM = SPREAD_
   const dLng = (d * Math.sin(angle)) / (111_320 * Math.cos((lat * Math.PI) / 180));
   return { lat: lat + dLat, lng: lng + dLng };
 }
+
+// ---- The gazetteer: Sweden's named places per kommun (data/places.ts, from OpenStreetMap) ----
+
+/** A place in the gazetteer: name, lat, lng and kind (c town, v village, h hamlet, s district, q square, i island, a industrial or retail area) */
+export type GazetteerPlace = [string, number, number, string];
+
+// Words after a name that only say what kind of place it is ("Lugnviks industriområde")
+const GENERIC = /\s+(industriområde|handelsområde|centrum|hamn|park|strand|by|gård|torg|kurva)$/;
+
+/** Names in a kommun's gazetteer, by their lower-case form */
+export function gazetteerIndex(places: GazetteerPlace[] | undefined): Map<string, GazetteerPlace> {
+  const index = new Map<string, GazetteerPlace>();
+  for (const p of places ?? []) {
+    const key = norm(p[0]);
+    // The first of a name is the biggest kind (the data lists towns before hamlets)
+    if (!index.has(key)) index.set(key, p);
+  }
+  return index;
+}
+
+/** The gazetteer's place for a name in this kommun, also without a trailing kind word */
+export function gazetteerLookup(name: string, index: Map<string, GazetteerPlace>): GazetteerPlace | null {
+  const key = norm(name);
+  return index.get(key) ?? index.get(key.replace(GENERIC, '').replace(/s$/, '')) ?? index.get(key.replace(GENERIC, '')) ?? null;
+}
+
+/**
+ * Places from the kommun's gazetteer named anywhere in the text, also without "i" or "vid"
+ * before them ("Polis åker till butiken, som ligger i Stenstan" and "Stenstan: bråk utomhus").
+ * Only capitalised names of four letters or more, so ordinary words aren't taken for places.
+ */
+export function gazetteerInText(text: string, index: Map<string, GazetteerPlace>, kommun?: string | null): PlaceCandidate[] {
+  if (!text || !index.size) return [];
+  const own = kommun ? norm(kommun) : '';
+  const out: PlaceCandidate[] = [];
+  const seen = new Set<string>();
+  const words = [...text.matchAll(/[A-ZÅÄÖÉ][a-zåäöéü]+(?:-[A-ZÅÄÖÉ]?[a-zåäöéü]+)?/g)];
+  for (let i = 0; i < words.length; i++) {
+    // The longest name first: "Västra Hamnen" before "Västra"
+    for (let n = 3; n >= 1; n--) {
+      const group = words.slice(i, i + n);
+      if (group.length < n) continue;
+      // Only words next to each other in the text
+      const start = group[0].index ?? 0;
+      const last = group[n - 1];
+      const phrase = text.slice(start, (last.index ?? 0) + last[0].length);
+      if (n > 1 && !/^[^\n.,;:]+$/.test(phrase)) continue;
+      const key = norm(phrase);
+      if (key.length < 4 || key === own || seen.has(key) || NOT_PLACES.has(key) || ADJECTIVES.has(key)) continue;
+      if (index.has(key)) {
+        seen.add(key);
+        out.push({ name: index.get(key)![0], kind: 'area' });
+        i += n - 1;
+        break;
+      }
+    }
+  }
+  return out;
+}

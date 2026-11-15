@@ -3,7 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '../_shared/archiveDiff.ts';
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
-import { distanceKm, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank, type GeocodeHit, type PlaceCandidate } from '../_shared/geoPlace.ts';
+import {
+  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
+} from '../_shared/geoPlace.ts';
+import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
+import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -678,16 +683,36 @@ function normalizeLocationText(text: string): string {
     .trim();
 }
 
+// A kommun's centralort (data/places.ts, from OpenStreetMap), by the kommun's name in lower case
+const CENTRALORT = new Map(Object.entries(KOMMUN_CENTRES).map(([kommun, [, lat, lng]]) => [kommun.toLowerCase(), { lat, lng }]));
+// The gazetteer's names per kommun, indexed when first needed
+const GAZETTEERS = new Map<string, ReturnType<typeof gazetteerIndex>>();
+const gazetteerFor = (kommun: string) => {
+  let index = GAZETTEERS.get(kommun);
+  if (!index) {
+    index = gazetteerIndex((PLACES as Record<string, GazetteerPlace[]>)[kommun]);
+    GAZETTEERS.set(kommun, index);
+  }
+  return index;
+};
+
+/** A kommun is placed at its centralort, where events happen, not its geographic middle */
+function atCentralort(key: string, entry: LocationEntry): LocationEntry {
+  if (entry.type !== 'kommun') return entry;
+  const centre = CENTRALORT.get(key);
+  return centre ? { ...entry, lat: centre.lat, lng: centre.lng } : entry;
+}
+
 // ─── Lookup from Swedish reference DB ─────────────────────────────────────────
 function lookupSwedishLocation(locationName: string): LocationEntry | null {
   const lower = locationName.toLowerCase().trim();
   
   // 1. Try exact match with original text (important for "Kronobergs län" etc.)
-  if (SWEDISH_LOCATIONS[lower]) return SWEDISH_LOCATIONS[lower];
+  if (SWEDISH_LOCATIONS[lower]) return atCentralort(lower, SWEDISH_LOCATIONS[lower]);
   
   // 2. Try normalized (strips "kommun", "stad", prepositions — but NOT "län")
   const normalized = normalizeLocationText(locationName);
-  if (SWEDISH_LOCATIONS[normalized]) return SWEDISH_LOCATIONS[normalized];
+  if (SWEDISH_LOCATIONS[normalized]) return atCentralort(normalized, SWEDISH_LOCATIONS[normalized]);
   
   // 3. Try adding "s län" suffix for county names (e.g. "Kronoberg" → "kronobergs län")
   const asLan = normalized + 's län';
@@ -816,8 +841,9 @@ async function searchNominatim(query: string): Promise<GeocodeHit[] | null> {
   }
 }
 
-// Lookups per refinement: Nominatim allows one a second
+// Lookups per refinement: Nominatim allows one a second, Apple Maps 25 000 a day
 const MAX_LOOKUPS_PER_RUN = 20;
+const MAX_APPLE_LOOKUPS_PER_RUN = 60;
 // Events this new are placed; older ones keep the place they have
 const REFINE_DAYS = 3;
 
@@ -834,11 +860,14 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     .sort((a, b) => parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time));
   if (!todo.length) return;
 
-  // What each event names, in its kommun (or, for an event only placed in a län, any kommun it names)
+  // What each event names: the places the text points at, and the kommun's own places named in it
   const plans = todo.map((inc) => {
     const kommun = kommunOf(inc);
     const text = `${inc.description || ''}`;
-    return { inc, kommun, candidates: placeCandidates(text, kommun).slice(0, 4) };
+    const named = placeCandidates(text, kommun);
+    const known = kommun ? gazetteerInText(text, gazetteerFor(kommun), kommun) : [];
+    const seen = new Set(named.map((c) => c.name.toLowerCase()));
+    return { inc, kommun, candidates: [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6) };
   });
 
   // Places learned before
@@ -850,9 +879,31 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     for (const row of data ?? []) learned.set(row.key, row);
   }
 
+  const keyId = Deno.env.get('MAPKIT_KEY_ID');
+  const privateKey = Deno.env.get('MAPKIT_PRIVATE_KEY');
+  const apple: AppleKey | null = keyId && privateKey ? { keyId, privateKey } : null;
   let lookups = 0;
+  let appleLookups = 0;
+  let fromGazetteer = 0;
   const learnedNow = new Map<string, { kommun: string; name: string; kind: string; lat: number | null; lng: number | null; hits: number }>();
   const changed: PoliceIncident[] = [];
+
+  /** Where a name is in a kommun: Apple Maps first, then Nominatim; undefined when neither could be asked */
+  const lookUp = async (c: PlaceCandidate, kommun: string, centre: { lat: number; lng: number }) => {
+    if (apple && appleLookups < MAX_APPLE_LOOKUPS_PER_RUN) {
+      appleLookups++;
+      const hits = await appleGeocode(`${c.kind === 'crossing' ? c.name.split('/')[0] : c.name}, ${kommun}`, centre, apple).catch(() => null);
+      if (hits !== null) {
+        const hit = pickAppleHit(hits, c, centre);
+        if (hit) return hit;
+      }
+    }
+    if (lookups >= MAX_LOOKUPS_PER_RUN) return undefined;
+    lookups++;
+    const hits = await searchNominatim(geocodeQuery(c, kommun));
+    if (hits === null) return undefined;
+    return pickHit(hits, kommun, centre);
+  };
 
   for (const { inc, kommun, candidates } of plans) {
     // Only placed in a län: a kommun or ort it names puts it in the right town at least
@@ -870,17 +921,25 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       continue;
     }
 
-    const centre = lookupSwedishLocation(kommun);
+    const centre = lookupSwedishLocation(kommun) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
+    const gazetteer = gazetteerFor(kommun);
     for (const c of candidates as PlaceCandidate[]) {
       if (rank(precisionOf(c.kind)) <= rank(inc.location_precision)) continue;
+      // An area the gazetteer knows: no lookup needed
+      const known = c.kind === 'area' ? gazetteerLookup(c.name, gazetteer) : null;
+      if (known) {
+        fromGazetteer++;
+        inc.lat = known[1];
+        inc.lng = known[2];
+        inc.location_precision = 'district';
+        changed.push(inc);
+        break;
+      }
       const key = placeKey(kommun, c.name);
       let place = learned.get(key) ?? learnedNow.get(key);
       if (!place) {
-        if (lookups >= MAX_LOOKUPS_PER_RUN) continue;
-        lookups++;
-        const hits = await searchNominatim(geocodeQuery(c, kommun));
-        if (hits === null) continue; // couldn't ask: try again another time
-        const hit = pickHit(hits, kommun, centre);
+        const hit = await lookUp(c, kommun, centre);
+        if (hit === undefined) continue; // couldn't ask: try again another time
         place = { lat: hit?.lat ?? null, lng: hit?.lng ?? null, hits: 0 };
       }
       learnedNow.set(key, { kommun, name: c.name, kind: c.kind, lat: place.lat, lng: place.lng, hits: (place.hits ?? 0) + 1 });
@@ -912,7 +971,7 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       if (a.id === inc.id) { a.lat = inc.lat; a.lng = inc.lng; a.location_precision = inc.location_precision; }
     });
   }
-  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${lookups} lookups, ${learned.size} known places)`);
+  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps and ${lookups} Nominatim lookups, ${learned.size} learned places)`);
 }
 
 /** Runs the refinement after the answer is sent, where the platform allows it */

@@ -9,7 +9,7 @@ import type { Incident } from '@/data/mockIncidents';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
-import { getJitteredPositions, isWithinDays, MARKER_PULSE_CSS, markerHtml, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
+import { getJitteredPositions, hitRadii, isWithinDays, MARKER_PULSE_CSS, markerHtml, MAX_HIT_RADIUS, setHitArea, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
 import { formatTimeAgo } from '@/lib/timeAgo';
 
 export type AppleMapType = 'standard' | 'satellite' | 'hybrid';
@@ -111,6 +111,16 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
   const mapRef = useRef<MapKit>(null);
   const kitRef = useRef<MapKit>(null);
   const markers = useRef(new Map<string, MapKit>());
+  /** Each marker can be tapped as far out as there is room for (lib/mapMarkers hitRadii), up to 44 px across */
+  const updateHitAreas = useRef(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const all = [...markers.current.values()].filter((m) => m.element);
+    if (!all.length) return;
+    const points = all.map((m) => map.convertCoordinateToPointOnPage(m.coordinate) as { x: number; y: number });
+    const radii = hitRadii(points, all.map((m) => (m.data.size ?? 16) / 2), MAX_HIT_RADIUS.touch);
+    all.forEach((m, i) => setHitArea(m.element as HTMLElement, radii[i]));
+  });
   const handlers = useRef({ onSelectIncident, onUnavailable, navigate });
   handlers.current = { onSelectIncident, onUnavailable, navigate };
   const typeRef = useRef(mapType);
@@ -151,6 +161,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       });
       mapRef.current = map;
       applyType(map, mapkit);
+      map.addEventListener('region-change-end', () => updateHitAreas.current());
       map.addEventListener('select', (event: { annotation?: MapKit }) => {
         const id = event.annotation?.data?.id;
         if (id) handlers.current.onSelectIncident(id);
@@ -207,7 +218,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
           displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000,
           title: cleanPoliceTitle(incident.title),
           subtitle: [incident.area, formatTimeAgo(incident.time)].filter(Boolean).join(' · '),
-          data: { id, pulse },
+          data: { id, pulse, size },
           // An event opens on its own page; a citizen report has none
           callout: community ? undefined : {
             calloutRightAccessoryForAnnotation: () => {
@@ -225,6 +236,8 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
         added.push(marker);
       }
       if (added.length) map.addAnnotations(added);
+      // After MapKit has drawn the new markers
+      requestAnimationFrame(() => updateHitAreas.current());
       return true;
     };
     if (sync()) return;

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  distanceKm, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
 } from './geoPlace';
 
@@ -107,5 +108,28 @@ describe('spreading markers', () => {
       quadrants.add(`${p.lat > 59.33}${p.lng > 18.07}`);
     }
     expect(quadrants.size).toBe(4);
+  });
+});
+
+describe('the gazetteer', () => {
+  const places: GazetteerPlace[] = [
+    ['Sundsvall', 62.39, 17.31, 'c'], ['Stenstan', 62.391, 17.306, 's'], ['Haga', 62.395, 17.29, 's'],
+    ['Lugnvik', 62.42, 17.35, 's'], ['Västra Kajen', 62.388, 17.32, 's'], ['Alnö', 62.43, 17.43, 'i'],
+  ];
+  const index = gazetteerIndex(places);
+
+  it('knows a place by name, also with a kind word after it', () => {
+    expect(gazetteerLookup('Stenstan', index)?.[1]).toBe(62.391);
+    expect(gazetteerLookup('Lugnviks industriområde', index)?.[0]).toBe('Lugnvik');
+    expect(gazetteerLookup('Birsta', index)).toBeNull();
+  });
+
+  it('finds the kommun\'s places anywhere in the text, longest name first', () => {
+    const found = gazetteerInText('Stenstan: bråk utomhus. Senare olycka vid Västra Kajen och på Alnö.', index, 'Sundsvall');
+    expect(found.map((c) => c.name)).toEqual(['Stenstan', 'Västra Kajen', 'Alnö']);
+  });
+
+  it('leaves out the kommun itself and words that only start a sentence', () => {
+    expect(gazetteerInText('Sundsvall, en man grips. Polisen åker till platsen.', index, 'Sundsvall')).toEqual([]);
   });
 });
