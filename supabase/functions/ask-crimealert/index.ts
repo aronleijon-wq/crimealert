@@ -55,7 +55,8 @@ async function hasPro(userId: string, email: string | undefined, now: number): P
 async function eventsSince(since: string, filter?: (q: any) => any, columns = COLUMNS): Promise<AskEvent[]> { // eslint-disable-line @typescript-eslint/no-explicit-any
   const rows: AskEvent[] = [];
   for (let page = 0; page < 12; page++) {
-    let query = db.from('police_events_archive').select(columns).gte('time', since);
+    // The column list is a variable, so the generated types cannot name the row shape here
+    let query: any = db.from('police_events_archive').select(columns).gte('time', since); // eslint-disable-line @typescript-eslint/no-explicit-any
     if (filter) query = filter(query);
     const { data, error } = await query.order('time', { ascending: false }).range(page * 1000, page * 1000 + 999);
     if (error) throw error;
