@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: "pages",
               networkTimeoutSeconds: 6,
-              fetchOptions: { cache: "no-cache" },
+              fetchOptions: { cache: "no-cache" } as RequestInit,
               expiration: { maxEntries: 20 },
             },
           },
