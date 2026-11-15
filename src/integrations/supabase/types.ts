@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
+          created_at: string
+          id: number
+          input_tokens: number
+          model: string
+          output_tokens: number
+        }
+        Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          created_at?: string
+          id?: never
+          input_tokens?: number
+          model: string
+          output_tokens?: number
+        }
+        Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
+          created_at?: string
+          id?: never
+          input_tokens?: number
+          model?: string
+          output_tokens?: number
+        }
+        Relationships: []
+      }
       apple_subscriptions: {
         Row: {
           environment: string
