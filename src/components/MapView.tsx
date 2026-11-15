@@ -10,7 +10,7 @@ import { isPoliceEvent } from '@/lib/share';
 import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
-import { COMMUNITY_REPORT_COLOR, getJitteredPositions, isWithinDays, markerHtml, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
+import { COMMUNITY_REPORT_COLOR, getJitteredPositions, hitRadii, isWithinDays, markerHtml, MAX_HIT_RADIUS, setHitArea, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 declare global {
@@ -31,6 +31,19 @@ interface MapViewProps {
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
   /** Shown as a heatmap (the timeline's heat view); null for none */
   heatPoints?: HeatPoint[] | null;
+}
+
+// A dot on the shared canvas can be tapped this many pixels beyond its rim (set per dot by
+// updateHitAreas, from the room around it); Leaflet otherwise only counts the dot itself
+type HitCircle = L.CircleMarker & { _hitExtra?: number };
+type WithTolerance = { _clickTolerance: (this: HitCircle) => number };
+const circleProto = L.CircleMarker.prototype as unknown as WithTolerance;
+const baseTolerance = circleProto._clickTolerance;
+if (baseTolerance && !(circleProto as { _hitPatched?: boolean })._hitPatched) {
+  circleProto._clickTolerance = function (this: HitCircle) {
+    return Math.max(baseTolerance.call(this), this._hitExtra ?? 0);
+  };
+  (circleProto as { _hitPatched?: boolean })._hitPatched = true;
 }
 
 const isTouchDevice = () =>
@@ -338,6 +351,24 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker | L.CircleMarker>>(new Map());
+  /**
+   * Each marker can be tapped as far out as there is room for (lib/mapMarkers hitRadii): up to
+   * 44 px across on a phone, never reaching another marker's area. Again after each zoom.
+   */
+  const updateHitAreas = useRef(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const entries = [...markerMapRef.current.values()];
+    if (!entries.length) return;
+    const points = entries.map((m) => map.latLngToLayerPoint(m.getLatLng()));
+    const dots = entries.map((m) =>
+      m instanceof L.CircleMarker ? m.getRadius() + 1 : ((m.options.icon?.options.iconSize as [number, number] | undefined)?.[0] ?? 10) / 2);
+    const radii = hitRadii(points, dots, isTouchDevice() ? MAX_HIT_RADIUS.touch : MAX_HIT_RADIUS.mouse);
+    entries.forEach((m, i) => {
+      if (m instanceof L.CircleMarker) (m as HitCircle)._hitExtra = radii[i] - m.getRadius();
+      else setHitArea(m.getElement(), radii[i]);
+    });
+  });
   // Quiet (non-pulsing) events are drawn on one canvas instead of one element each, which
   // keeps panning smooth on phones with hundreds of events. Taps get a wider hit area.
   const canvasRendererRef = useRef<L.Canvas | null>(null);
@@ -426,6 +457,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     updatePulseSize();
     map.on('zoomend', updatePulseSize);
+    map.on('zoomend', () => updateHitAreas.current());
 
     return () => {
       themeObserver.disconnect();
@@ -529,6 +561,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     };
 
     recentIncidents.forEach(addMarker);
+    updateHitAreas.current();
   }, [incidents, isPremium, isTouch, popupQueryClient]);
 
   const prevSelectedRef = useRef<string | null>(null);
