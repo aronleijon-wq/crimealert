@@ -1,18 +1,16 @@
 // Keeps everyone on the newest version of the site. Each build has its own id, and the build that
-// is live on the server says its id in /version.json. A page that finds a newer build loads it:
-// at once when the page has just opened or is hidden, otherwise the next time the visitor leaves
-// the tab, so nobody is reloaded in the middle of what they are doing. A visitor who comes back
-// after a month gets the new site within seconds instead of the copy their browser kept.
+// is live on the server says its id in /version.json. A page that finds a newer build loads it at
+// once, unless the visitor is typing in a field: then it waits until they leave the field or the
+// tab, so nothing they write is lost. Open pages ask again every few minutes, and the service
+// worker (public/sw-push.js) reloads pages that run an older build, including pages so old that
+// they have none of this code.
 import { reloadFresh } from './staleBuild';
 
 /** This build's id (vite.config.ts); "dev" when running locally */
 export const BUILD_ID: string = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
 
-const OPENED_AT = Date.now();
-/** A page this new has hardly been used, so it can be reloaded at once */
-const JUST_OPENED_MS = 30 * 1000;
-/** How often an open page asks again, when the visitor comes back to it */
-const CHECK_EVERY_MS = 10 * 60 * 1000;
+/** How often an open, visible page asks whether a newer build is live */
+const CHECK_EVERY_MS = 5 * 60 * 1000;
 const TRIED_KEY = 'ca_reloaded_for_build';
 
 /** The id of the build that is live, or null when it can't be read */
@@ -27,21 +25,39 @@ export async function liveBuild(fetcher: typeof fetch = fetch): Promise<string |
   }
 }
 
+/** Whether the visitor is writing something: a text field or editable area with focus and content */
+export function isTyping(doc: Document = document): boolean {
+  const el = doc.activeElement as (HTMLElement & { value?: unknown }) | null;
+  if (!el) return false;
+  if (el.isContentEditable) return (el.textContent ?? '').trim().length > 0;
+  const tag = el.tagName;
+  if (tag === 'TEXTAREA') return typeof el.value === 'string' && el.value.trim().length > 0;
+  if (tag === 'INPUT') {
+    const type = (el.getAttribute('type') ?? 'text').toLowerCase();
+    const text = ['text', 'search', 'email', 'tel', 'url', 'password', 'number'].includes(type);
+    return text && typeof el.value === 'string' && el.value.trim().length > 0;
+  }
+  return false;
+}
+
 /**
- * Reloads now if the page has just opened or is hidden, otherwise the next time it is hidden.
- * `now` and `doc` are for tests.
+ * Reloads now, unless the visitor is typing: then when they leave the field or the tab.
+ * `doc` is for tests.
  */
-export function reloadWhenSafe(reload: () => void, now = Date.now(), doc: Document = document) {
-  if (doc.visibilityState === 'hidden' || now - OPENED_AT < JUST_OPENED_MS) {
+export function reloadWhenSafe(reload: () => void, doc: Document = document) {
+  if (doc.visibilityState === 'hidden' || !isTyping(doc)) {
     reload();
     return;
   }
-  const onHide = () => {
-    if (doc.visibilityState !== 'hidden') return;
-    doc.removeEventListener('visibilitychange', onHide);
+  const later = () => {
+    if (doc.visibilityState !== 'hidden' && isTyping(doc)) return;
+    doc.removeEventListener('visibilitychange', later);
+    doc.removeEventListener('focusout', later, true);
     reload();
   };
-  doc.addEventListener('visibilitychange', onHide);
+  doc.addEventListener('visibilitychange', later);
+  // After the field has lost focus (focusout fires before activeElement changes)
+  doc.addEventListener('focusout', () => setTimeout(later, 0), true);
 }
 
 /** Whether a reload for this build was already tried in this visit, so a stale server can't cause a loop */
@@ -63,26 +79,41 @@ export async function checkForNewVersion(fetcher: typeof fetch = fetch, reload: 
   return true;
 }
 
-/** Checks soon after the page opens, and again when the visitor returns to the tab */
+/** Checks soon after the page opens, every few minutes while it is shown, and when the visitor returns */
 export function watchForNewVersion() {
   if (BUILD_ID === 'dev') return;
   let last = Date.now();
-  setTimeout(() => void checkForNewVersion(), 2000);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible' || Date.now() - last < CHECK_EVERY_MS) return;
+  const check = () => {
     last = Date.now();
     void checkForNewVersion();
+  };
+  setTimeout(check, 2000);
+  setInterval(() => {
+    if (document.visibilityState === 'visible') check();
+  }, CHECK_EVERY_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - last >= 60 * 1000) check();
   });
 }
 
+/** The message the service worker sends to ask a page which build it runs, and the answer */
+export const BUILD_QUESTION = 'CA_WHICH_BUILD';
+export const BUILD_ANSWER = 'CA_BUILD';
+
 /**
- * When a new version of the service worker takes over (it does so as soon as it is installed),
- * this page reloads when it is safe, so it doesn't keep running the old version.
+ * Answers the service worker's question about this page's build, so it only reloads pages that
+ * run an older one. When a new service worker takes over, the page checks the live build itself.
  */
 export function followServiceWorkerUpdates(sw: ServiceWorkerContainer) {
+  sw.addEventListener('message', (event: MessageEvent) => {
+    if (event.data?.type !== BUILD_QUESTION) return;
+    (event.source as ServiceWorker | null)?.postMessage({ type: BUILD_ANSWER, build: BUILD_ID });
+  });
+  // Messages wait until this is called
+  sw.startMessages?.();
   const hadController = Boolean(sw.controller);
   sw.addEventListener('controllerchange', () => {
     // The first install has no old version to leave
-    if (hadController) reloadWhenSafe(() => window.location.reload());
+    if (hadController) void checkForNewVersion();
   });
 }
