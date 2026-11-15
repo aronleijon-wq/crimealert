@@ -833,7 +833,10 @@ async function searchNominatim(query: string): Promise<GeocodeHit[] | null> {
     await acquireNominatimSlot();
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&addressdetails=1&limit=5&countrycodes=se&accept-language=sv`;
     const response = await fetch(url, { headers: { 'User-Agent': 'CrimeAlert/2.0 (+https://crimealert.se)' } });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`Nominatim search: ${response.status}`);
+      return null;
+    }
     return (await response.json()) as GeocodeHit[];
   } catch (e) {
     console.warn('Nominatim search failed:', e);
@@ -884,6 +887,8 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   const apple: AppleKey | null = keyId && privateKey ? { keyId, privateKey } : null;
   let lookups = 0;
   let appleLookups = 0;
+  let appleFailed = 0;
+  let nominatimFailed = 0;
   let fromGazetteer = 0;
   const learnedNow = new Map<string, { kommun: string; name: string; kind: string; lat: number | null; lng: number | null; hits: number }>();
   const changed: PoliceIncident[] = [];
@@ -893,7 +898,8 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     if (apple && appleLookups < MAX_APPLE_LOOKUPS_PER_RUN) {
       appleLookups++;
       const hits = await appleGeocode(`${c.kind === 'crossing' ? c.name.split('/')[0] : c.name}, ${kommun}`, centre, apple).catch(() => null);
-      if (hits !== null) {
+      if (hits === null) appleFailed++;
+      else {
         const hit = pickAppleHit(hits, c, centre);
         if (hit) return hit;
       }
@@ -901,7 +907,10 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     if (lookups >= MAX_LOOKUPS_PER_RUN) return undefined;
     lookups++;
     const hits = await searchNominatim(geocodeQuery(c, kommun));
-    if (hits === null) return undefined;
+    if (hits === null) {
+      nominatimFailed++;
+      return undefined;
+    }
     return pickHit(hits, kommun, centre);
   };
 
@@ -971,7 +980,7 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       if (a.id === inc.id) { a.lat = inc.lat; a.lng = inc.lng; a.location_precision = inc.location_precision; }
     });
   }
-  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps and ${lookups} Nominatim lookups, ${learned.size} learned places)`);
+  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
 }
 
 /** Runs the refinement after the answer is sent, where the platform allows it */

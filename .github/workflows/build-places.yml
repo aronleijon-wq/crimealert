@@ -1,0 +1,39 @@
+# Builds supabase/functions/_shared/data/places.ts (the place gazetteer police-events uses) from
+# OpenStreetMap and commits it to the branch it ran on. Runs when the generator changes on a
+# claude/ branch, or by hand: Actions -> Build place gazetteer -> Run workflow.
+name: Build place gazetteer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - scripts/build-places.py
+      - .github/workflows/build-places.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-places-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install shapely==2.0.6
+      - run: python3 scripts/build-places.py
+      - name: Commit the data if it changed
+        run: |
+          git add supabase/functions/_shared/data/places.ts
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update the place gazetteer from OpenStreetMap"
+          git push

@@ -36,15 +36,15 @@ OVERPASS = 'https://overpass-api.de/api/interpreter'
 
 SE = 'area["ISO3166-1"="SE"][admin_level=2]->.se;'
 QUERIES = {
-    'kommuner': '[out:json][timeout:300];' + SE + '''
+    'kommuner': '[out:json][timeout:600][maxsize:2147483648];' + SE + '''
 rel(area.se)[boundary=administrative][admin_level=7]->.k;
 .k out geom;
 node(r.k:"admin_centre");
 out;''',
-    'places': '[out:json][timeout:300];' + SE + '''
+    'places': '[out:json][timeout:600][maxsize:2147483648];' + SE + '''
 nwr(area.se)[place~"^(city|town|village|hamlet|suburb|quarter|neighbourhood|square|borough|city_block|island|islet)$"][name];
 out center tags;''',
-    'areas': '[out:json][timeout:300];' + SE + '''
+    'areas': '[out:json][timeout:600][maxsize:2147483648];' + SE + '''
 nwr(area.se)[landuse~"^(industrial|retail)$"][name];
 out center tags;''',
 }
