@@ -106,12 +106,14 @@ def read_kommun_names():
 
 
 def osm_to_app_name(osm_name, wanted):
-    """'Sundsvalls kommun' -> 'Sundsvall', 'Region Gotland' -> 'Gotland', 'Falu kommun' -> 'Falun'."""
+    """'Sundsvalls kommun' -> 'Sundsvall', 'Region Gotland' -> 'Gotland', 'Göteborgs Stad' -> 'Göteborg'."""
     base = osm_name
     if base.startswith('Region '):
         base = base[len('Region '):]
     elif base.endswith(' kommun'):
         base = base[:-len(' kommun')]
+    elif base.lower().endswith(' stad'):  # 'Göteborgs Stad'
+        base = base[:-len(' stad')]
     else:
         return None
     for cand in (base, base[:-1] if base.endswith('s') else None, base + 'n'):

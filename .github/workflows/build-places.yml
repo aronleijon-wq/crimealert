@@ -27,7 +27,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # Overpass answers, kept between runs so a rerun only fetches what is missing
+      - uses: actions/cache/restore@v4
+        with:
+          path: .overpass-cache
+          key: overpass-${{ github.run_id }}
+          restore-keys: overpass-
       - run: python3 -u scripts/build-places.py
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .overpass-cache
+          key: overpass-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Commit the data if it changed
         run: |
           git add supabase/functions/_shared/data/places.ts
