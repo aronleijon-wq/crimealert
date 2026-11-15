@@ -99,6 +99,13 @@
       "when": 1794674316221,
       "tag": "0013_admin_reads_whole_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794759947881,
+      "tag": "0014_ai_usage",
+      "breakpoints": true
     }
   ]
 }
