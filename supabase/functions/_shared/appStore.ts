@@ -41,10 +41,19 @@ interface TransactionPayload {
   expiresDate?: number;
   revocationDate?: number;
   appAccountToken?: string;
+  originalPurchaseDate?: number;
+  /** In thousandths of the currency */
+  price?: number;
+  currency?: string;
+  offerDiscountType?: string;
 }
 
 interface RenewalPayload {
   gracePeriodExpiresDate?: number;
+  autoRenewStatus?: number;
+  /** In thousandths of the currency */
+  renewalPrice?: number;
+  currency?: string;
 }
 
 interface StatusResponse {
@@ -121,4 +130,57 @@ export function transactionInNotice(signedPayload: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** What a subscription costs and whether it renews (for revenue in the admin dashboard) */
+export interface AppleBillingInfo {
+  productId: string;
+  priceMilli: number | null;
+  renewalPriceMilli: number | null;
+  currency: string | null;
+  autoRenew: boolean;
+  freeTrial: boolean;
+  expiresAt: string | null;
+  startedAt: string | null;
+}
+
+/** The price and renewal of the subscription a status answer describes */
+export function billingFromStatus(response: StatusResponse, now: number): AppleBillingInfo | null {
+  const sub = subscriptionFromStatus(response, 'production', now);
+  if (!sub) return null;
+  for (const group of response.data ?? []) {
+    for (const last of group.lastTransactions ?? []) {
+      if (last.originalTransactionId !== sub.originalTransactionId) continue;
+      const tx = decodeJws<TransactionPayload>(last.signedTransactionInfo);
+      const renewal = last.signedRenewalInfo ? decodeJws<RenewalPayload>(last.signedRenewalInfo) : {};
+      return {
+        productId: tx.productId,
+        priceMilli: typeof tx.price === 'number' ? tx.price : null,
+        renewalPriceMilli: typeof renewal.renewalPrice === 'number' ? renewal.renewalPrice : null,
+        currency: tx.currency ?? renewal.currency ?? null,
+        autoRenew: renewal.autoRenewStatus === 1,
+        freeTrial: tx.offerDiscountType === 'FREE_TRIAL',
+        expiresAt: sub.expiresAt,
+        startedAt: tx.originalPurchaseDate ? new Date(tx.originalPurchaseDate).toISOString() : null,
+      };
+    }
+  }
+  return null;
+}
+
+/** Asks Apple what one stored subscription costs now, in the environment it was bought in */
+export async function fetchAppleBilling(
+  originalTransactionId: string,
+  environment: AppStoreEnvironment,
+  key: AppStoreKey,
+  now: number,
+): Promise<AppleBillingInfo | null> {
+  if (!/^\d{1,30}$/.test(originalTransactionId)) return null;
+  const jwt = await appStoreJwt(key, now);
+  const response = await fetch(`${HOSTS[environment]}/inApps/v1/subscriptions/${originalTransactionId}`, {
+    headers: { authorization: `Bearer ${jwt}` },
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`App Store Server API ${response.status}: ${await response.text()}`);
+  return billingFromStatus((await response.json()) as StatusResponse, now);
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchAppleSubscription, subscriptionFromStatus, transactionInNotice } from './appStore';
+import { billingFromStatus, fetchAppleSubscription, subscriptionFromStatus, transactionInNotice } from './appStore';
 
 const jws = (claims: unknown) => `e30.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.sig`;
 const NOW = Date.UTC(2026, 9, 21);
@@ -58,5 +58,20 @@ describe('App Store subscriptions', () => {
     expect(transactionInNotice(jws({ notificationType: 'DID_RENEW', data: { signedTransactionInfo: tx() } }))).toBe('1005');
     expect(transactionInNotice(jws({ notificationType: 'TEST', data: {} }))).toBeNull();
     expect(transactionInNotice('garbage')).toBeNull();
+  });
+});
+
+describe('what an App Store subscription costs', () => {
+  it('reads the price, currency and renewal', () => {
+    const b = billingFromStatus(status(1, tx({ price: 19000, currency: 'SEK', originalPurchaseDate: NOW - 5 * DAY }), jws({ autoRenewStatus: 1, renewalPrice: 19000, currency: 'SEK' })), NOW);
+    expect(b).toEqual({
+      productId: 'crimealert.pro.monthly', priceMilli: 19000, renewalPriceMilli: 19000, currency: 'SEK', autoRenew: true,
+      freeTrial: false, expiresAt: new Date(NOW + 10 * DAY).toISOString(), startedAt: new Date(NOW - 5 * DAY).toISOString(),
+    });
+  });
+
+  it('knows a free trial and a subscription that will not renew', () => {
+    const b = billingFromStatus(status(1, tx({ price: 0, currency: 'SEK', offerDiscountType: 'FREE_TRIAL' }), jws({ autoRenewStatus: 0, renewalPrice: 19000 })), NOW);
+    expect(b).toMatchObject({ freeTrial: true, autoRenew: false, priceMilli: 0, renewalPriceMilli: 19000 });
   });
 });

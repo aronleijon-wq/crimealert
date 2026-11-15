@@ -7,6 +7,7 @@
 // ANTHROPIC_API_KEY is needed. ASK_MODEL and ASK_PRO_MODEL pick the models
 // (claude-haiku-5-5 and claude-sonnet-5-5 unless set).
 import Anthropic from 'npm:@anthropic-ai/sdk@^0.136.0';
+import { addUsage, NO_USAGE, type Usage } from '../_shared/aiCost.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.97.0';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import {
@@ -97,7 +98,8 @@ async function runTool(name: string, input: Record<string, unknown>, now: number
 }
 
 /** Claude's answer, using the tools as often as it needs to (up to MAX_ROUNDS) */
-async function answer(history: { role: 'user' | 'assistant'; content: string }[], now: number, model: string): Promise<string | null> {
+// Also what it used over all its rounds, and the model that gave it (the fallback, if one took over)
+async function answer(history: { role: 'user' | 'assistant'; content: string }[], now: number, model: string, spent: { usage: Usage; model: string }): Promise<string | null> {
   if (!anthropic) return null;
   const messages: Anthropic.Beta.BetaMessageParam[] = history.map((t) => ({ role: t.role, content: t.content }));
   for (let round = 0; round <= MAX_ROUNDS; round++) {
@@ -114,6 +116,8 @@ async function answer(history: { role: 'user' | 'assistant'; content: string }[]
       ...(model.startsWith('claude-haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }),
       messages,
     });
+    spent.usage = addUsage(spent.usage, response.usage);
+    spent.model = response.model || model;
     if (response.stop_reason === 'refusal') return 'Den frågan kan jag inte svara på. Fråga gärna om händelser i en kommun eller i Sverige.';
     if (response.stop_reason !== 'tool_use') {
       const text = response.content.map((b) => (b.type === 'text' ? b.text : '')).join('').trim();
@@ -159,11 +163,15 @@ Deno.serve(async (req) => {
     if (!history) return json({ error: 'Frågan saknas.' }, 400);
     if (!anthropic) return json({ error: 'Fråga CrimeAlert är inte igång än.' }, 503);
 
-    const text = await answer(history, now, MODELS[modelTier(used, pro)]);
+    const spent = { usage: NO_USAGE, model: MODELS[modelTier(used, pro)] };
+    const text = await answer(history, now, spent.model, spent);
     if (!text) return json({ error: 'Kunde inte svara just nu. Försök igen om en stund.' }, 502);
 
     // Counted only when answered; a month of rows is plenty to count a day
     await db.from('ask_log').insert({ user_id: user.id });
+    // What it cost, for the admin dashboard (no user, no text)
+    const { error: usageError } = await db.from('ai_usage').insert({ model: spent.model, ...spent.usage });
+    if (usageError) console.error('ai_usage:', usageError.message);
     await db.from('ask_log').delete().lt('created_at', new Date(now - 31 * DAY).toISOString());
     return json({ answer: text, left: questionsLeft(used + 1, pro), pro, better: betterLeft(used + 1, pro) });
   } catch (error) {
