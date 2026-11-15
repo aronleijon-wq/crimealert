@@ -84,18 +84,39 @@ describe('Header', () => {
     localStorage.removeItem('ca-app-banner-closed');
   });
 
-  it('keeps Rapportera, Chattar and Notiser under Mer', async () => {
+  it("has the start page's links in the bar, plus Fråga AI, and marks the current page", async () => {
+    await renderHeader('/flode');
+    const bar = screen.getByRole('navigation', { name: 'Huvudmeny' });
+    const { within } = await import('@testing-library/react');
+    expect(within(bar).getAllByRole('link').map((l) => l.textContent)).toEqual(['Karta', 'Flöde', 'Fråga AI', 'Analys', 'Notiser', 'Kommuner']);
+    expect(within(bar).getByRole('link', { name: 'Flöde' })).toHaveAttribute('aria-current', 'page');
+    expect(within(bar).getByRole('link', { name: 'Karta' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('keeps Rapportera, Chattar and Guider under Mer', async () => {
     const { fireEvent } = await import('@testing-library/react');
     await renderHeader('/karta');
     expect(screen.queryByRole('link', { name: /Rapportera/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Mer' }));
     expect(screen.getByRole('menuitem', { name: /Rapportera/ })).toHaveAttribute('href', '/rapportera');
     expect(screen.getByRole('menuitem', { name: /Chattar/ })).toHaveAttribute('href', '/chattar');
-    expect(screen.getByRole('menuitem', { name: /Notiser/ })).toHaveAttribute('href', '/alerts');
+    expect(screen.getByRole('menuitem', { name: /Guider/ })).toHaveAttribute('href', '/guider');
   });
 
   it('marks Mer when the page is one of its own', async () => {
     await renderHeader('/chatt/uppsala');
-    expect(screen.getByRole('button', { name: 'Mer' }).className).toMatch(/text-primary/);
+    // The current page's red line under the word
+    expect(screen.getByRole('button', { name: 'Mer' }).className).toMatch(/after:bg-\[hsl\(var\(--ca-red\)\)\]/);
+  });
+
+  it('opens every page from the menu on a phone', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    await renderHeader('/karta');
+    fireEvent.click(screen.getByRole('button', { name: 'Meny' }));
+    const { within } = await import('@testing-library/react');
+    const menu = screen.getByRole('navigation', { name: 'Meny' });
+    expect(within(menu).getAllByRole('link').map((l) => l.textContent)).toEqual(
+      ['Karta', 'Flöde', 'Fråga AI', 'Analys', 'Notiser', 'Kommuner', 'Rapportera', 'Chattar', 'Guider', 'Prisplan'],
+    );
   });
 });
