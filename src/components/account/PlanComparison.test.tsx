@@ -48,6 +48,15 @@ describe('PlanComparison', () => {
     expect(onBillingCycle).toHaveBeenCalledWith('monthly');
   });
 
+  it('asks kommuner, myndigheter and companies to contact us', () => {
+    renderPlans();
+    const offer = screen.getByRole('region', { name: 'Lägesbild för er verksamhet' });
+    expect(within(offer).getByText('Pris enligt offert')).toBeInTheDocument();
+    expect(within(offer).getAllByRole('term').map((t) => t.textContent)).toEqual(['Lägesrapporter', 'Statistik och jämförelser', 'Data och export']);
+    expect(within(offer).getAllByRole('listitem')).toHaveLength(3);
+    expect(within(offer).getByRole('link', { name: 'Kontakta oss' })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se?subject=CrimeAlert%20f%C3%B6r%20kommuner%20och%20organisationer');
+  });
+
   it('compares the plans row by row', () => {
     renderPlans();
     const table = screen.getByRole('table', { name: 'Jämför Gratis och Pro' });

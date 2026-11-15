@@ -1,6 +1,6 @@
-import { Bell, Building2, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
+import { Bell, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CONTACT_EMAIL } from '@/components/landing/faqItems';
+import B2BOffer from './B2BOffer';
 import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
@@ -67,7 +67,7 @@ interface PlanComparisonProps {
   checkoutLoading: boolean;
 }
 
-/** Gratis and Pro side by side, then everything compared row by row. */
+/** Gratis and Pro side by side, the offer for organisations, then everything compared row by row. */
 const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBillingCycle, onCheckout, onManage, checkoutLoading }: PlanComparisonProps) => {
   const price = PRICES[billingCycle];
   const offerTrial = !isPremium && trialEligible;
@@ -164,6 +164,8 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
         </div>
       </div>
 
+      <B2BOffer />
+
       <div className="overflow-hidden rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card">
         <table className="w-full text-left">
           <caption className="border-b border-[hsl(var(--ca-line))] px-4 py-3 text-left text-sm font-semibold text-foreground">Jämför Gratis och Pro</caption>
@@ -191,13 +193,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
         </table>
       </div>
 
-      <p className="flex items-start gap-2 rounded-xl border border-dashed border-[hsl(var(--ca-line-strong))] px-4 py-3 text-xs leading-relaxed text-[hsl(var(--ca-text-2))]">
-        <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <span>
-          Företag eller organisation? Vi kan ta fram en lösning för flera områden eller egna dataleveranser. Mejla oss på{' '}
-          <a href={`mailto:${CONTACT_EMAIL}?subject=CrimeAlert%20f%C3%B6r%20f%C3%B6retag`} className="font-medium text-primary hover:underline">{CONTACT_EMAIL}</a>.
-        </span>
-      </p>
+
     </section>
   );
 };

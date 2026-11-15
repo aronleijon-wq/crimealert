@@ -44,8 +44,23 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ["lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff2}"],
+        // The page itself (index.html) is never served from the service worker's copy when there
+        // is a network: it names the files of the newest build, so every visit starts on the
+        // newest version. The copy is kept only for when the visitor is offline.
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) => request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 6,
+              fetchOptions: { cache: "no-cache" },
+              expiration: { maxEntries: 20 },
+            },
+          },
+        ],
+        globPatterns: ["**/*.{js,css,ico,png,svg,webp,woff2}"],
         // Not shown by the app: the 512 px install icon and two unused uploads (about 0.9 MB)
         globIgnores: ["**/pwa-512x512.png", "**/lovable-uploads/442645a7-*.png", "**/lovable-uploads/f5451b06-*.png"],
         importScripts: [`/sw-push.js?v=${BUILD_ID}`],
