@@ -48,6 +48,14 @@ describe('PlanComparison', () => {
     expect(onBillingCycle).toHaveBeenCalledWith('monthly');
   });
 
+  it('asks companies and kommuner to contact us', () => {
+    renderPlans();
+    expect(screen.getByRole('heading', { name: 'Företag och kommuner' })).toBeInTheDocument();
+    expect(screen.getByText('Offert')).toBeInTheDocument();
+    expect(screen.getByText('Lägesrapporter för valfri kommun, stadsdel eller område')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Kontakta oss' })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se?subject=CrimeAlert%20f%C3%B6r%20f%C3%B6retag%20och%20kommuner');
+  });
+
   it('compares the plans row by row', () => {
     renderPlans();
     const table = screen.getByRole('table', { name: 'Jämför Gratis och Pro' });
