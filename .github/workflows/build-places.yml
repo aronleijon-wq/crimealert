@@ -21,14 +21,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install shapely==2.0.6
-      - run: python3 scripts/build-places.py
+      - run: python3 -u scripts/build-places.py
       - name: Commit the data if it changed
         run: |
           git add supabase/functions/_shared/data/places.ts
