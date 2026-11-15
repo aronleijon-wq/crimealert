@@ -70,11 +70,23 @@ def log(*args):
     print(*args, flush=True)
 
 
-def fetch(name, query, cache):
+def has_kommuner(data):
+    """An answer for a län holds its kommun relations; a server without the data answers with none"""
+    return any(e['type'] == 'relation' and e.get('tags', {}).get('admin_level') == '7' for e in data.get('elements', []))
+
+
+def has_lan(data):
+    return sum(e['type'] == 'relation' for e in data.get('elements', [])) >= 21
+
+
+def fetch(name, query, cache, valid):
     path = os.path.join(cache, name + '.json')
     if os.path.exists(path):
         with open(path, encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+        if valid(data):
+            return data
+        log(f'  {name}: cached answer is incomplete, fetching again')
     body = urllib.parse.urlencode({'data': query}).encode()
     for attempt in range(9):
         server = SERVERS[attempt % len(SERVERS)]
@@ -86,6 +98,8 @@ def fetch(name, query, cache):
             remark = data.get('remark', '')
             if 'runtime error' in remark or 'timed out' in remark or 'out of memory' in remark:
                 raise RuntimeError(remark)
+            if not valid(data):
+                raise RuntimeError(f'incomplete answer ({len(data.get("elements", []))} elements)')
             os.makedirs(cache, exist_ok=True)
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f)
@@ -231,12 +245,12 @@ def main():
     wanted = set(names)
 
     log('Fetching län ...')
-    lans = [e for e in fetch('lan', LAN_QUERY, args.cache)['elements'] if e['type'] == 'relation']
+    lans = [e for e in fetch('lan', LAN_QUERY, args.cache, has_lan)['elements'] if e['type'] == 'relation']
     log(f'{len(lans)} län')
     per, centres = {}, {}
     for i, lan in enumerate(sorted(lans, key=lambda e: e['id']), 1):
         log(f'[{i}/{len(lans)}] {lan.get("tags", {}).get("name", lan["id"])}')
-        data = fetch(f'lan-{lan["id"]}', KOMMUNER_IN_LAN.replace('{lan}', str(lan['id'])), args.cache)
+        data = fetch(f'lan-{lan["id"]}', KOMMUNER_IN_LAN.replace('{lan}', str(lan['id'])), args.cache, has_kommuner)
         p, c = split_by_kommun(data['elements'], wanted)
         for k, rows in p.items():
             per.setdefault(k, []).extend(rows)
