@@ -2,33 +2,30 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
-import { BarChart3, Bell, BookOpen, CreditCard, Megaphone, Menu, MessagesSquare, Newspaper, Radio, Sparkles, Building2, type LucideIcon } from 'lucide-react';
+import { BookOpen, ChevronDown, Megaphone, Menu, MessagesSquare, Search, X, type LucideIcon } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
 import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
 
-interface NavItem { to: string; label: string; icon: LucideIcon; hint?: string }
+interface NavItem { to: string; label: string }
+interface MoreItem extends NavItem { icon: LucideIcon; hint: string }
 
-// What most people come for, always in the bar
+// The same bar as the start page (components/landing/LandingNav), plus the AI and "Mer"
 const navItems: NavItem[] = [
-  { to: '/karta', label: 'Karta', icon: Radio },
-  { to: '/flode', label: 'Flöde', icon: Newspaper },
-  { to: '/fraga', label: 'Fråga AI', icon: Sparkles },
-  { to: '/analysis', label: 'Analys', icon: BarChart3 },
-  { to: '/prisplan', label: 'Prisplan', icon: CreditCard },
+  { to: '/karta', label: 'Karta' },
+  { to: '/flode', label: 'Flöde' },
+  { to: '/fraga', label: 'Fråga AI' },
+  { to: '/analysis', label: 'Analys' },
+  { to: '/alerts', label: 'Notiser' },
+  { to: '/kommun', label: 'Kommuner' },
 ];
 
-// The rest behind "Mer", so the bar stays short on a phone too
-const moreItems: NavItem[] = [
+// The rest behind "Mer"
+const moreItems: MoreItem[] = [
   { to: '/rapportera', label: 'Rapportera', icon: Megaphone, hint: 'Berätta vad du har sett' },
   { to: '/chattar', label: 'Chattar', icon: MessagesSquare, hint: 'Prata med grannarna' },
-  { to: '/alerts', label: 'Notiser', icon: Bell, hint: 'Kommuner och platser att bevaka' },
-  { to: '/kommun', label: 'Kommuner', icon: Building2, hint: 'Alla 290 kommuner' },
   { to: '/guider', label: 'Guider', icon: BookOpen, hint: 'Trygghet, larm och polisanmälan' },
 ];
-
-// The plans page also answers at /account (Stripe's way back)
-// The app doesn't sell Pro (lib/native), so it has no price page in the menu
-const menuItems = () => (canSellPro() ? navItems : navItems.filter((item) => item.to !== '/prisplan'));
 
 const isCurrent = (to: string, pathname: string) =>
   pathname === to
@@ -36,7 +33,11 @@ const isCurrent = (to: string, pathname: string) =>
   || (to === '/chattar' && pathname.startsWith('/chatt/'))
   || (to !== '/' && pathname.startsWith(`${to}/`));
 
-/** "Mer": the pages that don't need a place in the bar, in a menu under three lines */
+const linkText = 'text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors';
+// The current page: white text and a thin red line along the bar's lower edge
+const currentText = 'relative text-[13px] text-[hsl(var(--ca-text))] after:absolute after:inset-x-3.5 after:-bottom-[14px] after:h-[2px] after:rounded-full after:bg-[hsl(var(--ca-red))]';
+
+/** "Mer": the pages that don't need a place in the bar */
 const MoreMenu = ({ pathname }: { pathname: string }) => {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -59,18 +60,13 @@ const MoreMenu = ({ pathname }: { pathname: string }) => {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Mer"
-        className={`flex items-center gap-1 px-2 md:px-3 py-1.5 rounded-md text-[11px] md:text-xs font-medium transition-all ${
-          current || open
-            ? 'bg-primary/10 text-primary border border-primary/20'
-            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-        }`}
+        className={`flex items-center gap-1 px-3.5 py-2 ${current || open ? currentText : linkText}`}
       >
-        <Menu className="w-3.5 h-3.5" aria-hidden />
-        <span className="hidden sm:inline">Mer</span>
+        Mer
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
       </button>
       {open && (
-        <div role="menu" aria-label="Mer" className="absolute right-0 top-full z-[60] mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-2xl">
+        <div role="menu" aria-label="Mer" className="absolute right-0 top-full z-[60] mt-3 w-64 overflow-hidden rounded-xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-panel))] p-1.5 shadow-2xl">
           {moreItems.map(({ to, label, icon: Icon, hint }) => {
             const active = isCurrent(to, pathname);
             return (
@@ -79,12 +75,12 @@ const MoreMenu = ({ pathname }: { pathname: string }) => {
                 to={to}
                 role="menuitem"
                 aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition ${active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition ${active ? 'bg-[hsl(var(--ca-red)/0.1)] text-[hsl(var(--ca-text))]' : 'text-[hsl(var(--ca-text))] hover:bg-[hsl(var(--ca-panel-3))]'}`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${active ? '' : 'text-muted-foreground'}`} aria-hidden />
+                <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-[hsl(var(--ca-red))]' : 'text-[hsl(var(--ca-text-3))]'}`} aria-hidden />
                 <span className="min-w-0">
                   <span className="block text-sm font-medium">{label}</span>
-                  {hint && <span className="block text-[11px] text-muted-foreground">{hint}</span>}
+                  <span className="block text-[11px] text-[hsl(var(--ca-text-3))]">{hint}</span>
                 </span>
               </Link>
             );
@@ -95,71 +91,123 @@ const MoreMenu = ({ pathname }: { pathname: string }) => {
   );
 };
 
+/** The bar on every page but the start page: the start page's look, with "Mer" for the rest */
 const Header = () => {
-  const location = useLocation();
+  const { pathname } = useLocation();
+  const { user } = useAuth();
   const appBanner = useAppBanner();
+  const [open, setOpen] = useState(false);
+  useEffect(() => setOpen(false), [pathname]);
   // The iPhone app has its own title bar and tabs (src/native/AppShell)
   if (isNativeApp()) return null;
+  // The app doesn't sell Pro (lib/native), so it has no price page in the bar
+  const showPlans = canSellPro();
 
   return (
     <>
     {/* The banner sits above the bar, so it takes the phone's notch space instead of the bar */}
     {appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
     <header
-      className="border-b border-border bg-card/80 backdrop-blur-md flex shrink-0 items-center px-2 md:px-4 justify-between z-50 relative"
-      style={
-        appBanner.visible
-          ? { minHeight: '2.75rem' }
-          : { paddingTop: 'env(safe-area-inset-top, 0px)', minHeight: 'calc(2.75rem + env(safe-area-inset-top, 0px))' }
-      }
+      // ca-dark carries the start page's colours and type (index.css), on pages that are not inside it too
+      className="ca-dark relative z-50 shrink-0 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl"
+      style={appBanner.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
-      <Link to="/" className="flex items-center gap-2 group shrink-0">
-        <img
-          alt="CrimeAlert"
-          className="w-7 h-7 md:w-8 md:h-8 rounded-md object-cover"
-          style={{ background: 'transparent' }}
-          src="/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png"
-          width={32}
-          height={32}
-          fetchPriority="high"
-          decoding="async"
-        />
-        <div className="flex flex-col leading-none">
-          <span className="ca-display font-bold text-xs md:text-sm tracking-wider text-foreground">
-            CRIME<span className="text-primary">ALERT</span>
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 md:h-16 md:px-10">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5">
+          <img
+            src="/lovable-uploads/c2e577a8-2adc-46ca-b331-79142ec40f70.png"
+            alt="CrimeAlert"
+            width={30}
+            height={30}
+            className="h-[30px] w-[30px] rounded-md object-cover"
+            fetchPriority="high"
+            decoding="async"
+          />
+          <span className="ca-display text-[15px] tracking-[0.02em] text-[hsl(var(--ca-text))] md:text-base">
+            CRIME<span className="text-[hsl(var(--ca-red))]">ALERT</span>
           </span>
-          <span className="ca-mono hidden md:block text-[8.5px] tracking-[0.24em] text-muted-foreground font-mono uppercase mt-0.5">
-            Lägesbild Sverige
-          </span>
-        </div>
+        </Link>
 
-      </Link>
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Huvudmeny">
+          {navItems.map(({ to, label }) => {
+            const active = isCurrent(to, pathname);
+            return (
+              <Link key={to} to={to} aria-current={active ? 'page' : undefined} className={`px-3.5 py-2 ${active ? currentText : linkText}`}>
+                {label}
+              </Link>
+            );
+          })}
+          <MoreMenu pathname={pathname} />
+        </nav>
 
-      <nav className="flex items-center gap-0.5">
-        {menuItems().map(({ to, label, icon: Icon }) => {
-          const active = isCurrent(to, location.pathname);
-          return (
+        <div className="flex items-center gap-2 md:gap-3">
+          <Link
+            to="/kommun"
+            aria-label="Sök kommun"
+            className="hidden h-9 w-9 place-items-center rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))] transition hover:border-[hsl(var(--ca-line-strong))] hover:text-[hsl(var(--ca-text))] sm:grid"
+          >
+            <Search className="h-4 w-4" />
+          </Link>
+          {showPlans && (
             <Link
-              key={to}
-              to={to}
-              aria-label={label}
-              aria-current={active ? 'page' : undefined}
-              className={`flex items-center gap-1 px-2 md:px-3 py-1.5 rounded-md text-[11px] md:text-xs font-medium transition-all ${
-                active
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
+              to="/prisplan"
+              aria-current={isCurrent('/prisplan', pathname) ? 'page' : undefined}
+              className={`hidden px-3.5 py-2 md:inline-flex ${isCurrent('/prisplan', pathname) ? currentText : linkText}`}
             >
-              <Icon className="w-3.5 h-3.5" aria-hidden />
-              <span className="hidden sm:inline">{label}</span>
+              Prisplan
             </Link>
-          );
-        })}
-        <MoreMenu pathname={location.pathname} />
-        <span className="ml-1 flex md:ml-2">
-          <ProfileButton className="h-7 w-7 md:h-8 md:w-8" />
-        </span>
-      </nav>
+          )}
+          {user ? (
+            <ProfileButton className="h-9 w-9" />
+          ) : (
+            <>
+              <Link to="/auth" className={`hidden px-3.5 py-2 md:inline-flex ${linkText}`}>Logga in</Link>
+              <Link
+                to="/auth?mode=signup"
+                className="hidden items-center rounded-md bg-[hsl(var(--ca-red))] px-4 py-2 text-[13px] font-medium text-white transition hover:brightness-110 md:inline-flex"
+              >
+                Skapa konto
+              </Link>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label="Meny"
+            className="grid h-9 w-9 place-items-center rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))] lg:hidden"
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 px-5 py-3 backdrop-blur-xl lg:hidden">
+          <nav className="flex flex-col" aria-label="Meny">
+            {[...navItems, ...moreItems, ...(showPlans ? [{ to: '/prisplan', label: 'Prisplan' }] : [])].map(({ to, label }) => {
+              const active = isCurrent(to, pathname);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center justify-between py-2.5 text-sm ${active ? 'font-medium text-[hsl(var(--ca-text))]' : 'text-[hsl(var(--ca-text-2))]'}`}
+                >
+                  {label}
+                  {active && <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--ca-red))]" aria-hidden />}
+                </Link>
+              );
+            })}
+          </nav>
+          {!user && (
+            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-[hsl(var(--ca-line))] pt-3 md:hidden">
+              <Link to="/auth" className="rounded-md border border-[hsl(var(--ca-line-strong))] py-2.5 text-center text-sm text-[hsl(var(--ca-text))]">Logga in</Link>
+              <Link to="/auth?mode=signup" className="rounded-md bg-[hsl(var(--ca-red))] py-2.5 text-center text-sm font-medium text-white">Skapa konto</Link>
+            </div>
+          )}
+        </div>
+      )}
     </header>
     <PoliceStaleNotice />
     </>
