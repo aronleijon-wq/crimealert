@@ -4,8 +4,10 @@
 // with Pro (a hundred, so a stuck script can't run up a bill), the first five a day by Sonnet. The ask-crimealert edge function runs it; the parts
 // here are plain functions so they can be tested.
 import { SWEDISH_MUNICIPALITIES } from './data/municipalities.ts';
+import { KOMMUN_POPULATION, POPULATION_YEAR } from './data/population.ts';
 import { kommunMatcher } from './notifications.ts';
 import { THEMES, themeOf } from './themes.ts';
+import { STAT_TYPE_IDS } from './kommunStats.ts';
 
 export const FREE_QUESTIONS_PER_DAY = 3;
 /** "Obegränsat" for Pro, but not without end */
@@ -125,15 +127,46 @@ export const ASK_TOOLS = [
   },
   {
     name: 'sweden_ranking',
-    description: 'Räknar Polisens publicerade händelser per kommun i hela Sverige under de senaste dagarna och ger de tio kommuner med flest, i antal (inte per invånare). Använd för frågor om var i Sverige något är vanligast.',
+    description: 'Räknar Polisens publicerade händelser per kommun i hela Sverige under de senaste dagarna och rangordnar kommunerna, i antal eller per 100 000 invånare, flest eller minst först. Ger de tio första, hela landets nivå per 100 000 invånare och hur många kommuner som inte har någon händelse alls. Använd för frågor om var i Sverige något är vanligast eller ovanligast, och för att jämföra en kommun med riket.',
     strict: true,
     input_schema: {
       type: 'object' as const,
       properties: {
-        days: { type: 'integer', description: 'Hur många dagar bakåt, 1 till 30.' },
+        days: { type: 'integer', description: 'Hur många dagar bakåt, 1 till 60.' },
         kind: { type: 'string', enum: KINDS, description: 'Vilken sorts händelser, eller "alla".' },
+        matt: { type: 'string', enum: ['antal', 'per_invanare'], description: '"antal" rangordnar efter antal händelser, "per_invanare" efter händelser per 100 000 invånare.' },
+        ordning: { type: 'string', enum: ['flest', 'minst'], description: '"flest" eller "minst" först.' },
+        min_invanare: { type: 'integer', description: 'Ta bara med kommuner med minst så många invånare, 0 för alla. Använd till exempel 20000 eller 50000 vid "per_invanare", annars hamnar små kommuner med en enda händelse överst.' },
       },
-      required: ['days', 'kind'],
+      required: ['days', 'kind', 'matt', 'ordning', 'min_invanare'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'kommun_statistik',
+    description: 'Statistik för en kommun per 100 000 invånare: Brå:s alla anmälda brott 2025 för 16 sorter (bland annat totalt, våldsbrott, bostadsinbrott inklusive källare, vind och fritidshus, stöld, skadegörelse, narkotika, personrån, bilbrott), och räddningstjänstens insatser (MCF) till bränder i byggnad och trafikolyckor. För varje sort: kommunens nivå, förändringen mot ett tidigare år, hela landets nivå, hur många gånger rikets nivå det är och kommunens plats bland alla kommuner. Använd för frågor om hur mycket brott eller bränder det är i en kommun, eller hur den står sig mot riket.',
+    strict: true,
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        kommun: { type: 'string', description: 'Kommunens namn, till exempel "Norrköping".' },
+      },
+      required: ['kommun'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'sverige_statistik',
+    description: 'Rangordnar alla kommuner per 100 000 invånare för en sort, högst eller lägst först, och ger hela landets nivå: Brå:s anmälda brott 2025, eller räddningstjänstens insatser till bränder i byggnad och trafikolyckor. Använd för frågor om var i Sverige något är vanligast eller ovanligast, till exempel var det är minst bostadsinbrott per invånare.',
+    strict: true,
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        sort: { type: 'string', enum: STAT_TYPE_IDS, description: 'Vilken sort: ett brott enligt Brå, eller byggnadsbrander och trafikolyckor_raddningsinsats från räddningstjänsten.' },
+        ordning: { type: 'string', enum: ['hogst', 'lagst'], description: '"hogst" eller "lagst" först.' },
+        min_invanare: { type: 'integer', description: 'Ta bara med kommuner med minst så många invånare, 0 för alla. Använd till exempel 20000 eller 50000 för jämförbara svar.' },
+      },
+      required: ['sort', 'ordning', 'min_invanare'],
       additionalProperties: false,
     },
   },
@@ -173,8 +206,11 @@ export function kommunEvents(input: { kommun?: unknown; days?: unknown; kind?: u
     counts.set(theme, c);
   }
   listed.sort((a, b) => b.at - a.at);
+  const invanare = KOMMUN_POPULATION[kommun] ?? null;
   return {
     kommun,
+    invanare,
+    per_100_000_invanare: invanare ? round2((now_ / invanare) * 100_000) : null,
     period: `senaste ${days} dagarna`,
     sort: kind,
     antal: now_,
@@ -184,10 +220,20 @@ export function kommunEvents(input: { kommun?: unknown; days?: unknown; kind?: u
   };
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const SWEDEN_POPULATION = Object.values(KOMMUN_POPULATION).reduce((a, b) => a + b, 0);
+
 /** sweden_ranking: needs every event in Sweden for the period */
-export function swedenRanking(input: { days?: unknown; kind?: unknown }, events: AskEvent[], now: number) {
-  const days = clampDays(input.days, 30);
+export function swedenRanking(
+  input: { days?: unknown; kind?: unknown; matt?: unknown; ordning?: unknown; min_invanare?: unknown },
+  events: AskEvent[],
+  now: number,
+) {
+  const days = clampDays(input.days, 60);
   const kind = KINDS.includes(String(input.kind)) ? String(input.kind) : 'alla';
+  const perCapita = input.matt === 'per_invanare';
+  const fewest = input.ordning === 'minst';
+  const minPop = Math.max(0, Math.round(Number(input.min_invanare) || 0));
   const counts = new Map<string, number>();
   let total = 0;
   for (const e of events) {
@@ -198,12 +244,28 @@ export function swedenRanking(input: { days?: unknown; kind?: unknown }, events:
     const kommun = kommunOfEvent(e);
     if (kommun) counts.set(kommun, (counts.get(kommun) ?? 0) + 1);
   }
+  // Every kommun is in the ranking, those without events too, so "minst" means something
+  const rows = Object.entries(KOMMUN_POPULATION)
+    .filter(([, pop]) => pop >= minPop)
+    .map(([kommun, invanare]) => {
+      const antal = counts.get(kommun) ?? 0;
+      return { kommun, antal, invanare, per_100_000_invanare: round2((antal / invanare) * 100_000) };
+    });
+  const key = (r: (typeof rows)[number]) => (perCapita ? r.per_100_000_invanare : r.antal);
+  rows.sort((a, b) => (fewest ? key(a) - key(b) : key(b) - key(a)) || (fewest ? b.invanare - a.invanare : a.kommun.localeCompare(b.kommun, 'sv')));
+  // Most first lists only kommuner that have events; fewest first also those without
+  const list = (fewest ? rows : rows.filter((r) => r.antal > 0)).slice(0, 10).map((r) => (perCapita ? r : { kommun: r.kommun, antal: r.antal, invanare: r.invanare }));
   return {
     period: `senaste ${days} dagarna`,
     sort: kind,
+    matt: perCapita ? 'per 100 000 invånare' : 'antal',
+    ...(minPop ? { bara_kommuner_med_minst_invanare: minPop } : {}),
     antal_i_sverige: total,
-    flest: [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'sv')).slice(0, 10).map(([kommun, antal]) => ({ kommun, antal })),
-    obs: 'Antal, inte per invånare. Händelser som Polisen bara anger på länsnivå räknas inte till någon kommun.',
+    sverige_per_100_000_invanare: round2((total / SWEDEN_POPULATION) * 100_000),
+    kommuner_i_urvalet: rows.length,
+    kommuner_utan_handelser: rows.filter((r) => r.antal === 0).length,
+    [fewest ? 'minst' : 'flest']: list,
+    obs: `Invånare enligt SCB ${POPULATION_YEAR}. Polisen publicerar ett urval av händelserna, och händelser som Polisen bara anger på länsnivå räknas inte till någon kommun. Med få händelser blir siffrorna per invånare osäkra.`,
   };
 }
 
@@ -212,11 +274,15 @@ export function askSystem(now: number): string {
   const today = new Date(now).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   return `Du är Fråga CrimeAlert, en tjänst i appen CrimeAlert som svarar på frågor om brott och händelser i Sverige utifrån det Polisen har publicerat. Idag är det ${today}.
 
-Hämta alltid uppgifter med verktygen innan du svarar på en fråga om händelser, och svara bara utifrån det verktygen ger. Finns inget svar där, säg det rakt ut. Arkivet börjar den 28 september 2026, så längre tillbaka finns inget.
+Hämta alltid uppgifter med verktygen innan du svarar på en fråga om brott eller händelser, och svara bara utifrån det verktygen ger.
 
-Svara på enkel svenska, kort och sakligt: oftast 2 till 5 meningar, högst 120 ord, utan rubriker eller tabeller. Säg vilken period siffrorna gäller.
+Du har två sorters underlag. Statistiken (kommun_statistik, sverige_statistik) räknar alla anmälda brott under ett helt år enligt Brå, och räddningstjänstens insatser till bränder och trafikolyckor, per kommun och invånare; den visar nivån, alltså var det är mycket eller lite brott, och är det rätta underlaget för frågor som "var är det minst inbrott per invånare" eller "är det mycket brott i X". Polisens händelser (kommun_events, sweden_ranking) är ett urval av vad som hänt de senaste dagarna och veckorna; de visar vad som händer just nu, var och när. Använd båda när frågan gäller både läget nu och nivån, och säg vilken källa en siffra kommer från. Frågar någon per 1 000 invånare, dela talen per 100 000 med 100. Finns inget svar där, säg det rakt ut. Polisens händelser finns från den 28 september 2026; Brå:s statistik gäller hela år.
 
-Polisen publicerar ett urval av det som händer, så skriv "Polisen har rapporterat" och inte att brottsligheten är hög eller har ökat. Jämför inte kommuner per invånare, verktygen ger bara antal.
+Tänk igenom vad frågan egentligen kräver innan du svarar, och hämta det som behövs för att dra en slutsats, gärna med flera verktygsanrop. Jämför när det hjälper: med perioden innan, med andra kommuner och med hela landet per invånare. Frågar någon var något är vanligast eller ovanligast, räkna per invånare med sweden_ranking och välj en rimlig minsta kommunstorlek, så att en liten kommun med en enda händelse inte avgör svaret. Säg vad siffrorna pekar på och hur säkert det är; med få händelser, säg att skillnaderna kan vara slumpen.
+
+Svara på enkel svenska och sakligt, utan rubriker eller tabeller: oftast 3 till 6 meningar, högst 180 ord. Säg vilken period siffrorna gäller.
+
+Polisen publicerar ett urval av det som händer, inte alla anmälda brott, så skriv "Polisen har rapporterat" och påstå inte att brottsligheten i sig är högre eller lägre. Inbrott och många andra brott publiceras sällan, så för dem säger Polisens händelser lite om var det faktiskt sker mest; säg det när det gäller frågan.
 
 Peka aldrig ut personer: inga namn, åldrar, kön, utseenden eller gissningar om vem som gjorde vad, och svara inte på frågor om en viss persons inblandning. Spekulera inte om orsaker eller gärningsmän.
 

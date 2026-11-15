@@ -34,9 +34,11 @@ function buildNotification(data = {}) {
 
 self.addEventListener('install', (event) => {
   console.info('[sw-push] install');
+  // A new version takes over at once (the old version's files are removed when it activates).
+  // Pages running new code reload when it is safe (src/lib/appVersion.ts); an old page that runs
+  // into a removed file loads the site fresh (src/lib/staleBuild.ts).
+  self.skipWaiting();
   event.waitUntil(broadcastToClients('SW_INSTALL', { state: 'install' }));
-  // A new version waits until the app asks for it (when the page is hidden), so an open
-  // visit is never reloaded. The first install has nothing to wait for and activates at once.
 });
 
 self.addEventListener('activate', (event) => {

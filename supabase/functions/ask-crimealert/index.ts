@@ -12,6 +12,7 @@ import Stripe from 'https://esm.sh/stripe@18.5.0';
 import {
   ASK_TOOLS, askSystem, betterLeft, cleanHistory, kommunEvents, kommunNamed, modelTier, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
 } from '../_shared/ask.ts';
+import { kommunStats, statsRanking } from '../_shared/kommunStats.ts';
 import { isFreePremiumEmail, isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 
 const corsHeaders = {
@@ -27,7 +28,7 @@ const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
 const DAY = 24 * 60 * 60 * 1000;
 /** Rounds of tool use before the answer, at most */
-const MAX_ROUNDS = 4;
+const MAX_ROUNDS = 6;
 const COLUMNS = 'id, title, area, time, original_type, description';
 
 const json = (body: unknown, status = 200) =>
@@ -51,10 +52,10 @@ async function hasPro(userId: string, email: string | undefined, now: number): P
 }
 
 /** Every event since then, page by page (PostgREST gives at most 1000 at a time) */
-async function eventsSince(since: string, filter?: (q: any) => any): Promise<AskEvent[]> { // eslint-disable-line @typescript-eslint/no-explicit-any
+async function eventsSince(since: string, filter?: (q: any) => any, columns = COLUMNS): Promise<AskEvent[]> { // eslint-disable-line @typescript-eslint/no-explicit-any
   const rows: AskEvent[] = [];
-  for (let page = 0; page < 6; page++) {
-    let query = db.from('police_events_archive').select(COLUMNS).gte('time', since);
+  for (let page = 0; page < 12; page++) {
+    let query = db.from('police_events_archive').select(columns).gte('time', since);
     if (filter) query = filter(query);
     const { data, error } = await query.order('time', { ascending: false }).range(page * 1000, page * 1000 + 999);
     if (error) throw error;
@@ -81,9 +82,16 @@ async function runTool(name: string, input: Record<string, unknown>, now: number
     return JSON.stringify(kommunEvents(input, [...unique.values()], now));
   }
   if (name === 'sweden_ranking') {
-    const days = Math.min(30, Math.max(1, Math.round(Number(input.days) || 7)));
-    return JSON.stringify(swedenRanking(input, await eventsSince(new Date(now - days * DAY).toISOString()), now));
+    const days = Math.min(60, Math.max(1, Math.round(Number(input.days) || 7)));
+    // The ranking only counts, so Polisen's texts are left out of the download
+    const events = await eventsSince(new Date(now - days * DAY).toISOString(), undefined, 'id, title, area, time, original_type');
+    return JSON.stringify(swedenRanking(input, events, now));
   }
+  if (name === 'kommun_statistik') {
+    const kommun = kommunNamed(String(input.kommun ?? ''));
+    return JSON.stringify(kommun ? kommunStats(kommun) : { error: `Ingen svensk kommun heter "${String(input.kommun ?? '')}".` });
+  }
+  if (name === 'sverige_statistik') return JSON.stringify(statsRanking(input));
   return JSON.stringify({ error: `Okänt verktyg: ${name}` });
 }
 
@@ -99,7 +107,8 @@ async function answer(history: { role: 'user' | 'assistant'; content: string }[]
       tools: ASK_TOOLS,
       // After the last round of tools it must answer with what it has
       tool_choice: round === MAX_ROUNDS ? { type: 'none' } : { type: 'auto' },
-      output_config: { effort: 'medium' },
+      // Both models think adaptively; high effort lets them think through comparisons and per-capita figures
+      output_config: { effort: 'high' },
       // A declined request is run again on a fallback model where the model has one (Haiku has none)
       ...(model.startsWith('claude-haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }),
       messages,

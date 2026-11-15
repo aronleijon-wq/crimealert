@@ -83,6 +83,27 @@ describe('kommun_events', () => {
 });
 
 describe('sweden_ranking', () => {
+  it('ranks per inhabitant, fewest first, and counts the kommuner without events', () => {
+    const events = [ev(1, 'Inbrott', 'Malmö'), ev(2, 'Inbrott', 'Malmö'), ev(1, 'Inbrott', 'Lund')];
+    const r = swedenRanking({ days: 30, kind: 'inbrott', matt: 'per_invanare', ordning: 'minst', min_invanare: 100_000 }, events, NOW) as Record<string, unknown>;
+    expect(r.matt).toBe('per 100 000 invånare');
+    expect(r.bara_kommuner_med_minst_invanare).toBe(100_000);
+    const minst = r.minst as { kommun: string; antal: number; per_100_000_invanare: number }[];
+    // Kommuner of that size without any inbrott come first; Malmö and Lund are not among them
+    expect(minst[0].antal).toBe(0);
+    expect(minst.map((m) => m.kommun)).not.toContain('Malmö');
+    expect(r.kommuner_utan_handelser).toBe((r.kommuner_i_urvalet as number) - 2);
+    expect(r.sverige_per_100_000_invanare).toBeGreaterThan(0);
+  });
+
+  it('ranks per inhabitant, most first', () => {
+    const events = [ev(1, 'Inbrott', 'Malmö'), ev(2, 'Inbrott', 'Malmö'), ev(1, 'Inbrott', 'Lund')];
+    const r = swedenRanking({ days: 30, kind: 'inbrott', matt: 'per_invanare', ordning: 'flest', min_invanare: 0 }, events, NOW) as Record<string, unknown>;
+    const flest = r.flest as { kommun: string; per_100_000_invanare: number }[];
+    expect(flest.slice(0, 2).map((f) => f.kommun).sort()).toEqual(['Lund', 'Malmö']);
+    expect(flest[0].per_100_000_invanare).toBeGreaterThanOrEqual(flest[1].per_100_000_invanare);
+  });
+
   it('ranks the kommuner by count for a kind', () => {
     const events = [ev(1, 'Inbrott', 'Malmö'), ev(2, 'Inbrott', 'Malmö'), ev(1, 'Inbrott', 'Lund'), ev(1, 'Rån', 'Lund'), ev(40, 'Inbrott', 'Lund')];
     expect(swedenRanking({ days: 30, kind: 'inbrott' }, events, NOW)).toMatchObject({
