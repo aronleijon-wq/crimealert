@@ -568,6 +568,39 @@ export type Database = {
         }
         Relationships: []
       }
+      place_names: {
+        Row: {
+          hits: number
+          key: string
+          kind: string
+          kommun: string
+          lat: number | null
+          lng: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          hits?: number
+          key: string
+          kind: string
+          kommun: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          hits?: number
+          key?: string
+          kind?: string
+          kommun?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       police_events_archive: {
         Row: {
           area: string | null
