@@ -24,6 +24,15 @@ const data = {
   engagement: { ask7: 85, ask30: 300, push7: 1450, places: 48, reports30: 6, freePro: 3, invited: 5 },
   data: { events24h: 214, eventsTotal: 5455 },
   visits: [{ day: '2026-11-15', mobile: 200, desktop: 80 }],
+  ai: {
+    answers7: 10, answers30: 40, cost7: 0.12, cost30: 0.5, costAll: 0.5, costPerAnswer: 0.0125,
+    byModel: [{ model: 'claude-sonnet-5-5', answers: 10, cost: 0.4 }], byDay: [{ day: '2026-11-15', cost: 0.1, answers: 4 }],
+  },
+  invites: {
+    links: 9, inviters: 1, invited: 2, rewarded: 2, proActive: 1,
+    list: [{ email: 'anna@example.se', code: 'ABCD2345', invited: 2, rewarded: 2, pro_until: '2026-11-29T00:00:00Z', pro_active: true, last_invite: '2026-11-14T00:00:00Z' }],
+    recent: [{ at: '2026-11-14T00:00:00Z', inviter: 'anna@example.se', invitee: 'bo@example.se', rewarded: true }],
+  },
 };
 
 describe('DashboardPanel', () => {
@@ -37,6 +46,18 @@ describe('DashboardPanel', () => {
     expect(screen.getByText('ARR 912 kr')).toBeInTheDocument();
     expect(screen.getByText('Kunde inte läsa Stripe just nu.')).toBeInTheDocument();
     expect(screen.getByText('580')).toBeInTheDocument();
+  });
+
+  it("shows the AI chat's cost and who invites friends", async () => {
+    invoke.mockResolvedValue({ data, error: null });
+    render(<DashboardPanel />);
+    // 30 days and all time
+    expect(await screen.findAllByText('$0.50')).toHaveLength(2);
+    expect(screen.getByText('$0.0125')).toBeInTheDocument();
+    expect(screen.getByText('Sonnet 5.5 (Pro)')).toBeInTheDocument();
+    const inviter = screen.getByRole('cell', { name: 'anna@example.se' }).closest('tr')!;
+    expect(within(inviter).getAllByRole('cell').map((c) => c.textContent)).toEqual(['anna@example.se', '2', '2', '2026-11-29', '2026-11-14']);
+    expect(screen.getByText((_, el) => el?.tagName === 'SPAN' && el.textContent === 'anna@example.se bjöd in bo@example.se')).toBeInTheDocument();
   });
 
   it('says so when the numbers can not be fetched', async () => {

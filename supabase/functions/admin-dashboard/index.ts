@@ -1,10 +1,12 @@
 // Everything the admin dashboard shows, in one answer: revenue from Stripe and Apple (MRR), users,
-// app and web devices, engagement and visits. Only for admins. Numbers only, no personal details.
+// app and web devices, engagement, visits, the AI chat's cost and who invites friends. Only for
+// admins. Personal details only in the invite list (e-mail of those who invited and were invited).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { fetchAppleBilling, type AppStoreKey } from "../_shared/appStore.ts";
 import { fromApple, fromStripe, summarize, type RevenueSub } from "../_shared/revenue.ts";
+import { summarizeAi } from "../_shared/aiCost.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,12 +79,14 @@ serve(async (req) => {
 
   // ---- Users ----
   const created: number[] = [];
+  const emails = new Map<string, string>();
   let activeLast30 = 0;
   for (let page = 1; ; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw error;
     for (const u of data.users) {
       created.push(Date.parse(u.created_at));
+      emails.set(u.id, u.email ?? "(utan e-post)");
       if (u.last_sign_in_at && Date.parse(u.last_sign_in_at) > now - 30 * DAY) activeLast30 += 1;
     }
     if (data.users.length < 1000) break;
@@ -122,6 +126,59 @@ serve(async (req) => {
     viewsByDay.set(v.day, d);
   }
 
+  // ---- The AI chat's cost (ai_usage) ----
+  const aiRows: Parameters<typeof summarizeAi>[0] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await admin.from("ai_usage")
+      .select("model, created_at, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens")
+      .order("created_at", { ascending: true }).range(from, from + 999);
+    if (error) { notes.push("AI-kostnaden kunde inte läsas (finns tabellen ai_usage?)."); break; }
+    aiRows.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  const ai = summarizeAi(aiRows, now);
+
+  // ---- Invites: who invited, how many friends it gave, and their Pro from it ----
+  const [{ data: codes }, { data: invites }] = await Promise.all([
+    admin.from("invite_codes").select("user_id, code, rewarded, pro_until, created_at"),
+    admin.from("invites").select("invitee_id, inviter_id, rewarded, created_at").order("created_at", { ascending: false }),
+  ]);
+  const invitedBy = new Map<string, { invited: number; last: string | null }>();
+  for (const i of invites ?? []) {
+    const e = invitedBy.get(i.inviter_id) ?? { invited: 0, last: null };
+    e.invited += 1;
+    e.last = e.last && e.last > i.created_at ? e.last : i.created_at;
+    invitedBy.set(i.inviter_id, e);
+  }
+  const nowIso = new Date(now).toISOString();
+  const inviters = (codes ?? [])
+    .filter((c) => invitedBy.has(c.user_id) || c.rewarded > 0)
+    .map((c) => ({
+      email: emails.get(c.user_id) ?? "(raderat konto)",
+      code: c.code,
+      invited: invitedBy.get(c.user_id)?.invited ?? 0,
+      rewarded: c.rewarded,
+      pro_until: c.pro_until,
+      pro_active: Boolean(c.pro_until && c.pro_until > nowIso),
+      last_invite: invitedBy.get(c.user_id)?.last ?? null,
+    }))
+    .sort((a, b) => b.invited - a.invited || b.rewarded - a.rewarded)
+    .slice(0, 100);
+  const inviteSummary = {
+    links: codes?.length ?? 0,
+    inviters: invitedBy.size,
+    invited: invites?.length ?? 0,
+    rewarded: (invites ?? []).filter((i) => i.rewarded).length,
+    proActive: (codes ?? []).filter((c) => c.pro_until && c.pro_until > nowIso).length,
+    list: inviters,
+    recent: (invites ?? []).slice(0, 20).map((i) => ({
+      at: i.created_at,
+      inviter: emails.get(i.inviter_id) ?? "(raderat konto)",
+      invitee: emails.get(i.invitee_id) ?? "(raderat konto)",
+      rewarded: i.rewarded,
+    })),
+  };
+
   return json({
     generated_at: new Date(now).toISOString(),
     notes,
@@ -136,6 +193,8 @@ serve(async (req) => {
     devices: { app: appDevices, web: webDevices },
     engagement: { ask7, ask30, push7, places, reports30, freePro, invited },
     data: { events24h, eventsTotal },
+    ai,
+    invites: inviteSummary,
     visits: [...viewsByDay].sort(([a], [b]) => a.localeCompare(b)).map(([day, v]) => ({ day, ...v })),
   });
 });

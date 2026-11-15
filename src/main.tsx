@@ -17,8 +17,11 @@ const isInIframe = (() => {
   }
 })();
 
+// Lovable's previews (id-preview--…, preview--…lovable.app, lovableproject.com) always show the
+// newest code, so they get no service worker and no saved copy
 const isPreviewHost =
-  window.location.hostname.includes('id-preview--') ||
+  window.location.hostname.includes('preview--') ||
+  window.location.hostname.endsWith('.lovable.app') ||
   window.location.hostname.includes('lovableproject.com');
 
 if (isNativeApp()) document.documentElement.classList.add('native-app');
@@ -32,6 +35,8 @@ if ('serviceWorker' in navigator) {
       registrations.forEach((registration) => registration.unregister());
       console.info('[PWA] Service workers avregistrerade i preview/iframe');
     });
+    // And the files an old service worker saved
+    if ('caches' in window) void caches.keys().then((keys) => keys.forEach((key) => void caches.delete(key)));
   } else {
     // A new version takes over as soon as it is downloaded, and its old files are removed. This
     // page then reloads when it is safe: at once if it has just opened or is hidden, otherwise the
