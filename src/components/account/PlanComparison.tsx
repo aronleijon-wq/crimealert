@@ -1,6 +1,6 @@
-import { BarChart3, Bell, Building2, Check, Database, FileText, Layers, Map as MapIcon, Megaphone, MessageCircle, Minus, Moon, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
+import { Bell, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CONTACT_EMAIL } from '@/components/landing/faqItems';
+import B2BOffer from './B2BOffer';
 import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
@@ -11,17 +11,6 @@ const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MessageCircle, text: 'Gilla och kommentera (med gratis konto)' },
   { icon: Sparkles, text: 'Fråga AI om brotten där du bor: 3 frågor per dag (med gratis konto)' },
 ];
-
-/** For kommuner, companies and organisations: no fixed price, they contact us */
-const B2B_FEATURES: { icon: LucideIcon; text: string }[] = [
-  { icon: FileText, text: 'Lägesrapporter för valfri kommun, stadsdel eller område' },
-  { icon: Layers, text: 'Valfri period: vecka, månad, kvartal eller inför ett evenemang' },
-  { icon: BarChart3, text: 'Brå:s anmälda brott och räddningstjänstens insatser jämfört med riket' },
-  { icon: Moon, text: 'Händelserna i Polisens nattsammanfattningar, utlästa och räknade' },
-  { icon: Database, text: 'Den data ni behöver, för valfri period och i valfritt format' },
-  { icon: Zap, text: 'Allt som ingår i Pro' },
-];
-export const B2B_MAIL_SUBJECT = 'CrimeAlert för företag och kommuner';
 
 type Cell = boolean | string;
 interface Row { feature: string; free: Cell; pro: Cell }
@@ -78,7 +67,7 @@ interface PlanComparisonProps {
   checkoutLoading: boolean;
 }
 
-/** Gratis and Pro side by side, the offer for companies and kommuner, then everything compared row by row. */
+/** Gratis and Pro side by side, the offer for organisations, then everything compared row by row. */
 const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBillingCycle, onCheckout, onManage, checkoutLoading }: PlanComparisonProps) => {
   const price = PRICES[billingCycle];
   const offerTrial = !isPremium && trialEligible;
@@ -175,34 +164,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
         </div>
       </div>
 
-      {/* Företag och kommuner */}
-      <section className="rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5" aria-labelledby="b2b-rubrik">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="sm:max-w-[40%]">
-            <h2 id="b2b-rubrik" className="flex items-center gap-1.5 font-['Archivo',Inter,sans-serif] text-lg font-extrabold text-foreground">
-              <Building2 className="h-4 w-4" /> Företag och kommuner
-            </h2>
-            <p className="mt-1"><span className="font-mono text-2xl font-bold text-foreground">Offert</span></p>
-            <p className="mt-2 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-              För kommuner, företag och organisationer som behöver en lägesbild över brott och trygghet. Berätta vad ni behöver, så tar vi fram ett förslag.
-            </p>
-            <a
-              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(B2B_MAIL_SUBJECT)}`}
-              className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl border border-[hsl(var(--ca-line-strong))] px-5 text-sm font-semibold text-foreground transition hover:border-primary/50 sm:w-auto"
-            >
-              Kontakta oss
-            </a>
-            <p className="mt-2 text-[11px] text-muted-foreground">{CONTACT_EMAIL}</p>
-          </div>
-          <ul className="grid flex-1 grid-cols-1 gap-2.5 sm:max-w-[56%]">
-            {B2B_FEATURES.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-2.5 text-[13px] text-foreground">
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--ca-text-2))]" />{text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <B2BOffer />
 
       <div className="overflow-hidden rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card">
         <table className="w-full text-left">
