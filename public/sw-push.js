@@ -32,23 +32,64 @@ function buildNotification(data = {}) {
   };
 }
 
+/**
+ * Reloads every open page that runs an older build. Pages answer which build they run
+ * (src/lib/appVersion.ts); a page that doesn't answer is older than that code, and a page that
+ * answers with another build is old too. Pages already on this build are left alone.
+ */
+async function reloadOldPages() {
+  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  if (!windows.length) return;
+  // The build that is live (the one this service worker came with)
+  let live = '';
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (res.ok) live = (await res.json()).build || '';
+  } catch (e) { /* offline: pages that answer are left to check for themselves */ }
+  const current = new Set();
+  const listen = (event) => {
+    const data = event.data || {};
+    // A page that answers is new enough to check for itself; it is left alone when it runs the
+    // live build, or when the live build can't be read
+    if (data.type === 'CA_BUILD' && event.source && (!live || data.build === live)) current.add(event.source.id);
+  };
+  self.addEventListener('message', listen);
+  windows.forEach((client) => {
+    try { client.postMessage({ type: 'CA_WHICH_BUILD' }); } catch (e) { /* closed */ }
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  self.removeEventListener('message', listen);
+  await Promise.all(windows.map(async (client) => {
+    if (current.has(client.id)) return;
+    const url = new URL(client.url);
+    if (url.origin !== self.location.origin) return;
+    try {
+      console.info('[sw-push] reloading an old page', url.pathname);
+      await client.navigate(client.url);
+    } catch (e) {
+      console.warn('[sw-push] could not reload a page', e);
+    }
+  }));
+}
+
 self.addEventListener('install', (event) => {
   console.info('[sw-push] install');
-  // A new version takes over at once (the old version's files are removed when it activates).
-  // Pages running new code reload when it is safe (src/lib/appVersion.ts); an old page that runs
-  // into a removed file loads the site fresh (src/lib/staleBuild.ts).
+  // A new version takes over at once (the old version's files are removed when it activates),
+  // and then reloads the open pages that run an older build (reloadOldPages).
   self.skipWaiting();
   event.waitUntil(broadcastToClients('SW_INSTALL', { state: 'install' }));
 });
 
 self.addEventListener('activate', (event) => {
   console.info('[sw-push] activate');
-  event.waitUntil(
-    Promise.all([
-      self.clients.claim(),
-      broadcastToClients('SW_ACTIVE', { state: 'active', scope: self.registration.scope }),
-    ])
-  );
+  const activated = Promise.all([
+    self.clients.claim(),
+    broadcastToClients('SW_ACTIVE', { state: 'active', scope: self.registration.scope }),
+  ]);
+  event.waitUntil(activated);
+  // Only once this version is active: a page reloading earlier would wait for it to activate,
+  // which would wait for the page (and nothing would happen)
+  activated.then(() => reloadOldPages()).catch((e) => console.warn('[sw-push] reloading old pages failed', e));
 });
 
 self.addEventListener('message', (event) => {
