@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '../_shared/archiveDiff.ts';
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
+import { distanceKm, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank, type GeocodeHit, type PlaceCandidate } from '../_shared/geoPlace.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -697,82 +698,6 @@ function lookupSwedishLocation(locationName: string): LocationEntry | null {
   return null;
 }
 
-// Extract street address from summary text for precise geocoding
-function extractAddressFromSummary(summary: string): string | null {
-  if (!summary) return null;
-  
-  // ── Swedish street/road suffixes ──
-  const streetSuffixes = '(?:gatan|vägen|torget|platsen|allén|stigen|bron|gränd|backen|leden|parken|gärdet|ängen|berget|höjden|dalen|ringen|slingan|promenaden|kajen|hamnen|stranden|udden|kullen|åsen|sluttningen|tvärgatan|esplanaden|boulevarden|gata|väg|stig|plan|torg|led)';
-
-  // Common false positives
-  const skipWords = new Set([
-    'polisen', 'polisens', 'sjukhus', 'sjukhuset', 'ambulans', 'ambulansen',
-    'räddningstjänsten', 'brandkåren', 'föraren', 'chauffören',
-    'den', 'det', 'ett', 'en', 'personen', 'fordonet', 'bilen', 'mannen', 'kvinnan',
-    'platsen', 'området', 'centrum', 'bostad', 'boende', 'lägenhet', 'lägenheten',
-    'flerfamiljshus', 'fritidshus', 'personbil', 'personbilar', 'bilar',
-    'samband', 'trafiken', 'resultat', 'anledning',
-    'man', 'kvinna', 'person', 'misstänkt', 'gripen', 'greps',
-    'anmälan', 'ärende', 'händelse', 'fall', 'insats',
-    'närheten', 'riktning', 'höjd', 'dag', 'natt', 'kväll', 'morgon',
-    'norr', 'söder', 'öster', 'väster', 'dörren', 'huset', 'byggnaden',
-    'skolan', 'butiken', 'affären', 'restaurangen', 'baren',
-    'helgen', 'veckan', 'fredagen', 'lördagen', 'söndagen',
-    'måndagen', 'tisdagen', 'onsdagen', 'torsdagen',
-    'januari', 'februari', 'mars', 'april', 'maj', 'juni',
-    'juli', 'augusti', 'september', 'oktober', 'november', 'december',
-  ]);
-
-  const isSkipWord = (w: string) => skipWords.has(w.toLowerCase());
-
-  const patterns: Array<{ re: RegExp; group: number; priority: number }> = [
-    // 1. Intersections: "korsningen Storgatan/Kungsgatan", "i korsningen X och Y"
-    { re: new RegExp(`(?:korsningen|hörnet|korsning)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s*(?:/|och)\\s*[A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 1 },
-
-    // 2. Street with number: "Storgatan 15", "Nobelvägen 3B"
-    { re: new RegExp(`([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}\\s+\\d+\\s*[A-Za-z]?)`, 'gi'), group: 1, priority: 2 },
-
-    // 3. Preposition + street name: "på Storgatan", "vid Nobelvägen 5"
-    { re: new RegExp(`(?:på|vid|i\\s+närheten\\s+av|nära|utanför|framför|bakom|längs|mot|över|intill|bredvid|mittemot)\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes}(?:\\s+\\d+[-–]?\\d*\\s*[A-Za-z]?)?)`, 'gi'), group: 1, priority: 3 },
-
-    // 4. Compound street: "Kung Oscars väg 12", "Carl Johans gata"
-    { re: new RegExp(`(?:på|vid|i)\\s+((?:[A-ZÅÄÖ][a-zåäöé]+\\s+){1,3}${streetSuffixes}(?:\\s+\\d+)?)`, 'gi'), group: 1, priority: 4 },
-
-    // 5. "mellan X och Y" (between two streets/places)
-    { re: new RegExp(`mellan\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})\\s+och\\s+([A-ZÅÄÖ][a-zåäöé]+${streetSuffixes})`, 'gi'), group: 1, priority: 5 },
-
-    // 6. E-roads / riksvägar: "på E4", "riksväg 40", "E10 vid Birsta"
-    { re: /(?:på|längs|vid|mot)?\s*((?:E|Rv|riksväg|länsväg)\s*\d+)/gi, group: 1, priority: 6 },
-
-    // 7. Trafikplats / rondell / bro: "vid trafikplats Nacksta", "i Hjulstabron"
-    { re: /(?:trafikplats|rondellen?|cirkulationsplats)\s+([A-ZÅÄÖ][a-zåäöé]{2,})/gi, group: 1, priority: 7 },
-
-    // 8. "i/på/vid" + specific place name (capitalized, min 3 chars)
-    { re: /(?:i|på|vid)\s+([A-ZÅÄÖ][a-zåäöé]{2,}(?:\s+[A-ZÅÄÖ][a-zåäöé]{2,})?)/g, group: 1, priority: 8 },
-  ];
-
-  const candidates: { text: string; priority: number }[] = [];
-  
-  for (const { re, group, priority } of patterns) {
-    let match: RegExpExecArray | null;
-    re.lastIndex = 0;
-    while ((match = re.exec(summary)) !== null) {
-      const candidate = match[group]?.trim();
-      if (!candidate) continue;
-      if (isSkipWord(candidate)) continue;
-      if (candidate.length < 3 || /^\d+$/.test(candidate)) continue;
-      // Skip candidates that are just months or weekdays
-      if (/^(måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag)/i.test(candidate)) continue;
-      candidates.push({ text: candidate, priority });
-    }
-  }
-
-  if (candidates.length === 0) return null;
-
-  // Sort by priority (lower = better), return best
-  candidates.sort((a, b) => a.priority - b.priority);
-  return candidates[0].text;
-}
 // DB-based rate limiting for Nominatim (works across edge function isolates)
 const NOMINATIM_RATE_LIMIT_KEY = '__nominatim_last_request__';
 
@@ -867,6 +792,134 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
     console.error('Nominatim geocoding failed:', e);
   }
   return null;
+}
+
+// ─── Placing events from the places named in their text (_shared/geoPlace) ─────────────────
+// The kommun an event is in: the last part of its title when that is a kommun ("…, Sundsvall")
+function kommunOf(inc: Pick<PoliceIncident, 'title' | 'area'>): string | null {
+  const last = (inc.title || '').split(',').pop()?.trim() || inc.area || '';
+  const entry = lookupSwedishLocation(last);
+  return entry && entry.type === 'kommun' ? last : null;
+}
+
+/** Nominatim's answers for a query, with the municipality of each, or null when it can't be asked */
+async function searchNominatim(query: string): Promise<GeocodeHit[] | null> {
+  try {
+    await acquireNominatimSlot();
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=jsonv2&addressdetails=1&limit=5&countrycodes=se&accept-language=sv`;
+    const response = await fetch(url, { headers: { 'User-Agent': 'CrimeAlert/2.0 (+https://crimealert.se)' } });
+    if (!response.ok) return null;
+    return (await response.json()) as GeocodeHit[];
+  } catch (e) {
+    console.warn('Nominatim search failed:', e);
+    return null;
+  }
+}
+
+// Lookups per refinement: Nominatim allows one a second
+const MAX_LOOKUPS_PER_RUN = 20;
+// Events this new are placed; older ones keep the place they have
+const REFINE_DAYS = 3;
+
+/**
+ * Places events more precisely from the streets, crossings, roads and areas named in their full
+ * text: first from places learned earlier (place_names), then by asking the geocoder, keeping
+ * only answers inside the event's kommun. What is found, and what isn't, is learned for next
+ * time. Changed events are written to the archive and to the incidents in memory.
+ */
+async function refinePlaces(incidents: PoliceIncident[]) {
+  const now = Date.now();
+  const todo = incidents
+    .filter((i) => rank(i.location_precision) < rank('street') && isWithinLastDays(i.time, REFINE_DAYS))
+    .sort((a, b) => parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time));
+  if (!todo.length) return;
+
+  // What each event names, in its kommun (or, for an event only placed in a län, any kommun it names)
+  const plans = todo.map((inc) => {
+    const kommun = kommunOf(inc);
+    const text = `${inc.description || ''}`;
+    return { inc, kommun, candidates: placeCandidates(text, kommun).slice(0, 4) };
+  });
+
+  // Places learned before
+  const keys = [...new Set(plans.flatMap((p) => (p.kommun ? p.candidates.map((c) => placeKey(p.kommun!, c.name)) : [])))];
+  const learned = new Map<string, { lat: number | null; lng: number | null; hits: number }>();
+  for (let b = 0; b < keys.length; b += 100) {
+    const { data, error } = await supabase.from('place_names').select('key, lat, lng, hits').in('key', keys.slice(b, b + 100));
+    if (error) { console.warn('place_names read failed:', error.message); break; }
+    for (const row of data ?? []) learned.set(row.key, row);
+  }
+
+  let lookups = 0;
+  const learnedNow = new Map<string, { kommun: string; name: string; kind: string; lat: number | null; lng: number | null; hits: number }>();
+  const changed: PoliceIncident[] = [];
+
+  for (const { inc, kommun, candidates } of plans) {
+    // Only placed in a län: a kommun or ort it names puts it in the right town at least
+    if (!kommun) {
+      for (const c of candidates) {
+        const entry = c.kind === 'area' ? lookupSwedishLocation(c.name) : null;
+        if (entry && rank(inc.location_precision) <= rank('area') && (inc.area || '').toLowerCase().includes('län')) {
+          inc.lat = entry.lat;
+          inc.lng = entry.lng;
+          inc.location_precision = entry.type === 'stadsdel' ? 'district' : 'area';
+          changed.push(inc);
+          break;
+        }
+      }
+      continue;
+    }
+
+    const centre = lookupSwedishLocation(kommun);
+    for (const c of candidates as PlaceCandidate[]) {
+      if (rank(precisionOf(c.kind)) <= rank(inc.location_precision)) continue;
+      const key = placeKey(kommun, c.name);
+      let place = learned.get(key) ?? learnedNow.get(key);
+      if (!place) {
+        if (lookups >= MAX_LOOKUPS_PER_RUN) continue;
+        lookups++;
+        const hits = await searchNominatim(geocodeQuery(c, kommun));
+        if (hits === null) continue; // couldn't ask: try again another time
+        const hit = pickHit(hits, kommun, centre);
+        place = { lat: hit?.lat ?? null, lng: hit?.lng ?? null, hits: 0 };
+      }
+      learnedNow.set(key, { kommun, name: c.name, kind: c.kind, lat: place.lat, lng: place.lng, hits: (place.hits ?? 0) + 1 });
+      if (place.lat == null || place.lng == null) continue; // known not to be in this kommun
+      inc.lat = place.lat;
+      inc.lng = place.lng;
+      inc.location_precision = precisionOf(c.kind);
+      changed.push(inc);
+      break;
+    }
+  }
+
+  // Learn: found places with their position, and names not found in the kommun
+  const rows = [...learnedNow].map(([key, p]) => ({ key, ...p, updated_at: new Date(now).toISOString() }));
+  for (let b = 0; b < rows.length; b += 100) {
+    const { error } = await supabase.from('place_names').upsert(rows.slice(b, b + 100), { onConflict: 'key' });
+    if (error) console.warn('place_names write failed:', error.message);
+  }
+
+  // Store the better positions, and use them in this instance's caches too
+  const unique = [...new Map(changed.map((i) => [i.id, i])).values()];
+  for (const inc of unique) {
+    const { error } = await supabase
+      .from('police_events_archive')
+      .update({ lat: inc.lat, lng: inc.lng, location_precision: inc.location_precision })
+      .eq('id', inc.id);
+    if (error) console.warn('Archive place update failed:', error.message);
+    cachedArchive?.forEach((a) => {
+      if (a.id === inc.id) { a.lat = inc.lat; a.lng = inc.lng; a.location_precision = inc.location_precision; }
+    });
+  }
+  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${lookups} lookups, ${learned.size} known places)`);
+}
+
+/** Runs the refinement after the answer is sent, where the platform allows it */
+function refineLater(incidents: PoliceIncident[]) {
+  const job = refinePlaces(incidents).catch((e) => console.warn('Place refinement failed:', e));
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+  runtime?.waitUntil?.(job);
 }
 
 // Check if coordinates appear to be county-level centroids (imprecise)
@@ -1015,49 +1068,6 @@ async function fetchAndProcessIncidents(locationParam: string, archived: PoliceI
       const apiGpsIsCountyCentroid = rawLat && rawLng && isLikelyCountyCentroid(rawLat, rawLng, locationName);
       const hasValidApiGps = rawLat && rawLng && !apiGpsIsCountyCentroid;
 
-      // ── Step 1: ALWAYS try to extract street/address from summary (highest precision) ──
-      const extractedAddress = extractAddressFromSummary(event.summary || '');
-      
-      if (extractedAddress) {
-        // Build geocode query: address + city context
-        const cityContext = cityFromTitle || locationName.replace(/\s*län\s*/i, '');
-        const geocodeQuery = `${extractedAddress}, ${cityContext}, Sverige`;
-        
-        // Also try a simpler query as fallback
-        const simpleQuery = `${extractedAddress}, Sverige`;
-
-        // Resolve expected city coords for sanity checking street geocode results
-        const expectedCity = cityFromTitle ? lookupSwedishLocation(cityFromTitle) : null;
-        
-        const promise = geocodeWithNominatim(geocodeQuery).then(async coords => {
-          let result = coords;
-          if (!result) {
-            // Try simpler query
-            result = await geocodeWithNominatim(simpleQuery);
-          }
-          
-          if (result) {
-            // Sanity check: verify the geocoded street is within ~50km of the expected city
-            // This prevents "Storgatan" in Malmö being used for a Luleå incident
-            if (expectedCity) {
-              const dLat = Math.abs(result[0] - expectedCity.lat);
-              const dLng = Math.abs(result[1] - expectedCity.lng);
-              const approxDistKm = Math.sqrt(dLat * dLat + (dLng * 0.55) * (dLng * 0.55)) * 111;
-              if (approxDistKm > 50) {
-                console.log(`Street geocode REJECTED: "${geocodeQuery}" → ${result[0]},${result[1]} is ${Math.round(approxDistKm)}km from ${cityFromTitle} (${expectedCity.lat},${expectedCity.lng})`);
-                return; // discard this result, keep existing coords
-              }
-            }
-            
-            incident.lat = result[0];
-            incident.lng = result[1];
-            incident.location_precision = 'street';
-            console.log(`Street geocode: "${geocodeQuery}" → ${result[0]}, ${result[1]}`);
-          }
-        });
-        geocodePromises.push(promise);
-      }
-
       // ── Step 2: If API GPS is valid (not county centroid), keep it as baseline ──
       if (hasValidApiGps) {
         // API coords are decent — use as-is if no street-level upgrade arrives
@@ -1142,53 +1152,26 @@ async function fetchAndProcessIncidents(locationParam: string, archived: PoliceI
       ]);
     }
 
-    // ── Post-geocoding: scan description + title for known stadsdelar/orter ──
-    // If current precision is NOT street-level, check if description mentions a
-    // more specific location (stadsdel) than what we resolved to.
+    // ── Known stadsdelar named in the text, only within the event's own kommun ──
+    // (a stadsdel more than 25 km from the kommun's centre belongs to another city: "Haga" in
+    // Sundsvall is not Haga in Stockholm)
     for (const inc of incidents) {
-      if (inc.location_precision === 'street') continue; // already precise
-      
+      if (rank(inc.location_precision) >= rank('district')) continue;
+      const kommun = kommunOf(inc);
+      const centre = kommun ? lookupSwedishLocation(kommun) : null;
+      if (!centre) continue;
       const textToScan = `${inc.title || ''} ${inc.description || ''}`.toLowerCase();
-      let bestMatch: { key: string; entry: LocationEntry } | null = null;
-      
-      // Search for stadsdelar first (most specific), then orter
       for (const [key, entry] of Object.entries(SWEDISH_LOCATIONS)) {
         if (entry.type !== 'stadsdel') continue;
-        // Require word boundary match to avoid false positives
+        if (distanceKm(entry.lat, entry.lng, centre.lat, centre.lng) > 25) continue;
         const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const re = new RegExp(`(?:^|[\\s,.:;!?()/"'])${escaped}(?:[\\s,.:;!?()/"']|$)`, 'i');
         if (re.test(textToScan)) {
-          // Verify the stadsdel is in the same city as the incident
-          // (e.g. don't match "Tensta" if incident is in Malmö)
-          const cityFromTitle = (inc.title || '').split(',').pop()?.trim().toLowerCase() || '';
-          const isStockholmDistrict = ['stockholm', 'stockholms län'].includes(cityFromTitle) || 
-            inc.area?.toLowerCase().includes('stockholm');
-          const isGbgDistrict = ['göteborg', 'göteborgs'].some(g => cityFromTitle.includes(g) || (inc.area || '').toLowerCase().includes(g));
-          const isMalmoDistrict = ['malmö'].some(m => cityFromTitle.includes(m) || (inc.area || '').toLowerCase().includes(m));
-          
-          // Check district belongs to the right city
-          const stockholmDistricts = ['södermalm','norrmalm','kungsholmen','östermalm','gamla stan','vasastan','bromma','hägersten','liljeholmen','älvsjö','enskede','farsta','skärholmen','hässelby','vällingby','rinkeby','tensta','spånga','kista','hjulsta','akalla','husby','skarpnäck','hammarbyhöjden','hammarby sjöstad','gullmarsplan','hornstull','fruängen','bandhagen','bagarmossen','rågsved','hagsätra','högdalen','gubbängen','stureby','svedmyra','aspudden','midsommarkransen','telefonplan','globen'];
-          const gbgDistricts = ['majorna','linné','hisingen','angered','bergsjön','biskopsgården','centrum göteborg','frölunda','gamlestaden','kortedala','lundby'];
-          const malmoDistricts = ['rosengård','fosie','limhamn','husie','oxie','kirseberg','västra hamnen','hyllie'];
-          
-          const districtBelongs = 
-            (isStockholmDistrict && stockholmDistricts.includes(key)) ||
-            (isGbgDistrict && gbgDistricts.includes(key)) ||
-            (isMalmoDistrict && malmoDistricts.includes(key)) ||
-            (!isStockholmDistrict && !isGbgDistrict && !isMalmoDistrict); // unknown city, accept any
-          
-          if (districtBelongs) {
-            bestMatch = { key, entry };
-            break; // first stadsdel match is good enough
-          }
+          inc.lat = entry.lat;
+          inc.lng = entry.lng;
+          inc.location_precision = 'district';
+          break;
         }
-      }
-      
-      if (bestMatch) {
-        console.log(`Description location upgrade: "${bestMatch.key}" for "${inc.title}" (was ${inc.location_precision} → district)`);
-        inc.lat = bestMatch.entry.lat;
-        inc.lng = bestMatch.entry.lng;
-        inc.location_precision = 'district';
       }
     }
 
@@ -1244,6 +1227,10 @@ async function fetchAndProcessIncidents(locationParam: string, archived: PoliceI
       if (now - at > 4 * 24 * 60 * 60 * 1000) detailScrapedAt.delete(id);
     }
     console.log(`Scraped ${scrapeResults.size} detail pages with updates out of ${scrapeTargets.length} targets (${incidents.length - scrapeTargets.length} skipped)`);
+
+    // A fetch that hasn't placed an event yet must not move it back to the kommun's centre
+    const archivedById = new Map(archived.map((a) => [a.id, a]));
+    for (let k = 0; k < incidents.length; k++) incidents[k] = keepBest(incidents[k], archivedById.get(incidents[k].id));
 
     const validIncidents = incidents.filter((i) => i.lat && i.lng);
     
@@ -1474,6 +1461,8 @@ serve(async (req) => {
         cachedIncidentsTs = Date.now();
         // Archive fresh incidents to DB (fire and forget)
         archiveIncidents(freshIncidents, archivedNow);
+        // Then place them from the streets and areas in their text, after the answer is sent
+        refineLater(freshIncidents);
       }
     }
 

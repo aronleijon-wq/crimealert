@@ -1,0 +1,111 @@
+import { describe, it, expect } from 'vitest';
+import {
+  distanceKm, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  SPREAD_MAX_M, SPREAD_MIN_M,
+} from './geoPlace';
+
+const names = (text: string, kommun?: string) => placeCandidates(text, kommun).map((c) => `${c.kind}:${c.name}`);
+
+describe('places in Polisen\'s texts', () => {
+  it('finds crossings first, also with å, ä and ö in lower case', () => {
+    expect(names('I korsningen Sätragatan och årsundavägen i Sandviken har en person blivit påkörd.', 'Sandviken')[0])
+      .toBe('crossing:Sätragatan/Årsundavägen');
+    expect(names('Larm om en olycka vid Korsgatan/ångermanlandsgatan.', 'Örnsköldsvik')[0]).toBe('crossing:Korsgatan/Ångermanlandsgatan');
+  });
+
+  it('finds streets with several words and with numbers', () => {
+    expect(names('I korsningen Vaksalagatan och Tycho Hedéns väg kör en bil in i en annan.', 'Uppsala')).toContain('street:Tycho Hedéns väg');
+    expect(names('Brand i lägenhet på Storgatan 15 i Umeå.', 'Umeå')[0]).toBe('street:Storgatan 15');
+    expect(names('En personbil och en buss har krockat på Hertig Johans Allé.', 'Linköping')).toContain('street:Hertig Johans Allé');
+  });
+
+  it('finds areas after many kinds of words, and a place written first', () => {
+    expect(names('Polis larmas till Rosengård om en olycka.', 'Malmö')).toEqual(['area:Rosengård']);
+    expect(names('Två bilar har krockat på väg 632 nära Vikingstad.', 'Linköping')).toEqual(['area:Vikingstad', 'road:väg 632']);
+    expect(names('Vallrun, fyrhjulingsstöld strax söder om Åkersjön', 'Krokom')).toEqual(['area:Vallrun', 'area:Åkersjön']);
+    expect(names('Kraftig rökutveckling ur en verkstadslokal i Kungens kurva.', 'Huddinge')).toEqual(['area:Kungens kurva']);
+  });
+
+  it('finds roads by their number', () => {
+    expect(names('Trafikolycka på E22:an strax norr om Trafikplats Fogdarp.', 'Hörby')).toContain('road:E22');
+    expect(names('Kollision med en älg längs Rv 70 i älvdalen.', 'Älvdalen')).toContain('road:riksväg 70');
+    expect(names('Viltolycka på länsväg 705.', 'Kalix')).toEqual(['road:länsväg 705']);
+  });
+
+  it('leaves out words that are not places', () => {
+    expect(names('Polisen åker till platsen. Föraren blåser positivt.', 'Gävle')).toEqual([]);
+    expect(names('Passageraren, en man, ska ha slagit busschauffören.', 'Bengtsfors')).toEqual([]);
+    expect(names('Det brinner i ett förråd på källarplan.', 'Alingsås')).toEqual([]);
+    expect(names('Trafikledningen kontaktar polisen om laser mot tågförare.', 'Stockholm')).toEqual([]);
+    expect(names('Mycket halt väglag i Hälsingland under natten.', 'Nordanstig')).toEqual([]);
+    expect(names('Polis larmas till Hårds väg efter en smäll.', 'Malmö')).toEqual(['street:Hårds väg']);
+  });
+
+  it('leaves out the kommun itself, which is where the event already is', () => {
+    expect(names('Trafikolycka på Ålidhem i Umeå.', 'Umeå')).toEqual(['area:Ålidhem']);
+    expect(names('Piteå, två män misstänkta för grov misshandel.', 'Piteå')).toEqual([]);
+  });
+
+  it('asks the geocoder within the kommun', () => {
+    expect(geocodeQuery({ name: 'Rosengård', kind: 'area' }, 'Malmö')).toBe('Rosengård, Malmö kommun, Sverige');
+    expect(geocodeQuery({ name: 'Sätragatan/Årsundavägen', kind: 'crossing' }, 'Sandviken')).toBe('Sätragatan, Sandviken kommun, Sverige');
+    expect(precisionOf('area')).toBe('district');
+    expect(precisionOf('crossing')).toBe('street');
+    expect(placeKey('Sundsvall', ' Stenstan ')).toBe('sundsvall|stenstan');
+  });
+});
+
+describe('checking the geocoder\'s answer', () => {
+  it('knows a kommun however it is written', () => {
+    expect(sameKommun('Sundsvalls kommun', 'Sundsvall')).toBe(true);
+    expect(sameKommun('Västerås kommun', 'Västerås')).toBe(true);
+    expect(sameKommun('Region Gotland', 'Gotland')).toBe(true);
+    expect(sameKommun('Timrå kommun', 'Sundsvall')).toBe(false);
+  });
+
+  it('takes the first answer in the right kommun and never the kommun\'s own boundary', () => {
+    const centre = { lat: 62.39, lng: 17.31 };
+    const hits = [
+      { lat: '62.39', lon: '17.30', category: 'boundary', type: 'administrative', address: { municipality: 'Sundsvalls kommun' } },
+      { lat: '59.33', lon: '18.06', category: 'place', type: 'suburb', address: { municipality: 'Stockholms kommun' } },
+      { lat: '62.391', lon: '17.305', category: 'place', type: 'neighbourhood', address: { municipality: 'Sundsvalls kommun' } },
+    ];
+    expect(pickHit(hits, 'Sundsvall', centre)).toEqual({ lat: 62.391, lng: 17.305 });
+    expect(pickHit(hits.slice(0, 2), 'Sundsvall', centre)).toBeNull();
+    // Without a municipality: near the kommun's centre only
+    expect(pickHit([{ lat: '62.5', lon: '17.4' }], 'Sundsvall', centre)).toEqual({ lat: 62.5, lng: 17.4 });
+    expect(pickHit([{ lat: '59.3', lon: '18.0' }], 'Sundsvall', centre)).toBeNull();
+  });
+});
+
+describe('keeping the best position', () => {
+  const fresh = { lat: 62.39, lng: 17.31, location_precision: 'area' };
+  it('keeps the archive\'s street position when a later fetch only found the kommun', () => {
+    expect(keepBest(fresh, { lat: 62.4, lng: 17.3, location_precision: 'street' })).toMatchObject({ lat: 62.4, location_precision: 'street' });
+  });
+  it('takes a fresh position that is at least as precise', () => {
+    expect(keepBest({ ...fresh, location_precision: 'street' }, { lat: 1, lng: 1, location_precision: 'district' }).lat).toBe(62.39);
+    expect(keepBest(fresh, undefined)).toBe(fresh);
+  });
+});
+
+describe('spreading markers', () => {
+  it('moves every marker 100–600 m, the same way every time', () => {
+    for (let i = 0; i < 500; i++) {
+      const p = spreadPoint(`pol-${i}`, 62.39, 17.31);
+      const m = distanceKm(62.39, 17.31, p.lat, p.lng) * 1000;
+      expect(m).toBeGreaterThanOrEqual(SPREAD_MIN_M - 1);
+      expect(m).toBeLessThanOrEqual(SPREAD_MAX_M + 1);
+    }
+    expect(spreadPoint('pol-7', 59.33, 18.07)).toEqual(spreadPoint('pol-7', 59.33, 18.07));
+  });
+
+  it('spreads events at one place in all directions', () => {
+    const quadrants = new Set<string>();
+    for (let i = 0; i < 40; i++) {
+      const p = spreadPoint(`pol-${i}`, 59.33, 18.07);
+      quadrants.add(`${p.lat > 59.33}${p.lng > 18.07}`);
+    }
+    expect(quadrants.size).toBe(4);
+  });
+});
