@@ -50,3 +50,59 @@ Excluded: U00489 and U00490 (deviation from a model-estimated value, a 0/1/2 sco
 | **Rattfylleri** | **No.** A title search for “rattfylleri” returns 0 KPIs (“rattonykter” also 0). Rattfylleri is counted inside N07548 (all offences under trafikbrottslagen, 1951:649), but it cannot be separated from other traffic offences there. |
 
 Also: a title search for “bedrägeri” finds no separate fraud rate; fraud is only counted inside N07538 (ekobrott).
+
+---
+
+# Räddningstjänstens insatser per kommun (MSB/MCF)
+
+Statistik över räddningstjänstens insatser till bränder och trafikolyckor per kommun, från MCF (Myndigheten för civilt försvar, tidigare MSB), hämtad via Kolada på samma sätt som Brå-nyckeltalen ovan.
+
+- **Hämtad:** 2026-11-15T11:12:23Z (UTC)
+- **API:** `https://api.kolada.se/v3` – `/kpi?title=`, `/kpi/{id}`, `/data/kpi/{id}/year/{year}`, `/municipality?type=K`.
+- **Enhet:** antal räddningsinsatser **per 1 000 invånare** (inte per 100 000 som Brå-talen). Kön: Kolada delar inte upp dessa nyckeltal på kön; värdet med `gender = T` används.
+- **Obs – glidande medelvärden:** byggnadsbränderna avser femårsperioden T-4 till T, trafikolyckorna ett genomsnitt för T-2 till T. Värdet för ett år är alltså inte bara det årets insatser.
+
+## Filer
+
+- `msb_kpis.json` – ett objekt per nyckeltal: `id`, `title`, `description`, `municipality_type`, `operating_area`, `source`, `years_available` (år där minst en kommun har ett värde), `years_exported`.
+- `msb_values.json` – lista med `{kpi, kommun_id, kommun, year, value}`, 1 753 rader. Kommuner utan värde för ett år finns inte med som rader.
+
+## Valda nyckeltal
+
+| KPI | Titel | Typ | År med data | Exporterade år | Kommuner |
+|---|---|---|---|---|---|
+| N07415 | Byggnadsbränder med spridning från startobjektet, antal/1000 inv | K | 2024 | 2024 | 290 |
+| U07415 | Utvecklade bränder i byggnad, antal/1000 inv (-2023) | K | 2007–2023 | 2021, 2022, 2023 | 290 per år |
+| N00799 | Trafikolyckor med räddningsinsatser per 1000 inv | A | 2010–2025 | 2023, 2024, 2025 | 290 / **13** / 290 |
+
+Varför:
+
+- **N07415** är det aktuella måttet för bränder i byggnad (bostäder, allmänna byggnader, industri m.m.) som räddningstjänsten gjort insats till. Det har bara data för 2024 än; 2025 publiceras enligt Kolada 2026-12-03.
+- **U07415** är föregångaren (utvecklade bränder i byggnad, där det fortfarande brinner när räddningstjänsten kommer). Den slutar 2023 och ersätts av N07415. Kolada skriver att **de två inte är jämförbara** (ändrad definition), så de ska inte sättas ihop till en tidsserie.
+- **N00799** är räddningsinsatser till trafikolyckor (alla trafikelement: personbil, lastbil, djur, mc, moped, cykel m.m.). För **2024 har bara 13 kommuner värden** i Kolada; 2023 och 2025 täcker alla 290. Nästa publicering (2026) är 2027-05-05.
+
+Ej med: N00488 (avvikelse från modellberäknat värde, en poäng 0/1/2, inte en kvot), kostnadsmått (N07009, N07020, N07041, U07075), personal (N07032, N07035, U07003), SOS Alarms larm- och responstider (U07440, U07442), enkätmått (Medborgarundersökningen N00629/U01629, Företagsklimat U07446) och IVPA-insatser (U07461, källa Öppna jämförelser, inte MCF).
+
+## Sökt men saknas i Kolada per kommun
+
+Titelsökningar 2026-11-15 och vad de gav:
+
+| Sökning | Träffar | Kommentar |
+|---|---|---|
+| `brand` | 2 | U07003 (andel kvinnor bland brandpersonal), U07446 (Företagsklimat – brandskydd). Inga insatsmått. |
+| `bränder` | 3 | N07415, U07415, N00488 – se ovan. |
+| `räddningstjänst` | 9 | Kostnader, personal, larmtider och enkäter – inga antal insatser. |
+| `räddningsinsats` | 1 | N00799. |
+| `insats` | 97 | Nästan bara socialtjänst/LSS/arbetsmarknad; inga räddningsmått utöver N00799. |
+| `olyck` | 6 | N00799, U07413, N00998, N07804, U00487, U07075 – de övriga har andra källor (Socialstyrelsen, Arbetsmiljöverket, STRADA) eller är kostnad/modellavvikelse. |
+| `larm` | 9 | Larmtider (SOS Alarm) och trygghetslarm i äldreomsorgen. |
+| `bostadsbrand` | 0 | |
+| `anlagd`, `anlagda` | 0 | |
+| `skogsbrand`, `drunkn`, `omkom`, `döda` | 0 | |
+
+Det betyder:
+
+- **Bränder i bostad / bostadsbrand:** finns inte som eget nyckeltal. Bostäder ingår bara i byggnadsbränderna (N07415/U07415) och går inte att skilja ut där.
+- **Anlagda bränder:** finns inte per kommun i Kolada (0 träffar).
+- **Räddningstjänstens insatser totalt:** finns inte – Kolada har bara insatser till byggnadsbränder och till trafikolyckor, ingen total.
+- **Trafikolyckor där räddningstjänsten larmats:** finns – N00799.
