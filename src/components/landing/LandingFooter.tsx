@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import SocialLinks from '@/components/SocialLinks';
+import FooterWordmark from './FooterWordmark';
 
 const groups: { title: string; links: { to: string; label: string }[] }[] = [
   {
@@ -43,7 +44,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
 ];
 
 const LandingFooter = () => (
-  <footer className="border-t border-[hsl(var(--ca-line))] px-5 md:px-10 py-14">
+  <footer className="overflow-hidden border-t border-[hsl(var(--ca-line))] px-5 md:px-10 pt-14">
     <div className="max-w-[1400px] mx-auto grid gap-12 md:grid-cols-[1.4fr_repeat(4,1fr)]">
       <div>
         <div className="flex items-center gap-2.5">
@@ -110,6 +111,8 @@ const LandingFooter = () => (
         SVERIGE • LIVE-DATA
       </span>
     </div>
+
+    <FooterWordmark />
   </footer>
 );
 
