@@ -685,6 +685,11 @@ function normalizeLocationText(text: string): string {
 
 // A kommun's centralort (data/places.ts, from OpenStreetMap), by the kommun's name in lower case
 const CENTRALORT = new Map(Object.entries(KOMMUN_CENTRES).map(([kommun, [, lat, lng]]) => [kommun.toLowerCase(), { lat, lng }]));
+// How much of the gazetteer this deploy holds (data/places.ts is 3 MB; an empty one means it didn't arrive)
+const GAZETTEER_SIZE = {
+  kommuner: Object.keys(PLACES).length,
+  places: Object.values(PLACES as Record<string, GazetteerPlace[]>).reduce((n, list) => n + list.length, 0),
+};
 // The gazetteer's names per kommun, indexed when first needed
 const GAZETTEERS = new Map<string, ReturnType<typeof gazetteerIndex>>();
 const gazetteerFor = (kommun: string) => {
@@ -870,7 +875,7 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     const named = placeCandidates(text, kommun);
     const known = kommun ? gazetteerInText(text, gazetteerFor(kommun), kommun) : [];
     const seen = new Set(named.map((c) => c.name.toLowerCase()));
-    return { inc, kommun, candidates: [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6) };
+    return { inc, kommun, named: named.length, known: known.length, candidates: [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6) };
   });
 
   // Places learned before
@@ -893,6 +898,8 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   const learnedNow = new Map<string, { kommun: string; name: string; kind: string; lat: number | null; lng: number | null; hits: number }>();
   const changed: PoliceIncident[] = [];
 
+  // A few of Apple's answers that weren't used, to see why in the log
+  const appleRejected: string[] = [];
   /** Where a name is in a kommun: Apple Maps first, then Nominatim; undefined when neither could be asked */
   const lookUp = async (c: PlaceCandidate, kommun: string, centre: { lat: number; lng: number }) => {
     if (apple && appleLookups < MAX_APPLE_LOOKUPS_PER_RUN) {
@@ -902,6 +909,11 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       else {
         const hit = pickAppleHit(hits, c, centre);
         if (hit) return hit;
+        if (appleRejected.length < 3) {
+          const first = hits[0];
+          const at = first?.coordinate ? `${Math.round(distanceKm(first.coordinate.latitude, first.coordinate.longitude, centre.lat, centre.lng))} km away` : '';
+          appleRejected.push(`"${c.name}" (${c.kind}, ${kommun}): ${hits.length} answers${first ? `, first ${JSON.stringify({ name: first.name, ...first.structuredAddress, countryCode: first.countryCode })} ${at}` : ''}`);
+        }
       }
     }
     if (lookups >= MAX_LOOKUPS_PER_RUN) return undefined;
@@ -980,6 +992,11 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       if (a.id === inc.id) { a.lat = inc.lat; a.lng = inc.lng; a.location_precision = inc.location_precision; }
     });
   }
+  const withNamed = plans.filter((p) => p.named > 0).length;
+  const withKnown = plans.filter((p) => p.known > 0).length;
+  const withKommun = plans.filter((p) => p.kommun).length;
+  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun, ${withNamed} name a street or area, ${withKnown} name a gazetteer place; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
+  for (const r of appleRejected) console.log(`Apple Maps not used: ${r}`);
   console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
 }
 
