@@ -972,7 +972,8 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   for (const { inc, kommun, lan, gazetteer, candidates } of plans) {
     const region = kommun ?? lan;
     if (!region || !gazetteer) continue;
-    if (rank(inc.location_precision) >= rank('district') && candidates.every((c) => c.kind === 'area')) alreadyDistrict++;
+    // Named a gazetteer place but already placed in that area, from an earlier run (keepBest)
+    if (rank(inc.location_precision) >= rank('district') && candidates.length && candidates.every((c) => c.kind === 'area')) alreadyDistrict++;
 
     const centre = lookupSwedishLocation(region) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
     for (const c of candidates as PlaceCandidate[]) {
@@ -1027,7 +1028,7 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   const withKnown = plans.filter((p) => p.known > 0).length;
   const withKommun = plans.filter((p) => p.kommun).length;
   const withLan = plans.filter((p) => p.lan).length;
-  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun and ${withLan} only in a län, ${withNamed} name a street or area, ${withKnown} name a gazetteer place, ${alreadyDistrict} of them already placed in their area; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
+  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun and ${withLan} only in a län, ${withNamed} name a street or area, ${withKnown} name a gazetteer place, ${alreadyDistrict} name only areas and are already placed in one; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
   for (const r of appleRejected) console.log(`Apple Maps not used: ${r}`);
   console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed, ${nominatimSkipped} not asked${Date.now() < nominatimOffUntil ? ', paused after a refusal' : ''}), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
 }
