@@ -69,13 +69,15 @@ const plain = (s: string | undefined) => (s ?? '').toLowerCase().replace(/\s+/g,
 /**
  * The first of Apple's answers that is the place asked for, in the event's kommun: in Sweden,
  * within maxKm of the kommun's centralort, and for a street, on that street (Apple otherwise
- * answers with the nearest thing it knows).
+ * answers with the nearest thing it knows). For an event Polisen only gives a län for, the
+ * answer must be in that län instead (Apple's administrativeArea, e.g. "Jönköpings län").
  */
 export function pickAppleHit(
   hits: AppleHit[],
   candidate: PlaceCandidate,
   centre: { lat: number; lng: number },
   maxKm = 35,
+  lan?: string | null,
 ): { lat: number; lng: number } | null {
   const street = candidate.kind === 'street' || candidate.kind === 'crossing'
     ? plain(candidate.name.split('/')[0]).replace(/\s+\d+\s*[a-z]?$/, '')
@@ -84,7 +86,9 @@ export function pickAppleHit(
     const c = h.coordinate;
     if (!c || !Number.isFinite(c.latitude) || !Number.isFinite(c.longitude)) continue;
     if (h.countryCode && h.countryCode !== 'SE') continue;
-    if (distanceKm(c.latitude, c.longitude, centre.lat, centre.lng) > maxKm) continue;
+    if (lan) {
+      if (plain(h.structuredAddress?.administrativeArea) !== plain(lan)) continue;
+    } else if (distanceKm(c.latitude, c.longitude, centre.lat, centre.lng) > maxKm) continue;
     if (street) {
       const on = plain(h.structuredAddress?.thoroughfare) || plain(h.structuredAddress?.fullThoroughfare) || plain(h.name);
       const onBase = on.replace(/\s+\d.*$/, '');

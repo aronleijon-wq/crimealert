@@ -267,6 +267,25 @@ export function gazetteerIndex(places: GazetteerPlace[] | undefined): Map<string
   return index;
 }
 
+/**
+ * One index for all the kommuner of a län, for events Polisen only gives the län for. A name
+ * found in more than one of them is left out, unless exactly one of them is a town ("Anderstorp"
+ * the town, not a hamlet of the same name elsewhere in the län).
+ */
+export function lanGazetteerIndex(perKommun: (GazetteerPlace[] | undefined)[]): Map<string, GazetteerPlace> {
+  const all = new Map<string, GazetteerPlace[]>();
+  for (const places of perKommun) {
+    for (const [key, p] of gazetteerIndex(places)) all.set(key, [...(all.get(key) ?? []), p]);
+  }
+  const index = new Map<string, GazetteerPlace>();
+  for (const [key, list] of all) {
+    const towns = list.filter((p) => p[3] === 'c');
+    if (list.length === 1) index.set(key, list[0]);
+    else if (towns.length === 1) index.set(key, towns[0]);
+  }
+  return index;
+}
+
 /** The gazetteer's place for a name in this kommun, also without a trailing kind word */
 export function gazetteerLookup(name: string, index: Map<string, GazetteerPlace>): GazetteerPlace | null {
   const key = norm(name);
