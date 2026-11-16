@@ -26,6 +26,29 @@ describe('checking Apple\'s answer', () => {
   });
 });
 
+describe('checking Apple\'s answer for an event given only a län', () => {
+  // Apple's real answer for "Anderstorp, Jönköpings län", 65 km from Jönköping
+  const anderstorp: AppleHit = {
+    coordinate: { latitude: 57.283, longitude: 13.633 }, name: 'Anderstorp', countryCode: 'SE',
+    structuredAddress: { administrativeArea: 'Jönköpings län', locality: 'Anderstorp' },
+  };
+  const jonkoping = { lat: 57.7826, lng: 14.1618 };
+
+  it('takes a place anywhere in the län', () => {
+    expect(pickAppleHit([anderstorp], { name: 'Anderstorp', kind: 'area' }, jonkoping, 35, 'Jönköpings län')).toEqual({ lat: 57.283, lng: 13.633 });
+  });
+
+  it('turns down a place in another län, and keeps the distance limit for a kommun', () => {
+    expect(pickAppleHit([anderstorp], { name: 'Anderstorp', kind: 'area' }, jonkoping, 35, 'Kronobergs län')).toBeNull();
+    expect(pickAppleHit([anderstorp], { name: 'Anderstorp', kind: 'area' }, jonkoping)).toBeNull();
+  });
+
+  it('turns down the city when the street wasn\'t found (Ringvägen in Malmö)', () => {
+    const malmo: AppleHit = { coordinate: { latitude: 55.605, longitude: 13.0 }, name: 'Malmö', countryCode: 'SE', structuredAddress: { administrativeArea: 'Skåne län', locality: 'Malmö' } };
+    expect(pickAppleHit([malmo], { name: 'Ringvägen', kind: 'street' }, { lat: 55.605, lng: 13.0 })).toBeNull();
+  });
+});
+
 describe('asking Apple', () => {
   it('trades the signed token for an access token once, then geocodes in Sweden near the place', async () => {
     const calls: string[] = [];

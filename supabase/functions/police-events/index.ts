@@ -4,11 +4,12 @@ import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '.
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import {
-  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
   type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
+import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -701,6 +702,17 @@ const gazetteerFor = (kommun: string) => {
   return index;
 };
 
+// The gazetteer for a whole län, for events Polisen only gives the län for
+const LAN_GAZETTEERS = new Map<string, ReturnType<typeof gazetteerIndex>>();
+const lanGazetteerFor = (lan: string) => {
+  let index = LAN_GAZETTEERS.get(lan);
+  if (!index) {
+    index = lanGazetteerIndex((LAN_KOMMUNER[lan] ?? []).map((k) => (PLACES as Record<string, GazetteerPlace[]>)[k]));
+    LAN_GAZETTEERS.set(lan, index);
+  }
+  return index;
+};
+
 /** A kommun is placed at its centralort, where events happen, not its geographic middle */
 function atCentralort(key: string, entry: LocationEntry): LocationEntry {
   if (entry.type !== 'kommun') return entry;
@@ -828,9 +840,20 @@ async function geocodeWithNominatim(query: string): Promise<[number, number] | n
 // The kommun an event is in: the last part of its title when that is a kommun ("…, Sundsvall")
 function kommunOf(inc: Pick<PoliceIncident, 'title' | 'area'>): string | null {
   const last = (inc.title || '').split(',').pop()?.trim() || inc.area || '';
+  // The location table lists each län as a kommun too; a län is not one
+  if (lanNamed(last)) return null;
   const entry = lookupSwedishLocation(last);
   return entry && entry.type === 'kommun' ? last : null;
 }
+
+/** The län an event is only placed in ("Jönköpings län"), or null when it has a kommun */
+function lanOf(inc: Pick<PoliceIncident, 'title' | 'area'>): string | null {
+  return lanNamed((inc.title || '').split(',').pop()) ?? lanNamed(inc.area);
+}
+
+// Nominatim refuses this server's requests at times (403); then it isn't asked for a while
+const NOMINATIM_PAUSE_MS = 6 * 60 * 60 * 1000;
+let nominatimOffUntil = 0;
 
 /** Nominatim's answers for a query, with the municipality of each, or null when it can't be asked */
 async function searchNominatim(query: string): Promise<GeocodeHit[] | null> {
@@ -840,6 +863,8 @@ async function searchNominatim(query: string): Promise<GeocodeHit[] | null> {
     const response = await fetch(url, { headers: { 'User-Agent': 'CrimeAlert/2.0 (+https://crimealert.se)' } });
     if (!response.ok) {
       console.warn(`Nominatim search: ${response.status}`);
+      // Refused (403) or too many (429): leave it alone for a while
+      if (response.status === 403 || response.status === 429) nominatimOffUntil = Date.now() + NOMINATIM_PAUSE_MS;
       return null;
     }
     return (await response.json()) as GeocodeHit[];
@@ -869,17 +894,22 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   if (!todo.length) return;
 
   // What each event names: the places the text points at, and the kommun's own places named in it
+  // (for an event only placed in a län: the places of any of the län's kommuner)
   const plans = todo.map((inc) => {
     const kommun = kommunOf(inc);
+    const lan = kommun ? null : lanOf(inc);
     const text = `${inc.description || ''}`;
     const named = placeCandidates(text, kommun);
-    const known = kommun ? gazetteerInText(text, gazetteerFor(kommun), kommun) : [];
+    const gazetteer = kommun ? gazetteerFor(kommun) : lan ? lanGazetteerFor(lan) : null;
+    const known = gazetteer ? gazetteerInText(text, gazetteer, kommun) : [];
     const seen = new Set(named.map((c) => c.name.toLowerCase()));
-    return { inc, kommun, named: named.length, known: known.length, candidates: [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6) };
+    const candidates = [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6);
+    return { inc, kommun, lan, gazetteer, named: named.length, known: known.length, candidates };
   });
 
   // Places learned before
-  const keys = [...new Set(plans.flatMap((p) => (p.kommun ? p.candidates.map((c) => placeKey(p.kommun!, c.name)) : [])))];
+  const regionOf = (p: { kommun: string | null; lan: string | null }) => p.kommun ?? p.lan;
+  const keys = [...new Set(plans.flatMap((p) => (regionOf(p) ? p.candidates.map((c) => placeKey(regionOf(p)!, c.name)) : [])))];
   const learned = new Map<string, { lat: number | null; lng: number | null; hits: number }>();
   for (let b = 0; b < keys.length; b += 100) {
     const { data, error } = await supabase.from('place_names').select('key, lat, lng, hits').in('key', keys.slice(b, b + 100));
@@ -894,56 +924,57 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   let appleLookups = 0;
   let appleFailed = 0;
   let nominatimFailed = 0;
+  let nominatimSkipped = 0;
   let fromGazetteer = 0;
   const learnedNow = new Map<string, { kommun: string; name: string; kind: string; lat: number | null; lng: number | null; hits: number }>();
   const changed: PoliceIncident[] = [];
 
   // A few of Apple's answers that weren't used, to see why in the log
   const appleRejected: string[] = [];
-  /** Where a name is in a kommun: Apple Maps first, then Nominatim; undefined when neither could be asked */
-  const lookUp = async (c: PlaceCandidate, kommun: string, centre: { lat: number; lng: number }) => {
+  /**
+   * Where a name is in a kommun (or a län): Apple Maps first, then Nominatim. Null when it isn't
+   * there; undefined when neither could be asked, so it is tried again another time. When
+   * Nominatim can't be asked, Apple's "not there" is the answer.
+   */
+  const lookUp = async (c: PlaceCandidate, region: string, centre: { lat: number; lng: number }, lan: string | null) => {
+    let appleAnswered = false;
     if (apple && appleLookups < MAX_APPLE_LOOKUPS_PER_RUN) {
       appleLookups++;
-      const hits = await appleGeocode(`${c.kind === 'crossing' ? c.name.split('/')[0] : c.name}, ${kommun}`, centre, apple).catch(() => null);
+      const hits = await appleGeocode(`${c.kind === 'crossing' ? c.name.split('/')[0] : c.name}, ${region}`, centre, apple).catch(() => null);
       if (hits === null) appleFailed++;
       else {
-        const hit = pickAppleHit(hits, c, centre);
+        appleAnswered = true;
+        const hit = pickAppleHit(hits, c, centre, 35, lan);
         if (hit) return hit;
         if (appleRejected.length < 3) {
           const first = hits[0];
           const at = first?.coordinate ? `${Math.round(distanceKm(first.coordinate.latitude, first.coordinate.longitude, centre.lat, centre.lng))} km away` : '';
-          appleRejected.push(`"${c.name}" (${c.kind}, ${kommun}): ${hits.length} answers${first ? `, first ${JSON.stringify({ name: first.name, ...first.structuredAddress, countryCode: first.countryCode })} ${at}` : ''}`);
+          appleRejected.push(`"${c.name}" (${c.kind}, ${region}): ${hits.length} answers${first ? `, first ${JSON.stringify({ name: first.name, ...first.structuredAddress, countryCode: first.countryCode })} ${at}` : ''}`);
         }
       }
+    }
+    // Nominatim checks its answers against the kommun, so it isn't asked for a län
+    if (lan || Date.now() < nominatimOffUntil) {
+      nominatimSkipped++;
+      return appleAnswered ? null : undefined;
     }
     if (lookups >= MAX_LOOKUPS_PER_RUN) return undefined;
     lookups++;
-    const hits = await searchNominatim(geocodeQuery(c, kommun));
+    const hits = await searchNominatim(geocodeQuery(c, region));
     if (hits === null) {
       nominatimFailed++;
-      return undefined;
+      return Date.now() < nominatimOffUntil && appleAnswered ? null : undefined;
     }
-    return pickHit(hits, kommun, centre);
+    return pickHit(hits, region, centre);
   };
 
-  for (const { inc, kommun, candidates } of plans) {
-    // Only placed in a län: a kommun or ort it names puts it in the right town at least
-    if (!kommun) {
-      for (const c of candidates) {
-        const entry = c.kind === 'area' ? lookupSwedishLocation(c.name) : null;
-        if (entry && rank(inc.location_precision) <= rank('area') && (inc.area || '').toLowerCase().includes('län')) {
-          inc.lat = entry.lat;
-          inc.lng = entry.lng;
-          inc.location_precision = entry.type === 'stadsdel' ? 'district' : 'area';
-          changed.push(inc);
-          break;
-        }
-      }
-      continue;
-    }
+  let alreadyDistrict = 0;
+  for (const { inc, kommun, lan, gazetteer, candidates } of plans) {
+    const region = kommun ?? lan;
+    if (!region || !gazetteer) continue;
+    if (rank(inc.location_precision) >= rank('district') && candidates.every((c) => c.kind === 'area')) alreadyDistrict++;
 
-    const centre = lookupSwedishLocation(kommun) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
-    const gazetteer = gazetteerFor(kommun);
+    const centre = lookupSwedishLocation(region) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
     for (const c of candidates as PlaceCandidate[]) {
       if (rank(precisionOf(c.kind)) <= rank(inc.location_precision)) continue;
       // An area the gazetteer knows: no lookup needed
@@ -956,14 +987,14 @@ async function refinePlaces(incidents: PoliceIncident[]) {
         changed.push(inc);
         break;
       }
-      const key = placeKey(kommun, c.name);
+      const key = placeKey(region, c.name);
       let place = learned.get(key) ?? learnedNow.get(key);
       if (!place) {
-        const hit = await lookUp(c, kommun, centre);
+        const hit = await lookUp(c, region, centre, lan);
         if (hit === undefined) continue; // couldn't ask: try again another time
         place = { lat: hit?.lat ?? null, lng: hit?.lng ?? null, hits: 0 };
       }
-      learnedNow.set(key, { kommun, name: c.name, kind: c.kind, lat: place.lat, lng: place.lng, hits: (place.hits ?? 0) + 1 });
+      learnedNow.set(key, { kommun: region, name: c.name, kind: c.kind, lat: place.lat, lng: place.lng, hits: (place.hits ?? 0) + 1 });
       if (place.lat == null || place.lng == null) continue; // known not to be in this kommun
       inc.lat = place.lat;
       inc.lng = place.lng;
@@ -995,9 +1026,10 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   const withNamed = plans.filter((p) => p.named > 0).length;
   const withKnown = plans.filter((p) => p.known > 0).length;
   const withKommun = plans.filter((p) => p.kommun).length;
-  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun, ${withNamed} name a street or area, ${withKnown} name a gazetteer place; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
+  const withLan = plans.filter((p) => p.lan).length;
+  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun and ${withLan} only in a län, ${withNamed} name a street or area, ${withKnown} name a gazetteer place, ${alreadyDistrict} of them already placed in their area; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
   for (const r of appleRejected) console.log(`Apple Maps not used: ${r}`);
-  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
+  console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed, ${nominatimSkipped} not asked${Date.now() < nominatimOffUntil ? ', paused after a refusal' : ''}), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
 }
 
 /** Runs the refinement after the answer is sent, where the platform allows it */

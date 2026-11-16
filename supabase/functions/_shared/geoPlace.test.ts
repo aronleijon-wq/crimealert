@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
   type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
 } from './geoPlace';
@@ -137,5 +137,20 @@ describe('the gazetteer', () => {
     const words = gazetteerIndex([['Bilen', 62.4, 17.3, 'h'], ['Elden', 62.4, 17.3, 'h'], ['Kölsillre', 62.4, 17.3, 'v'], ['Körfältet', 62.4, 17.3, 's']]);
     expect(gazetteerInText('Bilen hade kört av vägen. 10:27 Elden spred sig.', words, 'Sundsvall')).toEqual([]);
     expect(gazetteerInText('Kölsillre, resultat efter trafikkontroll. Brand på Körfältet.', words, 'Sundsvall').map((c) => c.name)).toEqual(['Kölsillre', 'Körfältet']);
+  });
+});
+
+describe('lanGazetteerIndex', () => {
+  const gislaved: GazetteerPlace[] = [['Gislaved', 57.30, 13.54, 'c'], ['Anderstorp', 57.28, 13.63, 'c'], ['Berga', 57.2, 13.5, 'h']];
+  const jonkoping: GazetteerPlace[] = [['Jönköping', 57.78, 14.16, 'c'], ['Berga', 57.7, 14.1, 'h'], ['Anderstorp', 57.75, 14.2, 'h']];
+  const index = lanGazetteerIndex([gislaved, jonkoping, undefined]);
+
+  it('knows a name found in one kommun of the län', () => {
+    expect(index.get('gislaved')?.[1]).toBe(57.30);
+  });
+
+  it('takes the town when a name is also a hamlet elsewhere in the län, and leaves out names it can\'t tell apart', () => {
+    expect(index.get('anderstorp')?.[1]).toBe(57.28);
+    expect(index.has('berga')).toBe(false);
   });
 });
