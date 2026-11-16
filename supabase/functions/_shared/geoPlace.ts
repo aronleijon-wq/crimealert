@@ -286,6 +286,28 @@ export function lanGazetteerIndex(perKommun: (GazetteerPlace[] | undefined)[]): 
   return index;
 }
 
+// How far from a named area a street in it can lie, by the area's kind in the gazetteer
+const AREA_REACH_KM: Record<string, number> = { q: 2, a: 2, h: 2, s: 3, v: 4, c: 6, i: 10 };
+
+export interface AreaAnchor { name: string; lat: number; lng: number; reachKm: number }
+
+/**
+ * The first area among an event's candidates that the gazetteer knows: the event happened there,
+ * so a street it names must lie near it ("Kyrkvägen i Farsta" is not a Kyrkvägen in the city).
+ */
+export function areaAnchor(candidates: PlaceCandidate[], index: Map<string, GazetteerPlace>): AreaAnchor | null {
+  for (const c of candidates) {
+    if (c.kind !== 'area') continue;
+    const p = gazetteerLookup(c.name, index);
+    if (p) return { name: p[0], lat: p[1], lng: p[2], reachKm: AREA_REACH_KM[p[3]] ?? 3 };
+  }
+  return null;
+}
+
+/** Whether a position lies within the area an event names */
+export const withinArea = (anchor: AreaAnchor, lat: number, lng: number) =>
+  distanceKm(lat, lng, anchor.lat, anchor.lng) <= anchor.reachKm;
+
 /** The gazetteer's place for a name in this kommun, also without a trailing kind word */
 export function gazetteerLookup(name: string, index: Map<string, GazetteerPlace>): GazetteerPlace | null {
   const key = norm(name);

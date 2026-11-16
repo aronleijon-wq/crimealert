@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
   type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
 } from './geoPlace';
@@ -137,6 +137,24 @@ describe('the gazetteer', () => {
     const words = gazetteerIndex([['Bilen', 62.4, 17.3, 'h'], ['Elden', 62.4, 17.3, 'h'], ['Kölsillre', 62.4, 17.3, 'v'], ['Körfältet', 62.4, 17.3, 's']]);
     expect(gazetteerInText('Bilen hade kört av vägen. 10:27 Elden spred sig.', words, 'Sundsvall')).toEqual([]);
     expect(gazetteerInText('Kölsillre, resultat efter trafikkontroll. Brand på Körfältet.', words, 'Sundsvall').map((c) => c.name)).toEqual(['Kölsillre', 'Körfältet']);
+  });
+});
+
+describe('areaAnchor', () => {
+  const stockholm = gazetteerIndex([['Farsta', 59.24535, 18.08837, 's'], ['Hisingen', 57.73, 11.92, 'i']]);
+  const named: PlaceCandidate[] = [{ name: 'Kyrkvägen', kind: 'street' }, { name: 'Farsta', kind: 'area' }];
+
+  it('finds the area an event names, and keeps a street near it', () => {
+    const anchor = areaAnchor(named, stockholm)!;
+    expect(anchor.name).toBe('Farsta');
+    expect(withinArea(anchor, 59.2435, 18.0950)).toBe(true); // in Farsta
+    expect(withinArea(anchor, 59.3326, 18.0649)).toBe(false); // Kyrkvägen-ish in the city, 10 km away
+  });
+
+  it('lets a street lie further out in a big area, and has no anchor without a known area', () => {
+    const anchor = areaAnchor([{ name: 'Hisingen', kind: 'area' }], stockholm)!;
+    expect(withinArea(anchor, 57.78, 11.88)).toBe(true); // 6 km away, still on Hisingen
+    expect(areaAnchor([{ name: 'Kyrkvägen', kind: 'street' }, { name: 'Okänd', kind: 'area' }], stockholm)).toBeNull();
   });
 });
 
