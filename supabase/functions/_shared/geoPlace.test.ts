@@ -132,4 +132,10 @@ describe('the gazetteer', () => {
   it('leaves out the kommun itself and words that only start a sentence', () => {
     expect(gazetteerInText('Sundsvall, en man grips. Polisen åker till platsen.', index, 'Sundsvall')).toEqual([]);
   });
+
+  it('takes a word that starts a sentence and goes on into it as an ordinary word', () => {
+    const words = gazetteerIndex([['Bilen', 62.4, 17.3, 'h'], ['Elden', 62.4, 17.3, 'h'], ['Kölsillre', 62.4, 17.3, 'v'], ['Körfältet', 62.4, 17.3, 's']]);
+    expect(gazetteerInText('Bilen hade kört av vägen. 10:27 Elden spred sig.', words, 'Sundsvall')).toEqual([]);
+    expect(gazetteerInText('Kölsillre, resultat efter trafikkontroll. Brand på Körfältet.', words, 'Sundsvall').map((c) => c.name)).toEqual(['Kölsillre', 'Körfältet']);
+  });
 });

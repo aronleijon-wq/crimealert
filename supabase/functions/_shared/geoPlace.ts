@@ -278,6 +278,9 @@ export function gazetteerLookup(name: string, index: Map<string, GazetteerPlace>
  * before them ("Polis åker till butiken, som ligger i Stenstan" and "Stenstan: bråk utomhus").
  * Only capitalised names of four letters or more, so ordinary words aren't taken for places.
  */
+// Where a sentence starts: the text's start, after . ! ? or a line break, or after a time ("10:27 ")
+const SENTENCE_START = /(?:^|[.!?]\s+|\n\s*|\b\d{1,2}[:.]\d{2}\s+)$/;
+
 export function gazetteerInText(text: string, index: Map<string, GazetteerPlace>, kommun?: string | null): PlaceCandidate[] {
   if (!text || !index.size) return [];
   const own = kommun ? norm(kommun) : '';
@@ -296,6 +299,10 @@ export function gazetteerInText(text: string, index: Map<string, GazetteerPlace>
       if (n > 1 && !/^[^\n.,;:]+$/.test(phrase)) continue;
       const key = norm(phrase);
       if (key.length < 4 || key === own || seen.has(key) || NOT_PLACES.has(key) || ADJECTIVES.has(key)) continue;
+      // A word that starts a sentence and goes on into it is an ordinary word ("Bilen hade",
+      // "Elden spred sig"), not a place; "Vinslöv." and "Kölsillre, resultat" are places
+      const end = (last.index ?? 0) + last[0].length;
+      if (SENTENCE_START.test(text.slice(0, start)) && /^\s+[a-zåäöéü]/.test(text.slice(end))) continue;
       if (index.has(key)) {
         seen.add(key);
         out.push({ name: index.get(key)![0], kind: 'area' });

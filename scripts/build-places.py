@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Build supabase/functions/_shared/data/places.ts, a Swedish place gazetteer, from OpenStreetMap.
 
-Data: OpenStreetMap via the Overpass API (https://overpass-api.de), © OpenStreetMap contributors, ODbL.
+Data: OpenStreetMap via the Overpass API, (c) OpenStreetMap contributors, ODbL.
 
 Usage:
-    pip install shapely
     python3 scripts/build-places.py [--cache DIR]
 
-Overpass responses are cached as JSON in --cache (default: .overpass-cache, not committed), so a
-rerun does not hit the API again. Delete the cache to refresh the data.
+One Overpass query per län. Within it, Overpass itself finds each kommun's places
+(foreach kommun -> map_to_area -> places in that area), so no boundary geometry is downloaded.
+Answers are cached as JSON in --cache (default .overpass-cache, not committed), so a rerun only
+fetches what is missing. Delete the cache to refresh the data. Several Overpass servers are tried.
 
-The 290 kommun names are read from src/data/kommuner.ts (SWEDISH_KOMMUNER), which is the full list
-as the app writes them; supabase/functions/_shared/data/municipalities.ts only holds a subset.
+The 290 kommun names are read from src/data/kommuner.ts (SWEDISH_KOMMUNER), as the app writes them.
 """
 import argparse
 import datetime
@@ -25,29 +25,33 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from shapely import STRtree, points
-from shapely.geometry import LineString, Polygon
-from shapely.ops import linemerge, polygonize, unary_union
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KOMMUN_LIST = os.path.join(ROOT, 'src/data/kommuner.ts')
 OUT = os.path.join(ROOT, 'supabase/functions/_shared/data/places.ts')
-OVERPASS = 'https://overpass-api.de/api/interpreter'
+SERVERS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+]
 
-SE = 'area["ISO3166-1"="SE"][admin_level=2]->.se;'
-QUERIES = {
-    'kommuner': '[out:json][timeout:300];' + SE + '''
-rel(area.se)[boundary=administrative][admin_level=7]->.k;
-.k out geom;
-node(r.k:"admin_centre");
-out;''',
-    'places': '[out:json][timeout:300];' + SE + '''
-nwr(area.se)[place~"^(city|town|village|hamlet|suburb|quarter|neighbourhood|square|borough|city_block|island|islet)$"][name];
-out center tags;''',
-    'areas': '[out:json][timeout:300];' + SE + '''
-nwr(area.se)[landuse~"^(industrial|retail)$"][name];
-out center tags;''',
-}
+PLACE_RE = '^(city|town|village|hamlet|suburb|quarter|neighbourhood|square|borough|city_block|island|islet)$'
+LAN_QUERY = '''[out:json][timeout:600];
+area["ISO3166-1"="SE"][admin_level=2]->.se;
+rel(area.se)[boundary=administrative][admin_level=4];
+out tags;'''
+KOMMUNER_IN_LAN = '''[out:json][timeout:900];
+rel({lan});map_to_area->.l;
+rel(area.l)[boundary=administrative][admin_level=7];
+foreach->.k(
+  .k out body;
+  node(r.k:"admin_centre");out;
+  .k map_to_area->.a;
+  (
+    nwr(area.a)[place~"''' + PLACE_RE + '''"][name];
+    nwr(area.a)[landuse~"^(industrial|retail)$"][name];
+  );
+  out center tags;
+);'''
 
 # OSM tag value -> abbreviation used in places.ts
 ABBR = {
@@ -62,33 +66,49 @@ RANK = {t: i for i, t in enumerate([
 DUP_KM = 3.0
 
 
-def fetch(name, query, cache):
+def log(*args):
+    print(*args, flush=True)
+
+
+def has_kommuner(data):
+    """An answer for a län holds its kommun relations; a server without the data answers with none"""
+    return any(e['type'] == 'relation' and e.get('tags', {}).get('admin_level') == '7' for e in data.get('elements', []))
+
+
+def has_lan(data):
+    return sum(e['type'] == 'relation' for e in data.get('elements', [])) >= 21
+
+
+def fetch(name, query, cache, valid):
     path = os.path.join(cache, name + '.json')
     if os.path.exists(path):
         with open(path, encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+        if valid(data):
+            return data
+        log(f'  {name}: cached answer is incomplete, fetching again')
     body = urllib.parse.urlencode({'data': query}).encode()
-    wait = 60
-    for attempt in range(8):
+    for attempt in range(9):
+        server = SERVERS[attempt % len(SERVERS)]
+        started = time.time()
         try:
-            req = urllib.request.Request(OVERPASS, data=body, headers={'User-Agent': 'crimealert-gazetteer/1.0'})
-            with urllib.request.urlopen(req, timeout=400) as r:
+            req = urllib.request.Request(server, data=body, headers={'User-Agent': 'crimealert-gazetteer/1.1'})
+            with urllib.request.urlopen(req, timeout=960) as r:
                 data = json.load(r)
-            if 'remark' in data and not data.get('elements'):
-                raise RuntimeError('Overpass remark: ' + data['remark'])
+            remark = data.get('remark', '')
+            if 'runtime error' in remark or 'timed out' in remark or 'out of memory' in remark:
+                raise RuntimeError(remark)
+            if not valid(data):
+                raise RuntimeError(f'incomplete answer ({len(data.get("elements", []))} elements)')
             os.makedirs(cache, exist_ok=True)
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(data, f)
+            log(f'  {name}: {len(data.get("elements", []))} elements from {server} in {time.time() - started:.0f}s')
             return data
-        except urllib.error.HTTPError as e:
-            if e.code not in (429, 502, 503, 504):
-                raise
-            print(f'  {name}: HTTP {e.code}, waiting {wait}s', file=sys.stderr)
-        except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
-            print(f'  {name}: {e}, waiting {wait}s', file=sys.stderr)
-        time.sleep(wait)
-        wait = min(wait * 2, 600)
-    raise SystemExit(f'Overpass query {name} failed')
+        except (urllib.error.HTTPError, urllib.error.URLError, ConnectionError, TimeoutError, RuntimeError, json.JSONDecodeError) as e:
+            log(f'  {name}: {server} failed after {time.time() - started:.0f}s: {e}')
+        time.sleep(min(30 * (attempt + 1), 180))
+    raise SystemExit(f'Overpass query {name} failed on every server')
 
 
 def read_kommun_names():
@@ -100,12 +120,14 @@ def read_kommun_names():
 
 
 def osm_to_app_name(osm_name, wanted):
-    """'Sundsvalls kommun' -> 'Sundsvall', 'Region Gotland' -> 'Gotland', 'Falu kommun' -> 'Falun'."""
+    """'Sundsvalls kommun' -> 'Sundsvall', 'Region Gotland' -> 'Gotland', 'Göteborgs Stad' -> 'Göteborg'."""
     base = osm_name
     if base.startswith('Region '):
         base = base[len('Region '):]
     elif base.endswith(' kommun'):
         base = base[:-len(' kommun')]
+    elif base.lower().endswith(' stad'):  # 'Göteborgs Stad'
+        base = base[:-len(' stad')]
     else:
         return None
     for cand in (base, base[:-1] if base.endswith('s') else None, base + 'n'):
@@ -117,23 +139,6 @@ def osm_to_app_name(osm_name, wanted):
         if hit:
             return hit
     return None
-
-
-def ring_polys(ways):
-    lines = [LineString([(p['lon'], p['lat']) for p in w]) for w in ways if len(w) >= 2]
-    if not lines:
-        return []
-    return list(polygonize(linemerge(lines)))
-
-
-def relation_polygon(rel):
-    outer = [m['geometry'] for m in rel.get('members', []) if m['type'] == 'way' and m.get('role') in ('outer', '') and 'geometry' in m]
-    inner = [m['geometry'] for m in rel.get('members', []) if m['type'] == 'way' and m.get('role') == 'inner' and 'geometry' in m]
-    shape = unary_union(ring_polys(outer))
-    holes = ring_polys(inner)
-    if holes:
-        shape = shape.difference(unary_union(holes))
-    return shape.buffer(0)
 
 
 def km(a, b):
@@ -153,96 +158,65 @@ def js(s):
     return json.dumps(s, ensure_ascii=False)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--cache', default=os.path.join(ROOT, '.overpass-cache'))
-    args = ap.parse_args()
+def split_by_kommun(elements, wanted):
+    """The foreach answer: each kommun relation, then its admin_centre node, then its places.
 
-    names = read_kommun_names()
-    wanted = set(names)
-
-    print('Fetching kommuner ...')
-    kdata = fetch('kommuner', QUERIES['kommuner'], args.cache)
-    nodes = {e['id']: e for e in kdata['elements'] if e['type'] == 'node'}
-    shapes, centres, seen = {}, {}, {}
-    for rel in (e for e in kdata['elements'] if e['type'] == 'relation'):
-        tags = rel.get('tags', {})
-        app = osm_to_app_name(tags.get('name', ''), wanted)
-        if not app:
-            continue
-        if app in seen:
-            raise SystemExit(f'Two relations match {app}: {seen[app]} and {tags.get("name")}')
-        seen[app] = tags.get('name')
-        shapes[app] = relation_polygon(rel)
-        for m in rel.get('members', []):
-            if m.get('role') == 'admin_centre' and m['type'] == 'node' and m['ref'] in nodes:
-                n = nodes[m['ref']]
-                centres[app] = (n.get('tags', {}).get('name', app), n['lat'], n['lon'])
-                break
-    missing = sorted(wanted - set(shapes))
-    if missing:
-        raise SystemExit(f'{len(missing)} kommuner not matched in OSM: {missing}')
-    empty = [k for k, s in shapes.items() if s.is_empty]
-    if empty:
-        raise SystemExit(f'Empty polygons: {empty}')
-
-    print('Fetching places ...')
-    elements = fetch('places', QUERIES['places'], args.cache)['elements']
-    print('Fetching industrial/retail areas ...')
-    elements += fetch('areas', QUERIES['areas'], args.cache)['elements']
-
-    raw = []
+    Returns ({kommun: [(name, lat, lon, kind, population)]}, {kommun: (centralort, lat, lon)}).
+    """
+    per, centres = {}, {}
+    current, centre_ref = None, None
     for e in elements:
         tags = e.get('tags', {})
-        lat, lon = (e['lat'], e['lon']) if 'lat' in e else (e.get('center', {}).get('lat'), e.get('center', {}).get('lon'))
+        if e['type'] == 'relation' and tags.get('admin_level') == '7' and tags.get('boundary') == 'administrative':
+            current = osm_to_app_name(tags.get('name', ''), wanted)
+            if current is None:
+                log(f'  skipping unknown kommun {tags.get("name")!r}')
+            else:
+                per.setdefault(current, [])
+            centre_ref = next((m['ref'] for m in e.get('members', []) if m.get('role') == 'admin_centre' and m['type'] == 'node'), None)
+            continue
+        if current is None:
+            continue
+        if e['type'] == 'node' and e['id'] == centre_ref and current not in centres:
+            centres[current] = (tags.get('name', current), e['lat'], e['lon'])
+        lat, lon = (e.get('lat'), e.get('lon')) if 'lat' in e else (e.get('center', {}).get('lat'), e.get('center', {}).get('lon'))
         name = tags.get('name', '').strip()
         kind = tags.get('place') if tags.get('place') in ABBR else tags.get('landuse')
         if lat is None or not name or kind not in ABBR:
             continue
-        raw.append((name, lat, lon, kind, population(tags), e['type']))
+        per[current].append((name, lat, lon, kind, population(tags)))
+    return per, centres
 
-    order = sorted(shapes)
-    tree = STRtree([shapes[k] for k in order])
-    pt_idx, poly_idx = tree.query(points([(r[2], r[1]) for r in raw]), predicate='intersects')
-    owner = {}
-    for p, g in zip(pt_idx.tolist(), poly_idx.tolist()):
-        owner.setdefault(p, order[g])  # on a shared border, first match wins
-    dropped = len(raw) - len(owner)
 
-    per = {k: [] for k in names}
-    for i, kommun in owner.items():
-        per[kommun].append(raw[i])
-
-    # Kommuner without an admin_centre: most populous city/town inside, else the biggest place.
+def build(per, centres, names):
+    """Fallback centres, dedupe; returns (centres, places, fallbacks)."""
     fallbacks = {}
     for k in names:
         if k in centres:
             continue
-        towns = [r for r in per[k] if r[3] in ('city', 'town')]
-        pool = towns or per[k]
+        towns = [r for r in per.get(k, []) if r[3] in ('city', 'town')]
+        pool = towns or per.get(k, [])
         if not pool:
             raise SystemExit(f'No places inside {k}')
         best = max(pool, key=lambda r: (r[4], -RANK[r[3]])) if towns else min(pool, key=lambda r: (RANK[r[3]], -r[4]))
         centres[k] = (best[0], best[1], best[2])
         fallbacks[k] = f'{best[0]} ({best[3]}{", pop " + str(best[4]) if best[4] else ""})'
-
-    totals = {}
-    out_places = {}
+    places = {}
     for k in names:
         kept = []
-        for r in sorted(per[k], key=lambda r: (RANK[r[3]], -r[4], r[0])):
+        for r in sorted(per.get(k, []), key=lambda r: (RANK[r[3]], -r[4], r[0])):
             if any(o[0] == r[0] and km((o[1], o[2]), (r[1], r[2])) <= DUP_KM for o in kept):
                 continue
             kept.append(r)
-        out_places[k] = kept
-        for r in kept:
-            totals[ABBR[r[3]]] = totals.get(ABBR[r[3]], 0) + 1
+        places[k] = kept
+    return centres, places, fallbacks
 
-    today = datetime.date.today().isoformat()
+
+def write(centres, places, names):
     lines = [
         '// GENERATED FILE - do not edit by hand.',
-        f'// Generated {today} by scripts/build-places.py from OpenStreetMap data,',
-        '// © OpenStreetMap contributors, available under the Open Database License (ODbL).',
+        f'// Generated {datetime.date.today().isoformat()} by scripts/build-places.py from OpenStreetMap data,',
+        '// (c) OpenStreetMap contributors, available under the Open Database License (ODbL).',
         '//',
         '// KOMMUN_CENTRES: kommun -> [centralort, lat, lng].',
         '// PLACES: kommun -> [name, lat, lng, type]; type: c city/town, v village, h hamlet,',
@@ -253,23 +227,51 @@ def main():
     for k in names:
         n, lat, lon = centres[k]
         lines.append(f'{js(k)}:[{js(n)},{round(lat, 5)},{round(lon, 5)}],')
-    lines.append('};')
-    lines.append('')
-    lines.append('export const PLACES: Record<string, [string, number, number, string][]> = {')
+    lines += ['};', '', 'export const PLACES: Record<string, [string, number, number, string][]> = {']
     for k in names:
-        items = ','.join(f'[{js(r[0])},{round(r[1], 5)},{round(r[2], 5)},"{ABBR[r[3]]}"]' for r in out_places[k])
+        items = ','.join(f'[{js(r[0])},{round(r[1], 5)},{round(r[2], 5)},"{ABBR[r[3]]}"]' for r in places[k])
         lines.append(f'{js(k)}:[{items}],')
-    lines.append('};')
-    lines.append('')
+    lines += ['};', '']
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
 
-    print(f'Elements: {len(raw)}, outside all kommuner: {dropped}')
-    print('Totals per type:', ', '.join(f'{t}={totals.get(t, 0)}' for t in 'cvhsqia'), f'(all {sum(totals.values())})')
-    print(f'Kommuner without admin_centre ({len(fallbacks)}):')
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--cache', default=os.path.join(ROOT, '.overpass-cache'))
+    args = ap.parse_args()
+
+    names = read_kommun_names()
+    wanted = set(names)
+
+    log('Fetching län ...')
+    lans = [e for e in fetch('lan', LAN_QUERY, args.cache, has_lan)['elements'] if e['type'] == 'relation']
+    log(f'{len(lans)} län')
+    per, centres = {}, {}
+    for i, lan in enumerate(sorted(lans, key=lambda e: e['id']), 1):
+        log(f'[{i}/{len(lans)}] {lan.get("tags", {}).get("name", lan["id"])}')
+        data = fetch(f'lan-{lan["id"]}', KOMMUNER_IN_LAN.replace('{lan}', str(lan['id'])), args.cache, has_kommuner)
+        p, c = split_by_kommun(data['elements'], wanted)
+        for k, rows in p.items():
+            per.setdefault(k, []).extend(rows)
+        for k, v in c.items():
+            centres.setdefault(k, v)
+
+    missing = sorted(wanted - set(per))
+    if missing:
+        raise SystemExit(f'{len(missing)} kommuner not found in OSM: {missing}')
+    centres, places, fallbacks = build(per, centres, names)
+    write(centres, places, names)
+
+    totals = {}
+    for rows in places.values():
+        for r in rows:
+            totals[ABBR[r[3]]] = totals.get(ABBR[r[3]], 0) + 1
+    log('Totals per type:', ', '.join(f'{t}={totals.get(t, 0)}' for t in 'cvhsqia'), f'(all {sum(totals.values())})')
+    log(f'Kommuner without admin_centre ({len(fallbacks)}):')
     for k, v in sorted(fallbacks.items()):
-        print(f'  {k}: {v}')
-    print(f'Wrote {os.path.relpath(OUT, ROOT)}: {os.path.getsize(OUT):,} bytes')
+        log(f'  {k}: {v}')
+    log(f'Wrote {os.path.relpath(OUT, ROOT)}: {os.path.getsize(OUT):,} bytes')
 
 
 if __name__ == '__main__':
