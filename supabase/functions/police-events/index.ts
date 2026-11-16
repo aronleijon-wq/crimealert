@@ -4,7 +4,7 @@ import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '.
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import {
-  distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
   type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
@@ -888,14 +888,13 @@ const REFINE_DAYS = 3;
  */
 async function refinePlaces(incidents: PoliceIncident[]) {
   const now = Date.now();
-  const todo = incidents
-    .filter((i) => rank(i.location_precision) < rank('street') && isWithinLastDays(i.time, REFINE_DAYS))
+  const recent = incidents
+    .filter((i) => isWithinLastDays(i.time, REFINE_DAYS))
     .sort((a, b) => parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time));
-  if (!todo.length) return;
 
   // What each event names: the places the text points at, and the kommun's own places named in it
   // (for an event only placed in a län: the places of any of the län's kommuner)
-  const plans = todo.map((inc) => {
+  const planned = recent.map((inc) => {
     const kommun = kommunOf(inc);
     const lan = kommun ? null : lanOf(inc);
     const text = `${inc.description || ''}`;
@@ -904,8 +903,16 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     const known = gazetteer ? gazetteerInText(text, gazetteer, kommun) : [];
     const seen = new Set(named.map((c) => c.name.toLowerCase()));
     const candidates = [...named, ...known.filter((c) => !seen.has(c.name.toLowerCase()))].slice(0, 6);
-    return { inc, kommun, lan, gazetteer, named: named.length, known: known.length, candidates };
+    // The area the event names: a street must lie in it
+    const anchor = gazetteer ? areaAnchor(candidates, gazetteer) : null;
+    // Placed on a street outside the area it names (an earlier lookup found a street of that name
+    // elsewhere in the kommun): placed again, from scratch
+    const misplaced = rank(inc.location_precision) >= rank('street') && !!anchor && inc.lat != null && inc.lng != null && !withinArea(anchor, inc.lat, inc.lng);
+    return { inc, kommun, lan, gazetteer, anchor, misplaced, named: named.length, known: known.length, candidates };
   });
+  const plans = planned.filter((p) => p.misplaced || rank(p.inc.location_precision) < rank('street'));
+  const todo = plans.map((p) => p.inc);
+  if (!todo.length) return;
 
   // Places learned before
   const regionOf = (p: { kommun: string | null; lan: string | null }) => p.kommun ?? p.lan;
@@ -969,15 +976,21 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   };
 
   let alreadyDistrict = 0;
-  for (const { inc, kommun, lan, gazetteer, candidates } of plans) {
+  let movedBack = 0;
+  let streetsOutside = 0;
+  for (const { inc, kommun, lan, gazetteer, anchor, misplaced, candidates } of plans) {
     const region = kommun ?? lan;
     if (!region || !gazetteer) continue;
     // Named a gazetteer place but already placed in that area, from an earlier run (keepBest)
     if (rank(inc.location_precision) >= rank('district') && candidates.length && candidates.every((c) => c.kind === 'area')) alreadyDistrict++;
+    // A misplaced event is placed again from scratch: any of its places is better than where it is
+    const placedAs = misplaced ? 0 : rank(inc.location_precision);
+    if (misplaced) movedBack++;
 
-    const centre = lookupSwedishLocation(region) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
+    // Apple searches near the area the event names, else near the kommun's centralort
+    const centre = anchor ?? lookupSwedishLocation(region) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
     for (const c of candidates as PlaceCandidate[]) {
-      if (rank(precisionOf(c.kind)) <= rank(inc.location_precision)) continue;
+      if (rank(precisionOf(c.kind)) <= placedAs) continue;
       // An area the gazetteer knows: no lookup needed
       const known = c.kind === 'area' ? gazetteerLookup(c.name, gazetteer) : null;
       if (known) {
@@ -997,6 +1010,11 @@ async function refinePlaces(incidents: PoliceIncident[]) {
       }
       learnedNow.set(key, { kommun: region, name: c.name, kind: c.kind, lat: place.lat, lng: place.lng, hits: (place.hits ?? 0) + 1 });
       if (place.lat == null || place.lng == null) continue; // known not to be in this kommun
+      // A street of that name elsewhere in the kommun, not in the area the event names
+      if (anchor && c.kind !== 'area' && !withinArea(anchor, place.lat, place.lng)) {
+        streetsOutside++;
+        continue;
+      }
       inc.lat = place.lat;
       inc.lng = place.lng;
       inc.location_precision = precisionOf(c.kind);
@@ -1028,7 +1046,7 @@ async function refinePlaces(incidents: PoliceIncident[]) {
   const withKnown = plans.filter((p) => p.known > 0).length;
   const withKommun = plans.filter((p) => p.kommun).length;
   const withLan = plans.filter((p) => p.lan).length;
-  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun and ${withLan} only in a län, ${withNamed} name a street or area, ${withKnown} name a gazetteer place, ${alreadyDistrict} name only areas and are already placed in one; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
+  console.log(`Places detail: ${withKommun} of ${todo.length} events in a kommun and ${withLan} only in a län, ${withNamed} name a street or area, ${withKnown} name a gazetteer place, ${alreadyDistrict} name only areas and are already placed in one, ${movedBack} were on a street outside the area they name, ${streetsOutside} streets found outside the area named; gazetteer has ${GAZETTEER_SIZE.kommuner} kommuner and ${GAZETTEER_SIZE.places} places`);
   for (const r of appleRejected) console.log(`Apple Maps not used: ${r}`);
   console.log(`Places: ${unique.length} of ${todo.length} events placed more precisely (${fromGazetteer} from the gazetteer, ${appleLookups} Apple Maps lookups (${appleFailed} failed), ${lookups} Nominatim lookups (${nominatimFailed} failed, ${nominatimSkipped} not asked${Date.now() < nominatimOffUntil ? ', paused after a refusal' : ''}), ${learned.size} learned places, Apple Maps ${apple ? 'on' : 'off: no MapKit key'})`);
 }
