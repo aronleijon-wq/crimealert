@@ -3,14 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <script>
+      // Google Ads (AW-18563415709) is off until CA_GOOGLE_ADS is true here and GOOGLE_ADS_ENABLED in
+      // src/lib/googleAds.ts. Then the tag loads here, first in <head> as Google asks, but only for a visitor
+      // who has said yes in CrimeAlert's own cookie box (or outside the EU, via lib/googleAds). Never in the iPhone app.
+      var CA_GOOGLE_ADS=false;
       window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
       gtag('consent','default',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});
       gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500,region:['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','CA-QC']});
-      // Google tag (AW-18563415709) first in <head>, as Google asks, so its tag check finds it. Not in the iPhone app.
-      if(!/\bCrimeAlertApp\b/.test(navigator.userAgent)){
-        gtag('set','developer_id.dZjgwMW',true);gtag('js',new Date());gtag('config','AW-18563415709');
-        var t=document.createElement('script');t.async=true;t.src='https://www.googletagmanager.com/gtag/js?id=AW-18563415709';t.setAttribute('data-google-ads','');document.head.appendChild(t);
-      }
+      try{
+        if(CA_GOOGLE_ADS&&!/\bCrimeAlertApp\b/.test(navigator.userAgent)&&localStorage.getItem('cookie_consent')==='granted'&&navigator.globalPrivacyControl!==true){
+          gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});
+          gtag('set','developer_id.dZjgwMW',true);gtag('js',new Date());gtag('config','AW-18563415709');
+          var t=document.createElement('script');t.async=true;t.src='https://www.googletagmanager.com/gtag/js?id=AW-18563415709';t.setAttribute('data-google-ads','');document.head.appendChild(t);
+        }
+      }catch(e){}
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0a" />
@@ -33,7 +39,7 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), payment=()" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://cdn.apple-mapkit.com https://*.googlesyndication.com https://www.googletagservices.com https://partner.googleadservices.com https://adservice.google.com https://www.google.com https://www.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.se https://*.apple-mapkit.com https://*.ls.apple.com https://*.geo.apple.com https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://polisen.se https://nominatim.openstreetmap.org https://*.googlesyndication.com https://*.doubleclick.net https://adservice.google.com https://www.google.com https://csi.gstatic.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; frame-src https://accounts.google.com https://www.googletagmanager.com https://*.doubleclick.net https://*.googlesyndication.com https://www.google.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://cdn.apple-mapkit.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https: http:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.se https://*.apple-mapkit.com https://*.ls.apple.com https://*.geo.apple.com https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://polisen.se https://nominatim.openstreetmap.org https://*.doubleclick.net https://www.google.com https://csi.gstatic.com; frame-src https://accounts.google.com https://www.googletagmanager.com https://*.doubleclick.net https://www.google.com; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self';" />
     <title>CrimeAlert — Livekarta över polishändelser i Sverige</title>
     <script>
       // If the app's own files can't load (an old copy of the page after a new version was
@@ -101,6 +107,9 @@
             "@type": "Organization",
             "@id": "https://crimealert.se/#organization",
             "name": "CrimeAlert",
+            "legalName": "KGV Analysis AB",
+            "identifier": { "@type": "PropertyValue", "propertyID": "Organisationsnummer", "value": "559243-8054" },
+            "address": { "@type": "PostalAddress", "streetAddress": "Karl Gerhards Väg 9", "addressLocality": "Saltsjöbaden", "addressCountry": "SE" },
             "url": "https://crimealert.se/",
             "logo": "https://crimealert.se/pwa-512x512.png",
             "email": "kontakt@crimealert.se",
@@ -139,7 +148,6 @@
       }
     </script>
     <!-- AdSense is loaded by AdsController for free users only (Pro has no ads) -->
-    <meta name="google-adsense-account" content="ca-pub-3945855440160391" />
     
   
   

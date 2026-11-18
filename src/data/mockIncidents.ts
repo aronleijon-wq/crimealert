@@ -7,6 +7,8 @@ export interface Incident {
   type: IncidentType;
   title: string;
   description: string;
+  /** Without Pro the server sends only the start of Polisen's description; the rest is with Pro */
+  descriptionTruncated?: boolean;
   lat: number;
   lng: number;
   area: string;

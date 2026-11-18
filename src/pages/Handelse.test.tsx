@@ -50,10 +50,18 @@ describe('event page', () => {
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/handelse/e1`);
   });
 
-  it('keeps the description for Pro', () => {
+  it('shows free users the start of the description the server sends, and the rest with Pro', () => {
+    state.incidents = [event('e1', 'Malmö', 1, { description: 'Brand i flerfamiljshus.', descriptionTruncated: true })];
     renderAt('/handelse/e1');
-    expect(screen.queryByText(/Brand i flerfamiljshus/)).toBeNull();
+    expect(screen.getByText('Brand i flerfamiljshus.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Läs mer med Pro/ })).toHaveAttribute('href', '/prisplan');
+  });
+
+  it('says the description is with Pro when the server sends none', () => {
+    state.incidents = [event('e1', 'Malmö', 1, { description: '' })];
+    renderAt('/handelse/e1');
     expect(screen.getByText(/Polisens beskrivning av händelsen finns med Pro/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Läs mer med Pro/ })).toBeNull();
   });
 
   it('shows Pro the description', () => {

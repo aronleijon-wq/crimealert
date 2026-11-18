@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import DotWordmark from '@/components/brand/DotWordmark';
 import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
-import { BookOpen, ChevronDown, Megaphone, Menu, MessagesSquare, Search, X, type LucideIcon } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Megaphone, Menu, MessagesSquare, Search, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
 import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
@@ -25,6 +26,8 @@ const moreItems: MoreItem[] = [
   { to: '/rapportera', label: 'Rapportera', icon: Megaphone, hint: 'Berätta vad du har sett' },
   { to: '/chattar', label: 'Chattar', icon: MessagesSquare, hint: 'Prata med grannarna' },
   { to: '/guider', label: 'Guider', icon: BookOpen, hint: 'Trygghet, larm och polisanmälan' },
+  // Not in the iPhone app: an offer for organisations, sold outside the app
+  ...(isNativeApp() ? [] : [{ to: '/for-kommuner', label: 'För kommuner', icon: Building2, hint: 'Lägesrapporter för er verksamhet' }]),
 ];
 
 const isCurrent = (to: string, pathname: string) =>
@@ -123,9 +126,7 @@ const Header = () => {
             fetchPriority="high"
             decoding="async"
           />
-          <span className="ca-display text-[15px] tracking-[0.02em] text-[hsl(var(--ca-text))] md:text-base">
-            CRIME<span className="text-[hsl(var(--ca-red))]">ALERT</span>
-          </span>
+          <DotWordmark />
         </Link>
 
         <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Huvudmeny">
@@ -148,6 +149,15 @@ const Header = () => {
           >
             <Search className="h-4 w-4" />
           </Link>
+          {!isNativeApp() && (
+            <Link
+              to="/for-kommuner"
+              aria-current={isCurrent('/for-kommuner', pathname) ? 'page' : undefined}
+              className={`hidden px-3.5 py-2 2xl:inline-flex ${isCurrent('/for-kommuner', pathname) ? currentText : linkText}`}
+            >
+              För kommuner
+            </Link>
+          )}
           {showPlans && (
             <Link
               to="/prisplan"

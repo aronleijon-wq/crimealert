@@ -1,7 +1,7 @@
 import { Bell, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import B2BOffer from './B2BOffer';
-import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
+import { FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
@@ -20,7 +20,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
     group: 'Händelser',
     rows: [
       { feature: 'Polisens händelser på kartan och i flödet', free: '15 min fördröjning', pro: 'Direkt' },
-      { feature: 'Beskrivning av händelsen', free: 'Rubrik och plats', pro: 'Hela texten' },
+      { feature: 'Beskrivning av händelsen', free: 'Början av texten', pro: 'Hela texten' },
       { feature: 'Risknivå, status och Polisens kategori', free: false, pro: true },
       { feature: 'Polisens natt- och kvällssammanfattningar', free: true, pro: true },
       { feature: 'VMA och krisinformation', free: 'Direkt', pro: 'Direkt' },
@@ -44,7 +44,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
       { feature: 'Analys och statistik per kommun', free: false, pro: 'Upp till 60 dagar' },
       { feature: 'Export till PDF och CSV', free: false, pro: true },
       { feature: 'Medborgarrapporter', free: false, pro: true },
-      { feature: 'Reklam', free: 'Visas', pro: 'Ingen' },
+      ...(FREE_PLAN_HAS_ADS ? [{ feature: 'Reklam', free: 'Visas', pro: 'Ingen' }] : []),
     ],
   },
 ];
@@ -78,7 +78,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
         <p className="ca-eyebrow">Medlemskap</p>
         <h1 id="planer-rubrik" className="ca-display mt-2 text-4xl uppercase text-foreground sm:text-5xl">Gratis eller Pro</h1>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
-          Det viktigaste är gratis. Pro är för dig som vill se händelser direkt, läsa hela beskrivningen och slippa reklam.
+          Det viktigaste är gratis. Pro är för dig som vill se händelser direkt, läsa hela beskrivningen och {FREE_PLAN_HAS_ADS ? 'slippa reklam' : 'följa statistiken'}.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-[11px] text-muted-foreground">Visar annonser.</p>
+          {FREE_PLAN_HAS_ADS && <p className="mt-4 text-[11px] text-muted-foreground">Visar annonser.</p>}
           {!signedIn ? (
             <Link to="/auth?mode=signup" className="mt-3 inline-flex h-10 items-center justify-center rounded-xl border border-[hsl(var(--ca-line-strong))] text-sm font-semibold text-foreground transition hover:border-primary/50">
               Skapa gratis konto

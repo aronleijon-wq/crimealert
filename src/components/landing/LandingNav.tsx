@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import DotWordmark from '@/components/brand/DotWordmark';
 import { Link } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,9 +46,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
             fetchPriority="high"
             decoding="async"
           />
-          <span className="ca-display text-[15px] md:text-base tracking-[0.02em]">
-            CRIME<span className="text-[hsl(var(--ca-red))]">ALERT</span>
-          </span>
+          <DotWordmark />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -69,6 +68,12 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
             aria-label="Sök kommun"
           >
             <Search className="w-4 h-4" />
+          </Link>
+          <Link
+            to="/for-kommuner"
+            className="hidden xl:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+          >
+            För kommuner
           </Link>
           <Link
             to="/prisplan"
@@ -106,7 +111,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
 
       {open && (
         <div className="md:hidden border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
-          {[...links, { to: '/prisplan', label: 'Prisplan' }].map((l) => (
+          {[...links, { to: '/prisplan', label: 'Prisplan' }, { to: '/for-kommuner', label: 'För kommuner och organisationer' }].map((l) => (
             <Link
               key={l.to}
               to={l.to}

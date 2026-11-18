@@ -4,6 +4,8 @@ import { ArrowLeft, Cookie } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
 import { isNativeApp } from '@/lib/native';
+import { COMPANY } from '@/lib/company';
+import { COOKIE_SETTINGS_EVENT, GOOGLE_ADS_ENABLED } from '@/lib/googleAds';
 
 const Cookies = () => {
   useSEO({ title: 'Cookies | CrimeAlert', description: 'Vilka cookies CrimeAlert använder, varför de behövs och hur du ändrar dina inställningar i webbläsaren.', canonical: 'https://crimealert.se/cookies' });
@@ -23,7 +25,7 @@ const Cookies = () => {
             <div>
               <p className="ca-eyebrow">// cookies</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Cookies</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-29</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-11-18</p>
             </div>
           </div>
 
@@ -63,14 +65,27 @@ const Cookies = () => {
                     </div>
 
                     <div className="ca-tac ca-tac-top p-4">
-                      <h3 className="text-sm font-semibold text-foreground mb-1">Marknadsföringscookies</h3>
-                      <p>
-                        CrimeAlert använder Google AdSense för att visa annonser. Google och dess annonsnätverk kan placera cookies
-                        på din enhet för att visa relevanta annonser baserat på dina intressen. Dessa cookies spårar din aktivitet
-                        över olika webbplatser för att anpassa annonsupplevelsen. Pro-medlemmar ser inga annonser och berörs därför
-                        inte av dessa cookies.
-                      </p>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">Annonser</h3>
+                      <p>CrimeAlert visar inga annonser och använder inga cookies för reklam på sajten.</p>
                     </div>
+
+                    {GOOGLE_ADS_ENABLED && (
+                      <div className="ca-tac ca-tac-top p-4">
+                        <h3 className="text-sm font-semibold text-foreground mb-1">Mätning av våra annonser (frivilligt)</h3>
+                        <p>
+                          När vi annonserar på Google mäter vi om annonserna leder till nya konton och Pro-köp, med cookies
+                          från Google Ads. Det sker bara om du har godkänt det i vår cookieruta. Väljer du endast nödvändiga
+                          laddas inget från Google Ads.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT))}
+                          className="mt-3 rounded-lg border border-border px-3 py-1.5 text-[13px] font-medium text-foreground hover:bg-secondary transition"
+                        >
+                          Ändra ditt val
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -84,7 +99,7 @@ const Cookies = () => {
                     Utöver våra egna cookies kan tredjepartsleverantörer placera cookies på din enhet. Dessa inkluderar:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 mt-2">
-                    <li><strong>Google AdSense</strong> – för att visa annonser för besökare utan Pro</li>
+                    {GOOGLE_ADS_ENABLED && <li><strong>Google Ads</strong> – för att mäta våra annonser, bara om du godkänt det</li>}
                     <li><strong>Stripe</strong> – på Stripes betalsida, när du köper Pro</li>
                   </ul>
                 </section>
@@ -101,13 +116,6 @@ const Cookies = () => {
                     <li><strong>Safari:</strong> Inställningar → Sekretess → Hantera webbplatsdata</li>
                     <li><strong>Edge:</strong> Inställningar → Sekretess, sökning och tjänster → Cookies</li>
                   </ul>
-                  <p className="mt-2">
-                    Du kan även besöka{' '}
-                    <a href="https://www.youronlinechoices.eu" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      www.youronlinechoices.eu
-                    </a>{' '}
-                    för att hantera intressebaserad annonsering.
-                  </p>
                 </section>
               </>
             )}
@@ -115,11 +123,8 @@ const Cookies = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">Kontakt</h2>
               <p>
-                Har du frågor om vår användning av cookies? Kontakta oss via{' '}
-                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
-                  kontosidan
-                </button>
-                .
+                Har du frågor om vår användning av cookies? Mejla{' '}
+                <a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>.
               </p>
             </section>
           </div>

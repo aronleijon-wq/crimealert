@@ -15,6 +15,8 @@ export interface FeedItem {
   body: string;
   /** The text exists but is part of Pro */
   bodyLocked: boolean;
+  /** body is the start of the text, the rest is with Pro ("Läs mer med Pro") */
+  bodyIsPreview: boolean;
   area: string;
   time: string;
   timestamp: number;
@@ -116,7 +118,8 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
   const kind: FeedKind = incident.type === 'trafikverket' ? 'traffic'
     : incident.source === 'Medborgarrapport' ? 'community' : 'police';
   const isSummary = !!incident.originalType?.toLowerCase().includes('sammanfattning');
-  const showBody = isPremium || isSummary || kind === 'community';
+  // Without Pro the server sends the start of a police description (descriptionTruncated when there is more)
+  const showBody = isPremium || isSummary || kind === 'community' || (kind === 'police' && !!incident.description);
   const policeUrl = incident.url?.startsWith('/') ? `https://polisen.se${incident.url}` : incident.url ?? null;
   return {
     id: incident.id,
@@ -124,8 +127,11 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
     incidentType: incident.type,
     title: kind === 'police' ? cleanPoliceTitle(incident.title) : incident.title,
     body: showBody ? incident.description : '',
-    // The server only sends police descriptions to Pro; Trafikverket texts are Pro on the map too
-    bodyLocked: !showBody && (kind === 'police' || (kind === 'traffic' && !!incident.description)),
+    // The rest of a police description is Pro, as are Trafikverket's texts on the map
+    bodyLocked: !isPremium && (
+      (kind === 'police' && !isSummary && (!incident.description || incident.descriptionTruncated === true))
+      || (kind === 'traffic' && !!incident.description)),
+    bodyIsPreview: !isPremium && kind === 'police' && incident.descriptionTruncated === true,
     area: incident.area,
     time: incident.time,
     timestamp: parseIncidentTime(incident.time)?.getTime() ?? 0,
@@ -154,6 +160,7 @@ function externalToItem(event: ExternalEvent, now: number): FeedItem {
     title: event.title,
     body: event.summary,
     bodyLocked: false,
+    bodyIsPreview: false,
     area: event.area ?? 'Sverige',
     time: event.published_at,
     timestamp,

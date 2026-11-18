@@ -2,7 +2,7 @@
 // prices and trial from account/plans.ts, delays from police-events and notifications.ts,
 // cancellation from Villkor, stored data from Sekretesspolicy.
 
-import { PRICES, TRIAL_DAYS } from '@/components/account/plans';
+import { FREE_PLAN_HAS_ADS, PRICES, TRIAL_DAYS } from '@/components/account/plans';
 import { APP_STORE_URL } from '@/lib/appStoreLink';
 
 export const CONTACT_EMAIL = 'kontakt@crimealert.se';
@@ -43,7 +43,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     q: 'Vad ingår i Pro och vad kostar det?',
     a: [
       `Pro kostar ${monthly.price} i månaden eller ${yearly.price} om året. ` +
-        'Då ser du Polisens händelser och får notiser direkt, läser hela beskrivningen av varje händelse och slipper reklam. ' +
+        'Då ser du Polisens händelser och får notiser direkt, läser hela beskrivningen av varje händelse och ' + (FREE_PLAN_HAS_ADS ? 'slipper reklam. ' : 'följer statistiken 60 dagar bakåt. ') +
         `Har du aldrig haft Pro kan du prova gratis i ${TRIAL_DAYS} dagar. `,
       { to: '/prisplan', label: 'Jämför Gratis och Pro' },
       '.',

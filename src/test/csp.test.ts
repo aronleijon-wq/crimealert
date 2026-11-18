@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-// The CSP lives in a meta tag in index.html. AdSense needs more than its loader script:
-// ad frames, Google's invalid-traffic checks and the consent message all come from other hosts.
+// The CSP lives in a meta tag in index.html. AdSense is gone; Google Ads (off for now, lib/googleAds) keeps the
+// hosts its tag and conversions use, so turning it on needs no change here.
 const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf8');
 const policy = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '';
 const directive = (name: string) =>
@@ -19,32 +19,22 @@ const allows = (name: string, url: string) => {
 };
 
 describe('Content-Security-Policy', () => {
-  it('lets AdSense load its scripts', () => {
+  it('lets the Google Ads tag load and report conversions', () => {
+    expect(allows('script-src', 'https://www.googletagmanager.com/gtag/js?id=AW-18563415709')).toBe(true);
+    expect(allows('script-src', 'https://www.googleadservices.com/pagead/conversion_async.js')).toBe(true);
+    for (const url of ['https://www.google.com/pagead/1p-conversion/x', 'https://googleads.g.doubleclick.net/pagead/viewthroughconversion/x']) {
+      expect(allows('connect-src', url), url).toBe(true);
+    }
+  });
+
+  it('no longer allows AdSense or its cookie box', () => {
     for (const url of [
       'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
-      'https://ep2.adtrafficquality.google/sodar/sodar2.js',
-      'https://adservice.google.com/adsid/integrator.js',
       'https://fundingchoicesmessages.google.com/i/pub-3945855440160391',
-    ]) expect(allows('script-src', url), url).toBe(true);
-  });
-
-  it('lets AdSense show ads, its traffic checks and the consent message in frames', () => {
-    for (const url of [
-      'https://googleads.g.doubleclick.net/pagead/ads',
-      'https://tpc.googlesyndication.com/sodar/sodar2/232/runner.html',
-      'https://ep2.adtrafficquality.google/sodar/sodar2/232/runner.html',
-      'https://www.google.com/recaptcha/api2/aframe',
-      'https://fundingchoicesmessages.google.com/f/x',
-    ]) expect(allows('frame-src', url), url).toBe(true);
-  });
-
-  it('lets AdSense make its requests', () => {
-    for (const url of [
-      'https://pagead2.googlesyndication.com/getconfig/sodar',
-      'https://ep1.adtrafficquality.google/getconfig/sodar',
-      'https://fundingchoicesmessages.google.com/el/x',
-      'https://csi.gstatic.com/csi',
-    ]) expect(allows('connect-src', url), url).toBe(true);
+      'https://ep2.adtrafficquality.google/sodar/sodar2.js',
+    ]) expect(allows('script-src', url), url).toBe(false);
+    expect(allows('frame-src', 'https://fundingchoicesmessages.google.com/f/x')).toBe(false);
+    expect(html).not.toContain('google-adsense-account');
   });
 
   it('still keeps everything else locked down', () => {

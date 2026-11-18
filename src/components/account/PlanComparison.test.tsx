@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PlanComparison from './PlanComparison';
-import { PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT } from './plans';
+import { FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT } from './plans';
 import { FREE_TIER_DELAY_MS } from '@/lib/mapFilters';
 
 const renderPlans = (props: Partial<React.ComponentProps<typeof PlanComparison>> = {}) => {
@@ -64,7 +64,9 @@ describe('PlanComparison', () => {
     expect(within(row('Polisens händelser på kartan och i flödet')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['15 min fördröjning', 'Direkt']);
     expect(within(row('VMA och krisinformation')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Direkt', 'Direkt']);
     expect(within(row('Medborgarrapporter')).getByLabelText('Ingår inte')).toBeInTheDocument();
-    expect(within(row('Reklam')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Visas', 'Ingen']);
+    // Ads only in the comparison when the free plan has them (plans.ts)
+    if (FREE_PLAN_HAS_ADS) expect(within(row('Reklam')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Visas', 'Ingen']);
+    else expect(within(table).queryByRole('rowheader', { name: 'Reklam' })).toBeNull();
   });
 });
 

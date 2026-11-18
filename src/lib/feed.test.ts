@@ -74,6 +74,21 @@ describe('buildFeed', () => {
     expect(items[0]).toMatchObject({ body: '', bodyLocked: true, url: null });
   });
 
+  it('shows free users the start of a police description, with the rest locked behind Pro', () => {
+    const items = buildFeed({
+      ...base,
+      isPremium: false,
+      police: [
+        incident({ id: 'pol-1', description: 'Polis larmas till en bostad efter larm om bråk.', descriptionTruncated: true }),
+        incident({ id: 'pol-2', time: minutesAgo(90), description: 'Brand i bil.' }),
+      ],
+    });
+    expect(items.map((i) => [i.id, i.body, i.bodyLocked, i.bodyIsPreview])).toEqual([
+      ['pol-1', 'Polis larmas till en bostad efter larm om bråk.', true, true],
+      ['pol-2', 'Brand i bil.', false, false],
+    ]);
+  });
+
   it('shows police summaries and crisis text to everyone', () => {
     const items = buildFeed({
       ...base,

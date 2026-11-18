@@ -507,12 +507,6 @@ html:not(.dark) .ca-hud {
   background: hsl(var(--ca-line-strong));
 }
 
-/* Pro has no ads: hide anything AdSense placed before the subscription was known */
-html.no-ads ins.adsbygoogle,
-html.no-ads .google-auto-placed {
-  display: none !important;
-}
-
 /* ==========================================================
    Landing: operations picture
    ========================================================== */
@@ -629,4 +623,23 @@ html.no-ads .google-auto-placed {
   .ca-wordmark-letters { transform: none; opacity: 1; transition: none; }
   .ca-wordmark-sweep, .ca-wordmark-dot { animation: none; }
   .ca-wordmark-sweep { display: none; }
+}
+
+/* ==========================================================
+   CRIMEALERT in dots, in the menu bar (components/brand/DotWordmark)
+   ========================================================== */
+.ca-dark { --ca-dotmark-red: 3 100% 61%; }
+html:not(.dark) .ca-dark { --ca-dotmark-red: 0 76% 47%; }
+.ca-dotmark-fill { fill: hsl(var(--ca-text) / 0.2); }
+.ca-dotmark-fill-red { fill: hsl(var(--ca-dotmark-red) / 0.26); }
+.ca-dotmark-edge { stroke: hsl(var(--ca-text) / 0.18); }
+html:not(.dark) .ca-dotmark-fill { fill: hsl(var(--ca-text) / 0.16); }
+html:not(.dark) .ca-dotmark-sweep { display: none; }
+@keyframes ca-dm-sweep {
+  0% { transform: translateX(0); }
+  22%, 100% { transform: translateX(var(--ca-dotmark-travel)); }
+}
+.ca-dotmark-sweep { animation: ca-dm-sweep 9s cubic-bezier(0.45, 0, 0.55, 1) 1.5s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ca-dotmark-sweep { animation: none; display: none; }
 }

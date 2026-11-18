@@ -4,6 +4,8 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
 import { isNativeApp } from '@/lib/native';
+import { COMPANY, COMPANY_ADDRESS, COMPANY_IDENTITY } from '@/lib/company';
+import { GOOGLE_ADS_ENABLED } from '@/lib/googleAds';
 
 const Sekretesspolicy = () => {
   useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar CrimeAlert in, använder och skyddar dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
@@ -23,7 +25,7 @@ const Sekretesspolicy = () => {
             <div>
               <p className="ca-eyebrow">// sekretesspolicy</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Sekretesspolicy</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-29</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-11-18</p>
             </div>
           </div>
 
@@ -34,6 +36,14 @@ const Sekretesspolicy = () => {
                 CrimeAlert (crimealert.se) värnar om din integritet. Denna sekretesspolicy förklarar vilken information vi
                 samlar in, hur vi använder den och vilka rättigheter du har. Tjänsten sammanställer och visualiserar offentlig
                 information från Polisen och andra myndigheter – vi skapar inte eget innehåll om brott.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-base font-semibold text-foreground mb-2">Personuppgiftsansvarig</h2>
+              <p>
+                Personuppgiftsansvarig för CrimeAlert, på crimealert.se och i appen, är {COMPANY_IDENTITY}. Frågor om
+                hur dina personuppgifter behandlas skickar du till {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}.
               </p>
             </section>
 
@@ -95,8 +105,7 @@ const Sekretesspolicy = () => {
                   en länk för att avregistrera sig, och du kan också mejla oss. Raderar du kontot tas adressen bort.
                 </li>
                 <li>Analysera trafik och användarmönster för att förbättra upplevelsen.</li>
-                {!app && <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>}
-                {!app && <li>Mäta om våra Google Ads-annonser leder till nya konton och Pro-köp (Google Ads konverteringsspårning). Google tar emot uppgifter om besöket och konverteringen. I EU/EES sker det bara om du godkänner i cookie-rutan, och du kan ändra ditt val när som helst. Läs mer: <a href="https://business.safety.google/privacy/" className="underline" target="_blank" rel="noopener noreferrer">Googles integritetspolicy för företag</a>.</li>}
+                {!app && GOOGLE_ADS_ENABLED && <li>Mäta om våra Google Ads-annonser leder till nya konton och Pro-köp (Google Ads konverteringsspårning). Google tar emot uppgifter om besöket och konverteringen. I EU/EES sker det bara om du godkänner i vår cookieruta, och du kan ändra ditt val när som helst på cookiesidan. Läs mer: <a href="https://business.safety.google/privacy/" className="underline" target="_blank" rel="noopener noreferrer">Googles integritetspolicy för företag</a>.</li>}
               </ul>
             </section>
 
@@ -117,13 +126,13 @@ const Sekretesspolicy = () => {
                 som hjälper oss att driva tjänsten:
               </p>
               <ul className="list-disc pl-5 space-y-1 mt-2">
-                {!app && (
+                {!app && GOOGLE_ADS_ENABLED && (
                   <li>
-                    <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
+                    <strong>Google Ads:</strong> Mäter om våra annonser leder till konton och köp, bara om du godkänt det. Se vår{' '}
                     <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
                       cookiepolicy
-                    </button>{' '}
-                    för mer information.
+                    </button>
+                    .
                   </li>
                 )}
                 <li>
@@ -168,7 +177,7 @@ const Sekretesspolicy = () => {
                 </li>
               </ul>
               <p className="mt-2">
-                För att utöva dina rättigheter, kontakta oss via{' '}
+                För att utöva dina rättigheter, mejla {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}. Du kan också radera ditt konto själv på{' '}
                 <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
                   kontosidan
                 </button>
@@ -203,11 +212,8 @@ const Sekretesspolicy = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">9. Kontakt</h2>
               <p>
-                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta oss via{' '}
-                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
-                  kontosidan
-                </button>
-                .
+                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta {COMPANY.name} på {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}, eller
+                skriv till {COMPANY.name}, {COMPANY_ADDRESS}.
               </p>
             </section>
           </div>

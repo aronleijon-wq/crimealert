@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
-import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -31,6 +30,7 @@ const ResetPassword = lazyPage(() => import("./pages/ResetPassword"));
 const Admin = lazyPage(() => import("./pages/Admin"));
 const DebugPush = lazyPage(() => import("./pages/DebugPush"));
 const OmOss = lazyPage(() => import("./pages/OmOss"));
+const ForKommuner = lazyPage(() => import("./pages/ForKommuner"));
 const Statistik = lazyPage(() => import("./pages/Statistik"));
 const Feed = lazyPage(() => import("./pages/Feed"));
 const Kommun = lazyPage(() => import("./pages/Kommun"));
@@ -125,6 +125,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/debug-push" element={<DebugPush />} />
           <Route path="/om-oss" element={<OmOss />} />
+          <Route path="/for-kommuner" element={isNativeApp() ? <Navigate to="/karta" replace /> : <ForKommuner />} />
           <Route path="/statistik" element={<Statistik />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -132,7 +133,6 @@ const App = () => (
         </Suspense>
         </ErrorBoundary>
         <BackendStatusBanner />
-        <AdsController />
         <CookieBanner />
 
       </BrowserRouter>

@@ -1,31 +1,7 @@
+import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
-
-export const B2B_MAIL_SUBJECT = 'CrimeAlert för kommuner och organisationer';
-
-/** What an organisation gets, in the order a buyer asks about it */
-const OFFER: { title: string; text: string }[] = [
-  {
-    title: 'Lägesrapporter',
-    text: 'För en kommun, en stadsdel eller ett eget område. Varje månad, varje kvartal eller inför ett evenemang.',
-  },
-  {
-    title: 'Statistik och jämförelser',
-    text: 'Anmälda brott och räddningstjänstens insatser per invånare, jämfört med riket och året innan.',
-  },
-  {
-    title: 'Data och export',
-    text: 'Händelserna med tid, plats och Polisens text, även de som bara finns i nattsammanfattningarna. Som CSV eller PDF.',
-  },
-];
-
-const STEPS = [
-  'Ni berättar vilket område och vilka frågor det gäller.',
-  'Vi skickar ett förslag och en exempelrapport för ert område.',
-  'Rapporterna levereras löpande, och data finns att hämta.',
-];
-
-const SOURCES = 'Polisen, Brå, MCF (tidigare MSB) och SCB';
+import { B2B_MAIL_SUBJECT, OFFER, SOURCES, STEPS } from '@/lib/b2bOffer';
 
 /** The offer for kommuner, myndigheter and companies: price on request, they contact us. */
 const B2BOffer = () => (
@@ -36,7 +12,8 @@ const B2BOffer = () => (
         Lägesbild för er verksamhet
       </h2>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
-        Ett underlag om brott och trygghet för det område ni ansvarar för, sammanställt ur offentliga källor och uppdaterat löpande.
+        Ett underlag om brott och trygghet för det område ni ansvarar för, sammanställt ur offentliga källor och uppdaterat löpande.{' '}
+        <Link to="/for-kommuner" className="text-foreground underline underline-offset-4 hover:opacity-80">Läs mer och se en exempelrapport</Link>
       </p>
 
       <dl className="mt-7 grid grid-cols-1 border-t border-[hsl(var(--ca-line-strong))] sm:grid-cols-3">

@@ -17,10 +17,17 @@ export type BillingCycle = keyof typeof PRICES;
 /** Stripe's customer portal, where Pro members change or cancel their subscription */
 export const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00';
 
+/**
+ * Whether the free plan shows ads. CrimeAlert shows none today, so Pro doesn't promise "Ingen reklam".
+ * Set to true when ads are turned on: Pro's list, the comparison table, the FAQ, the account page
+ * and the app then say Pro has no ads.
+ */
+export const FREE_PLAN_HAS_ADS = false;
+
 /** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
 export const TRIAL_DAYS = 7;
 
-/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ads, ask-crimealert). */
+/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ask-crimealert). */
 export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] = [
   { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning', short: 'Händelser direkt, utan 15 min väntan' },
   { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner', short: 'Notiser direkt i dina kommuner' },
@@ -29,8 +36,8 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line,
   { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 60 dagar bakåt', short: 'Analys och statistik, 60 dagar bakåt' },
   { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
   { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
-  { icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' },
   { icon: Sparkles, text: 'Fråga AI utan gräns, med utförligare svar (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
+  ...(FREE_PLAN_HAS_ADS ? [{ icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' }] : []),
 ];
 
 /** The plan in words: "Gratis", "Pro livstid", "Provperiod t.o.m. 2026-10-12" and so on. */

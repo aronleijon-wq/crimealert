@@ -2,8 +2,8 @@ import { isNativeApp } from '@/lib/native';
 
 /**
  * At the top of the privacy and cookie pages inside the iPhone app: the app shows no ads and
- * tracks no one (AdsController keeps AdSense out of it), so what those pages say about ad and
- * analytics cookies is for the website only. Renders nothing on the website.
+ * tracks no one (no Google Ads tag in the app), so what those pages say about ad and analytics
+ * cookies is for the website only. Renders nothing on the website.
  */
 const AppPrivacyNote = () => {
   if (!isNativeApp()) return null;
