@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import DotWordmark from '@/components/brand/DotWordmark';
 import { Link, useLocation } from 'react-router-dom';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
 import ProfileButton from '@/components/ProfileButton';
@@ -125,9 +126,7 @@ const Header = () => {
             fetchPriority="high"
             decoding="async"
           />
-          <span className="ca-display text-[15px] tracking-[0.02em] text-[hsl(var(--ca-text))] md:text-base">
-            CRIME<span className="text-[hsl(var(--ca-red))]">ALERT</span>
-          </span>
+          <DotWordmark />
         </Link>
 
         <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Huvudmeny">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import DotWordmark from '@/components/brand/DotWordmark';
 import { Link } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,9 +46,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
             fetchPriority="high"
             decoding="async"
           />
-          <span className="ca-display text-[15px] md:text-base tracking-[0.02em]">
-            CRIME<span className="text-[hsl(var(--ca-red))]">ALERT</span>
-          </span>
+          <DotWordmark />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
