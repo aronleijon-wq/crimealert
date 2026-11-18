@@ -10,7 +10,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PlanComparison from '@/components/account/PlanComparison';
-import { BILLING_PORTAL_URL, PRO_FEATURES, type BillingCycle } from '@/components/account/plans';
+import { BILLING_PORTAL_URL, FREE_PLAN_HAS_ADS, PRO_FEATURES, type BillingCycle } from '@/components/account/plans';
 
 
 
@@ -31,7 +31,7 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 const Prisplan = () => {
   useSEO({
     title: 'Prisplan: Gratis eller Pro — CrimeAlert',
-    description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik och export.',
+    description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik' + (FREE_PLAN_HAS_ADS ? ', export och ingen reklam.' : ' och export.'),
     canonical: 'https://crimealert.se/prisplan',
   });
   const { user, subscription, checkSubscription } = useAuth();

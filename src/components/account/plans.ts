@@ -1,5 +1,5 @@
 import type { SubscriptionState } from '@/hooks/useAuth';
-import { BarChart3, BellRing, FileDown, FileText, ListChecks, Sparkles, Users, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Sparkles, Users, Zap, type LucideIcon } from 'lucide-react';
 
 // Must match the active prices in Stripe (create-checkout charges whatever is active there)
 const MONTHLY_KR = 19;
@@ -17,6 +17,13 @@ export type BillingCycle = keyof typeof PRICES;
 /** Stripe's customer portal, where Pro members change or cancel their subscription */
 export const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/7sY28q57o6Vlduz8It1wY00';
 
+/**
+ * Whether the free plan shows ads. CrimeAlert shows none today, so Pro doesn't promise "Ingen reklam".
+ * Set to true when ads are turned on: Pro's list, the comparison table, the FAQ, the account page
+ * and the app then say Pro has no ads.
+ */
+export const FREE_PLAN_HAS_ADS = false;
+
 /** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
 export const TRIAL_DAYS = 7;
 
@@ -30,6 +37,7 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line,
   { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
   { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
   { icon: Sparkles, text: 'Fråga AI utan gräns, med utförligare svar (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
+  ...(FREE_PLAN_HAS_ADS ? [{ icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' }] : []),
 ];
 
 /** The plan in words: "Gratis", "Pro livstid", "Provperiod t.o.m. 2026-10-12" and so on. */

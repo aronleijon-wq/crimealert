@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BadgeCheck, Check, Loader2 } from 'lucide-react';
-import { planLabel, PRO_FEATURES } from '@/components/account/plans';
+import { FREE_PLAN_HAS_ADS, planLabel, PRO_FEATURES } from '@/components/account/plans';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
@@ -13,7 +13,9 @@ import ProHero from './ProHero';
 import './pro.css';
 
 /** What the page leads with for those without Pro: the five that matter most */
-const HIGHLIGHTS = [0, 1, 2, 7, 4, 6].map((i) => PRO_FEATURES[i]);
+// The app's six highlights; "Ingen reklam" takes the place of Medborgarrapporter when the free plan has ads
+const HIGHLIGHT_TEXTS = ['Händelser direkt', 'Notiser direkt', 'Hela beskrivningen', 'Fråga AI', 'Analys och statistik', FREE_PLAN_HAS_ADS ? 'Ingen reklam' : 'Medborgarrapporter'];
+const HIGHLIGHTS = HIGHLIGHT_TEXTS.map((start) => PRO_FEATURES.find((f) => f.short.startsWith(start))!);
 
 /** The place in the order things rise into view (pro.css) */
 const rise = (i: number) => ({ ['--i' as string]: i });

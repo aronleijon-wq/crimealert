@@ -12,7 +12,7 @@ import Header from '@/components/Header';
 
 // "Tyck till": the same sheet as in the app, loaded when it is opened
 const FeedbackSheet = lazy(() => import('@/native/FeedbackSheet'));
-import { BILLING_PORTAL_URL, planLabel, TRIAL_DAYS } from '@/components/account/plans';
+import { BILLING_PORTAL_URL, FREE_PLAN_HAS_ADS, planLabel, TRIAL_DAYS } from '@/components/account/plans';
 import { CONTACT_EMAIL } from '@/components/landing/faqItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -281,7 +281,7 @@ const Installningar = () => {
                   <LinkRow
                     icon={Zap}
                     label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-                    hint="Händelser och notiser direkt, hela beskrivningen och statistik."
+                    hint={`Händelser och notiser direkt, hela beskrivningen och ${FREE_PLAN_HAS_ADS ? 'ingen reklam' : 'statistik'}.`}
                     to="/prisplan"
                   />
                 ) : null}
