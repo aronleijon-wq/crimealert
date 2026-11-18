@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
-import AdsController from "@/components/AdsController";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -134,7 +133,6 @@ const App = () => (
         </Suspense>
         </ErrorBoundary>
         <BackendStatusBanner />
-        <AdsController />
         <CookieBanner />
 
       </BrowserRouter>

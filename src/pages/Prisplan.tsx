@@ -31,7 +31,7 @@ const PREMIUM_PRODUCT_ID_YEARLY = 'prod_U0duDYNoEp8JXS';
 const Prisplan = () => {
   useSEO({
     title: 'Prisplan: Gratis eller Pro — CrimeAlert',
-    description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik, export och ingen reklam.',
+    description: 'Jämför Gratis och Pro. Pro ger Polisens händelser direkt, hela beskrivningar, analys och statistik och export.',
     canonical: 'https://crimealert.se/prisplan',
   });
   const { user, subscription, checkSubscription } = useAuth();

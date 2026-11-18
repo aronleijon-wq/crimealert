@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
 import { isNativeApp } from '@/lib/native';
 import { COMPANY, COMPANY_ADDRESS, COMPANY_IDENTITY } from '@/lib/company';
+import { GOOGLE_ADS_ENABLED } from '@/lib/googleAds';
 
 const Sekretesspolicy = () => {
   useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar CrimeAlert in, använder och skyddar dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
@@ -104,8 +105,7 @@ const Sekretesspolicy = () => {
                   en länk för att avregistrera sig, och du kan också mejla oss. Raderar du kontot tas adressen bort.
                 </li>
                 <li>Analysera trafik och användarmönster för att förbättra upplevelsen.</li>
-                {!app && <li>Visa annonser via Google AdSense (gäller ej Pro-medlemmar).</li>}
-                {!app && <li>Mäta om våra Google Ads-annonser leder till nya konton och Pro-köp (Google Ads konverteringsspårning). Google tar emot uppgifter om besöket och konverteringen. I EU/EES sker det bara om du godkänner i cookie-rutan, och du kan ändra ditt val när som helst. Läs mer: <a href="https://business.safety.google/privacy/" className="underline" target="_blank" rel="noopener noreferrer">Googles integritetspolicy för företag</a>.</li>}
+                {!app && GOOGLE_ADS_ENABLED && <li>Mäta om våra Google Ads-annonser leder till nya konton och Pro-köp (Google Ads konverteringsspårning). Google tar emot uppgifter om besöket och konverteringen. I EU/EES sker det bara om du godkänner i vår cookieruta, och du kan ändra ditt val när som helst på cookiesidan. Läs mer: <a href="https://business.safety.google/privacy/" className="underline" target="_blank" rel="noopener noreferrer">Googles integritetspolicy för företag</a>.</li>}
               </ul>
             </section>
 
@@ -126,13 +126,13 @@ const Sekretesspolicy = () => {
                 som hjälper oss att driva tjänsten:
               </p>
               <ul className="list-disc pl-5 space-y-1 mt-2">
-                {!app && (
+                {!app && GOOGLE_ADS_ENABLED && (
                   <li>
-                    <strong>Google AdSense:</strong> Kan använda cookies för att visa anpassade annonser. Se vår{' '}
+                    <strong>Google Ads:</strong> Mäter om våra annonser leder till konton och köp, bara om du godkänt det. Se vår{' '}
                     <button onClick={() => navigate('/cookies')} className="text-primary hover:underline">
                       cookiepolicy
-                    </button>{' '}
-                    för mer information.
+                    </button>
+                    .
                   </li>
                 )}
                 <li>

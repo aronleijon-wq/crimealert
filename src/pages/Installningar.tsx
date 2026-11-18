@@ -281,7 +281,7 @@ const Installningar = () => {
                   <LinkRow
                     icon={Zap}
                     label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
-                    hint="Händelser och notiser direkt, hela beskrivningen och ingen reklam."
+                    hint="Händelser och notiser direkt, hela beskrivningen och statistik."
                     to="/prisplan"
                   />
                 ) : null}

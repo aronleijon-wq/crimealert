@@ -64,7 +64,7 @@ describe('PlanComparison', () => {
     expect(within(row('Polisens händelser på kartan och i flödet')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['15 min fördröjning', 'Direkt']);
     expect(within(row('VMA och krisinformation')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Direkt', 'Direkt']);
     expect(within(row('Medborgarrapporter')).getByLabelText('Ingår inte')).toBeInTheDocument();
-    expect(within(row('Reklam')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Visas', 'Ingen']);
+    expect(within(table).queryByRole('rowheader', { name: 'Reklam' })).toBeNull();
   });
 });
 

@@ -44,7 +44,6 @@ const ROWS: { group: string; rows: Row[] }[] = [
       { feature: 'Analys och statistik per kommun', free: false, pro: 'Upp till 60 dagar' },
       { feature: 'Export till PDF och CSV', free: false, pro: true },
       { feature: 'Medborgarrapporter', free: false, pro: true },
-      { feature: 'Reklam', free: 'Visas', pro: 'Ingen' },
     ],
   },
 ];
@@ -78,7 +77,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
         <p className="ca-eyebrow">Medlemskap</p>
         <h1 id="planer-rubrik" className="ca-display mt-2 text-4xl uppercase text-foreground sm:text-5xl">Gratis eller Pro</h1>
         <p className="mt-2 max-w-lg text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">
-          Det viktigaste är gratis. Pro är för dig som vill se händelser direkt, läsa hela beskrivningen och slippa reklam.
+          Det viktigaste är gratis. Pro är för dig som vill se händelser direkt, läsa hela beskrivningen och följa statistiken.
         </p>
       </div>
 
@@ -113,7 +112,6 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-[11px] text-muted-foreground">Visar annonser.</p>
           {!signedIn ? (
             <Link to="/auth?mode=signup" className="mt-3 inline-flex h-10 items-center justify-center rounded-xl border border-[hsl(var(--ca-line-strong))] text-sm font-semibold text-foreground transition hover:border-primary/50">
               Skapa gratis konto

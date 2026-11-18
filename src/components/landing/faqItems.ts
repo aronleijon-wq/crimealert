@@ -43,7 +43,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     q: 'Vad ingår i Pro och vad kostar det?',
     a: [
       `Pro kostar ${monthly.price} i månaden eller ${yearly.price} om året. ` +
-        'Då ser du Polisens händelser och får notiser direkt, läser hela beskrivningen av varje händelse och slipper reklam. ' +
+        'Då ser du Polisens händelser och får notiser direkt, läser hela beskrivningen av varje händelse och följer statistiken 60 dagar bakåt. ' +
         `Har du aldrig haft Pro kan du prova gratis i ${TRIAL_DAYS} dagar. `,
       { to: '/prisplan', label: 'Jämför Gratis och Pro' },
       '.',

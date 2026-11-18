@@ -1,15 +1,22 @@
-// Google Ads tag + conversions, gated on the visitor's cookie choice (regional consent).
+// Google Ads tag + conversions, gated on the visitor's choice in CrimeAlert's own cookie box
+// (components/CookieBanner), and only in the EU and the other regions that need consent.
+//
+// Off for now. To run Google Ads: set GOOGLE_ADS_ENABLED to true here and CA_GOOGLE_ADS to true in
+// index.html. Then the cookie box asks visitors, and the tag loads for those who say yes.
 declare global {
   interface Window { dataLayer: unknown[]; gtag?: (...args: unknown[]) => void }
 }
 
+export const GOOGLE_ADS_ENABLED = false;
 export const GOOGLE_ADS_ID = "AW-18563415709";
 export const SEND_TO_SIGNUP = "AW-18563415709/mDXdCMDxubQdEJ393JNF";
 export const SEND_TO_PURCHASE = "AW-18563415709/47RHCN7iubQdEJ393JNF";
 export const STORAGE_KEY = "cookie_consent";
 export const CONSENT_RECORD_KEY = "cookie_consent_record";
-export const CONSENT_NOTICE_VERSION = "2026-11-08-v1";
+export const CONSENT_NOTICE_VERSION = "2026-11-18-v2";
 export const CONSENT_EVENT = "ca-consent-change";
+/** Opens the cookie box again, from the cookie page */
+export const COOKIE_SETTINGS_EVENT = "ca-open-cookie-settings";
 
 const CONSENT_COUNTRIES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','CA'];
 let consentRegion: Promise<boolean> | undefined;
@@ -73,8 +80,10 @@ export function saveChoice(decision: "granted" | "denied") {
   window.dispatchEvent(new Event(CONSENT_EVENT));
 }
 
+/** Loads the Google Ads tag, when Google Ads is on and the visitor may be measured */
 export async function loadGoogleAds() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !GOOGLE_ADS_ENABLED) return;
+  if (!(await canTrackAds())) return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { // eslint-disable-next-line prefer-rest-params
     window.dataLayer.push(arguments); };
@@ -90,8 +99,9 @@ export async function loadGoogleAds() {
 }
 
 export async function reportConversion(sendTo: string, extra: Record<string, unknown> = {}) {
+  if (!GOOGLE_ADS_ENABLED) return;
   await loadGoogleAds();
-  // Consent Mode (set by Google's cookie box) decides what Google may store or use.
+  // Consent Mode (set by the cookie box) decides what Google may store or use.
   window.gtag?.("event", "conversion", { send_to: sendTo, ...extra });
 }
 
