@@ -65,7 +65,7 @@ describe('Landing page', () => {
     expect(within(faq).getByRole('link', { name: 'kontakt@crimealert.se' })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se');
     const ld = container.querySelector('#vanliga-fragor script[type="application/ld+json"]');
     expect(JSON.parse(ld!.textContent!)['@type']).toBe('FAQPage');
-    expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '#vanliga-fragor');
+    expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '/#vanliga-fragor');
   });
 
   it('announces the iPhone app in a banner at the top, linking to the App Store', async () => {
