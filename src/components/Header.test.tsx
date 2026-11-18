@@ -116,7 +116,7 @@ describe('Header', () => {
     const { within } = await import('@testing-library/react');
     const menu = screen.getByRole('navigation', { name: 'Meny' });
     expect(within(menu).getAllByRole('link').map((l) => l.textContent)).toEqual(
-      ['Karta', 'Flöde', 'Fråga AI', 'Analys', 'Notiser', 'Kommuner', 'Rapportera', 'Chattar', 'Guider', 'Prisplan'],
+      ['Karta', 'Flöde', 'Fråga AI', 'Analys', 'Notiser', 'Kommuner', 'Rapportera', 'Chattar', 'Guider', 'För kommuner', 'Prisplan'],
     );
   });
 });

@@ -31,6 +31,7 @@ const ResetPassword = lazyPage(() => import("./pages/ResetPassword"));
 const Admin = lazyPage(() => import("./pages/Admin"));
 const DebugPush = lazyPage(() => import("./pages/DebugPush"));
 const OmOss = lazyPage(() => import("./pages/OmOss"));
+const ForKommuner = lazyPage(() => import("./pages/ForKommuner"));
 const Statistik = lazyPage(() => import("./pages/Statistik"));
 const Feed = lazyPage(() => import("./pages/Feed"));
 const Kommun = lazyPage(() => import("./pages/Kommun"));
@@ -125,6 +126,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/debug-push" element={<DebugPush />} />
           <Route path="/om-oss" element={<OmOss />} />
+          <Route path="/for-kommuner" element={isNativeApp() ? <Navigate to="/karta" replace /> : <ForKommuner />} />
           <Route path="/statistik" element={<Statistik />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

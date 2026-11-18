@@ -71,6 +71,12 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
             <Search className="w-4 h-4" />
           </Link>
           <Link
+            to="/for-kommuner"
+            className="hidden xl:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+          >
+            För kommuner
+          </Link>
+          <Link
             to="/prisplan"
             className="hidden md:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
           >
@@ -106,7 +112,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
 
       {open && (
         <div className="md:hidden border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
-          {[...links, { to: '/prisplan', label: 'Prisplan' }].map((l) => (
+          {[...links, { to: '/prisplan', label: 'Prisplan' }, { to: '/for-kommuner', label: 'För kommuner och organisationer' }].map((l) => (
             <Link
               key={l.to}
               to={l.to}

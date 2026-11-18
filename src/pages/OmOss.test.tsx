@@ -18,7 +18,7 @@ describe('Om oss', () => {
     await renderPage();
     expect(screen.getByRole('heading', { level: 1, name: 'Om oss' })).toBeInTheDocument();
     // In the text, not in a caption of its own
-    expect(screen.getByText('Aron Leijon').closest('p')).toHaveTextContent(/^Bakom CrimeAlert står grundaren Aron Leijon, och idén är enkel/);
+    expect(screen.getAllByText('Aron Leijon')[0].closest('p')).toHaveTextContent(/^Bakom CrimeAlert står grundaren Aron Leijon, och idén är enkel/);
     expect(screen.queryByText('Grundare, CrimeAlert')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Vad vi strävar efter' })).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Trygghet genom kunskap', 'Fakta, inte rykten', 'Öppet för alla']);
@@ -28,10 +28,17 @@ describe('Om oss', () => {
   it('asks for feedback by mail and on Trustpilot', async () => {
     await renderPage();
     expect(screen.getByText(/Vi ser alltid fram emot feedback och åsikter om sidan/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /kontakt@crimealert\.se/ })).toHaveAttribute('href', 'mailto:kontakt@crimealert.se');
+    for (const link of screen.getAllByRole('link', { name: /kontakt@crimealert\.se/ })) expect(link).toHaveAttribute('href', 'mailto:kontakt@crimealert.se');
     const trustpilot = screen.getByRole('link', { name: /Trustpilot/ });
     expect(trustpilot).toHaveAttribute('href', 'https://se.trustpilot.com/evaluate/crimealert.se');
     expect(trustpilot).toHaveAttribute('target', '_blank');
+  });
+
+  it('says which company runs CrimeAlert', async () => {
+    await renderPage();
+    expect(screen.getByRole('heading', { level: 2, name: 'Vem som står bakom CrimeAlert' })).toBeInTheDocument();
+    for (const fact of ['KGV Analysis AB', '559243-8054', 'Karl Gerhards Väg 9, Saltsjöbaden']) expect(screen.getByText(fact)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'CrimeAlert för kommuner och organisationer' })).toHaveAttribute('href', '/for-kommuner');
   });
 
   it('shows no made-up event count', async () => {

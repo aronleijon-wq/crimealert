@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { COMPANY, COMPANY_IDENTITY } from '@/lib/company';
 
 const Villkor = () => {
   useSEO({ title: 'Användarvillkor | CrimeAlert', description: 'Villkoren för att använda CrimeAlert: tjänstens omfattning, ansvar, konto, betalning och uppsägning.', canonical: 'https://crimealert.se/villkor' });
@@ -19,7 +20,7 @@ const Villkor = () => {
             <div>
               <p className="ca-eyebrow">// användarvillkor</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Användarvillkor</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-20</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-11-18</p>
             </div>
           </div>
 
@@ -28,6 +29,11 @@ const Villkor = () => {
               <p>
                 Genom att använda CrimeAlert (crimealert.se) godkänner du dessa användarvillkor. Om du inte
                 accepterar villkoren ber vi dig att inte använda tjänsten.
+              </p>
+              <p className="mt-2">
+                CrimeAlert, på webben och i appen, tillhandahålls av {COMPANY_IDENTITY}. {COMPANY.name} är din avtalspart
+                för tjänsten och för betalda prenumerationer som köps på crimealert.se. Köper du Pro i iPhone-appen sköter
+                Apple köpet, betalningen och eventuell återbetalning.
               </p>
             </section>
 
@@ -169,8 +175,8 @@ const Villkor = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">Kontakt</h2>
               <p>
-                Om du har frågor om dessa användarvillkor är du välkommen att kontakta oss via
-                kontaktformuläret på webbplatsen.
+                Om du har frågor om dessa användarvillkor är du välkommen att kontakta {COMPANY.name} på{' '}
+                <a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>.
               </p>
             </section>
           </div>

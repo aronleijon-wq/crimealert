@@ -4,6 +4,7 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppPrivacyNote from '@/components/legal/AppPrivacyNote';
 import { isNativeApp } from '@/lib/native';
+import { COMPANY, COMPANY_ADDRESS, COMPANY_IDENTITY } from '@/lib/company';
 
 const Sekretesspolicy = () => {
   useSEO({ title: 'Sekretesspolicy | CrimeAlert', description: 'Så samlar CrimeAlert in, använder och skyddar dina personuppgifter. Läs om cookies, lagring, rättigheter och kontakt.', canonical: 'https://crimealert.se/sekretesspolicy' });
@@ -23,7 +24,7 @@ const Sekretesspolicy = () => {
             <div>
               <p className="ca-eyebrow">// sekretesspolicy</p>
               <h1 className="ca-display text-xl sm:text-2xl text-foreground">Sekretesspolicy</h1>
-              <p className="ca-meta mt-1">Senast uppdaterad: 2026-10-29</p>
+              <p className="ca-meta mt-1">Senast uppdaterad: 2026-11-18</p>
             </div>
           </div>
 
@@ -34,6 +35,14 @@ const Sekretesspolicy = () => {
                 CrimeAlert (crimealert.se) värnar om din integritet. Denna sekretesspolicy förklarar vilken information vi
                 samlar in, hur vi använder den och vilka rättigheter du har. Tjänsten sammanställer och visualiserar offentlig
                 information från Polisen och andra myndigheter – vi skapar inte eget innehåll om brott.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-base font-semibold text-foreground mb-2">Personuppgiftsansvarig</h2>
+              <p>
+                Personuppgiftsansvarig för CrimeAlert, på crimealert.se och i appen, är {COMPANY_IDENTITY}. Frågor om
+                hur dina personuppgifter behandlas skickar du till {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}.
               </p>
             </section>
 
@@ -168,7 +177,7 @@ const Sekretesspolicy = () => {
                 </li>
               </ul>
               <p className="mt-2">
-                För att utöva dina rättigheter, kontakta oss via{' '}
+                För att utöva dina rättigheter, mejla {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}. Du kan också radera ditt konto själv på{' '}
                 <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
                   kontosidan
                 </button>
@@ -203,11 +212,8 @@ const Sekretesspolicy = () => {
             <section>
               <h2 className="text-base font-semibold text-foreground mb-2">9. Kontakt</h2>
               <p>
-                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta oss via{' '}
-                <button onClick={() => navigate('/installningar')} className="text-primary hover:underline">
-                  kontosidan
-                </button>
-                .
+                Har du frågor om hur vi hanterar dina personuppgifter? Kontakta {COMPANY.name} på {<a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">{COMPANY.email}</a>}, eller
+                skriv till {COMPANY.name}, {COMPANY_ADDRESS}.
               </p>
             </section>
           </div>

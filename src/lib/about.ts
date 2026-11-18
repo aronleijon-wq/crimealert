@@ -1,9 +1,10 @@
 // Who runs CrimeAlert, for the Om oss page and what search engines read about it.
+import { COMPANY } from './company';
 
 export const FOUNDER = { name: 'Aron Leijon', role: 'Grundare' };
 /** One id for the founder everywhere, so search engines tie the name to CrimeAlert. */
 export const FOUNDER_ID = 'https://crimealert.se/om-oss#aron-leijon';
-export const ABOUT_CONTACT = 'kontakt@crimealert.se';
+export const ABOUT_CONTACT = COMPANY.email;
 
 /** AboutPage with the organisation and its founder, as schema.org JSON-LD. */
 export const aboutJsonLd = () =>
@@ -17,6 +18,9 @@ export const aboutJsonLd = () =>
       '@type': 'Organization',
       '@id': 'https://crimealert.se/#organization',
       name: 'CrimeAlert',
+      legalName: COMPANY.name,
+      identifier: { '@type': 'PropertyValue', propertyID: 'Organisationsnummer', value: COMPANY.orgNr },
+      address: { '@type': 'PostalAddress', streetAddress: COMPANY.street, addressLocality: COMPANY.locality, addressCountry: 'SE' },
       url: 'https://crimealert.se',
       logo: 'https://crimealert.se/pwa-512x512.png',
       email: ABOUT_CONTACT,

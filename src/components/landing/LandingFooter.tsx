@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import SocialLinks from '@/components/SocialLinks';
 import FooterWordmark from './FooterWordmark';
+import { COMPANY, COMPANY_ADDRESS } from '@/lib/company';
 
 const groups: { title: string; links: { to: string; label: string }[] }[] = [
   {
@@ -26,6 +27,7 @@ const groups: { title: string; links: { to: string; label: string }[] }[] = [
     title: 'OM',
     links: [
       { to: '/om-oss', label: 'Om oss' },
+      { to: '/for-kommuner', label: 'För kommuner och organisationer' },
       { to: '/guider', label: 'Guider' },
       { to: '/statistik', label: 'Brottsstatistik' },
       { to: '#vanliga-fragor', label: 'Vanliga frågor' },
@@ -104,8 +106,11 @@ const LandingFooter = () => (
     </div>
 
     <div className="max-w-[1400px] mx-auto mt-12 pt-6 border-t border-[hsl(var(--ca-line))] flex flex-col sm:flex-row justify-between gap-3">
-      <span className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))]">
-        © {new Date().getFullYear()} CRIMEALERT
+      <span className="ca-mono text-[10px] leading-relaxed tracking-wider text-[hsl(var(--ca-text-3))]">
+        © {new Date().getFullYear()} CRIMEALERT DRIVS AV {COMPANY.name.toUpperCase()} · ORG.NR {COMPANY.orgNr}
+        <br />
+        {COMPANY_ADDRESS.toUpperCase()} ·{' '}
+        <a href={`mailto:${COMPANY.email}`} className="hover:text-[hsl(var(--ca-text))]">{COMPANY.email.toUpperCase()}</a>
       </span>
       <span className="ca-mono text-[10px] tracking-wider text-[hsl(var(--ca-text-3))]">
         SVERIGE • LIVE-DATA

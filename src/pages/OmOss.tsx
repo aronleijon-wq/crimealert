@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
 import { ABOUT_CONTACT as CONTACT, aboutJsonLd, FOUNDER } from '@/lib/about';
+import { COMPANY, COMPANY_ADDRESS } from '@/lib/company';
 import { TRUSTPILOT_REVIEW_URL } from '@/lib/trustpilot';
 import { Eye, MessageSquare, Scale, Star, Users } from 'lucide-react';
 
@@ -127,9 +128,38 @@ const OmOss = () => {
             </div>
           </section>
 
+          {/* Bolaget */}
+          <section className={part}>
+            <p className="ca-meta">03 / bolaget</p>
+            <div className="max-w-2xl">
+              <h2 className="ca-display text-xl md:text-2xl text-[hsl(var(--ca-text))]">Vem som står bakom CrimeAlert</h2>
+              <dl className="mt-5 grid grid-cols-1 sm:grid-cols-[160px_1fr] border-t border-[hsl(var(--ca-line))] text-sm">
+                {[
+                  ['Bolag', COMPANY.name],
+                  ['Organisationsnummer', COMPANY.orgNr],
+                  ['Adress', COMPANY_ADDRESS],
+                  ['Grundare', FOUNDER.name],
+                  ['Kontakt', COMPANY.email],
+                  ['Datakällor', 'Polisen (händelser), Brå (anmälda brott), MCF (räddningstjänstens insatser) och SCB (befolkning)'],
+                ].map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="ca-meta pt-3 sm:py-3 sm:border-b border-[hsl(var(--ca-line))]">{k}</dt>
+                    <dd className="pb-3 sm:py-3 border-b border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text))]">
+                      {k === 'Kontakt' ? <a href={`mailto:${v}`} className="underline underline-offset-4">{v}</a> : v}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-4 text-[13px] leading-relaxed text-[hsl(var(--ca-text-2))]">
+                Kommuner och organisationer kan beställa lägesrapporter för sitt område, se{' '}
+                <Link to="/for-kommuner" className="text-[hsl(var(--ca-text))] underline underline-offset-4">CrimeAlert för kommuner och organisationer</Link>.
+              </p>
+            </div>
+          </section>
+
           {/* Feedback och kontakt */}
           <section className={part}>
-            <p className="ca-meta">03 / kontakt</p>
+            <p className="ca-meta">04 / kontakt</p>
             <div className="max-w-2xl">
               <h2 className="ca-display text-xl md:text-2xl text-[hsl(var(--ca-text))]">Vi vill höra vad du tycker</h2>
               <div className="mt-3 space-y-3 text-sm md:text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
