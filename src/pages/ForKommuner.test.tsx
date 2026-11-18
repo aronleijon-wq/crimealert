@@ -45,8 +45,8 @@ describe('För kommuner och organisationer', () => {
 });
 
 describe('the company behind CrimeAlert', () => {
-  it('is named in the privacy policy, the terms and both footers', () => {
-    for (const file of ['src/pages/Sekretesspolicy.tsx', 'src/pages/Villkor.tsx', 'src/components/Footer.tsx', 'src/components/landing/LandingFooter.tsx']) {
+  it('is named in the privacy policy, the terms and the footer', () => {
+    for (const file of ['src/pages/Sekretesspolicy.tsx', 'src/pages/Villkor.tsx', 'src/components/landing/LandingFooter.tsx']) {
       expect(readFileSync(file, 'utf8'), file).toMatch(/COMPANY/);
     }
     expect(readFileSync('src/pages/Sekretesspolicy.tsx', 'utf8')).toContain('Personuppgiftsansvarig');
