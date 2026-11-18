@@ -10,6 +10,7 @@ import {
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
+import { descriptionPreview } from '../_shared/descriptionPreview.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -40,6 +41,8 @@ interface PoliceIncident {
   original_type?: string | null;
   url?: string | null;
   location_precision: string;
+  /** For a visitor without Pro: the description is only its start, the rest is with Pro */
+  descriptionTruncated?: boolean;
 }
 
 // Row shape of the police_events_archive table
@@ -1680,10 +1683,12 @@ serve(async (req) => {
             return !isNaN(t) && t <= delayCutoff;
           } catch { return false; }
         })
-        .map((i) => ({
-          ...i,
-          description: isSummaryIncident(i) ? (i.description || '') : '',
-        }));
+        // The night summaries whole; of other events about the first half, the rest with Pro
+        .map((i) => {
+          if (isSummaryIncident(i)) return { ...i, description: i.description || '' };
+          const preview = descriptionPreview(i.description);
+          return { ...i, description: preview.text, descriptionTruncated: preview.truncated };
+        });
       console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
 

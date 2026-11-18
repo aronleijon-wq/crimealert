@@ -7,6 +7,7 @@ import { parseIncidentTime } from '@/lib/incidentTime';
 import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
 import { isPoliceEvent } from '@/lib/share';
+import { canSellPro } from '@/lib/native';
 import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
@@ -267,8 +268,10 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         </div>
       </div>
 
-      ${(isPremium || descriptionIsFree) && inc.description
-        ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}</p>`
+      ${inc.description && (isPremium || descriptionIsFree || isPoliceEvent(inc))
+        ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}${!isPremium && inc.descriptionTruncated
+            ? ` <a href="/prisplan" onclick="event.preventDefault();window.dispatchEvent(new CustomEvent('crimealert-pro'))" style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:${P.red};font-weight:600;text-decoration:none;">${svgIcon('lock', sz(10, 8))} Läs mer med Pro</a>`
+            : ''}</p>`
         : !isPremium && !descriptionIsFree
           ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;display:flex;align-items:center;gap:5px;">${svgIcon('lock', sz(11, 9))} Detaljerad beskrivning kräver Pro</p>`
           : ''}
@@ -382,6 +385,17 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
   const authRef = useRef(auth);
   authRef.current = auth;
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // "Läs mer med Pro" in a popup: to the plans, inside the app (React Router follows popstate)
+  useEffect(() => {
+    const toPlans = () => {
+      if (!canSellPro()) return;
+      window.history.pushState({}, '', '/prisplan');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    };
+    window.addEventListener('crimealert-pro', toPlans);
+    return () => window.removeEventListener('crimealert-pro', toPlans);
+  }, []);
 
   // Listen for lightbox events from popup image clicks
   useEffect(() => {

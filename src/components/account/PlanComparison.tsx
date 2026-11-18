@@ -20,7 +20,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
     group: 'Händelser',
     rows: [
       { feature: 'Polisens händelser på kartan och i flödet', free: '15 min fördröjning', pro: 'Direkt' },
-      { feature: 'Beskrivning av händelsen', free: 'Rubrik och plats', pro: 'Hela texten' },
+      { feature: 'Beskrivning av händelsen', free: 'Början av texten', pro: 'Hela texten' },
       { feature: 'Risknivå, status och Polisens kategori', free: false, pro: true },
       { feature: 'Polisens natt- och kvällssammanfattningar', free: true, pro: true },
       { feature: 'VMA och krisinformation', free: 'Direkt', pro: 'Direkt' },

@@ -110,10 +110,18 @@ const Handelse = () => {
                   <SwedenLocator lat={incident.lat} lng={incident.lng} label={`${incident.area} på Sverigekartan`} className="h-32 w-auto shrink-0 sm:h-40" />
                 </section>
 
-                {incident.description && (isPremium || isSummary) ? (
-                  <p className="whitespace-pre-line rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
-                    {incident.description}
-                  </p>
+                {incident.description ? (
+                  // Without Pro the server sends the start of the description; the rest is with Pro
+                  <div className="rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5">
+                    <p className="whitespace-pre-line text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">
+                      {incident.description}
+                    </p>
+                    {!isPremium && !isSummary && incident.descriptionTruncated && (
+                      <Link to="/prisplan" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+                        <Lock className="h-3.5 w-3.5" aria-hidden /> Läs mer med Pro
+                      </Link>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex items-start gap-3 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5">
                     <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

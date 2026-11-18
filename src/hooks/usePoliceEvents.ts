@@ -22,6 +22,8 @@ interface PoliceEventDto {
   url?: string | null;
   originalType?: string | null;
   location_precision?: string | null;
+  /** Without Pro: the description is only its start */
+  descriptionTruncated?: boolean;
 }
 
 interface PoliceEventsResponse {
@@ -89,6 +91,7 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
     url: e.url || undefined,
     originalType: e.originalType || undefined,
     locationPrecision: e.location_precision || undefined,
+    descriptionTruncated: e.descriptionTruncated === true || undefined,
   }));
   // Sort by timestamp descending (newest first)
   mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());

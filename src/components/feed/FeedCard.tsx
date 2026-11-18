@@ -133,7 +133,12 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
             {expanded ? 'Visa mindre' : 'Läs mer'}
           </button>
         )}
-        {item.bodyLocked && (
+        {item.bodyLocked && (item.bodyIsPreview ? (
+          <Link to="/prisplan" className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+            <Lock className="h-3 w-3" aria-hidden />
+            Läs mer med Pro
+          </Link>
+        ) : (
           <Link
             to="/prisplan"
             className="mt-3 flex items-center gap-2 rounded-lg border border-dashed border-[hsl(var(--ca-line-strong))] px-3 py-2 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
@@ -141,7 +146,7 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
             <Lock className="h-3.5 w-3.5 text-primary" />
             Hela beskrivningen ingår i <span className="font-semibold text-primary">Pro</span>
           </Link>
-        )}
+        ))}
 
         {item.alsoReported.length > 0 && (
           <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
 import { Incident, incidentTypeConfig, riskConfig } from '@/data/mockIncidents';
 import { canSellPro } from '@/lib/native';
+import { isPoliceEvent } from '@/lib/share';
 import { X, MapPin, Clock, Shield, Radio, ExternalLink, Lock, Zap, Tag, Crosshair, Calendar } from 'lucide-react';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -82,11 +83,24 @@ const IncidentDetail = ({ incident, onClose }: IncidentDetailProps) => {
       </div>
 
       {/* Description */}
-      {isPremium ? (
-        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{incident.description}</p>
-      ) : (
+      {incident.description && (isPremium || incident.type === 'crisis' || isPoliceEvent(incident)) ? (
+        // Without Pro the server sends the start of a police description; the rest is with Pro
+        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+          {incident.description}
+          {!isPremium && incident.descriptionTruncated && (
+            canSellPro() ? (
+              <button onClick={() => navigate('/prisplan')} className="ml-1 inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                <Lock className="h-3 w-3" aria-hidden /> Läs mer med Pro
+              </button>
+            ) : (
+              <span className="ml-1 inline-flex items-center gap-1 font-medium text-primary"><Lock className="h-3 w-3" aria-hidden /> Resten ingår i Pro</span>
+            )
+          )}
+        </p>
+      ) : !isPremium && (
+        // Trafikverket's texts and citizen reports are Pro: shown blurred
         <div className="relative mb-3">
-          <p className="text-xs text-muted-foreground leading-relaxed blur-[6px] select-none" aria-hidden>
+          <p className="text-xs text-muted-foreground leading-relaxed blur-[6px] select-none min-h-[2rem]" aria-hidden>
             {incident.description}
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
