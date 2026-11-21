@@ -7,6 +7,7 @@ import StatsBar from '@/components/StatsBar';
 import MapView from '@/components/MapView';
 import IncidentCard from '@/components/IncidentCard';
 import MobileSignupBar from '@/components/MobileSignupBar';
+import InviteBanner from '@/components/InviteBanner';
 
 
 import { KOMMUN_COORDINATES } from '@/data/kommuner';
@@ -509,6 +510,9 @@ const Index = () => {
       {/* The app has its welcome and tabs instead */}
       {!isLoggedIn && !isNativeApp() && <div className="h-[calc(3.6rem+env(safe-area-inset-bottom,0px))] shrink-0 md:hidden" aria-hidden />}
       {!isLoggedIn && !isNativeApp() && <MobileSignupBar />}
+      {/* Signed in on the web: the invite offer takes the same bottom spot */}
+      {isLoggedIn && !isNativeApp() && <div className="h-[calc(3.6rem+env(safe-area-inset-bottom,0px))] shrink-0" aria-hidden />}
+      {isLoggedIn && !isNativeApp() && <InviteBanner />}
       
     </div>);
 
