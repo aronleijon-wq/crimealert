@@ -15,6 +15,7 @@ import StoryStatic from '@/components/landing/StoryStatic';
 import { useLandingLive } from '@/components/landing/useLandingLive';
 import AppBanner, { APP_BANNER_HEIGHT, useAppBanner } from '@/components/landing/AppBanner';
 import InviteBanner from '@/components/InviteBanner';
+import { INVITE_BANNER_HEIGHT, useInviteBanner } from '@/hooks/useInviteBanner';
 import { useAuth } from '@/hooks/useAuth';
 
 // Below the fold and the only user of framer-motion, so keep it out of the initial bundle
@@ -43,6 +44,9 @@ const Landing = () => {
   const live = useLandingLive();
   const appBanner = useAppBanner();
   const { user } = useAuth();
+  // Signed in with friends left to invite: the invite offer takes the iPhone banner's place at the top
+  const invite = useInviteBanner(Boolean(user));
+  const bannerHeight = invite.visible ? INVITE_BANNER_HEIGHT : appBanner.visible ? APP_BANNER_HEIGHT : 0;
   const incident = new URLSearchParams(location.search).get('incident');
 
   useEffect(() => {
@@ -66,9 +70,11 @@ const Landing = () => {
   return (
     <div
       className="ca-dark min-h-screen antialiased"
-      style={{ '--ca-banner-h': `${appBanner.visible ? APP_BANNER_HEIGHT : 0}px` } as React.CSSProperties}
+      style={{ '--ca-banner-h': `${bannerHeight}px` } as React.CSSProperties}
     >
-      <LandingNav banner={appBanner.visible ? <AppBanner onClose={appBanner.dismiss} /> : null} />
+      <LandingNav
+        banner={invite.visible ? <InviteBanner banner={invite} /> : appBanner.visible ? <AppBanner onClose={appBanner.dismiss} /> : null}
+      />
       <main>
         <Hero live={live} />
         {touch ? (
@@ -87,8 +93,6 @@ const Landing = () => {
         <FinalCTA />
       </main>
       <LandingFooter />
-      {/* Signed in: the same "Få 7 dagar Pro per vän" offer as on the map */}
-      {user && <InviteBanner />}
     </div>
   );
 };
