@@ -81,6 +81,9 @@ Texter, nyckelord, dataskyddssvar och granskningsanteckning finns i `APPSTORE.md
 
 - **Ny version i App Store** behövs bara när något i `ios/` ändras. Höj då **Build** (och
   **Version** vid större ändringar) under målet App → General innan du arkiverar.
+- **Gammal version i appen:** webbvyn sparar en egen kopia av sajten. Från 1.6 rensas den kopian
+  varje gång appen startar (`SceneDelegate.swift`), så appen hämtar alltid sajten på nytt.
+  Inloggning och inställningar finns kvar.
 - **Pro:** säljs i appen via Apple. Stegen i App Store Connect finns i `APPSTORE.md`
   (Prenumerationen). Den som har Pro från webben har det i appen också, och tvärtom.
 - **Ändrar du `capacitor.config.ts`:** kör `npm install` och `npx cap sync ios` (kräver Node.js),

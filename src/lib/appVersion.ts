@@ -9,6 +9,9 @@ import { reloadFresh } from './staleBuild';
 /** This build's id (vite.config.ts); "dev" when running locally */
 export const BUILD_ID: string = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
 
+/** The event the iPhone app sends on the document when it comes back from the background */
+export const APP_RESUMED = 'crimealert-app-resumed';
+
 /** How often an open, visible page asks whether a newer build is live */
 const CHECK_EVERY_MS = 5 * 60 * 1000;
 const TRIED_KEY = 'ca_reloaded_for_build';
@@ -91,8 +94,18 @@ export function watchForNewVersion() {
   setInterval(() => {
     if (document.visibilityState === 'visible') check();
   }, CHECK_EVERY_MS);
-  document.addEventListener('visibilitychange', () => {
+  const onReturn = () => {
     if (document.visibilityState === 'visible' && Date.now() - last >= 60 * 1000) check();
+  };
+  document.addEventListener('visibilitychange', onReturn);
+  // The iPhone app keeps the page in memory while it is in the background, and its web view does
+  // not always say the page became visible again. The app says so itself when it comes back
+  // (ios/App/App/AppDelegate.swift, from 1.6), and Capacitor sends "resume" on the document.
+  document.addEventListener(APP_RESUMED, onReturn);
+  document.addEventListener('resume', onReturn);
+  // A page brought back from the browser's back/forward memory
+  window.addEventListener('pageshow', (event) => {
+    if ((event as PageTransitionEvent).persisted) check();
   });
 }
 
