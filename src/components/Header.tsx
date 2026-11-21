@@ -7,6 +7,8 @@ import { BookOpen, Building2, ChevronDown, Megaphone, Menu, MessagesSquare, Sear
 import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
 import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
+import InviteBanner from '@/components/InviteBanner';
+import { useInviteBanner } from '@/hooks/useInviteBanner';
 
 interface NavItem { to: string; label: string }
 interface MoreItem extends NavItem { icon: LucideIcon; hint: string }
@@ -99,6 +101,8 @@ const Header = () => {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const appBanner = useAppBanner();
+  // Signed in with friends left to invite: the invite offer takes the iPhone banner's place
+  const invite = useInviteBanner(Boolean(user) && !isNativeApp());
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
   // The iPhone app has its own title bar and tabs (src/native/AppShell)
@@ -109,11 +113,11 @@ const Header = () => {
   return (
     <>
     {/* The banner sits above the bar, so it takes the phone's notch space instead of the bar */}
-    {appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
+    {invite.visible ? <InviteBanner banner={invite} safeTop /> : appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
     <header
       // ca-dark carries the start page's colours and type (index.css), on pages that are not inside it too
       className="ca-dark relative z-50 shrink-0 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl"
-      style={appBanner.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      style={appBanner.visible || invite.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 md:h-16 md:px-10">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">

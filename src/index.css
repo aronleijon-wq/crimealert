@@ -643,3 +643,35 @@ html:not(.dark) .ca-dotmark-sweep { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .ca-dotmark-sweep { animation: none; display: none; }
 }
+
+/* ==========================================================
+   "Få 7 dagar Pro per vän" across the top (components/InviteBanner)
+   ========================================================== */
+.ca-invite-strip {
+  --ca-dotmark-red: 3 100% 61%;
+  background:
+    radial-gradient(60% 140% at 50% 0%, hsl(3 100% 50% / 0.28), transparent 70%),
+    linear-gradient(90deg, #0b0506, #1c0809 50%, #0b0506);
+  border-bottom: 1px solid hsl(3 100% 60% / 0.25);
+}
+.ca-invite-strip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.09) 45%, transparent 60%);
+  transform: translateX(-100%);
+  animation: ca-invite-shine 7s ease-in-out 1.5s infinite;
+}
+@keyframes ca-invite-shine {
+  0% { transform: translateX(-100%); }
+  30%, 100% { transform: translateX(100%); }
+}
+.ca-invite-gift {
+  color: #fff;
+  background: linear-gradient(135deg, hsl(3 100% 60%), hsl(350 85% 42%));
+  box-shadow: 0 0 0 1px hsl(3 100% 70% / 0.35), 0 0 14px hsl(3 100% 55% / 0.55);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-invite-strip::after { animation: none; display: none; }
+}

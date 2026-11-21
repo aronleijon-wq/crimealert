@@ -1,64 +1,71 @@
-import { useState } from 'react';
 import { Gift, Share2, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useMyInvite } from '@/hooks/useMyInvite';
-import { daysLeftToEarn, INVITE_DAYS } from '@/lib/invite';
+import { INVITE_BANNER_HEIGHT, type useInviteBanner } from '@/hooks/useInviteBanner';
+import { INVITE_DAYS, INVITE_MAX_FRIENDS } from '@/lib/invite';
 
-const DISMISS_KEY = 'ca-invite-banner-dismissed';
+/** "Bara i november" shows until the end of November 2026, Swedish time */
+const OFFER_ENDS = Date.parse('2026-12-01T00:00:00+01:00');
+
+
+type Banner = ReturnType<typeof useInviteBanner>;
 
 /**
- * "Få 7 dagar Pro per vän" over the bottom of the map, for signed-in users who still
- * have days to earn. Closing it with X keeps it away on this device (localStorage).
+ * "Få 7 dagar Pro per vän" as a strip across the top of the page: a gift, the offer, how many
+ * friends have joined, and Dela. Dark with a red glow on both themes, like the iPhone banner.
  */
-const InviteBanner = () => {
-  const { toast } = useToast();
-  const { invite, loading, share } = useMyInvite();
-  const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
-  });
-
-  const close = () => {
-    try { localStorage.setItem(DISMISS_KEY, '1'); } catch { /* private mode */ }
-    setDismissed(true);
-  };
-
-  const onShare = async () => {
-    const result = await share();
-    if (result === 'copied') toast({ title: 'Länken är kopierad', description: 'Skicka den till dina vänner.' });
-    else if (result === 'failed') toast({ title: 'Kunde inte dela', description: 'Försök igen.', variant: 'destructive' });
-  };
-
-  if (dismissed || loading || !invite || daysLeftToEarn(invite.rewarded) <= 0) return null;
-
+const InviteBanner = ({ banner, safeTop = false, now = Date.now() }: { banner: Banner; safeTop?: boolean; now?: number }) => {
+  const november = now < OFFER_ENDS;
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[1100] flex items-center justify-between gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur"
-      style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+      className="ca-invite-strip relative flex shrink-0 items-center justify-center overflow-hidden text-white"
+      style={
+        safeTop
+          ? { paddingTop: 'env(safe-area-inset-top, 0px)', height: `calc(${INVITE_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))` }
+          : { height: INVITE_BANNER_HEIGHT }
+      }
+      role="region"
+      aria-label="Bjud in vänner"
     >
-      <div className="flex min-w-0 items-center gap-2.5">
-        <Gift className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-foreground">Få {INVITE_DAYS} dagar Pro per vän</p>
-          <p className="truncate text-[11px] text-muted-foreground">Dela din länk – varje vän som går med ger dig Pro</p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="relative flex h-full w-full max-w-[1400px] items-center gap-3 pl-4 pr-12 md:justify-center md:pl-10">
+        <span className="ca-invite-gift grid h-7 w-7 shrink-0 place-items-center rounded-lg" aria-hidden>
+          <Gift className="h-4 w-4" />
+        </span>
+        <p className="min-w-0 flex-1 truncate text-[13px] md:flex-none">
+          <span className="font-semibold"><span className="hidden sm:inline">Få </span>{INVITE_DAYS} dagar Pro per vän</span>
+          {november && <span className="text-white/60 sm:hidden"> · bara i nov.</span>}
+          <span className="hidden text-white/60 lg:inline"> · Dela din länk – varje vän som går med ger dig Pro</span>
+        </p>
+        {november && (
+          <span className="hidden shrink-0 rounded-full border border-white/15 bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/80 sm:inline">
+            Bara i november
+          </span>
+        )}
+        <span
+          className="hidden shrink-0 items-center gap-1 md:flex"
+          role="img"
+          aria-label={`${banner.rewarded} av ${INVITE_MAX_FRIENDS} vänner har gått med`}
+        >
+          {Array.from({ length: INVITE_MAX_FRIENDS }, (_, i) => (
+            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < banner.rewarded ? 'bg-[hsl(var(--ca-dotmark-red))]' : 'bg-white/20'}`} />
+          ))}
+        </span>
         <button
           type="button"
-          onClick={onShare}
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-3.5 text-[13px] font-semibold text-primary-foreground transition hover:bg-primary/90"
+          onClick={banner.share}
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-white px-3 text-[12px] font-semibold text-black transition hover:bg-white/85"
         >
-          <Share2 className="h-4 w-4" aria-hidden /> Dela
-        </button>
-        <button
-          type="button"
-          onClick={close}
-          aria-label="Stäng"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition hover:text-foreground"
-        >
-          <X className="h-4 w-4" aria-hidden />
+          <Share2 className="h-3.5 w-3.5" aria-hidden />
+          <span className="sm:hidden">Dela</span>
+          <span className="hidden sm:inline">Dela din länk</span>
         </button>
       </div>
+      <button
+        type="button"
+        onClick={banner.dismiss}
+        aria-label="Stäng"
+        className="absolute bottom-1.5 right-2 grid h-8 w-8 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 };

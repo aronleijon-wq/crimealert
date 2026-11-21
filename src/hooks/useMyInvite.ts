@@ -6,16 +6,22 @@ import { copyLink } from '@/lib/share';
 export type InviteShareResult = 'shared' | 'copied' | 'cancelled' | 'failed';
 
 /** The signed-in user's own invite link, and using a friend's code (lib/invite) */
+// The last invite loaded, so a page change shows it at once (the menu bar's invite strip) while it
+// is loaded again
+let lastLoaded: { userId: string; invite: MyInvite } | null = null;
+
 export function useMyInvite() {
   const { user, checkSubscription } = useAuth();
-  const [invite, setInvite] = useState<MyInvite | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = user && lastLoaded?.userId === user.id ? lastLoaded.invite : null;
+  const [invite, setInvite] = useState<MyInvite | null>(cached);
+  const [loading, setLoading] = useState(!cached);
   const [failed, setFailed] = useState(false);
 
   const reload = useCallback(async () => {
     if (!user) { setInvite(null); setLoading(false); return; }
-    setLoading(true);
+    if (lastLoaded?.userId !== user.id) setLoading(true);
     const mine = await loadMyInvite().catch(() => null);
+    if (mine) lastLoaded = { userId: user.id, invite: mine };
     setInvite(mine);
     setFailed(!mine);
     setLoading(false);
