@@ -74,7 +74,7 @@ const OmOss = () => {
             </h1>
             <p className="mt-6 max-w-2xl text-base md:text-lg leading-relaxed text-[hsl(var(--ca-text-2))]">
               Bakom CrimeAlert står grundaren{' '}
-              <strong className="whitespace-nowrap font-semibold text-[hsl(var(--ca-text))]">A. Leijon</strong>, och idén är enkel:
+              <strong className="whitespace-nowrap font-semibold text-[hsl(var(--ca-text))]">Aron Leijon</strong>, och idén är enkel:
               det ska gå att se vad som händer där man bor, utan att leta igenom polisen.se eller lita på rykten i
               sociala medier.
             </p>
