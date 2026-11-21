@@ -14,6 +14,8 @@ import LandingFooter from '@/components/landing/LandingFooter';
 import StoryStatic from '@/components/landing/StoryStatic';
 import { useLandingLive } from '@/components/landing/useLandingLive';
 import AppBanner, { APP_BANNER_HEIGHT, useAppBanner } from '@/components/landing/AppBanner';
+import InviteBanner from '@/components/InviteBanner';
+import { useAuth } from '@/hooks/useAuth';
 
 // Below the fold and the only user of framer-motion, so keep it out of the initial bundle
 const StickyStory = lazy(() => import('@/components/landing/StickyStory'));
@@ -40,6 +42,7 @@ const Landing = () => {
   // One source of live events for the hero and the map preview
   const live = useLandingLive();
   const appBanner = useAppBanner();
+  const { user } = useAuth();
   const incident = new URLSearchParams(location.search).get('incident');
 
   useEffect(() => {
@@ -84,6 +87,8 @@ const Landing = () => {
         <FinalCTA />
       </main>
       <LandingFooter />
+      {/* Signed in: the same "Få 7 dagar Pro per vän" offer as on the map */}
+      {user && <InviteBanner />}
     </div>
   );
 };
