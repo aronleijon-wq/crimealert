@@ -187,7 +187,8 @@ const Prisplan = () => {
           </button>
         </DialogContent>
       </Dialog>
-      <div className="flex-1 overflow-y-auto p-6 grid-overlay">
+      {/* relative: hidden screen-reader text in the table is placed within this, not stretching the page below it */}
+      <div className="relative flex-1 overflow-y-auto p-6 grid-overlay">
         <div className="max-w-3xl mx-auto space-y-6">
           <PlanComparison
             signedIn={!!user}
