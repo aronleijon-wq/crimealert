@@ -33,6 +33,12 @@ describe('illustrationFor', () => {
     expect(illustrationFor(ev('Rattfylleri'), available)).toBeNull();
   });
 
+  it('shows a robbery of a shop as a shop behind cordon tape until robberies have their own picture', () => {
+    const shops = { 'inbrott-butik': '/e.jpg' };
+    expect(illustrationFor(ev('Rån', 'Rån mot en butik i centrum.'), shops)).toBe('/e.jpg');
+    expect(illustrationFor(ev('Rån', 'En man blev rånad på sin telefon i en park.'), shops)).toBeNull();
+  });
+
   it('keeps the general picture of a family in front when there are more', () => {
     const more = { ...available, 'trafik-lastbil': '/d.jpg' };
     expect(illustrationFor(ev('Trafikolycka', 'Kollision på E4.'), more)).toBe('/b.jpg');
@@ -45,6 +51,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning']));
   });
 });

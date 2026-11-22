@@ -62,7 +62,7 @@ export function illustrationKeys(event: IllustrationEvent): string[] {
   }
   if (/motorfordon/.test(kind) || (/stöld/.test(kind) && has(text, /\bbil\b|bilen|fordon|cykel|moped|båt/))) return ['stold-fordon', 'stold'];
   if (/stöld|häleri/.test(kind)) return ['stold'];
-  if (/rån/.test(kind)) return ['ran', 'polisinsats'];
+  if (/rån/.test(kind)) return has(text, /butik|affär|kiosk|bensinstation|tobak|restaurang|bank|växlingskontor|apotek/) ? ['ran', 'inbrott-butik', 'polisinsats'] : ['ran', 'polisinsats'];
   if (/skottlossning|mord|dråp/.test(kind) || has(text, /skottlossning|skott avlossats/)) return ['skottlossning', 'polisinsats'];
   if (/explosion|sprängning|detonation/.test(kind)) return ['sprangning', 'skottlossning', 'polisinsats'];
   if (/farligt föremål/.test(kind)) return ['farligt-foremal', 'polisinsats'];
@@ -91,7 +91,7 @@ const FAMILY_ORDER: Record<string, string[]> = {
 
 // Where the action is in a picture, for the wide banners that show only a band of it
 // (CSS object-position); the rest have it a little below the middle
-const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%' };
+const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%', 'trafik-motorvag': '50% 45%' };
 const DEFAULT_FOCUS = '50% 62%';
 
 /** The part of a picture to keep in view when it is cropped, by its URL */
