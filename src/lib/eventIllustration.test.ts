@@ -78,6 +78,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-vilt', 'brand-bil', 'narkotika', 'hot', 'skadegorelse', 'rattfylleri', 'fylleri', 'forsvunnen', 'stold-fordon', 'stold', 'brand-lagenhet-dag', 'inbrott-villa-dag', 'brand-villa', 'brand-industri', 'ran', 'inbrott-butik-dag', 'narkotika-dag', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-vilt', 'brand-bil', 'narkotika', 'hot', 'skadegorelse', 'rattfylleri', 'fylleri', 'forsvunnen', 'stold-fordon', 'stold', 'brand-lagenhet-dag', 'inbrott-villa-dag', 'brand-villa', 'brand-industri', 'ran', 'inbrott-butik-dag', 'narkotika-dag', 'trafik-vilt-dag', 'trafik-singel', 'arbetsplatsolycka', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
   });
 });
