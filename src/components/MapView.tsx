@@ -13,6 +13,8 @@ import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
 import { svgIcon, TYPE_ICON } from '@/lib/svgIcons';
 import { COMMUNITY_REPORT_COLOR, getJitteredPositions, hitRadii, isWithinDays, markerHtml, MAX_HIT_RADIUS, setHitArea, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { MyPosition } from '@/hooks/useMyLocation';
+import { addMyDotStyles, MY_BLUE, MY_DOT_HTML, MY_DOT_SIZE } from '@/lib/myLocationDot';
 
 declare global {
   interface Window {
@@ -32,6 +34,8 @@ interface MapViewProps {
   flyToLocation?: { lat: number; lng: number; zoom: number } | null;
   /** Shown as a heatmap (the timeline's heat view); null for none */
   heatPoints?: HeatPoint[] | null;
+  /** Where the visitor is (the locate button), as a blue dot */
+  myLocation?: MyPosition | null;
 }
 
 // A dot on the shared canvas can be tapped this many pixels beyond its rim (set per dot by
@@ -350,8 +354,9 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
 };
 
 
-const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation, heatPoints = null }: MapViewProps) => {
+const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, flyToLocation, heatPoints = null, myLocation = null }: MapViewProps) => {
   const mapRef = useRef<L.Map | null>(null);
+  const meRef = useRef<{ dot: L.Marker; ring: L.Circle } | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Map<string, L.Marker | L.CircleMarker>>(new Map());
   /**
@@ -477,6 +482,7 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       themeObserver.disconnect();
       map.remove();
       mapRef.current = null;
+      meRef.current = null;
       markersRef.current = null;
       canvasRendererRef.current = null;
     };
@@ -639,6 +645,28 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     if (!mapRef.current || !flyToLocation) return;
     mapRef.current.flyTo([flyToLocation.lat, flyToLocation.lng], flyToLocation.zoom, { duration: 1.2 });
   }, [flyToLocation]);
+
+  // The blue dot for where you are, with how sure the phone is as a faint ring in metres
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!myLocation) {
+      if (meRef.current) { meRef.current.dot.remove(); meRef.current.ring.remove(); meRef.current = null; }
+      return;
+    }
+    const at: L.LatLngExpression = [myLocation.lat, myLocation.lng];
+    if (!meRef.current) {
+      addMyDotStyles();
+      const ring = L.circle(at, { radius: myLocation.accuracy, color: MY_BLUE, weight: 1, opacity: 0.35, fillColor: MY_BLUE, fillOpacity: 0.12, interactive: false }).addTo(map);
+      const icon = L.divIcon({ html: MY_DOT_HTML, className: '', iconSize: [MY_DOT_SIZE, MY_DOT_SIZE], iconAnchor: [MY_DOT_SIZE / 2, MY_DOT_SIZE / 2] });
+      const dot = L.marker(at, { icon, interactive: false, keyboard: false, zIndexOffset: 2000 }).addTo(map);
+      meRef.current = { dot, ring };
+    } else {
+      meRef.current.dot.setLatLng(at);
+      meRef.current.ring.setLatLng(at);
+      meRef.current.ring.setRadius(myLocation.accuracy);
+    }
+  }, [myLocation]);
 
   return (
     <div ref={containerRef} className="w-full h-full" style={{ touchAction: 'pan-x pan-y', backgroundColor: 'hsl(212 26% 2%)' }}>

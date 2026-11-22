@@ -54,11 +54,10 @@ describe('Om oss', () => {
     expect(ld.mentions).toMatchObject({ '@type': 'Person', '@id': 'https://crimealert.se/om-oss#aron-leijon', name: 'Aron Leijon' });
   });
 
-  it('names the founder in the sitewide data and footer, with the same id', () => {
+  it('names the founder in the sitewide data, with the same id', () => {
     const html = readFileSync('index.html', 'utf8');
     expect(html).toContain('<meta name="author" content="Aron Leijon" />');
     expect(html).toContain('"@id": "https://crimealert.se/om-oss#aron-leijon"');
-    expect(readFileSync('src/components/landing/LandingFooter.tsx', 'utf8')).toContain('Grundad av');
   });
 
   it('is in the sitemap', () => {

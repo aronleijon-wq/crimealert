@@ -17,6 +17,7 @@ import { kommunPath, kommunStats } from '@/lib/kommunPages';
 import { eventPath, eventUrl } from '@/lib/share';
 import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
+import { illustrationFocus, illustrationFor } from '@/lib/eventIllustration';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 
 const fullTime = (time: string) =>
@@ -51,6 +52,8 @@ const Handelse = () => {
   });
 
   const isSummary = !!incident?.originalType?.toLowerCase().includes('sammanfattning');
+  // A picture of the kind of event (lib/eventIllustration); not of the place itself
+  const illustration = incident ? illustrationFor(incident) : null;
   const policeUrl = incident?.url?.startsWith('/') ? `https://polisen.se${incident.url}` : incident?.url ?? null;
   const config = incident ? incidentTypeConfig[incident.type] ?? incidentTypeConfig.other : null;
 
@@ -109,6 +112,13 @@ const Handelse = () => {
                   </div>
                   <SwedenLocator lat={incident.lat} lng={incident.lng} label={`${incident.area} på Sverigekartan`} className="h-32 w-auto shrink-0 sm:h-40" />
                 </section>
+
+                {illustration && (
+                  <figure className="relative mb-5 overflow-hidden rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-base-3))]">
+                    <img src={illustration} alt="" loading="lazy" decoding="async" className="aspect-[16/9] w-full object-cover" style={{ objectPosition: illustrationFocus(illustration) }} />
+                    <figcaption className="absolute bottom-2 right-3 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-white/90 backdrop-blur">Illustration</figcaption>
+                  </figure>
+                )}
 
                 {incident.description ? (
                   // Without Pro the server sends the start of the description; the rest is with Pro

@@ -11,6 +11,8 @@ import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
 import { getJitteredPositions, hitRadii, isWithinDays, MARKER_PULSE_CSS, markerHtml, MAX_HIT_RADIUS, setHitArea, shouldIncidentPulse, touchPulseIds } from '@/lib/mapMarkers';
 import { formatTimeAgo } from '@/lib/timeAgo';
+import type { MyPosition } from '@/hooks/useMyLocation';
+import { addMyDotStyles, MY_BLUE, MY_DOT_HTML, MY_DOT_SIZE } from '@/lib/myLocationDot';
 
 export type AppleMapType = 'standard' | 'satellite' | 'hybrid';
 
@@ -72,7 +74,7 @@ function loadMapKit(): Promise<MapKit> {
     script.crossOrigin = 'anonymous';
     script.async = true;
     script.dataset.callback = '__caMapkitLoaded';
-    script.dataset.libraries = 'map,annotations';
+    script.dataset.libraries = 'map,annotations,overlays';
     script.onerror = () => { clearTimeout(timer); reject(new Error('MapKit laddades inte')); };
     document.head.appendChild(script);
   }).catch((error) => { loading = null; throw error; });
@@ -103,14 +105,17 @@ interface AppleMapProps {
   onUnavailable: () => void;
   /** 'app': the iPhone app's full-screen map with its sheet; 'web': the website's map page, with Apple's zoom buttons */
   variant?: 'app' | 'web';
+  /** Where the visitor is (the locate button), as a blue dot */
+  myLocation?: MyPosition | null;
 }
 
-const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable, variant = 'app' }: AppleMapProps) => {
+const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapType, onUnavailable, variant = 'app', myLocation = null }: AppleMapProps) => {
   const navigate = useNavigate();
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapKit>(null);
   const kitRef = useRef<MapKit>(null);
   const markers = useRef(new Map<string, MapKit>());
+  const me = useRef<{ dot: MapKit; ring: MapKit } | null>(null);
   /** Each marker can be tapped as far out as there is room for (lib/mapMarkers hitRadii), up to 44 px across */
   const updateHitAreas = useRef(() => {
     const map = mapRef.current;
@@ -172,6 +177,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       kit?.removeEventListener('error', onError);
       map?.destroy();
       mapRef.current = null;
+      me.current = null;
       shown.clear();
     };
   // A page has one kind of map; only if that changed would it be made again
@@ -263,6 +269,48 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
     if (!map || !mapkit || !flyToLocation) return;
     map.setRegionAnimated(regionAt(mapkit, flyToLocation.lat, flyToLocation.lng, flyToLocation.zoom), true);
   }, [flyToLocation]);
+
+  // The blue dot for where you are, and how sure the phone is as a faint ring in metres
+  useEffect(() => {
+    const place = () => {
+      const map = mapRef.current;
+      const mapkit = kitRef.current;
+      if (!map || !mapkit) return false;
+      if (!myLocation) {
+        if (me.current) {
+          map.removeAnnotation(me.current.dot);
+          if (me.current.ring) map.removeOverlay(me.current.ring);
+          me.current = null;
+        }
+        return true;
+      }
+      const at = new mapkit.Coordinate(myLocation.lat, myLocation.lng);
+      if (!me.current) {
+        addMyDotStyles();
+        const dot = new mapkit.Annotation(at, () => {
+          const box = document.createElement('div');
+          box.innerHTML = MY_DOT_HTML;
+          box.style.cssText = `width:${MY_DOT_SIZE}px;height:${MY_DOT_SIZE}px;`;
+          return box;
+        }, { anchorOffset: new DOMPoint(0, MY_DOT_SIZE / 2), enabled: false, displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000 });
+        // Overlays may be missing if MapKit was loaded without them; the dot shows either way
+        const ring = mapkit.CircleOverlay ? new mapkit.CircleOverlay(at, myLocation.accuracy, {
+          style: new mapkit.Style({ fillColor: MY_BLUE, fillOpacity: 0.12, strokeColor: MY_BLUE, strokeOpacity: 0.35, lineWidth: 1 }),
+          enabled: false,
+        }) : null;
+        if (ring) map.addOverlay(ring);
+        map.addAnnotation(dot);
+        me.current = { dot, ring };
+      } else {
+        me.current.dot.coordinate = at;
+        if (me.current.ring) { me.current.ring.coordinate = at; me.current.ring.radius = myLocation.accuracy; }
+      }
+      return true;
+    };
+    if (place()) return;
+    const timer = setInterval(() => { if (place()) clearInterval(timer); }, 300);
+    return () => clearInterval(timer);
+  }, [myLocation]);
 
   // --pulse-scale: how far the pulse reaches, as on the website's map at a town's zoom
   return <div ref={el} className="absolute inset-0 bg-[#1c1c1e]" style={{ ['--pulse-scale' as string]: '3' }} aria-label="Karta" role="application" />;
