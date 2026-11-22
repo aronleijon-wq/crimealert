@@ -68,6 +68,8 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
     : KINDS[item.kind];
   const isLongBody = item.body.length > 260;
   const isNews = item.kind === 'news';
+  // Police events no longer link out to polisen.se; news items keep their article link.
+  const showSourceLink = isNews && !!item.url;
   const totalReactions = engagement?.reactions.reduce((sum, r) => sum + r.count, 0) ?? 0;
 
   return (
@@ -155,9 +157,9 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
           </p>
         )}
 
-        {(item.url || item.mapLink) && (
+        {(showSourceLink || item.mapLink) && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {item.url && (
+            {showSourceLink && (
               <a
                 href={item.url}
                 target="_blank"

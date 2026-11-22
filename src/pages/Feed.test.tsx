@@ -9,6 +9,7 @@ const minutesAgo = (m: number) => new Date(Date.now() - m * 60 * 1000).toISOStri
 const police: Incident = {
   id: 'pol-1', type: 'fire', title: '18 februari 12.30, Brand, Uppsala', description: '', lat: 59.86, lng: 17.64,
   area: 'Uppsala', time: minutesAgo(60), status: 'active', risk: 'medium', source: 'Polisen.se',
+  url: 'https://polisen.se/aktuellt/brand-uppsala',
 };
 const vma: ExternalEvent = {
   id: 'vma-1', source: 'sr-vma', kind: 'vma', title: 'VMA: Brand i Västerås', summary: 'Stäng dörrar och fönster.',
@@ -68,6 +69,15 @@ describe('Feed page', () => {
     const policeCard = screen.getAllByRole('article')[2];
     expect(within(policeCard).getByRole('link', { name: /Hela beskrivningen ingår i Pro/ })).toHaveAttribute('href', '/prisplan');
     expect(within(policeCard).getByRole('link', { name: /Visa på kartan/ })).toHaveAttribute('href', '/karta?incident=pol-1');
+  });
+
+  it('does not link police events out to polisen.se, but keeps the news article link', async () => {
+    await renderFeed();
+    const policeCard = screen.getAllByRole('article')[2];
+    expect(within(policeCard).queryByRole('link', { name: /Läs mer på polisen\.se/ })).toBeNull();
+    expect(within(policeCard).queryAllByRole('link').some((a) => (a.getAttribute('href') || '').includes('polisen.se'))).toBe(false);
+    const newsCard = screen.getAllByRole('article')[1];
+    expect(within(newsCard).getByRole('link', { name: /Läs artikeln på svt\.se/ })).toHaveAttribute('href', 'https://www.svt.se/rån');
   });
 
   it('filters the feed', async () => {
