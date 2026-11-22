@@ -90,13 +90,18 @@ const MapThumb = ({ lat, lng, color }: { lat: number; lng: number; color: string
 /** The news photo, or the place on the map; nothing when there is neither */
 const Thumb = ({ item, color }: { item: FeedItem; color: string }) => {
   const [failed, setFailed] = useState(false);
+  const [illustrationFailed, setIllustrationFailed] = useState(false);
   const image = item.image && !failed ? item.image : null;
-  if (!image && (item.lat === null || item.lng === null)) return null;
+  // CrimeAlert's own picture of the kind of event (lib/eventIllustration), where the source has none
+  const illustration = !image && item.illustration && !illustrationFailed ? item.illustration : null;
+  if (!image && !illustration && (item.lat === null || item.lng === null)) return null;
   return (
     <span className="relative block shrink-0 overflow-hidden rounded-[10px] bg-[#1c1c1e]" style={{ width: THUMB, height: THUMB }}>
       {image
         ? <img src={image.url} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="absolute inset-0 h-full w-full object-cover" />
-        : <MapThumb lat={item.lat!} lng={item.lng!} color={color} />}
+        : illustration
+          ? <img src={illustration} alt="" title="Illustration" loading="lazy" decoding="async" onError={() => setIllustrationFailed(true)} className="absolute inset-0 h-full w-full object-cover" />
+          : <MapThumb lat={item.lat!} lng={item.lng!} color={color} />}
     </span>
   );
 };

@@ -62,7 +62,10 @@ const NationalArt = ({ accent, icon: Icon }: { accent: string; icon: LucideIcon 
 
 const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
   const [imageFailed, setImageFailed] = useState(false);
+  const [illustrationFailed, setIllustrationFailed] = useState(false);
   const showImage = !!item.image && !imageFailed;
+  // CrimeAlert's own picture of the kind of event, where the source has no image
+  const showIllustration = !showImage && !!item.illustration && !illustrationFailed;
   const hasPosition = item.lat !== null && item.lng !== null;
 
   return (
@@ -76,6 +79,15 @@ const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
           referrerPolicy="no-referrer"
           onError={() => setImageFailed(true)}
           className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : showIllustration ? (
+        <img
+          src={item.illustration!}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setIllustrationFailed(true)}
+          className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
         />
       ) : hasPosition ? (
         <LocationMap lat={item.lat!} lng={item.lng!} accent={accent} />
@@ -94,10 +106,14 @@ const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
         {label}
       </span>
 
-      {!showImage && hasPosition && (
+      {!showImage && (showIllustration || hasPosition) && item.area && (
         <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] text-white backdrop-blur">
           <MapPin className="h-3 w-3" /> {item.area}
         </span>
+      )}
+
+      {showIllustration && (
+        <span className="absolute bottom-2 right-3 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-white/90 backdrop-blur">Illustration</span>
       )}
 
       {showImage && (

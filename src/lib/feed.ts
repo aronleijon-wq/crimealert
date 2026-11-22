@@ -4,6 +4,7 @@ import { parseIncidentTime } from '@/lib/incidentTime';
 import { CRISIS_DEFAULT_DURATION_MS, filterIncidentsForMap, linkTrafficDuplicates } from '@/lib/mapFilters';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 import { specificTopicsOf } from '../../supabase/functions/_shared/sources/topics';
+import { illustrationFor } from '@/lib/eventIllustration';
 
 export type FeedKind = 'police' | 'community' | 'traffic' | 'vma' | 'crisis' | 'news';
 
@@ -34,6 +35,8 @@ export interface FeedItem {
   alsoReported: Incident[];
   /** The source's own image for a news or crisis post, with its credit */
   image: { url: string; credit: string | null } | null;
+  /** One of CrimeAlert's illustrations for a police event (lib/eventIllustration), shown when there is no image */
+  illustration: string | null;
 }
 
 const HOUR = 60 * 60 * 1000;
@@ -146,6 +149,7 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
     related: [],
     alsoReported,
     image: null,
+    illustration: kind === 'police' ? illustrationFor(incident) : null,
   };
 }
 
@@ -174,6 +178,7 @@ function externalToItem(event: ExternalEvent, now: number): FeedItem {
     related: [],
     alsoReported: [],
     image: event.image_url ? { url: event.image_url, credit: event.image_credit ?? null } : null,
+    illustration: null,
   };
 }
 
