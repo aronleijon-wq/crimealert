@@ -113,7 +113,7 @@ const FAMILY_ORDER: Record<string, string[]> = {
 
 // Where the action is in a picture, for the wide banners that show only a band of it
 // (CSS object-position); the rest have it a little below the middle
-const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%', 'trafik-motorvag': '50% 45%', 'inbrott-lagenhet': '50% 50%', natt: '50% 50%', trafikkontroll: '50% 52%', 'trafik-vilt': '50% 66%' };
+const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%', 'trafik-motorvag': '50% 45%', 'inbrott-lagenhet': '50% 50%', natt: '50% 50%', trafikkontroll: '50% 52%', 'trafik-vilt': '50% 66%', 'brand-lagenhet-dag': '50% 30%', 'inbrott-villa-dag': '50% 38%', forsvunnen: '50% 55%' };
 const DEFAULT_FOCUS = '50% 62%';
 
 /** The part of a picture to keep in view when it is cropped, by its URL */
