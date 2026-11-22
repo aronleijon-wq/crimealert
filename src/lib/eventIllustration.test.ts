@@ -39,6 +39,12 @@ describe('illustrationFor', () => {
     expect(illustrationFor(ev('Rån', 'En man blev rånad på sin telefon i en park.'), shops)).toBeNull();
   });
 
+  it('shows police cars on a street for a police event without a picture of its own', () => {
+    const street = { misshandel: '/m.jpg', 'brand-lagenhet': '/a.jpg' };
+    expect(illustrationFor(ev('Bedrägeri', 'Ett telefonbedrägeri.'), street)).toBe('/m.jpg');
+    expect(illustrationFor(ev('Brand', 'En bil brinner.', 'fire'), street)).toBe('/a.jpg');
+  });
+
   it('keeps the general picture of a family in front when there are more', () => {
     const more = { ...available, 'trafik-lastbil': '/d.jpg' };
     expect(illustrationFor(ev('Trafikolycka', 'Kollision på E4.'), more)).toBe('/b.jpg');
@@ -51,6 +57,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel']));
   });
 });

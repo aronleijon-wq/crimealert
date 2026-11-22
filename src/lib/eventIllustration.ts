@@ -4,7 +4,7 @@
 //
 // Adding a picture is only adding the file: the name says what it shows (brand-lagenhet.jpg).
 // A missing picture falls back to a broader one (brand-bil → brand), then to any picture of the
-// same family (brand-*), and finally to "polisinsats" or "ovrigt"; with none of those, no picture.
+// same family (brand-*), and finally to "polisinsats", "misshandel" or "ovrigt"; with none, no picture.
 
 const files = import.meta.glob('../assets/illustrationer/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
@@ -91,7 +91,7 @@ const FAMILY_ORDER: Record<string, string[]> = {
 
 // Where the action is in a picture, for the wide banners that show only a band of it
 // (CSS object-position); the rest have it a little below the middle
-const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%', 'trafik-motorvag': '50% 45%', 'inbrott-lagenhet': '50% 50%' };
+const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%', 'trafik-motorvag': '50% 45%', 'inbrott-lagenhet': '50% 50%', natt: '50% 50%', trafikkontroll: '50% 52%' };
 const DEFAULT_FOCUS = '50% 62%';
 
 /** The part of a picture to keep in view when it is cropped, by its URL */
@@ -110,6 +110,7 @@ export function illustrationFor(event: IllustrationEvent, available: Record<stri
   const related = Object.keys(available).filter((k) => familyOf(k) === family)
     .sort((a, b) => ((order.indexOf(a) + 1) || 99) - ((order.indexOf(b) + 1) || 99) || a.localeCompare(b));
   if (related.length) return available[related[0]];
-  for (const key of ['polisinsats', 'ovrigt']) if (available[key]) return available[key];
+  // Police cars on a street at night stand in for any police event without a picture of its own
+  for (const key of ['polisinsats', 'misshandel', 'ovrigt']) if (available[key]) return available[key];
   return null;
 }
