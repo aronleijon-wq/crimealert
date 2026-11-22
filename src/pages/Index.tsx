@@ -24,6 +24,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { hasAppDesign13, isNativeApp } from '@/lib/native';
 import MapChrome from '@/native/MapChrome';
 import AppleMap, { type AppleMapType } from '@/native/AppleMap';
+import LocateButton from '@/components/LocateButton';
+import { useMyLocation } from '@/hooks/useMyLocation';
+import { toast } from '@/hooks/use-toast';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
 import { crisisToIncident } from '@/lib/externalEvents';
 import { useExternalEvents } from '@/hooks/useExternalEvents';
@@ -209,6 +212,16 @@ const Index = () => {
 
   const appDesign = hasAppDesign13();
   const [appleMapOk, setAppleMapOk] = useState(true);
+  // The blue dot: asked for only when the locate button is tapped, and the map goes there once found
+  const me = useMyLocation((p) => setFlyToLocation({ lat: p.lat, lng: p.lng, zoom: 15, _ts: Date.now() }));
+  useEffect(() => {
+    if (me.status === 'denied') toast({ title: 'Platsen är avstängd', description: isNativeApp() ? 'Tillåt platsen för CrimeAlert i Inställningar på telefonen.' : 'Tillåt platsen för crimealert.se i webbläsarens inställningar.' });
+    else if (me.status === 'unavailable') toast({ title: 'Kunde inte hitta din position', description: 'Försök igen om en stund.' });
+  }, [me.status]);
+  const locate = () => {
+    if (me.position) setFlyToLocation({ lat: me.position.lat, lng: me.position.lng, zoom: 15, _ts: Date.now() });
+    else me.start();
+  };
   const [mapType, setMapType] = useState<AppleMapType>(() => {
     try {
       const saved = localStorage.getItem('ca-map-type');
@@ -253,6 +266,7 @@ const Index = () => {
             onSelectIncident={(id) => setSelectedId(id || null)}
             flyToLocation={flyToLocation}
             mapType={mapType}
+            myLocation={me.position}
             onUnavailable={() => setAppleMapOk(false)} />
         ) : (
           <MapView
@@ -261,6 +275,7 @@ const Index = () => {
             onSelectIncident={(id) => setSelectedId(id || null)}
             isPremium={isPremium}
             flyToLocation={flyToLocation}
+            myLocation={me.position}
             heatPoints={showHeat ? filtered : null} />
         )}
         <MapChrome
@@ -284,6 +299,7 @@ const Index = () => {
           }}
           timelineOpen={historyOpen}
           timeline={timelinePanel}
+          locate={<LocateButton status={me.status} onClick={locate} className="h-11 w-11 rounded-full text-white bg-[rgba(44,44,46,0.8)] shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-xl backdrop-saturate-150 active:scale-95 transition" />}
         />
       </div>
     );
@@ -390,6 +406,7 @@ const Index = () => {
               onSelectIncident={(id) => setSelectedId(id || null)}
               flyToLocation={flyToLocation}
               mapType={mapType}
+              myLocation={me.position}
               onUnavailable={() => setAppleMapOk(false)} />
           ) : (
             <MapView
@@ -398,7 +415,8 @@ const Index = () => {
               onSelectIncident={(id) => setSelectedId(id || null)}
               isPremium={isPremium}
               flyToLocation={flyToLocation}
-              heatPoints={showHeat ? filtered : null} />
+              myLocation={me.position}
+            heatPoints={showHeat ? filtered : null} />
           )}
 
           {appleMapOk && !showHeat && (
@@ -420,6 +438,14 @@ const Index = () => {
               ))}
             </div>
           )}
+
+          {/* Where you are: below the map type buttons (Apple's map) or the zoom buttons (the site's own) */}
+          <LocateButton
+            status={me.status}
+            onClick={locate}
+            className="ca-glass absolute right-3 z-[1000] h-9 w-9 rounded-md text-[hsl(var(--ca-text))] transition hover:brightness-125"
+            style={{ top: isFullscreen ? 'calc(5.4rem + env(safe-area-inset-top, 0px))' : '5.4rem' }}
+          />
 
           {/* Vinjett för nattkänsla över kartan */}
           <div

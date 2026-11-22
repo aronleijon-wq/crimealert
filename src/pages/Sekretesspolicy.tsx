@@ -90,6 +90,11 @@ const Sekretesspolicy = () => {
                   webbläsaren eller, i iPhone-appen, från Apple. Den raderas när du stänger av notiserna, loggar ut i appen
                   eller raderar ditt konto.
                 </li>
+                <li>
+                  <strong>Din position på kartan:</strong> Trycker du på knappen för din position frågar telefonen eller
+                  webbläsaren om lov, och kartan visar en blå punkt där du är så länge kartan är öppen. Positionen används
+                  bara i din enhet för att rita punkten. Den sparas inte och skickas inte till oss.
+                </li>
               </ul>
             </section>
 

@@ -45,6 +45,8 @@ export interface MapChromeProps {
   timeline: ReactNode;
   /** Standard, satellite or hybrid, when the map is Apple's (AppleMap) */
   mapType?: { value: AppleMapType; onChange: (type: AppleMapType) => void };
+  /** The locate button, floating at the right just above the sheet */
+  locate?: ReactNode;
 }
 
 const MAP_TYPES: { value: AppleMapType; label: string }[] = [
@@ -199,7 +201,7 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
 
 const MapChrome = ({
   incidents, activeCount, loading, status, live, selectedId, onSelect, activeFilters, onToggleFilter, isPremium,
-  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline, mapType,
+  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline, mapType, locate,
 }: MapChromeProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -298,6 +300,12 @@ const MapChrome = ({
       {timelineOpen && (
         <div className="pointer-events-auto absolute left-1/2 -translate-x-1/2 transition-[bottom] duration-300" style={{ bottom: Math.min(height, heights.half) + 12 }}>
           {timeline}
+        </div>
+      )}
+
+      {locate && (
+        <div className="pointer-events-auto absolute right-3 transition-[bottom] duration-300" style={{ bottom: Math.min(height, heights.half) + 12 }}>
+          {locate}
         </div>
       )}
 
