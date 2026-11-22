@@ -119,7 +119,7 @@ export function markerHtml(incident: Incident, touch: boolean, pulse = shouldInc
         <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
           <div class="marker-hit" style="position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);border-radius:50%;"></div>
           ${shouldPulse ? `<div class="marker-pulse-community" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:4px;background:${COMMUNITY_REPORT_COLOR};transform:rotate(45deg);"></div>` : ''}
-          <div style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
+          <div class="ca-marker-dot" style="width:${size}px;height:${size}px;border-radius:3px;background:${COMMUNITY_REPORT_COLOR};border:2.5px solid rgba(255,255,255,0.95);position:relative;z-index:2;box-shadow:0 2px 10px ${COMMUNITY_REPORT_COLOR}90;transform:rotate(45deg);"></div>
           <span style="position:absolute;z-index:3;display:flex;pointer-events:none;">${svgIcon('eye', touch ? 13 : 10, '#fff', 2.5)}</span>
         </div>
       `,
@@ -135,7 +135,7 @@ export function markerHtml(incident: Incident, touch: boolean, pulse = shouldInc
       <div style="position:relative;width:${pulseSize}px;height:${pulseSize}px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">
         <div class="marker-hit" style="position:absolute;left:50%;top:50%;width:100%;height:100%;transform:translate(-50%,-50%);border-radius:50%;"></div>
         ${shouldPulse ? `<div class="marker-pulse" style="position:absolute;width:100%;height:100%;top:0;left:0;border-radius:50%;background:${color};"></div>` : ''}
-        <div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
+        <div class="ca-marker-dot" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.9);position:relative;z-index:2;box-shadow:0 1px 6px ${color}80;"></div>
       </div>
     `,
     size: pulseSize,
@@ -149,4 +149,6 @@ export const MARKER_PULSE_CSS = `
 .marker-pulse-community { position: absolute; border-radius: 4px; pointer-events: none; animation: marker-pulse-community-anim 2s ease-in-out infinite; will-change: transform, opacity; }
 @keyframes marker-pulse-community-anim { 0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(1); } 50% { opacity: 0; transform: rotate(45deg) scale(2.8); } }
 @media (prefers-reduced-motion: reduce) { .marker-pulse, .marker-pulse-community { animation: none; opacity: 0; } }
+.ca-map-moving .marker-pulse, .ca-map-moving .marker-pulse-community { animation: none; opacity: 0; will-change: auto; }
+.ca-map-moving .ca-marker-dot { box-shadow: none !important; }
 `;

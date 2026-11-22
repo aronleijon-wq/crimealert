@@ -166,7 +166,13 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
       });
       mapRef.current = map;
       applyType(map, mapkit);
-      map.addEventListener('region-change-end', () => updateHitAreas.current());
+      // While the map moves, the pulses and shadows stand still, so the dots can keep up with
+      // the map instead of trailing behind it (MapKit moves every marker each frame)
+      map.addEventListener('region-change-start', () => el.current?.classList.add('ca-map-moving'));
+      map.addEventListener('region-change-end', () => {
+        el.current?.classList.remove('ca-map-moving');
+        updateHitAreas.current();
+      });
       map.addEventListener('select', (event: { annotation?: MapKit }) => {
         const id = event.annotation?.data?.id;
         if (id) handlers.current.onSelectIncident(id);
@@ -218,8 +224,14 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
           dot.style.cssText = `width:${size}px;height:${size}px;`;
           return dot;
         }, {
+          // The dot's size given, not measured: MapKit measures a marker drawn while the map is
+          // hidden (the app opens on another tab) as 0 px, and then puts every dot a few pixels
+          // off its place, which is kilometres when zoomed out
+          size: { width: size, height: size },
           // The dot's middle on the spot, not its bottom edge
           anchorOffset: new DOMPoint(0, size / 2),
+          // No drop-in: a marker drawn again (an event that stops pulsing) stays where it is
+          animates: false,
           calloutOffset: new DOMPoint(0, -size / 2 + 6),
           displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000,
           title: cleanPoliceTitle(incident.title),
@@ -292,7 +304,7 @@ const AppleMap = ({ incidents, selectedId, onSelectIncident, flyToLocation, mapT
           box.innerHTML = MY_DOT_HTML;
           box.style.cssText = `width:${MY_DOT_SIZE}px;height:${MY_DOT_SIZE}px;`;
           return box;
-        }, { anchorOffset: new DOMPoint(0, MY_DOT_SIZE / 2), enabled: false, displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000 });
+        }, { size: { width: MY_DOT_SIZE, height: MY_DOT_SIZE }, anchorOffset: new DOMPoint(0, MY_DOT_SIZE / 2), animates: false, enabled: false, displayPriority: mapkit.Annotation.DisplayPriority?.Required ?? 1000 });
         // Overlays may be missing if MapKit was loaded without them; the dot shows either way
         const ring = mapkit.CircleOverlay ? new mapkit.CircleOverlay(at, myLocation.accuracy, {
           style: new mapkit.Style({ fillColor: MY_BLUE, fillOpacity: 0.12, strokeColor: MY_BLUE, strokeOpacity: 0.35, lineWidth: 1 }),
