@@ -73,6 +73,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-vilt', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
   });
 });
