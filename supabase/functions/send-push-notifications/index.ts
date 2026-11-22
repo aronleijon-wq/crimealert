@@ -23,6 +23,7 @@ import {
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
 import { mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
+import { isSummaryPart } from '../_shared/summaryEvents.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -658,14 +659,16 @@ Deno.serve(async (req) => {
     // Events archived in the last hour: new ones for Pro, and ones free accounts get after the delay
     const now = Date.now();
     const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
-    const { data: recentEvents, error: eventsError } = await supabase
+    const { data: archivedEvents, error: eventsError } = await supabase
       .from('police_events_archive')
       .select('id, title, area, lat, lng, type, risk, time, original_type, location_precision')
       .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 
     if (eventsError) throw eventsError;
-    if (!recentEvents || recentEvents.length === 0) {
+    // The events found in Polisen's summaries are hours old when the summary comes: not news
+    const recentEvents = (archivedEvents ?? []).filter((event) => !isSummaryPart(event.id));
+    if (recentEvents.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: 'no_new_events' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

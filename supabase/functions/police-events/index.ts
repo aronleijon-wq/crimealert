@@ -11,6 +11,7 @@ import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import { descriptionPreview } from '../_shared/descriptionPreview.ts';
+import { isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -715,6 +716,79 @@ const lanGazetteerFor = (lan: string) => {
   }
   return index;
 };
+
+// ── The events in Polisen's summaries (_shared/summaryEvents) ──
+
+const ALL_KOMMUNER = Object.values(LAN_KOMMUNER).flat();
+const lanOfKommun = (kommun: string) =>
+  Object.keys(LAN_KOMMUNER).find((lan) => LAN_KOMMUNER[lan].some((k) => k.toLowerCase() === kommun.toLowerCase())) ?? null;
+const kommunNamed = (name: string) => ALL_KOMMUNER.find((k) => k.toLowerCase() === name.trim().toLowerCase()) ?? null;
+// Districts and villages per län, each with its kommun, indexed when first needed
+const PLACE_KOMMUN = new Map<string, Map<string, string>>();
+const SUMMARY_PLACES: SummaryPlaces = {
+  // A summary for a län names its kommuner; one for a kommun, its län's; else any in Sweden
+  kommunerFor: (area) => {
+    const lan = lanNamed(area) ?? (kommunNamed(area) ? lanOfKommun(kommunNamed(area)!) : null);
+    return lan ? LAN_KOMMUNER[lan] : [];
+  },
+  placeKommun: (area, name) => {
+    const lan = lanNamed(area) ?? (kommunNamed(area) ? lanOfKommun(kommunNamed(area)!) : null);
+    if (!lan) return null;
+    let index = PLACE_KOMMUN.get(lan);
+    if (!index) {
+      index = placeKommunIndex(LAN_KOMMUNER[lan].map((k) => [k, (PLACES as Record<string, GazetteerPlace[]>)[k]]));
+      PLACE_KOMMUN.set(lan, index);
+    }
+    return index.get(summaryPlaceKey(name)) ?? null;
+  },
+  kommunOfArea: (area) => kommunNamed(area),
+};
+
+// The parts of each summary, kept while its text is the same
+const PARTS = new Map<string, { length: number; parts: SummaryPart[] }>();
+
+/**
+ * The events in the summaries among `incidents` that are not events already: neither one
+ * Polisen published on its own nor a part found before (archived parts come back with the
+ * archive). Each is placed at its kommun's centralort, and refined from its text later.
+ */
+function summaryEvents(incidents: PoliceIncident[]): PoliceIncident[] {
+  const known = new Set(incidents.map((i) => i.id));
+  const found: SummaryPart[] = [];
+  for (const s of incidents) {
+    if (!isSummary(s.originalType ?? s.original_type, s.title) || !s.description) continue;
+    let cached = PARTS.get(s.id);
+    if (!cached || cached.length !== s.description.length) {
+      cached = { length: s.description.length, parts: summaryParts({ ...s, url: s.url ?? null }, SUMMARY_PLACES) };
+      PARTS.set(s.id, cached);
+    }
+    found.push(...cached.parts.filter((p) => !known.has(p.id)));
+  }
+  if (PARTS.size > 2000) PARTS.clear();
+  const summaries = new Map(incidents.map((i) => [i.id, i]));
+  return newParts(found, incidents).map((part) => {
+    const summary = summaries.get(part.id.replace(/-s\d+$/, ''));
+    const centre = CENTRALORT.get(part.kommun.toLowerCase());
+    const at = new Date(part.time).getTime();
+    return {
+      id: part.id,
+      type: classifyEvent(part.type),
+      title: partTitle(part),
+      description: part.text,
+      lat: centre?.lat ?? null,
+      lng: centre?.lng ?? null,
+      area: part.kommun,
+      time: part.time,
+      status: Date.now() - at > 3 * 60 * 60 * 1000 ? 'resolved' : 'active',
+      risk: assessRisk(part.type),
+      source: 'Polisen.se',
+      originalType: part.type,
+      // The summary it came from, on polisen.se
+      url: summary?.url ?? null,
+      location_precision: 'area',
+    };
+  });
+}
 
 /** A kommun is placed at its centralort, where events happen, not its geographic middle */
 function atCentralort(key: string, entry: LocationEntry): LocationEntry {
@@ -1670,6 +1744,18 @@ serve(async (req) => {
       }
 
       console.log(`Backfilled ${summaryScrapeResults.size} summary descriptions`);
+    }
+
+    // The events in Polisen's summaries, as events of their own: archived once (no push, they
+    // are hours old) and placed from their text like the others
+    const parts = summaryEvents(allIncidents);
+    if (parts.length) {
+      allIncidents = [...allIncidents, ...parts];
+      if (!location && !stale) {
+        archiveIncidents(parts, await getArchivedIncidents());
+        refineLater(parts);
+      }
+      console.log(`Summary parts: ${parts.length} new`);
     }
 
     // Apply premium filtering per-user

@@ -18,6 +18,7 @@ import { eventPath, eventUrl } from '@/lib/share';
 import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { illustrationFocus, illustrationFor } from '@/lib/eventIllustration';
+import { isSummaryPart } from '../../supabase/functions/_shared/summaryEvents';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 
 const fullTime = (time: string) =>
@@ -157,7 +158,7 @@ const Handelse = () => {
                   />
                   {policeUrl && (
                     <a href={policeUrl} target="_blank" rel="noopener noreferrer" className={secondaryButton}>
-                      <ExternalLink className="h-4 w-4" /> Polisen.se
+                      <ExternalLink className="h-4 w-4" /> {isSummaryPart(incident.id) ? 'Polisens sammanfattning' : 'Polisen.se'}
                     </a>
                   )}
                 </div>
