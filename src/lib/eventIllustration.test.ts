@@ -13,7 +13,7 @@ describe('illustrationKeys', () => {
     expect(illustrationKeys(ev('Trafikolycka', 'Kollision i en korsning i centrum.'))[0]).toBe('trafik-stad');
     expect(illustrationKeys(ev('Inbrott', 'Inbrott i en villa under natten.'))[0]).toBe('inbrott-villa');
     expect(illustrationKeys(ev('Rån', 'Rån mot en butik.'))[0]).toBe('ran');
-    expect(illustrationKeys(ev('Rattfylleri'))[0]).toEqual(['rattfylleri', 'trafikkontroll', 'polisinsats']);
+    expect(illustrationKeys(ev('Rattfylleri'))).toEqual(['rattfylleri', 'trafikkontroll', 'polisinsats']);
     expect(illustrationKeys(ev('Trafikkontroll'))[0]).toBe('trafikkontroll');
     expect(illustrationKeys(ev('Sammanfattning natt'))[0]).toBe('natt');
   });
