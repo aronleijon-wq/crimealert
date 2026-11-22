@@ -13,7 +13,8 @@ describe('illustrationKeys', () => {
     expect(illustrationKeys(ev('Trafikolycka', 'Kollision i en korsning i centrum.'))[0]).toBe('trafik-stad');
     expect(illustrationKeys(ev('Inbrott', 'Inbrott i en villa under natten.'))[0]).toBe('inbrott-villa');
     expect(illustrationKeys(ev('Rån', 'Rån mot en butik.'))[0]).toBe('ran');
-    expect(illustrationKeys(ev('Rattfylleri'))[0]).toBe('trafikkontroll');
+    expect(illustrationKeys(ev('Rattfylleri'))[0]).toEqual(['rattfylleri', 'trafikkontroll', 'polisinsats']);
+    expect(illustrationKeys(ev('Trafikkontroll'))[0]).toBe('trafikkontroll');
     expect(illustrationKeys(ev('Sammanfattning natt'))[0]).toBe('natt');
   });
 });
@@ -55,6 +56,10 @@ describe('illustrationFor', () => {
     // A theft in daylight has its own picture; at night it falls back to the street, at night
     expect(illustrationFor(at('2026-11-22T11:00:00Z', 'Stöld', 'Stöld ur en butik.'), pics)).toBe('/sd.jpg');
     expect(illustrationFor(at('2026-11-22T22:00:00Z', 'Stöld', 'Stöld ur en butik.'), pics)).toBe('/mn.jpg');
+    // Drunk driving by day shows a traffic check by day, at night its own picture
+    const roads = { rattfylleri: '/r.jpg', trafikkontroll: '/t.jpg', 'trafikkontroll-dag': '/td.jpg' };
+    expect(illustrationFor(at('2026-11-22T11:00:00Z', 'Rattfylleri', ''), roads)).toBe('/td.jpg');
+    expect(illustrationFor(at('2026-11-22T22:00:00Z', 'Rattfylleri', ''), roads)).toBe('/r.jpg');
     // In the police's own format too
     expect(inDaylight('2026-11-22 14:05:00 +01:00')).toBe(true);
     expect(inDaylight('2026-11-22 21:05:00 +01:00')).toBe(false);
@@ -73,6 +78,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-vilt', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-vilt', 'brand-bil', 'narkotika', 'hot', 'skadegorelse', 'rattfylleri', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
   });
 });

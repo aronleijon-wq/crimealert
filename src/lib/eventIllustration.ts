@@ -5,8 +5,9 @@
 // Adding a picture is only adding the file: the name says what it shows (brand-lagenhet.jpg).
 // A missing picture falls back to a broader one (brand-bil → brand), then to any picture of the
 // same family (brand-*), and finally to "polisinsats", "misshandel" or "ovrigt"; with none, no picture.
-// Pictures in daylight are named with -dag (trafik-stad-dag.jpg) and used for events in daylight;
-// at other times, or without one, the night picture is used.
+// Pictures in daylight are named with -dag (trafik-stad-dag.jpg) and used for events in daylight,
+// before a dark picture of the same name or further down the list (drunk driving by day shows a
+// traffic check by day); at other times, or without one, the night picture is used.
 
 import { parseIncidentTime } from './incidentTime';
 
@@ -72,7 +73,8 @@ export function illustrationKeys(event: IllustrationEvent): string[] {
     if (has(text, /korsning|rondell|cykel|cyklist|gående|övergångsställe|centrum|gatan|vägen/)) return ['trafik-stad', 'trafikolycka'];
     return ['trafikolycka'];
   }
-  if (/trafikkontroll|rattfylleri|trafikbrott|olovlig körning|^kontroll/.test(kind)) return ['trafikkontroll', 'polisinsats'];
+  if (/rattfylleri|drograttfylleri/.test(kind)) return ['rattfylleri', 'trafikkontroll', 'polisinsats'];
+  if (/trafikkontroll|trafikbrott|olovlig körning|^kontroll/.test(kind)) return ['trafikkontroll', 'polisinsats'];
   if (/trafikhinder/.test(kind) || type === 'trafikverket') return ['trafikhinder', 'vagarbete'];
   if (/inbrott/.test(kind)) {
     if (has(text, BUILDING_HOUSE)) return ['inbrott-villa', 'inbrott'];
@@ -126,6 +128,7 @@ export function illustrationFor(event: IllustrationEvent, available: Record<stri
   // The daylight picture of a name in daylight, else the night one
   const pick = (key: string) => (day && available[`${key}-dag`]) || available[key] || null;
   const keys = illustrationKeys(event);
+  if (day) for (const key of keys) { const url = available[`${key}-dag`]; if (url) return url; }
   for (const key of keys) { const url = pick(key); if (url) return url; }
   // Any picture of the same kind: a car fire may show a fire in a flat until there is one of a car
   const family = familyOf(keys[0]);
