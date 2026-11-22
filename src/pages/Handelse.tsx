@@ -17,7 +17,7 @@ import { kommunPath, kommunStats } from '@/lib/kommunPages';
 import { eventPath, eventUrl } from '@/lib/share';
 import { cardTime, drawEventCard } from '@/lib/shareCard';
 import { formatTimeAgo } from '@/lib/timeAgo';
-import { illustrationFor } from '@/lib/eventIllustration';
+import { illustrationFocus, illustrationFor } from '@/lib/eventIllustration';
 import { watchedKommunFor } from '../../supabase/functions/_shared/notifications';
 
 const fullTime = (time: string) =>
@@ -115,7 +115,7 @@ const Handelse = () => {
 
                 {illustration && (
                   <figure className="relative mb-5 overflow-hidden rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-base-3))]">
-                    <img src={illustration} alt="" loading="lazy" decoding="async" className="aspect-[16/9] w-full object-cover object-[50%_30%]" />
+                    <img src={illustration} alt="" loading="lazy" decoding="async" className="aspect-[16/9] w-full object-cover" style={{ objectPosition: illustrationFocus(illustration) }} />
                     <figcaption className="absolute bottom-2 right-3 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-white/90 backdrop-blur">Illustration</figcaption>
                   </figure>
                 )}

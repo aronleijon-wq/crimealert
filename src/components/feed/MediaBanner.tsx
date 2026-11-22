@@ -3,6 +3,7 @@ import { MapPin, type LucideIcon } from 'lucide-react';
 import SwedenMap from '@/components/landing/SwedenMap';
 import { useTheme } from '@/hooks/useTheme';
 import type { FeedItem } from '@/lib/feed';
+import { illustrationFocus } from '@/lib/eventIllustration';
 import { TILE_SIZE, tilesAround, tileUrl } from '@/lib/mapTiles';
 
 // Kommun-level positions, so a zoom that shows the town and its surroundings
@@ -87,7 +88,8 @@ const MediaBanner = ({ item, accent, icon: Icon, label }: MediaBannerProps) => {
           loading="lazy"
           decoding="async"
           onError={() => setIllustrationFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover object-[50%_30%]"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: illustrationFocus(item.illustration!) }}
         />
       ) : hasPosition ? (
         <LocationMap lat={item.lat!} lng={item.lng!} accent={accent} />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ILLUSTRATIONS, illustrationFor, illustrationKeys } from './eventIllustration';
+import { ILLUSTRATIONS, illustrationFocus, illustrationFor, illustrationKeys } from './eventIllustration';
 
 const ev = (originalType: string, description = '', type = 'police') => ({ type, originalType, title: `22 november 02.14, ${originalType}, Stockholm`, description });
 
@@ -33,7 +33,18 @@ describe('illustrationFor', () => {
     expect(illustrationFor(ev('Rattfylleri'), available)).toBeNull();
   });
 
+  it('keeps the general picture of a family in front when there are more', () => {
+    const more = { ...available, 'trafik-lastbil': '/d.jpg' };
+    expect(illustrationFor(ev('Trafikolycka', 'Kollision på E4.'), more)).toBe('/b.jpg');
+    expect(illustrationFor(ev('Trafikolycka', 'En lastbil har vält.'), more)).toBe('/d.jpg');
+  });
+
+  it('keeps the action in view when a picture is cropped', () => {
+    expect(illustrationFocus('/a.jpg', { 'brand-lagenhet': '/a.jpg' })).toBe('50% 28%');
+    expect(illustrationFocus('/d.jpg', { 'trafik-lastbil': '/d.jpg' })).toBe('50% 62%');
+  });
+
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten']));
   });
 });

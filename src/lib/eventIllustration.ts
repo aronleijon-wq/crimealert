@@ -64,7 +64,7 @@ export function illustrationKeys(event: IllustrationEvent): string[] {
   if (/stöld|häleri/.test(kind)) return ['stold'];
   if (/rån/.test(kind)) return ['ran', 'polisinsats'];
   if (/skottlossning|mord|dråp/.test(kind) || has(text, /skottlossning|skott avlossats/)) return ['skottlossning', 'polisinsats'];
-  if (/explosion|sprängning|detonation/.test(kind)) return ['sprangning', 'polisinsats'];
+  if (/explosion|sprängning|detonation/.test(kind)) return ['sprangning', 'skottlossning', 'polisinsats'];
   if (/farligt föremål/.test(kind)) return ['farligt-foremal', 'polisinsats'];
   if (/misshandel|bråk|knivlagen/.test(kind)) return ['misshandel', 'polisinsats'];
   if (/olaga hot|ofredande|våld\/hot|tjänsteman|sexualbrott|olaga intrång/.test(kind)) return ['hot', 'polisinsats'];
@@ -79,8 +79,26 @@ export function illustrationKeys(event: IllustrationEvent): string[] {
   return ['polisinsats'];
 }
 
-/** The family of a picture's name, for the last fallback: brand-lagenhet → brand */
-const familyOf = (key: string) => key.split('-')[0];
+/** The family of a picture's name, for the last fallback: brand-lagenhet → brand, trafik-stad → trafikolycka */
+const familyOf = (key: string) => (key.startsWith('trafik-') ? 'trafikolycka' : key.split('-')[0]);
+
+// Which picture of a family stands in for the others first: the most general-looking one
+const FAMILY_ORDER: Record<string, string[]> = {
+  brand: ['brand-lagenhet', 'brand-villa', 'brand-industri', 'brand-bil', 'brand-container', 'brand-skog'],
+  trafikolycka: ['trafik-stad', 'trafik-motorvag', 'trafik-singel', 'trafik-vilt', 'trafik-lastbil'],
+  inbrott: ['inbrott-villa', 'inbrott-lagenhet', 'inbrott-butik'],
+};
+
+// Where the action is in a picture, for the wide banners that show only a band of it
+// (CSS object-position); the rest have it a little below the middle
+const FOCUS: Record<string, string> = { 'brand-lagenhet': '50% 28%' };
+const DEFAULT_FOCUS = '50% 62%';
+
+/** The part of a picture to keep in view when it is cropped, by its URL */
+export function illustrationFocus(url: string, available: Record<string, string> = ILLUSTRATIONS): string {
+  const key = Object.keys(available).find((k) => available[k] === url);
+  return (key && FOCUS[key]) || DEFAULT_FOCUS;
+}
 
 /** The picture for an event, or null when there is none to show */
 export function illustrationFor(event: IllustrationEvent, available: Record<string, string> = ILLUSTRATIONS): string | null {
@@ -88,7 +106,9 @@ export function illustrationFor(event: IllustrationEvent, available: Record<stri
   for (const key of keys) if (available[key]) return available[key];
   // Any picture of the same kind: a car fire may show a fire in a flat until there is one of a car
   const family = familyOf(keys[0]);
-  const related = Object.keys(available).filter((k) => familyOf(k) === family || (family === 'trafikolycka' && k.startsWith('trafik-'))).sort();
+  const order = FAMILY_ORDER[family] ?? [];
+  const related = Object.keys(available).filter((k) => familyOf(k) === family)
+    .sort((a, b) => ((order.indexOf(a) + 1) || 99) - ((order.indexOf(b) + 1) || 99) || a.localeCompare(b));
   if (related.length) return available[related[0]];
   for (const key of ['polisinsats', 'ovrigt']) if (available[key]) return available[key];
   return null;
