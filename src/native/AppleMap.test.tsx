@@ -68,12 +68,27 @@ describe('Apple Maps in the app', () => {
     // The website's own dots, the newest pulsing, every one shown however crowded
     expect(first.options).toMatchObject({ title: 'Brand, Malmö', displayPriority: 'required', data: { id: 'a', pulse: true } });
     expect(first.factory().innerHTML).toContain('marker-pulse');
+    // MapKit puts the element's bottom middle on the spot: that is the dot's middle, with no
+    // offset that could point the wrong way and let the dots drift when zoomed out
+    const box = first.factory();
+    const dot = box.firstElementChild as HTMLElement;
+    const size = (first.options.data as { size: number }).size;
+    expect(first.options.anchorOffset).toBeUndefined();
+    expect(first.options).toMatchObject({ animates: false, size: { width: size, height: size / 2 } });
+    expect([box.style.width, box.style.height]).toEqual([`${size}px`, `${size / 2}px`]);
+    expect([dot.style.top, dot.style.height]).toEqual(['0px', `${size}px`]);
     expect(document.getElementById('ca-marker-pulse')?.textContent).toContain('@keyframes marker-pulse-anim');
     expect(map.options).toMatchObject({ colorScheme: 'dark', showsZoomControl: false });
 
     rerender(<MemoryRouter><AppleMap incidents={[event('b', { type: 'police' }), event('c')]} {...props} mapType="hybrid" /></MemoryRouter>);
     await waitFor(() => expect((map.annotations as { data: { id: string } }[]).map((a) => a.data.id).sort()).toEqual(['b', 'c']));
     expect(map.mapType).toBe('hybrid');
+
+    // While the map moves, the pulses rest so the dots keep up with it
+    map.listeners['region-change-start']({});
+    expect(map.el.classList.contains('ca-map-moving')).toBe(true);
+    map.listeners['region-change-end']({});
+    expect(map.el.classList.contains('ca-map-moving')).toBe(false);
 
     map.listeners.select({ annotation: map.annotations[0] });
     expect(onSelect).toHaveBeenCalledWith('b');
