@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ILLUSTRATIONS, illustrationFocus, illustrationFor, illustrationKeys } from './eventIllustration';
+import { ILLUSTRATIONS, illustrationFocus, illustrationFor, illustrationKeys, inDaylight } from './eventIllustration';
 
 const ev = (originalType: string, description = '', type = 'police') => ({ type, originalType, title: `22 november 02.14, ${originalType}, Stockholm`, description });
 
@@ -45,6 +45,22 @@ describe('illustrationFor', () => {
     expect(illustrationFor(ev('Brand', 'En bil brinner.', 'fire'), street)).toBe('/a.jpg');
   });
 
+  it('uses the daylight picture in daylight and the night one otherwise', () => {
+    const pics = { 'trafik-stad': '/n.jpg', 'trafik-stad-dag': '/d.jpg', misshandel: '/mn.jpg', 'misshandel-dag': '/md.jpg', 'stold-dag': '/sd.jpg' };
+    const at = (time: string, orig: string, desc: string) => ({ ...ev(orig, desc), time });
+    // 14.00 in November is daylight, 17.00 is dark; in June 21.00 is still light
+    expect(illustrationFor(at('2026-11-22T13:00:00Z', 'Trafikolycka', 'Krock i en korsning.'), pics)).toBe('/d.jpg');
+    expect(illustrationFor(at('2026-11-22T16:00:00Z', 'Trafikolycka', 'Krock i en korsning.'), pics)).toBe('/n.jpg');
+    expect(illustrationFor(at('2026-06-20T19:00:00Z', 'Trafikolycka', 'Krock i en korsning.'), pics)).toBe('/d.jpg');
+    // A theft in daylight has its own picture; at night it falls back to the street, at night
+    expect(illustrationFor(at('2026-11-22T11:00:00Z', 'Stöld', 'Stöld ur en butik.'), pics)).toBe('/sd.jpg');
+    expect(illustrationFor(at('2026-11-22T22:00:00Z', 'Stöld', 'Stöld ur en butik.'), pics)).toBe('/mn.jpg');
+    // In the police's own format too
+    expect(inDaylight('2026-11-22 14:05:00 +01:00')).toBe(true);
+    expect(inDaylight('2026-11-22 21:05:00 +01:00')).toBe(false);
+    expect(inDaylight(null)).toBe(false);
+  });
+
   it('keeps the general picture of a family in front when there are more', () => {
     const more = { ...available, 'trafik-lastbil': '/d.jpg' };
     expect(illustrationFor(ev('Trafikolycka', 'Kollision på E4.'), more)).toBe('/b.jpg');
@@ -57,6 +73,6 @@ describe('illustrationFor', () => {
   });
 
   it('finds the pictures in src/assets/illustrationer', () => {
-    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel']));
+    expect(Object.keys(ILLUSTRATIONS)).toEqual(expect.arrayContaining(['brand-lagenhet', 'trafik-stad', 'inbrott-villa', 'trafik-lastbil', 'skottlossning', 'vatten', 'trafik-motorvag', 'inbrott-butik', 'sprangning', 'brand-container', 'brand-skog', 'inbrott-lagenhet', 'natt', 'trafikkontroll', 'misshandel', 'trafik-stad-dag', 'trafik-motorvag-dag', 'trafikkontroll-dag', 'stold-dag', 'bedrageri-dag', 'misshandel-dag']));
   });
 });

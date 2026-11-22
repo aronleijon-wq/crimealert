@@ -5,6 +5,10 @@
 // Adding a picture is only adding the file: the name says what it shows (brand-lagenhet.jpg).
 // A missing picture falls back to a broader one (brand-bil → brand), then to any picture of the
 // same family (brand-*), and finally to "polisinsats", "misshandel" or "ovrigt"; with none, no picture.
+// Pictures in daylight are named with -dag (trafik-stad-dag.jpg) and used for events in daylight;
+// at other times, or without one, the night picture is used.
+
+import { parseIncidentTime } from './incidentTime';
 
 const files = import.meta.glob('../assets/illustrationer/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
@@ -18,6 +22,22 @@ export interface IllustrationEvent {
   originalType?: string | null;
   title?: string | null;
   description?: string | null;
+  /** When it happened, as the police give it, for a daylight picture in daylight */
+  time?: string | null;
+}
+
+// The hours of daylight in Stockholm by month, roughly, from January: short in winter, long in summer
+const DAYLIGHT: [number, number][] = [[9, 15], [8, 16], [7, 18], [6, 20], [5, 21], [4, 22], [4, 22], [6, 20], [7, 19], [8, 17], [8, 15], [9, 15]];
+
+/** Whether an event happened in daylight in Sweden; false when its time is unknown */
+export function inDaylight(time: string | null | undefined): boolean {
+  const ms = parseIncidentTime(time)?.getTime() ?? NaN;
+  if (!Number.isFinite(ms)) return false;
+  const parts = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', month: 'numeric', hour: 'numeric', hourCycle: 'h23' }).formatToParts(new Date(ms));
+  const month = Number(parts.find((p) => p.type === 'month')?.value) - 1;
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value);
+  const [from, to] = DAYLIGHT[month] ?? [8, 16];
+  return hour >= from && hour < to;
 }
 
 const has = (text: string, rx: RegExp) => rx.test(text);
@@ -102,15 +122,18 @@ export function illustrationFocus(url: string, available: Record<string, string>
 
 /** The picture for an event, or null when there is none to show */
 export function illustrationFor(event: IllustrationEvent, available: Record<string, string> = ILLUSTRATIONS): string | null {
+  const day = inDaylight(event.time);
+  // The daylight picture of a name in daylight, else the night one
+  const pick = (key: string) => (day && available[`${key}-dag`]) || available[key] || null;
   const keys = illustrationKeys(event);
-  for (const key of keys) if (available[key]) return available[key];
+  for (const key of keys) { const url = pick(key); if (url) return url; }
   // Any picture of the same kind: a car fire may show a fire in a flat until there is one of a car
   const family = familyOf(keys[0]);
   const order = FAMILY_ORDER[family] ?? [];
-  const related = Object.keys(available).filter((k) => familyOf(k) === family)
+  const related = Object.keys(available).filter((k) => !k.endsWith('-dag') && familyOf(k) === family)
     .sort((a, b) => ((order.indexOf(a) + 1) || 99) - ((order.indexOf(b) + 1) || 99) || a.localeCompare(b));
-  if (related.length) return available[related[0]];
-  // Police cars on a street at night stand in for any police event without a picture of its own
-  for (const key of ['polisinsats', 'misshandel', 'ovrigt']) if (available[key]) return available[key];
+  if (related.length) return pick(related[0]);
+  // Police cars on a street stand in for any police event without a picture of its own
+  for (const key of ['polisinsats', 'misshandel', 'ovrigt']) { const url = pick(key); if (url) return url; }
   return null;
 }
