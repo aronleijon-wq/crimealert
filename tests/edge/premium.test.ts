@@ -78,8 +78,17 @@ describe('free trial', () => {
   });
 
   it('is used once, also after cancelling', async () => {
-    expect(await trialEligible(stripe({ cus_a: [], cus_b: [sub('canceled', '2026-01-01T00:00:00Z')] }), 'x@example.com')).toBe(false);
+    const after = Date.parse('2026-12-01T00:00:00+01:00');
+    expect(await trialEligible(stripe({ cus_a: [], cus_b: [sub('canceled', '2026-01-01T00:00:00Z')] }), 'x@example.com', after)).toBe(false);
     expect(hadPro([sub('trialing', '2026-10-09T00:00:00Z', 'prod_U0duDYNoEp8JXS')])).toBe(true);
+  });
+
+  it('is for everyone without Pro now during Black Week, those who had it before too', async () => {
+    const blackWeek = Date.parse('2026-11-24T12:00:00+01:00');
+    expect(await trialEligible(stripe({ cus_b: [sub('canceled', '2026-01-01T00:00:00Z')] }), 'x@example.com', blackWeek)).toBe(true);
+    // Not for one paying or trying now, nor for the free list
+    expect(await trialEligible(stripe({ cus_b: [sub('active', '2026-12-20T00:00:00Z')] }), 'x@example.com', blackWeek)).toBe(false);
+    expect(await trialEligible(stripe({ cus_b: [sub('trialing', '2026-12-20T00:00:00Z', 'prod_U0duDYNoEp8JXS')] }), 'x@example.com', blackWeek)).toBe(false);
   });
 
   it('is not offered to accounts with free Pro', async () => {

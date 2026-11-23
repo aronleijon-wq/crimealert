@@ -21,7 +21,10 @@ export function useBlackWeekBanner(now = Date.now()) {
     try { localStorage.setItem(DISMISS_KEY, '1'); } catch { /* private mode: closes on this page only */ }
     setDismissed(true);
   }, []);
-  const trial = canSellPro() && (!user || subscription.trialEligible === true);
+  // The App Store gives its free trial only to those who never had Pro; the web, during Black
+  // Week, to everyone without Pro now
+  const eligible = isNativeApp() ? subscription?.firstTrial : subscription?.trialEligible;
+  const trial = canSellPro() && (!user || eligible === true);
   const offer: BlackWeekOffer | null = trial ? 'trial' : user ? 'invite' : null;
   const visible = isBlackWeek(now) && !dismissed && offer !== null;
   const daysLeft = Math.max(1, Math.ceil((BLACK_WEEK_ENDS - now) / 86_400_000));

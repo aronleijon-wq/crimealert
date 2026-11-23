@@ -12,8 +12,10 @@ export interface SubscriptionState {
   subscriptionEnd: string | null;
   /** In the free trial */
   trialing?: boolean;
-  /** May start Pro with the free trial (never had Pro) */
+  /** May start Pro with the free trial on the web (never had Pro; during Black Week, no Pro now) */
   trialEligible?: boolean;
+  /** Never had Pro: what the App Store's own free trial goes by */
+  firstTrial?: boolean;
   /**
    * Where Pro comes from when it isn't Stripe: bought in the iPhone app, through Apple (managed
    * there), or earned by inviting friends (ends by itself)
@@ -74,6 +76,8 @@ async function requestSubscription(accessToken: string): Promise<SubscriptionRes
         subscriptionEnd: data.subscription_end || null,
         trialing: data.trialing === true,
         trialEligible: data.trial_eligible === true,
+        // Older answers lack it; then it is the same as trial_eligible was
+        firstTrial: (data.first_trial ?? data.trial_eligible) === true,
         ...(data.store === 'apple' || data.store === 'invite' ? { store: data.store as 'apple' | 'invite' } : {}),
       },
       ok: true,
