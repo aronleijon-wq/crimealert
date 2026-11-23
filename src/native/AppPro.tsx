@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BadgeCheck, Check, Loader2 } from 'lucide-react';
-import { FREE_PLAN_HAS_ADS, planLabel, PRO_FEATURES } from '@/components/account/plans';
+import { BLACK_WEEK_TRIAL_DAYS, FREE_PLAN_HAS_ADS, isBlackWeek, planLabel, PRO_FEATURES } from '@/components/account/plans';
+import { INVITE_DAYS } from '@/lib/invite';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
@@ -130,6 +131,25 @@ const AppPro = () => {
             {isPremium ? `Ditt konto har ${planLabel(true, subscription)}.` : 'Allt som händer, direkt när det händer.'}
           </p>
         </div>
+
+        {/* Black Week, through 30 November: 30 days free for those the App Store gives its trial
+            (never had Pro), and the invite offer for the rest */}
+        {!isPremium && isBlackWeek() && (
+          <div className="ca-pro-rise mt-6 border border-white/20 bg-black px-4 py-3" style={rise(1)} role="region" aria-label="Black Week-erbjudande">
+            <p className="ca-bw-mark text-[12px] uppercase text-white">Black Week</p>
+            {!user || subscription.firstTrial ? (
+              <p className="mt-1 text-[15px] text-white">
+                <b className="font-semibold">{BLACK_WEEK_TRIAL_DAYS} dagar Pro gratis</b> <s className="text-white/40">7 dagar</s>
+                <span className="block text-[13px] text-white/55">Bara t.o.m. 30 november. Välj månad eller år nedan, och avsluta när du vill.</span>
+              </p>
+            ) : (
+              <p className="mt-1 text-[15px] text-white">
+                <b className="font-semibold">{INVITE_DAYS} dagar Pro per vän</b> du bjuder in, upp till 8 vänner.
+                <Link to="/bjud-in" className="mt-1 block text-[13px] font-semibold uppercase tracking-[0.1em] underline decoration-white/40 underline-offset-4">Bjud in</Link>
+              </p>
+            )}
+          </div>
+        )}
 
         <ul className="mt-7 space-y-3.5 px-1" aria-label="Det här ingår i Pro">
           {(isPremium ? PRO_FEATURES : HIGHLIGHTS).map(({ icon: Icon, short }, i) => (
