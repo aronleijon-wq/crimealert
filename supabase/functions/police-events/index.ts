@@ -10,6 +10,7 @@ import {
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
 import { LANDMARKS } from '../_shared/data/landmarks.ts';
+import { markerPoint } from '../_shared/seaMask.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import { descriptionPreview } from '../_shared/descriptionPreview.ts';
 import { isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
@@ -45,6 +46,8 @@ interface PoliceIncident {
   location_precision: string;
   /** For a visitor without Pro: the description is only its start, the rest is with Pro */
   descriptionTruncated?: boolean;
+  /** lat and lng are the marker's position, already spread and on land (seaMask) */
+  spread?: boolean;
 }
 
 // Row shape of the police_events_archive table
@@ -1785,6 +1788,11 @@ serve(async (req) => {
         });
       console.log(`Premium filter applied: ${resultIncidents.length} incidents after 15min delay`);
     }
+
+    // Each marker's position on the map: spread from its place, never in the sea (_shared/seaMask).
+    // Only in the answer; the archive keeps the place itself.
+    resultIncidents = resultIncidents.map((i) =>
+      i.lat != null && i.lng != null ? { ...i, ...markerPoint(i.id, i.lat, i.lng), spread: true } : i);
 
     return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium, fetchedAt: await polisenFetchedAt(), stale }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

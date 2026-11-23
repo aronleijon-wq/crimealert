@@ -9,17 +9,21 @@ const metres = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
 };
 
 describe('where markers are drawn', () => {
-  it('draws every police event 100–600 m from its place, the same way every time', () => {
+  it('draws every police event 60–300 m from its place, the same way every time', () => {
     const items = Array.from({ length: 50 }, (_, i) => at(`pol-${i}`));
     const first = getJitteredPositions(items);
     first.forEach((p) => {
       const m = metres({ lat: 62.39, lng: 17.31 }, p);
-      expect(m).toBeGreaterThanOrEqual(99);
-      expect(m).toBeLessThanOrEqual(601);
+      expect(m).toBeGreaterThanOrEqual(59);
+      expect(m).toBeLessThanOrEqual(301);
     });
     expect(getJitteredPositions(items)).toEqual(first);
     // Not on top of each other
     expect(new Set(first.map((p) => `${p.lat.toFixed(4)}:${p.lng.toFixed(4)}`)).size).toBe(50);
+  });
+
+  it('takes a position the server has spread already as it is', () => {
+    expect(getJitteredPositions([{ ...at('pol-1'), spread: true }])).toEqual([{ lat: 62.39, lng: 17.31 }]);
   });
 
   it('leaves a citizen report where its sender put it', () => {

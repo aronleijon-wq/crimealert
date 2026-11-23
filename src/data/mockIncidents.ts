@@ -9,6 +9,8 @@ export interface Incident {
   description: string;
   /** Without Pro the server sends only the start of Polisen's description; the rest is with Pro */
   descriptionTruncated?: boolean;
+  /** lat and lng are already the marker's position, spread and on land, from police-events */
+  spread?: boolean;
   lat: number;
   lng: number;
   area: string;

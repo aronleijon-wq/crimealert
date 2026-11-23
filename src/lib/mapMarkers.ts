@@ -24,13 +24,15 @@ export const isWithinDays = (timeStr: string, days: number) => {
 };
 
 /**
- * Where each marker is drawn: 100–600 m from the event's place, in a direction of its own that
- * is the same every time (supabase/functions/_shared/geoPlace). Events at one place spread out
+ * Where each marker is drawn: 60–300 m from the event's place, in a direction of its own that
+ * is the same every time; Polisen's events come spread already, on land (`spread`) (supabase/functions/_shared/geoPlace). Events at one place spread out
  * instead of hiding each other, and an address is never shown to the metre. Citizen reports,
  * placed by the person who sent them, stay where they are.
  */
 export const getJitteredPositions = (items: Incident[]) =>
-  items.map((item) => (item.source === 'Medborgarrapport' ? { lat: item.lat, lng: item.lng } : spreadPoint(item.id, item.lat, item.lng)));
+  items.map((item) =>
+    // The server spreads Polisen's events itself, onto land (police-events, _shared/seaMask)
+    item.source === 'Medborgarrapport' || item.spread ? { lat: item.lat, lng: item.lng } : spreadPoint(item.id, item.lat, item.lng));
 
 /** The largest hit area, as a radius in pixels: 44 px across on a phone (Apple's minimum), 28 on a computer */
 export const MAX_HIT_RADIUS = { touch: 22, mouse: 14 } as const;
