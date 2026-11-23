@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { BLACK_WEEK_TRIAL_DAYS } from '@/components/account/plans';
 import type { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
 import { INVITE_DAYS } from '@/lib/invite';
 
@@ -32,7 +31,7 @@ const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?
         <span className="hidden h-3.5 w-px shrink-0 bg-white/25 sm:block" aria-hidden />
         <p className="min-w-0 flex-1 truncate text-[13px] text-white md:flex-none">
           {trial ? (
-            <span>{BLACK_WEEK_TRIAL_DAYS} dagar<span className="hidden sm:inline"> Pro</span> gratis</span>
+            <span>{banner.trialLength}<span className="hidden sm:inline"> Pro</span> gratis</span>
           ) : (
             <span>{INVITE_DAYS} dagar Pro per vän<span className="hidden sm:inline"> du bjuder in</span></span>
           )}
