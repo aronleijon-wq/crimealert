@@ -9,7 +9,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}", "supabase/functions/_shared/**/*.test.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "tests/edge/**/*.test.ts"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

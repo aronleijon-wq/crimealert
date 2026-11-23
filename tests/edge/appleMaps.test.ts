@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { appleGeocode, pickAppleHit, type AppleHit } from './appleMaps';
+import { appleGeocode, pickAppleHit, type AppleHit } from "../../supabase/functions/_shared/appleMaps";
 
-vi.mock('./appleJwt.ts', () => ({ signAppleJwt: async () => 'signed' }));
+vi.mock('../../supabase/functions/_shared/appleJwt.ts', () => ({ signAppleJwt: async () => 'signed' }));
 
 const centre = { lat: 62.391, lng: 17.307 }; // Sundsvall
 const hit = (lat: number, lng: number, thoroughfare?: string, countryCode = 'SE'): AppleHit =>
@@ -27,7 +27,7 @@ describe('checking Apple\'s answer', () => {
 });
 
 describe('checking Apple\'s answer for an event given only a län', () => {
-  // Apple's real answer for "Anderstorp, Jönköpings län", 65 km from Jönköping
+  // Apple's real answer for "Anderstorp, Jönköpings län', 65 km from Jönköping
   const anderstorp: AppleHit = {
     coordinate: { latitude: 57.283, longitude: 13.633 }, name: 'Anderstorp', countryCode: 'SE',
     structuredAddress: { administrativeArea: 'Jönköpings län', locality: 'Anderstorp' },

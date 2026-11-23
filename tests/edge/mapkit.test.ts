@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowedMapOrigin, mapkitClaims, MAPKIT_TOKEN_SECONDS } from './mapkit';
+import { allowedMapOrigin, mapkitClaims, MAPKIT_TOKEN_SECONDS } from "../../supabase/functions/_shared/mapkit";
 
 describe('MapKit tokens', () => {
   it('are only for CrimeAlert, its previews and local development', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSummaryPart, kindOf, newParts, partTitle, placeKommunIndex, summaryBlocks, summaryParts, timeIn, type SummaryPlaces } from './summaryEvents';
+import { isSummaryPart, kindOf, newParts, partTitle, placeKommunIndex, summaryBlocks, summaryParts, timeIn, type SummaryPlaces } from "../../supabase/functions/_shared/summaryEvents";
 
 const STOCKHOLM = ['Botkyrka', 'Haninge', 'Huddinge', 'Nacka', 'Solna', 'Stockholm', 'Södertälje', 'Täby', 'Värmdö'];
 const places: SummaryPlaces = {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.stubGlobal('Deno', { env: { get: () => undefined } });
-const { addContact, contactsUrl, listable, removeContact, syncNewsletterContact } = await import('./newsletter');
+const { addContact, contactsUrl, listable, removeContact, syncNewsletterContact } = await import("../../supabase/functions/_shared/newsletter");
 
 const env = { apiKey: 're_test', audienceId: 'aud_1' };
 const reply = (status: number, body = '{}') => vi.fn(async () => new Response(body, { status }));

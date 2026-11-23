@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descriptionPreview, PREVIEW_MAX_CHARS } from './descriptionPreview';
+import { descriptionPreview, PREVIEW_MAX_CHARS } from "../../supabase/functions/_shared/descriptionPreview";
 
 describe('descriptionPreview', () => {
   it('shows whole sentences up to about half the text, and says there is more', () => {

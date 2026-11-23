@@ -19,7 +19,7 @@ import {
   wantsEvent,
   watchedKommunFor,
   type PushEvent,
-} from './notifications';
+} from "../../supabase/functions/_shared/notifications";
 
 describe('areaMatchesKommun', () => {
   it('matches the kommun, its genitive and its county', () => {

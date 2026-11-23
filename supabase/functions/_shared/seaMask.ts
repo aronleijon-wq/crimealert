@@ -5,24 +5,50 @@
 import { SEA } from './data/sea.ts';
 import { spreadPoint } from './geoPlace.ts';
 
-let decoded: { offsets: Uint32Array; cells: Uint16Array } | null = null;
-
-const uint16s = (b64: string): Uint16Array => {
-  const bin = atob(b64);
-  const out = new Uint16Array(bin.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8);
-  return out;
+/**
+ * The payload is every row's crossings — a count, then the crossings as deltas of each other —
+ * as varints, deflated and base64 (scripts/build-sea.cjs). It is read once, when the module is
+ * loaded, because the whole mask rides inside every edge function's upload.
+ */
+const varint = (bytes: Uint8Array, at: { i: number }): number => {
+  let z = 0, shift = 0;
+  for (;;) {
+    const c = bytes[at.i++];
+    z |= (c & 127) << shift;
+    if (!(c & 128)) break;
+    shift += 7;
+  }
+  return z;
 };
 
-function mask() {
-  if (!decoded) {
-    const counts = uint16s(SEA.counts);
-    const offsets = new Uint32Array(SEA.rows + 1);
-    for (let r = 0; r < SEA.rows; r++) offsets[r + 1] = offsets[r] + counts[r];
-    decoded = { offsets, cells: uint16s(SEA.cells) };
+async function decode(): Promise<{ offsets: Uint32Array; cells: Uint16Array }> {
+  const bin = atob(SEA.payload);
+  const packed = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) packed[i] = bin.charCodeAt(i);
+  const bytes = new Uint8Array(
+    await new Response(
+      new ReadableStream({ start(c) { c.enqueue(packed); c.close(); } })
+        .pipeThrough(new DecompressionStream('deflate')),
+    ).arrayBuffer(),
+  );
+  const at = { i: 0 };
+  const offsets = new Uint32Array(SEA.rows + 1);
+  const cells: number[] = [];
+  for (let r = 0; r < SEA.rows; r++) {
+    const n = varint(bytes, at);
+    offsets[r + 1] = offsets[r] + n;
+    let prev = 0;
+    for (let i = 0; i < n; i++) {
+      prev += varint(bytes, at);
+      cells.push(prev);
+    }
   }
-  return decoded;
+  return { offsets, cells: Uint16Array.from(cells) };
 }
+
+const decoded = await decode();
+
+const mask = () => decoded;
 
 /** Whether a point lies in the sea (within 50 m or so) */
 export function inSea(lat: number, lng: number): boolean {

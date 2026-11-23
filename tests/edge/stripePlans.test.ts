@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickPrice, planFromRequest, type PriceLike } from './stripePlans';
+import { pickPrice, planFromRequest, type PriceLike } from "../../supabase/functions/_shared/stripePlans";
 
 const price = (id: string, created: number, extra: Partial<PriceLike> = {}): PriceLike => ({
   id, created, active: true, recurring: { interval: 'year' }, ...extra,

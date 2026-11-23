@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { inSea, landPoint, markerPoint } from './seaMask';
-import { distanceKm } from './geoPlace';
+import { inSea, landPoint, markerPoint } from "../../supabase/functions/_shared/seaMask";
+import { distanceKm } from "../../supabase/functions/_shared/geoPlace";
 
 describe('the sea around Sweden', () => {
   it('knows sea from land in Stockholm and Malmö', () => {

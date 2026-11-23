@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey } from './weeklySummary';
+import { buildWeeklyMessage, inSummaryWindow, summarizeKommun, weekKey } from "../../supabase/functions/_shared/weeklySummary";
 
 describe('week and window', () => {
   it('numbers weeks as in Sweden', () => {

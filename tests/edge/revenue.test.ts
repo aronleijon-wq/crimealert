@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fromApple, fromStripe, summarize, type StripeSubLike } from './revenue';
+import { fromApple, fromStripe, summarize, type StripeSubLike } from "../../supabase/functions/_shared/revenue";
 
 const NOW = Date.UTC(2026, 10, 15);
 const DAY = 86_400_000;

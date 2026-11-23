@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { LAN_KOMMUNER, lanNamed } from './data/kommunLan';
-import { KOMMUN_CENTRES } from './data/places';
-import { SWEDISH_KOMMUNER } from '../../../src/data/kommuner';
+import { LAN_KOMMUNER, lanNamed } from "../../supabase/functions/_shared/data/kommunLan";
+import { KOMMUN_CENTRES } from "../../supabase/functions/_shared/data/places";
+import { SWEDISH_KOMMUNER } from '../../src/data/kommuner';
 
 describe('LAN_KOMMUNER', () => {
   it('holds every kommun exactly once', () => {

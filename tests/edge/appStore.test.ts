@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { billingFromStatus, fetchAppleSubscription, subscriptionFromStatus, transactionInNotice } from './appStore';
+import { billingFromStatus, fetchAppleSubscription, subscriptionFromStatus, transactionInNotice } from "../../supabase/functions/_shared/appStore";
 
 const jws = (claims: unknown) => `e30.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.sig`;
 const NOW = Date.UTC(2026, 9, 21);

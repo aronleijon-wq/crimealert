@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanSummary, numbersFromFacts, plainText, situationFacts, situationPrompt, tooQuiet, type SituationEvent } from './situation';
+import { cleanSummary, numbersFromFacts, plainText, situationFacts, situationPrompt, tooQuiet, type SituationEvent } from "../../supabase/functions/_shared/situation";
 
 const NOW = Date.parse('2026-11-14T12:00:00Z');
 const DAY = 24 * 60 * 60 * 1000;

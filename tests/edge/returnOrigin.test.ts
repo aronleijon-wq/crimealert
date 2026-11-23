@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { returnOrigin, SITE_ORIGIN } from './returnOrigin';
+import { returnOrigin, SITE_ORIGIN } from "../../supabase/functions/_shared/returnOrigin";
 
 describe('returnOrigin', () => {
   it('keeps our own sites', () => {

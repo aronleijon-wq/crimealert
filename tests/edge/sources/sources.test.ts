@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { findPlace, placeFromAreaName } from './geo.ts';
-import { parseFeed } from './rss.ts';
-import { enabledNewsFeeds, newsItemsToEvents, SVT_FEEDS } from './news.ts';
-import { isSafetyRelated, specificTopicsOf } from './topics.ts';
-import { parseSituations, deviationPosition, trafikverketToExternal } from './trafikverket.ts';
-import { parseKrisinformationNews, parseVmaAlerts } from './krisinformation.ts';
-import { htmlToText, truncate } from './text.ts';
+import { findPlace, placeFromAreaName } from "../../../supabase/functions/_shared/sources/geo.ts";
+import { parseFeed } from "../../../supabase/functions/_shared/sources/rss.ts";
+import { enabledNewsFeeds, newsItemsToEvents, SVT_FEEDS } from "../../../supabase/functions/_shared/sources/news.ts";
+import { isSafetyRelated, specificTopicsOf } from "../../../supabase/functions/_shared/sources/topics.ts";
+import { parseSituations, deviationPosition, trafikverketToExternal } from "../../../supabase/functions/_shared/sources/trafikverket.ts";
+import { parseKrisinformationNews, parseVmaAlerts } from "../../../supabase/functions/_shared/sources/krisinformation.ts";
+import { htmlToText, truncate } from "../../../supabase/functions/_shared/sources/text.ts";
 
 const NOW = Date.parse('2026-02-18T12:00:00Z');
 const hoursAgo = (h: number) => new Date(NOW - h * 3600e3).toISOString();

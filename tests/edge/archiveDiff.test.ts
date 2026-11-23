@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites, type ArchivableIncident } from './archiveDiff';
+import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites, type ArchivableIncident } from "../../supabase/functions/_shared/archiveDiff";
 
 const event = (id: string, extra: Partial<ArchivableIncident> = {}): ArchivableIncident => ({
   id, type: 'police', title: `02 oktober 14.05, Rån, Malmö`, description: 'Kort text', lat: 55.6, lng: 13.0,

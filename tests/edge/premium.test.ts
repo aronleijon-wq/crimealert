@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bestValidSubscription, findSubscription, hadPro, isFresh, laterProUntil, lookupProUntil, proUntilActive, proUntilFor, rememberProStatus, storeApplePro, trialEligible, type SubscriptionLike } from './premium';
+import { bestValidSubscription, findSubscription, hadPro, isFresh, laterProUntil, lookupProUntil, proUntilActive, proUntilFor, rememberProStatus, storeApplePro, trialEligible, type SubscriptionLike } from "../../supabase/functions/_shared/premium";
 
 const NOW = Date.parse('2026-10-03T12:00:00Z');
 const sec = (iso: string) => Date.parse(iso) / 1000;

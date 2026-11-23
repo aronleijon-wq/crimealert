@@ -3,7 +3,7 @@ import {
   areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
   type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
-} from './geoPlace';
+} from "../../supabase/functions/_shared/geoPlace";
 
 const names = (text: string, kommun?: string) => placeCandidates(text, kommun).map((c) => `${c.kind}:${c.name}`);
 
@@ -183,7 +183,7 @@ describe('where it happened, not where someone came from', () => {
 
 describe('the big cities\' own names (data/landmarks)', () => {
   it('knows squares, stations and what people call a district', async () => {
-    const { LANDMARKS } = await import('./data/landmarks');
+    const { LANDMARKS } = await import("../../supabase/functions/_shared/data/landmarks");
     const index = gazetteerIndex(LANDMARKS.Stockholm);
     expect(gazetteerLookup('Vasastan', index)?.[0]).toBe('Vasastan');
     expect(gazetteerInText('Misshandel i tunnelbanan vid T-Centralen.', index, 'Stockholm').map((c) => c.name)).toEqual(['Centralen']);

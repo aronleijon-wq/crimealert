@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { apnsJwt, apnsMessage, parseApnsEndpoint, sendApns } from './apns';
+import { apnsJwt, apnsMessage, parseApnsEndpoint, sendApns } from "../../supabase/functions/_shared/apns";
 
 const TOKEN = 'ab'.repeat(32);
 

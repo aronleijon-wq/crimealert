@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addUsage, costUsd, NO_USAGE, summarizeAi } from './aiCost';
+import { addUsage, costUsd, NO_USAGE, summarizeAi } from "../../supabase/functions/_shared/aiCost";
 
 const NOW = Date.UTC(2026, 10, 15, 12);
 const DAY = 86_400_000;

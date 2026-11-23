@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { kommunStats, latestYear, statsRanking, swedenRate } from './kommunStats';
-import { STAT_RATES, STAT_TYPES } from './data/kommunStats';
-import { KOMMUN_POPULATION } from './data/population';
+import { kommunStats, latestYear, statsRanking, swedenRate } from "../../supabase/functions/_shared/kommunStats";
+import { STAT_RATES, STAT_TYPES } from "../../supabase/functions/_shared/data/kommunStats";
+import { KOMMUN_POPULATION } from "../../supabase/functions/_shared/data/population";
 
 describe('statistics per kommun', () => {
   it('has every kind for every kommun in its latest year', () => {

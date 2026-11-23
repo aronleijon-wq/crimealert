@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   betterLeft, cleanHistory, FREE_QUESTIONS_PER_DAY, modelTier, kommunEvents, kommunNamed, kommunOfEvent, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
-} from './ask';
+} from "../../supabase/functions/_shared/ask";
 
 const NOW = Date.parse('2026-11-14T12:00:00Z');
 const DAY = 24 * 60 * 60 * 1000;

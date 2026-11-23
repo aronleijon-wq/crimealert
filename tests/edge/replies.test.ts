@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { kommunThreadId, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace } from './replies';
-import { safeAppPath } from './notifications';
+import { kommunThreadId, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace } from "../../supabase/functions/_shared/replies";
+import { safeAppPath } from "../../supabase/functions/_shared/notifications";
 
 const c = (id: string, user: string, minute: number) => ({ id, user_id: user, created_at: new Date(Date.UTC(2026, 10, 7, 12, minute)).toISOString() });
 
