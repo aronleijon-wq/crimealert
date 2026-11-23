@@ -48,6 +48,22 @@ describe('DashboardPanel', () => {
     expect(screen.getByText('580')).toBeInTheDocument();
   });
 
+  it('shows every account by plan, and the paying customers month by month', async () => {
+    invoke.mockResolvedValue({ data: { ...data, revenue: { ...data.revenue, history: [{ month: '2026-10', monthly: 3, yearly: 0, trials: 0 }, { month: '2026-11', monthly: 4, yearly: 0, trials: 1 }] } }, error: null });
+    render(<DashboardPanel />);
+    await screen.findByRole('heading', { name: 'Översikt' });
+    // The plans table comes first; the revenue table below has an "I provperiod" row too
+    const row = (label: string) => within(screen.getAllByRole('rowheader', { name: new RegExp(`^${label}`) })[0].closest('tr')!).getAllByRole('cell').map((c) => c.textContent);
+    // 4 paying monthly (2 on the web, 2 in the app), 1 trial, 4 with Pro free, the rest on the free plan
+    expect(row('Betalar månadsvis')).toEqual(['4', '0,7 %', '2 / 2']);
+    expect(row('I provperiod')).toEqual(['1', '0,2 %', '0 / 1']);
+    expect(row('Gratis Pro')).toEqual(['4', '0,7 %', '']);
+    expect(row('Gratisplan')).toEqual(['571', '98,4 %', '']);
+    expect(screen.getByText('4 betalar')).toBeInTheDocument();
+    expect(screen.getByText('Betalande per månad')).toBeInTheDocument();
+    expect(screen.queryByText(/Visas när funktionen admin-dashboard/)).toBeNull();
+  });
+
   it("shows the AI chat's cost and who invites friends", async () => {
     invoke.mockResolvedValue({ data, error: null });
     render(<DashboardPanel />);
