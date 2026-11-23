@@ -10,7 +10,7 @@ import {
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
 import { LANDMARKS } from '../_shared/data/landmarks.ts';
-import { markerPoint } from '../_shared/seaMask.ts';
+import { markerPoint, placesNear } from '../_shared/seaMask.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import { descriptionPreview } from '../_shared/descriptionPreview.ts';
 import { isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
@@ -797,6 +797,23 @@ function summaryEvents(incidents: PoliceIncident[]): PoliceIncident[] {
     // At the place its text names from the start ("på Östermalm"), not at the kommun's centre
     return { ...event, ...placeByText(event, textPlace(event)) };
   });
+}
+
+// The gazetteer's places near a point, per kommun and point (many events share a point)
+const NEARBY = new Map<string, [number, number][]>();
+
+/** Named places near an event's place, for spreading its marker onto land (seaMask.markerPoint) */
+function nearbyPlaces(inc: PoliceIncident): [number, number][] {
+  const kommun = kommunOf(inc);
+  if (!kommun || inc.lat == null || inc.lng == null) return [];
+  const key = `${kommun}|${inc.lat.toFixed(5)}|${inc.lng.toFixed(5)}`;
+  let near = NEARBY.get(key);
+  if (!near) {
+    near = placesNear(inc.lat, inc.lng, placesOf(kommun));
+    if (NEARBY.size > 5000) NEARBY.clear();
+    NEARBY.set(key, near);
+  }
+  return near;
 }
 
 // The place each event's text names, kept while its text is the same
@@ -1844,7 +1861,7 @@ serve(async (req) => {
     // Each marker's position on the map: spread from its place, never in the sea (_shared/seaMask).
     // Only in the answer; the archive keeps the place itself.
     resultIncidents = resultIncidents.map((i) =>
-      i.lat != null && i.lng != null ? { ...i, ...markerPoint(i.id, i.lat, i.lng), spread: true } : i);
+      i.lat != null && i.lng != null ? { ...i, ...markerPoint(i.id, i.lat, i.lng, nearbyPlaces(i)), spread: true } : i);
 
     return new Response(JSON.stringify({ success: true, data: resultIncidents, premium: isPremium, fetchedAt: await polisenFetchedAt(), stale }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

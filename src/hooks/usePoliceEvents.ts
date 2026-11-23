@@ -24,6 +24,8 @@ interface PoliceEventDto {
   location_precision?: string | null;
   /** Without Pro: the description is only its start */
   descriptionTruncated?: boolean;
+  /** lat and lng are already the marker's position, spread onto land */
+  spread?: boolean;
 }
 
 interface PoliceEventsResponse {
@@ -92,6 +94,8 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
     originalType: e.originalType || undefined,
     locationPrecision: e.location_precision || undefined,
     descriptionTruncated: e.descriptionTruncated === true || undefined,
+    // Kept, so the maps don't spread the marker a second time (into the water)
+    spread: e.spread === true || undefined,
   }));
   // Sort by timestamp descending (newest first)
   mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
