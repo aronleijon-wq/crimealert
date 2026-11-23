@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsPremium } from '@/hooks/useIsPremium';
+import { readEventPrefill } from '@/lib/communityReports';
+import { REPORT_CATEGORY_LABELS } from '../../supabase/functions/_shared/reportCategories';
 import {
   MessageSquarePlus, MapPin, Send, Trash2, ChevronDown, ChevronUp,
   Clock, CheckCircle2, AlertTriangle, Loader2, Navigation, X,
@@ -29,7 +30,14 @@ type Report = {
   isOwn?: boolean;
 };
 
+// The same categories as the app (lib/communityReports, _shared/reportCategories), those of the
+// moment first
 const CATEGORIES = [
+  { value: 'police_here', label: REPORT_CATEGORY_LABELS.police_here, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', dot: 'bg-blue-500' },
+  { value: 'sirens', label: REPORT_CATEGORY_LABELS.sirens, color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', dot: 'bg-indigo-500' },
+  { value: 'smoke_fire', label: REPORT_CATEGORY_LABELS.smoke_fire, color: 'bg-orange-600/10 text-orange-500 border-orange-600/20', dot: 'bg-orange-600' },
+  { value: 'bangs', label: REPORT_CATEGORY_LABELS.bangs, color: 'bg-rose-500/10 text-rose-400 border-rose-500/20', dot: 'bg-rose-500' },
+  { value: 'cordon', label: REPORT_CATEGORY_LABELS.cordon, color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20', dot: 'bg-yellow-500' },
   { value: 'broken_lighting', label: 'Trasig belysning', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500' },
   { value: 'vandalism', label: 'Skadegörelse', color: 'bg-red-500/10 text-red-500 border-red-500/20', dot: 'bg-red-500' },
   { value: 'unsafe_area', label: 'Otrygg plats', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20', dot: 'bg-orange-500' },
@@ -55,10 +63,11 @@ type AddressSuggestion = { display_name: string; lat: string; lon: string };
 
 export default function CommunityReports() {
   const { user } = useAuth();
-  const { isPremium } = useIsPremium();
+  // Opened from a police event ("Är du på plats?"): the form opens with its place filled in
+  const [fromEvent] = useState(() => (typeof window === 'undefined' ? null : readEventPrefill(window.location.search)));
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(() => fromEvent !== null);
   const [expanded, setExpanded] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -68,9 +77,10 @@ export default function CommunityReports() {
   const [category, setCategory] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [area, setArea] = useState('');
-  const [lat, setLat] = useState<number | null>(null);
-  const [lng, setLng] = useState<number | null>(null);
+  const [area, setArea] = useState(fromEvent?.area ?? '');
+  const [lat, setLat] = useState<number | null>(fromEvent?.lat ?? null);
+  const [lng, setLng] = useState<number | null>(fromEvent?.lng ?? null);
+  const [eventId, setEventId] = useState<string | null>(fromEvent?.eventId ?? null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -80,7 +90,7 @@ export default function CommunityReports() {
   const [addressQuery, setAddressQuery] = useState('');
   const [addressResults, setAddressResults] = useState<AddressSuggestion[]>([]);
   const [addressLoading, setAddressLoading] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(fromEvent?.area || null);
   const addressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Image upload state
@@ -197,14 +207,15 @@ export default function CommunityReports() {
 
   const resetForm = () => {
     setCategory(''); setTitle(''); setDescription(''); setArea('');
-    setLat(null); setLng(null); setGeoError(null);
+    setLat(null); setLng(null); setGeoError(null); setEventId(null);
     setAddressQuery(''); setAddressResults([]); setSelectedAddress(null);
     removeImage();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !category || !title.trim() || !description.trim()) return;
+    // Rubrik and words are optional: the category and the place make a report
+    if (!user || !category || lat === null || lng === null) return;
     if (hasBlockedWords(`${title} ${description}`)) {
       setGeoError(BLOCKED_WORDS_MESSAGE);
       toast.error(BLOCKED_WORDS_MESSAGE);
@@ -219,7 +230,7 @@ export default function CommunityReports() {
       imageFailed = !image_url;
     }
 
-    // Server-side function validates auth + Pro status before inserting.
+    // The server checks the sign-in and how many the account has sent today
     const { data, error } = await supabase.functions.invoke<{ id?: string; error?: string }>('submit-community-report', {
       body: {
         category,
@@ -228,6 +239,7 @@ export default function CommunityReports() {
         area: stripHtml(area).slice(0, 200) || null,
         lat, lng,
         image_url,
+        event_id: eventId,
       },
     });
 
@@ -349,7 +361,7 @@ export default function CommunityReports() {
             </div>
 
             {/* New report CTA / form */}
-            {user && isPremium ? (
+            {user ? (
               !showForm ? (
                 <Button
                   variant="outline"
@@ -364,7 +376,7 @@ export default function CommunityReports() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-md border border-primary/20 bg-primary/[0.02]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-foreground tracking-tight">Ny observation</h3>
+                    <h3 className="text-xs font-bold text-foreground tracking-tight">{eventId ? 'Är du på plats? Berätta vad du ser' : 'Ny observation'}</h3>
                     <button
                       type="button"
                       onClick={() => { setShowForm(false); resetForm(); }}
@@ -373,6 +385,12 @@ export default function CommunityReports() {
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
+
+                  {eventId && fromEvent && (
+                    <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+                      Om händelsen <span className="font-semibold text-foreground">{fromEvent.title || fromEvent.area}</span>. Din rapport syns vid händelsen för alla inloggade.
+                    </p>
+                  )}
 
                   {/* Category selection */}
                   <div className="space-y-2">
@@ -401,14 +419,13 @@ export default function CommunityReports() {
                   {/* Title */}
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Rubrik
+                      Rubrik <span className="text-muted-foreground/50 normal-case">(valfritt)</span>
                     </label>
                     <Input
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       maxLength={200}
-                      placeholder="Kort beskrivning av händelsen..."
-                      required
+                      placeholder="Valfritt, t.ex. Polisbilar utanför stationen"
                       className="text-xs h-9"
                     />
                   </div>
@@ -416,15 +433,14 @@ export default function CommunityReports() {
                   {/* Description */}
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Beskrivning
+                      Beskrivning <span className="text-muted-foreground/50 normal-case">(valfritt)</span>
                     </label>
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       maxLength={1000}
                       rows={3}
-                      placeholder="Beskriv vad du observerat..."
-                      required
+                      placeholder="Valfritt: vad ser du, och hur länge har det pågått?"
                       className="text-xs resize-none"
                     />
                     <p className="text-[9px] text-muted-foreground/60 text-right">{description.length}/1000</p>
@@ -626,7 +642,7 @@ export default function CommunityReports() {
                     <Button
                       type="submit"
                       size="sm"
-                      disabled={submitting || !category || !title.trim() || !description.trim()}
+                      disabled={submitting || !category || lat === null || lng === null}
                       className="text-xs"
                     >
                       {submitting ? (
@@ -648,12 +664,6 @@ export default function CommunityReports() {
                   </div>
                 </form>
               )
-            ) : user && !isPremium ? (
-              <div className="text-center py-4 px-4 rounded-lg bg-muted/30 border border-border">
-                <p className="text-xs text-muted-foreground">
-                  <a href="/prisplan" className="text-primary hover:underline font-semibold">Uppgradera till Pro</a> för att skicka rapporter
-                </p>
-              </div>
             ) : (
               <div className="text-center py-4 px-4 rounded-lg bg-muted/30 border border-border">
                 <p className="text-xs text-muted-foreground">

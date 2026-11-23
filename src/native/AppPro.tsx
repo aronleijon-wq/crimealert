@@ -14,8 +14,8 @@ import ProHero from './ProHero';
 import './pro.css';
 
 /** What the page leads with for those without Pro: the five that matter most */
-// The app's six highlights; "Ingen reklam" takes the place of Medborgarrapporter when the free plan has ads
-const HIGHLIGHT_TEXTS = ['Händelser direkt', 'Notiser direkt', 'Hela beskrivningen', 'Fråga AI', 'Analys och statistik', FREE_PLAN_HAS_ADS ? 'Ingen reklam' : 'Medborgarrapporter'];
+// The app's six highlights; "Ingen reklam" takes the place of Risknivå when the free plan has ads
+const HIGHLIGHT_TEXTS = ['Händelser direkt', 'Notiser direkt', 'Hela beskrivningen', 'Fråga AI', 'Analys och statistik', FREE_PLAN_HAS_ADS ? 'Ingen reklam' : 'Risknivå'];
 const HIGHLIGHTS = HIGHLIGHT_TEXTS.map((start) => PRO_FEATURES.find((f) => f.short.startsWith(start))!);
 
 /** The place in the order things rise into view (pro.css) */

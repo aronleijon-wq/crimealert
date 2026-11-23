@@ -235,7 +235,7 @@ const NativeFeed = () => {
   const { incidents: police, loading } = usePoliceEvents();
   const { incidents: traffic } = useTrafikverketEvents();
   const { events: external } = useExternalEvents();
-  const { reports: community } = useCommunityReports(isPremium);
+  const { reports: community } = useCommunityReports(Boolean(user));
   const { kommuner } = useNotificationPreferences();
   const [storyId, setStoryId] = useState('all');
   const [count, setCount] = useState(PAGE);

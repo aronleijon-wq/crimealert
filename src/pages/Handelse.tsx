@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ChevronRight, ExternalLink, Lock, Map as MapIcon } from 'lucide-react';
 import Discussion from '@/components/community/Discussion';
+import OnTheSpot from '@/components/community/OnTheSpot';
 import Header from '@/components/Header';
 import ShareButton from '@/components/ShareButton';
 import ShareCardButton from '@/components/ShareCardButton';
@@ -163,6 +164,9 @@ const Handelse = () => {
                   )}
                 </div>
               </article>
+
+              {/* What people on the spot saw, and "Är du på plats?" (not for a night's summary) */}
+              {!isSummary && <OnTheSpot event={incident} />}
 
               {kommun && more.length > 0 && (
                 <section className="mt-10" aria-labelledby="mer">

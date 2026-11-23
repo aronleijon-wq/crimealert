@@ -36,6 +36,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
       { feature: 'Pushnotiser för dina kommuner', free: 'Med konto, efter 15 min', pro: 'Direkt' },
       { feature: 'Välj vilka händelser du får notiser om', free: 'Med konto', pro: true },
       { feature: 'Gilla och kommentera', free: 'Med konto', pro: true },
+      { feature: 'Medborgarrapporter: se och skicka', free: 'Med konto', pro: true },
       { feature: 'Fråga AI om brotten där du bor', free: '3 frågor per dag, med konto', pro: 'Obegränsat, utförligare svar' },
     ],
   },
@@ -44,7 +45,6 @@ const ROWS: { group: string; rows: Row[] }[] = [
     rows: [
       { feature: 'Analys och statistik per kommun', free: false, pro: 'Upp till 60 dagar' },
       { feature: 'Export till PDF och CSV', free: false, pro: true },
-      { feature: 'Medborgarrapporter', free: false, pro: true },
       ...(FREE_PLAN_HAS_ADS ? [{ feature: 'Reklam', free: 'Visas', pro: 'Ingen' }] : []),
     ],
   },

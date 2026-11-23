@@ -75,7 +75,7 @@ describe('PlanComparison', () => {
     const row = (name: string) => within(table).getByRole('rowheader', { name }).closest('tr')!;
     expect(within(row('Polisens händelser på kartan och i flödet')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['15 min fördröjning', 'Direkt']);
     expect(within(row('VMA och krisinformation')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Direkt', 'Direkt']);
-    expect(within(row('Medborgarrapporter')).getByLabelText('Ingår inte')).toBeInTheDocument();
+    expect(within(row('Medborgarrapporter: se och skicka')).getAllByRole('cell')[0].textContent).toBe('Med konto');
     // Ads only in the comparison when the free plan has them (plans.ts)
     if (FREE_PLAN_HAS_ADS) expect(within(row('Reklam')).getAllByRole('cell').map((c) => c.textContent)).toEqual(['Visas', 'Ingen']);
     else expect(within(table).queryByRole('rowheader', { name: 'Reklam' })).toBeNull();

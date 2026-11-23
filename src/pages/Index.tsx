@@ -71,7 +71,7 @@ const Index = () => {
   const [flyToLocation, setFlyToLocation] = useState<{lat: number;lng: number;zoom: number;_ts?: number;} | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { incidents: liveIncidents, loading, error, refetch } = usePoliceEvents();
-  const { reports: communityReports } = useCommunityReports(isPremium);
+  const { reports: communityReports } = useCommunityReports(isLoggedIn);
   const { incidents: trafikverketIncidents } = useTrafikverketEvents();
   const { events: externalEvents } = useExternalEvents();
 
@@ -114,17 +114,17 @@ const Index = () => {
   }, []);
 
   const policeIncidents = liveIncidents.length > 0 ? liveIncidents : mockIncidents;
-  // Community reports only visible for Pro members on the map/list
+  // Medborgarrapporter, for everyone signed in, unless switched off in the filter
   const allIncidents = useMemo(() => {
     // A Trafikverket accident that the police also reported gets no marker of its own
     const { traffic } = linkTrafficDuplicates(policeIncidents, trafikverketIncidents);
     const crisis = externalEvents.map(crisisToIncident).filter((i): i is Incident => i !== null);
     const base = [...policeIncidents, ...traffic, ...crisis];
-    if (isPremium && showCommunityReports) {
+    if (isLoggedIn && showCommunityReports) {
       return [...base, ...communityReports];
     }
     return base;
-  }, [policeIncidents, trafikverketIncidents, externalEvents, communityReports, isPremium, showCommunityReports]);
+  }, [policeIncidents, trafikverketIncidents, externalEvents, communityReports, isLoggedIn, showCommunityReports]);
   const isLive = liveIncidents.length > 0;
 
   // Timeline (Pro): a day, week, month or two months back, as a whole, a window being played, or a heatmap

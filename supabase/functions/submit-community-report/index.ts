@@ -1,33 +1,11 @@
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
+import { eventIdOf, isReportCategory, REPORT_CATEGORY_LABELS, REPORTS_PER_DAY } from "../_shared/reportCategories.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const FREE_PREMIUM_EMAILS = [
-  "aronleijon@icloud.com",
-  "oscaralvenius@outlook.com",
-  "carlmrski@gmail.com",
-  "stefanlasse67@gmail.com",
-  "kristensson91@hotmail.com",
-  "mykhailo@inphiz.com",
-  "kcleijon@gmail.com",
-];
-
-const CATEGORIES = [
-  "broken_lighting",
-  "vandalism",
-  "unsafe_area",
-  "suspicious_activity",
-  "other",
-];
-
-// current_period_end is not on the typed Subscription for this API version
-// (it lives on subscription items), so read it defensively.
-type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_end?: number | null };
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -37,41 +15,6 @@ const json = (body: unknown, status = 200) =>
 
 const stripHtml = (value: unknown) =>
   String(value ?? "").replace(/<[^>]*>/g, "").trim();
-
-// Pro as the database counts it (has_pro: Stripe as last checked, the App Store, invites), and
-// Stripe asked directly when that says no, in case a new subscription isn't remembered yet
-// deno-lint-ignore no-explicit-any
-const isPremiumUser = async (db: any, userId: string, email: string): Promise<boolean> => {
-  if (FREE_PREMIUM_EMAILS.includes(email.toLowerCase())) return true;
-  const { data: pro, error: proError } = await db.rpc("has_pro", { _user_id: userId });
-  if (!proError && pro === true) return true;
-
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey) return false;
-
-  const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-  const customers = await stripe.customers.list({ email, limit: 10 });
-  const nowSec = Math.floor(Date.now() / 1000);
-
-  for (const customer of customers.data) {
-    const subs = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: "all",
-      limit: 20,
-    });
-    for (const sub of subs.data) {
-      if (!["active", "trialing", "past_due", "canceled"].includes(sub.status)) continue;
-      const rawEnd = (sub as SubscriptionWithLegacyPeriodEnd).current_period_end ?? sub.cancel_at ?? sub.trial_end;
-      const endSec = Number(rawEnd);
-      if (Number.isFinite(endSec) && endSec > 0) {
-        if (endSec > nowSec) return true;
-      } else if (["active", "trialing", "past_due"].includes(sub.status)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -97,8 +40,12 @@ Deno.serve(async (req) => {
       return json({ error: "Ogiltig session." }, 401);
     }
 
-    if (!(await isPremiumUser(supabase, user.id, user.email))) {
-      return json({ error: "Community-rapporter kräver Pro." }, 403);
+    // Everyone signed in may report (no longer only Pro), up to REPORTS_PER_DAY a day
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: sentToday } = await supabase
+      .from("community_reports").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", since);
+    if ((sentToday ?? 0) >= REPORTS_PER_DAY) {
+      return json({ error: `Du har skickat ${REPORTS_PER_DAY} rapporter det senaste dygnet. Försök igen senare.` }, 429);
     }
 
     const body = await req.json().catch(() => null);
@@ -107,13 +54,16 @@ Deno.serve(async (req) => {
     }
 
     const category = String(body.category ?? "");
-    const title = stripHtml(body.title).slice(0, 200);
+    const typedTitle = stripHtml(body.title).slice(0, 200);
     const description = stripHtml(body.description).slice(0, 1000);
     const area = stripHtml(body.area).slice(0, 200) || null;
 
-    if (!CATEGORIES.includes(category)) return json({ error: "Ogiltig kategori." }, 400);
-    if (!title) return json({ error: "Titel saknas." }, 400);
-    if (!description) return json({ error: "Beskrivning saknas." }, 400);
+    if (!isReportCategory(category)) return json({ error: "Ogiltig kategori." }, 400);
+    // The police event it is about, when sent from an event ("Är du på plats?")
+    const event_id = eventIdOf(body.event_id);
+    // A report from the spot can be just what it is and where: the category names it, and a few
+    // words are welcome but not needed
+    const title = typedTitle || REPORT_CATEGORY_LABELS[category];
 
     const lat = body.lat === null || body.lat === undefined ? null : Number(body.lat);
     const lng = body.lng === null || body.lng === undefined ? null : Number(body.lng);
@@ -147,6 +97,7 @@ Deno.serve(async (req) => {
         lng,
         status: "open",
         image_url,
+        event_id,
       })
       .select("id")
       .single();

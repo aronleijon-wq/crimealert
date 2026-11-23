@@ -23,6 +23,8 @@ export interface Incident {
   originalType?: string;
   locationPrecision?: string;
   image_url?: string | null;
+  /** A medborgarrapport: the police event it is about ("Är du på plats?"), by its id */
+  eventId?: string | null;
   endTime?: string | null;
   /** Trafikverket: an acute disruption (accident, closure, obstacle) rather than roadworks */
   acute?: boolean;
