@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, namedPlace, placeByText, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, namedPlace, placeByText, nationalIndex, nearestNamed, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
   type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
 } from "../../supabase/functions/_shared/geoPlace";
@@ -221,5 +221,26 @@ describe('an area named in the text decides where the event is', () => {
     const place = namedPlace('Rån på Karlavägen på Östermalm.', 'Stockholm', index);
     expect(placeByText({ lat: 59.3385, lng: 18.0800, location_precision: 'street' }, place)).toBeNull();
     expect(placeByText({ lat: 59.3100, lng: 18.0300, location_precision: 'street' }, place)?.lat).toBe(59.34015);
+  });
+});
+
+describe('a place Polisen gives instead of a kommun', () => {
+  // Places named Östermalm in the gazetteer (data/places.ts): Stockholm, Hedemora, Alingsås, Norrköping
+  const index = nationalIndex([
+    [['Östermalm', 59.34015, 18.08374, 's'], ['Gamla stan', 59.32495, 18.07064, 's']],
+    [['Östermalm', 60.48001, 15.4353, 's']],
+    [['Östermalm', 57.72075, 12.96069, 's']],
+    [['Östermalm', 58.70776, 15.79395, 's'], ['Östermalm', 58.7, 15.8, 'h']],
+  ]);
+
+  it('is the nearest place of that name to Polisen\'s point: Östermalm in Stockholm, not elsewhere', () => {
+    // Polisen's point for Stockholm, and Stockholm's centre in Gamla stan
+    expect(nearestNamed(['Östermalm'], 59.329324, 18.068581, index)).toEqual({ name: 'Östermalm', lat: 59.34015, lng: 18.08374, kind: 's' });
+    expect(nearestNamed(['Östermalm'], 59.32512, 18.07109, index)?.lat).toBe(59.34015);
+    // In Norrköping, Norrköping's district rather than the hamlet next to it
+    expect(nearestNamed(['Östermalm'], 58.59, 16.18, index)?.lat).toBe(58.70776);
+    // None of the name near: nothing, rather than a place far away
+    expect(nearestNamed(['Östermalm'], 64.0, 20.0, index, 40)).toBeNull();
+    expect(nearestNamed(['Östermalm'], null, null, index)).toBeNull();
   });
 });

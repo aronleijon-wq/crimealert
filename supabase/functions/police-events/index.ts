@@ -4,7 +4,7 @@ import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '.
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import {
-  areaAnchor, distanceKm, namedPlace, placeByText, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  areaAnchor, distanceKm, namedPlace, placeByText, nationalIndex, nearestNamed, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
   type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
@@ -816,6 +816,10 @@ function nearbyPlaces(inc: PoliceIncident): [number, number][] {
   return near;
 }
 
+// Every named place in Sweden by name, built when first needed
+let NATIONAL: Map<string, GazetteerPlace[]> | null = null;
+const nationalPlaces = () => (NATIONAL ??= nationalIndex([...Object.values(LANDMARKS), ...Object.values(PLACES as Record<string, GazetteerPlace[]>)]));
+
 // The place each event's text names, kept while its text is the same
 const TEXT_PLACES = new Map<string, { length: number; place: ReturnType<typeof namedPlace> }>();
 
@@ -827,7 +831,14 @@ function textPlace(inc: PoliceIncident) {
   const kommun = kommunOf(inc);
   const lan = kommun ? null : lanOf(inc);
   const index = kommun ? gazetteerFor(kommun) : lan ? lanGazetteerFor(lan) : null;
-  const place = index ? namedPlace(text, kommun, index) : null;
+  let place = index ? namedPlace(text, kommun, index) : null;
+  if (!place) {
+    // Polisen places some events at a district, not a kommun ("Bedrägeri, Östermalm"), and a
+    // text may name a place in the next kommun: the nearest place of that name, near Polisen's point
+    const label = (inc.title || '').split(',').pop()?.trim() || inc.area || '';
+    const names = [...(kommun || lan ? [] : [label]), ...placeCandidates(text, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name)];
+    place = nearestNamed(names, inc.lat, inc.lng, nationalPlaces());
+  }
   if (TEXT_PLACES.size > 5000) TEXT_PLACES.clear();
   TEXT_PLACES.set(inc.id, { length: text.length, place });
   return place;
