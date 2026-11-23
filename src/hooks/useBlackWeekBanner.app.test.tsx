@@ -34,9 +34,11 @@ describe('Black Week in the app', () => {
     expect(result.current.trialLength).toBe('1 månad');
   });
 
-  it('offers the invite to those who have Pro now', async () => {
+  it('shows nothing to those who have Pro now', async () => {
+    apple.trial = '1 month';
     auth.subscription = { subscribed: true } as typeof auth.subscription;
     const { result } = renderHook(() => useBlackWeekBanner(MON));
-    await waitFor(() => expect(result.current.offer).toBe('invite'));
+    await waitFor(() => expect(result.current.offer).toBeNull());
+    expect(result.current.visible).toBe(false);
   });
 });

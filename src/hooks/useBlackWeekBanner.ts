@@ -8,13 +8,14 @@ import { canSellPro, isNativeApp } from '@/lib/native';
 const HIDDEN_UNTIL_KEY = 'ca-black-week-2026-hidden-until';
 const HIDE_MS = 24 * 60 * 60 * 1000;
 
-/** trial: start Pro with the free trial; code: (app) redeem the Black Week offer code; invite: 7 days per friend */
-export type BlackWeekOffer = 'trial' | 'code' | 'invite';
+/** trial: start Pro with the free trial; code: (app) redeem the Black Week offer code */
+export type BlackWeekOffer = 'trial' | 'code';
 
 /**
  * The Black Week strip at the top (components/BlackWeekBanner), through 30 November 2026: 30 days
  * of Pro free for those who can start a trial (on the web: signed out or without Pro now; in the
- * app: an Apple ID Apple still gives a trial), and 7 days of Pro per friend for everyone else signed in. Its × hides it for a day on this device.
+ * app: an Apple ID Apple still gives a trial, else the Black Week offer code). Those who have Pro
+ * see none. Its × hides it for a day on this device.
  */
 export function useBlackWeekBanner(now = Date.now()) {
   const { user, subscription, loading, subscriptionChecked } = useAuth();
@@ -38,16 +39,15 @@ export function useBlackWeekBanner(now = Date.now()) {
     return () => { live = false; };
   }, [askApple]);
   // Nothing until the answer is in (the sign-in, the account's check, Apple's), so the strip
-  // slides in once with the right offer instead of showing the invite and then changing
+  // slides in once, with the right offer, or not at all
   const known = !loading && (!user || subscriptionChecked !== false) && (!askApple || apple !== undefined);
   const hasPro = subscription?.subscribed === true;
   let offer: BlackWeekOffer | null = null;
   if (!known) offer = null;
-  else if (!app) offer = canSellPro() && (!user || subscription?.trialEligible === true) ? 'trial' : user ? 'invite' : null;
+  else if (!app) offer = canSellPro() && (!user || subscription?.trialEligible === true) ? 'trial' : null;
   // The app: Apple's trial if this Apple ID still gets one, else the offer code Apple redeems
-  // for those who had their trial
+  // for those who had their trial. Those with Pro have nothing to get, so they see no strip.
   else if (askApple && !hasPro) offer = apple ? 'trial' : 'code';
-  else offer = user ? 'invite' : null;
   const visible = isBlackWeek(now) && !dismissed && offer !== null;
   const daysLeft = Math.max(1, Math.ceil((BLACK_WEEK_ENDS - now) / 86_400_000));
   // "30 dagar" on the web; Apple's own length in the app ("1 månad")

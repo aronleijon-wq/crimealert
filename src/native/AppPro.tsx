@@ -135,7 +135,7 @@ const AppPro = () => {
         </div>
 
         {/* Black Week, through 30 November: the free trial for each Apple ID Apple still gives one
-            (its own length, from App Store Connect), and the invite offer for the rest */}
+            (its own length, from App Store Connect), and the Black Week offer code for the rest */}
         {!isPremium && isBlackWeek() && products !== null && (
           <div className="ca-pro-rise mt-6 border border-white/20 bg-black px-4 py-3" style={rise(1)} role="region" aria-label="Black Week-erbjudande">
             <p className="ca-bw-mark text-[12px] uppercase text-white">Black Week</p>
