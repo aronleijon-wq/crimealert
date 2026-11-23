@@ -4,7 +4,7 @@ import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '.
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import {
-  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  areaAnchor, distanceKm, namedPlace, placeByText, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
   type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
@@ -777,7 +777,7 @@ function summaryEvents(incidents: PoliceIncident[]): PoliceIncident[] {
     const summary = summaries.get(part.id.replace(/-s\d+$/, ''));
     const centre = CENTRALORT.get(part.kommun.toLowerCase());
     const at = new Date(part.time).getTime();
-    return {
+    const event: PoliceIncident = {
       id: part.id,
       type: classifyEvent(part.type),
       title: partTitle(part),
@@ -794,7 +794,56 @@ function summaryEvents(incidents: PoliceIncident[]): PoliceIncident[] {
       url: summary?.url ?? null,
       location_precision: 'area',
     };
+    // At the place its text names from the start ("på Östermalm"), not at the kommun's centre
+    return { ...event, ...placeByText(event, textPlace(event)) };
   });
+}
+
+// The place each event's text names, kept while its text is the same
+const TEXT_PLACES = new Map<string, { length: number; place: ReturnType<typeof namedPlace> }>();
+
+/** The place an event's text says it happened, from the gazetteer of its kommun (or län) */
+function textPlace(inc: PoliceIncident) {
+  const text = inc.description || '';
+  const cached = TEXT_PLACES.get(inc.id);
+  if (cached && cached.length === text.length) return cached.place;
+  const kommun = kommunOf(inc);
+  const lan = kommun ? null : lanOf(inc);
+  const index = kommun ? gazetteerFor(kommun) : lan ? lanGazetteerFor(lan) : null;
+  const place = index ? namedPlace(text, kommun, index) : null;
+  if (TEXT_PLACES.size > 5000) TEXT_PLACES.clear();
+  TEXT_PLACES.set(inc.id, { length: text.length, place });
+  return place;
+}
+
+/**
+ * Every event whose text names a place is shown in it, whatever placed it before: an event
+ * "på Östermalm" is on Östermalm, not at Stockholm's centre in Gamla stan. Done for each answer,
+ * so it never waits on the refinement after it; what moved is written to the archive too.
+ */
+function placeAllByText(incidents: PoliceIncident[]): PoliceIncident[] {
+  const moved: PoliceIncident[] = [];
+  const out = incidents.map((inc) => {
+    if (isSummary(inc.originalType ?? inc.original_type, inc.title)) return inc;
+    const fix = placeByText(inc, textPlace(inc));
+    if (!fix) return inc;
+    // The caches too, so the next answer and the refinement start from here
+    Object.assign(inc, fix);
+    moved.push(inc);
+    return inc;
+  });
+  if (moved.length) {
+    const job = (async () => {
+      for (const inc of moved.slice(0, 200)) {
+        const { error } = await supabase.from('police_events_archive')
+          .update({ lat: inc.lat, lng: inc.lng, location_precision: inc.location_precision }).eq('id', inc.id);
+        if (error) { console.warn('Archive place update failed:', error.message); break; }
+      }
+    })().catch((e) => console.warn('Archive place update failed:', e));
+    (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime?.waitUntil?.(job);
+    console.log(`Placed by the place their text names: ${moved.length}`);
+  }
+  return out;
 }
 
 /** A kommun is placed at its centralort, where events happen, not its geographic middle */
@@ -1768,6 +1817,9 @@ serve(async (req) => {
       }
       console.log(`Summary parts: ${parts.length} new`);
     }
+
+    // An event whose text names a place is shown in that place
+    allIncidents = placeAllByText(allIncidents);
 
     // Apply premium filtering per-user
     let resultIncidents = allIncidents;
