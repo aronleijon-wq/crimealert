@@ -391,3 +391,36 @@ export function placeByText<T extends { lat: number | null; lng: number | null; 
   if (!precise && inc.lat === place.lat && inc.lng === place.lng) return null;
   return { lat: place.lat, lng: place.lng, location_precision: place.kind === 'q' ? 'street' : 'district' };
 }
+
+/** Every named place in Sweden by its lower-case name, for nearestNamed */
+export function nationalIndex(perKommun: Iterable<GazetteerPlace[] | undefined>): Map<string, GazetteerPlace[]> {
+  const index = new Map<string, GazetteerPlace[]>();
+  for (const places of perKommun) {
+    for (const p of places ?? []) {
+      const key = norm(p[0]);
+      if (key.length < 4) continue;
+      const list = index.get(key);
+      if (list) list.push(p); else index.set(key, [p]);
+    }
+  }
+  return index;
+}
+
+/**
+ * The first of `names` that is a place within `maxKm` of a point, the nearest of that name:
+ * for an event Polisen places at a district ("Östermalm") rather than a kommun, or whose text
+ * names a place in the next kommun. Islands and hamlets of the name only when nothing else is.
+ */
+export function nearestNamed(names: string[], lat: number | null, lng: number | null, index: Map<string, GazetteerPlace[]>, maxKm = 40): NamedPlace | null {
+  if (lat == null || lng == null) return null;
+  for (const name of names) {
+    const list = index.get(norm(name)) ?? index.get(norm(name).replace(GENERIC, ''));
+    if (!list) continue;
+    const near = list
+      .map((p) => ({ p, km: distanceKm(lat, lng, p[1], p[2]) }))
+      .filter((x) => x.km <= maxKm)
+      .sort((a, b) => Number(['i', 'h'].includes(a.p[3])) - Number(['i', 'h'].includes(b.p[3])) || a.km - b.km);
+    if (near.length) { const [n, pLat, pLng, kind] = near[0].p; return { name: n, lat: pLat, lng: pLng, kind }; }
+  }
+  return null;
+}
