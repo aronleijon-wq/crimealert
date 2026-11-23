@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { inSea, landPoint, markerPoint } from "../../supabase/functions/_shared/seaMask";
+import { inSea, landPoint, markerPoint, placesNear } from "../../supabase/functions/_shared/seaMask";
+import { PLACES } from "../../supabase/functions/_shared/data/places";
+import { LANDMARKS } from "../../supabase/functions/_shared/data/landmarks";
 import { distanceKm } from "../../supabase/functions/_shared/geoPlace";
 
 describe('the sea around Sweden', () => {
@@ -31,5 +33,30 @@ describe('the sea around Sweden', () => {
       }
     }
     expect(markerPoint('pol-7', 59.3245, 18.0825)).toEqual(markerPoint('pol-7', 59.3245, 18.0825));
+  });
+});
+
+describe('markers spread onto named places, not into lakes', () => {
+  // Stockholm's centre, in Gamla stan, between Riddarfjärden (a lake, not in the sea data) and Strömmen
+  const centre = [59.32512, 18.07109] as const;
+  const places = [...LANDMARKS.Stockholm, ...(PLACES as Record<string, [string, number, number, string][]>).Stockholm];
+  const near = placesNear(centre[0], centre[1], places);
+
+  it('finds the places around Stockholm\'s centre', () => {
+    expect(near.length).toBeGreaterThan(2);
+    for (const [lat, lng] of near) expect(distanceKm(lat, lng, centre[0], centre[1])).toBeLessThanOrEqual(0.35);
+  });
+
+  it('puts every marker within 50 m of the centre or a named place, never in Riddarfjärden or Strömmen', () => {
+    const points = Array.from({ length: 60 }, (_, i) => markerPoint(`pol-${i}`, centre[0], centre[1], near));
+    for (const p of points) {
+      expect(inSea(p.lat, p.lng)).toBe(false);
+      const closest = Math.min(...[[centre[0], centre[1]], ...near].map(([a, b]) => distanceKm(p.lat, p.lng, a, b)));
+      expect(closest).toBeLessThanOrEqual(0.051);
+      // Riddarfjärden's open water starts some 450 m west of the centre
+      expect(distanceKm(p.lat, p.lng, 59.3235, 18.058)).toBeGreaterThan(0.3);
+    }
+    // Spread over several places, not all on one
+    expect(new Set(points.map((p) => `${p.lat.toFixed(3)}:${p.lng.toFixed(3)}`)).size).toBeGreaterThan(3);
   });
 });

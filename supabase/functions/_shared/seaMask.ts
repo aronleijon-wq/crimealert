@@ -79,12 +79,24 @@ export function landPoint(lat: number, lng: number): { lat: number; lng: number 
 }
 
 /**
- * Where an event's marker goes: its place on land, moved 60–300 m in its own direction
- * (geoPlace.spreadPoint). When that lies in the sea, other directions and then shorter moves are
- * tried; with no land around, the place itself.
+ * Where an event's marker goes. With named places nearby (`nearby`, from the gazetteer: districts,
+ * squares and villages, all on land), one of them in the event's own choice, 15–50 m from its
+ * point: lakes and rivers are not in the sea data, but the gazetteer's places are never in them.
+ * Without, its place on land moved 60–300 m in its own direction (geoPlace.spreadPoint); when
+ * that lies in the sea, other directions and then shorter moves are tried, else the place itself.
  */
-export function markerPoint(id: string, lat: number, lng: number): { lat: number; lng: number } {
+export function markerPoint(id: string, lat: number, lng: number, nearby: [number, number][] = []): { lat: number; lng: number } {
   const base = landPoint(lat, lng);
+  if (nearby.length) {
+    // The place itself is one of the choices, so events also stay at their own place
+    const choices: [number, number][] = [[base.lat, base.lng], ...nearby];
+    const [pLat, pLng] = choices[pick(id, choices.length)];
+    for (const k of [0, 2, -2, 4]) {
+      const p = spreadPoint(id, pLat, pLng, 15, 50, (k * Math.PI) / 4);
+      if (!inSea(p.lat, p.lng)) return p;
+    }
+    return { lat: pLat, lng: pLng };
+  }
   for (const scale of [1, 0.5]) {
     for (const k of [0, 1, -1, 2, -2, 3, -3, 4]) {
       const p = spreadPoint(id, base.lat, base.lng, undefined, undefined, (k * Math.PI) / 4, scale);
@@ -92,4 +104,27 @@ export function markerPoint(id: string, lat: number, lng: number): { lat: number
     }
   }
   return base;
+}
+
+/** A number below n that is the same for an id every time */
+function pick(id: string, n: number): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return (h >>> 0) % n;
+}
+
+/**
+ * The places within 60–350 m of a point, from a kommun's gazetteer, for markerPoint: close
+ * enough to be the same place, far enough apart that events there don't sit on each other.
+ */
+export function placesNear(lat: number, lng: number, places: [string, number, number, string][]): [number, number][] {
+  const out: [number, number][] = [];
+  const kx = 111.32 * Math.cos((lat * Math.PI) / 180);
+  for (const [, pLat, pLng] of places) {
+    const dy = (pLat - lat) * 111.32;
+    if (Math.abs(dy) > 0.35) continue;
+    const km = Math.hypot(dy, (pLng - lng) * kx);
+    if (km >= 0.06 && km <= 0.35 && !inSea(pLat, pLng)) out.push([pLat, pLng]);
+  }
+  return out;
 }

@@ -80,6 +80,14 @@ describe('usePoliceEvents', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
+  it('keeps the server\'s marker position, so the maps don\'t spread it a second time', async () => {
+    fetchMock.mockImplementationOnce(async () => new Response(JSON.stringify({ success: true, data: [{ ...event('pol-9'), spread: true }] })));
+    const usePoliceEvents = await loadHook();
+    const { result } = renderHook(() => usePoliceEvents());
+    await flush();
+    expect(result.current.incidents[0]).toMatchObject({ id: 'pol-9', lat: 59.3, lng: 18.0, spread: true });
+  });
+
   it('always fetches on manual refresh', async () => {
     const usePoliceEvents = await loadHook();
     const { result } = renderHook(() => usePoliceEvents());
