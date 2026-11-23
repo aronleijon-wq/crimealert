@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PlanComparison from './PlanComparison';
-import { FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT } from './plans';
+import { BLACK_WEEK, FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT } from './plans';
 import { FREE_TIER_DELAY_MS } from '@/lib/mapFilters';
 
 const renderPlans = (props: Partial<React.ComponentProps<typeof PlanComparison>> = {}) => {
@@ -19,16 +19,16 @@ describe('PlanComparison', () => {
   it('invites visitors to a free account and to Pro', () => {
     const { onCheckout } = renderPlans();
     expect(screen.getByRole('link', { name: 'Skapa gratis konto' })).toHaveAttribute('href', '/auth?mode=signup');
-    fireEvent.click(screen.getByRole('button', { name: 'Prova Pro gratis i 7 dagar' }));
+    fireEvent.click(screen.getByRole('button', { name: `Prova Pro gratis i ${TRIAL_DAYS} dagar` }));
     expect(onCheckout).toHaveBeenCalled();
-    expect(screen.getByText('7 DAGAR GRATIS')).toBeInTheDocument();
-    expect(screen.getByText('Gratis i 7 dagar, sedan 19 kr/mån. Avsluta under provperioden så dras inget.')).toBeInTheDocument();
+    expect(screen.getByText(`${BLACK_WEEK ? 'BLACK WEEK · ' : ''}${TRIAL_DAYS} DAGAR GRATIS`)).toBeInTheDocument();
+    expect(screen.getByText(`${BLACK_WEEK ? 'Black Week, bara t.o.m. 30 november: ' : ''}Gratis i ${TRIAL_DAYS} dagar, sedan 19 kr/mån. Avsluta under provperioden så dras inget.`)).toBeInTheDocument();
   });
 
   it('offers no new trial to someone who already had Pro', () => {
     renderPlans({ signedIn: true, trialEligible: false });
     expect(screen.getByRole('button', { name: 'Uppgradera till Pro' })).toBeInTheDocument();
-    expect(screen.queryByText(/7 DAGAR GRATIS/)).toBeNull();
+    expect(screen.queryByText(/DAGAR GRATIS/)).toBeNull();
     expect(screen.getByText('Avsluta när du vill. Pro gäller perioden ut.')).toBeInTheDocument();
   });
 
@@ -76,9 +76,15 @@ describe('plan texts match the code', () => {
     expect(PRO_FEATURES[0].text).toContain('15 minuters');
   });
 
-  it('gives the same trial as create-checkout', async () => {
-    const { TRIAL_DAYS: serverTrialDays } = await import('../../../supabase/functions/_shared/premium');
-    expect(TRIAL_DAYS).toBe(serverTrialDays);
+  it('gives the same trial as create-checkout: a month during Black Week, then a week', async () => {
+    const server = await import('../../../supabase/functions/_shared/premium');
+    const client = await import('./plans');
+    for (const at of ['2026-11-23T12:00:00+01:00', '2026-11-30T23:59:00+01:00', '2026-12-01T00:00:00+01:00', '2027-02-01T12:00:00+01:00']) {
+      expect(client.trialDays(Date.parse(at))).toBe(server.trialDays(Date.parse(at)));
+    }
+    expect(server.trialDays(Date.parse('2026-11-30T23:59:00+01:00'))).toBe(30);
+    expect(server.trialDays(Date.parse('2026-12-01T00:00:00+01:00'))).toBe(7);
+    expect(TRIAL_DAYS).toBe(client.trialDays());
   });
 
   it('gives 13 % off for a year', () => {

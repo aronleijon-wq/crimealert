@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { TRIAL_DAYS } from '@/components/account/plans';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Incident } from '@/data/mockIncidents';
@@ -53,7 +54,7 @@ describe('Landing page', () => {
   it('offers the free Pro trial above the headline', async () => {
     await renderLanding();
     const hero = screen.getByRole('heading', { level: 1 }).closest('section')!;
-    expect(within(hero).getByRole('link', { name: /Prova gratis i 7 dagar/ })).toHaveAttribute('href', '/prisplan');
+    expect(within(hero).getByRole('link', { name: new RegExp(`Prova gratis i ${TRIAL_DAYS} dagar`) })).toHaveAttribute('href', '/prisplan');
   });
 
   it('answers common questions, with links to the right pages', async () => {

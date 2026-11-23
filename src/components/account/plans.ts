@@ -24,8 +24,18 @@ export const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/7sY28q57o6
  */
 export const FREE_PLAN_HAS_ADS = false;
 
-/** Free days before the first payment for accounts that never had Pro (create-checkout, premium.ts) */
-export const TRIAL_DAYS = 7;
+// Free days before the first payment for accounts that never had Pro, as create-checkout gives
+// them (premium.ts trialDays): a month during Black Week, through 30 November 2026, else a week
+export const NORMAL_TRIAL_DAYS = 7;
+export const BLACK_WEEK_TRIAL_DAYS = 30;
+export const BLACK_WEEK_ENDS = Date.parse('2026-12-01T00:00:00+01:00');
+export const isBlackWeek = (now = Date.now()) => now < BLACK_WEEK_ENDS;
+export const trialDays = (now = Date.now()) => (isBlackWeek(now) ? BLACK_WEEK_TRIAL_DAYS : NORMAL_TRIAL_DAYS);
+
+/** The free days when the page was opened */
+export const TRIAL_DAYS = trialDays();
+/** Whether the page was opened during Black Week */
+export const BLACK_WEEK = isBlackWeek();
 
 /** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ask-crimealert). */
 export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] = [

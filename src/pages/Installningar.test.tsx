@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { TRIAL_DAYS } from '@/components/account/plans';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@/hooks/useTheme';
@@ -77,7 +78,7 @@ describe('Profil och inställningar', () => {
     expect(screen.getByText('aron@example.se', { selector: 'p' })).toBeInTheDocument();
     expect(await screen.findByText('Aron')).toBeInTheDocument();
     expect(screen.getAllByText('Gratis').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /Prova Pro gratis i 7 dagar/ })).toHaveAttribute('href', '/prisplan');
+    expect(screen.getByRole('link', { name: new RegExp(`Prova Pro gratis i ${TRIAL_DAYS} dagar`) })).toHaveAttribute('href', '/prisplan');
     expect(screen.getByRole('link', { name: /Kommuner och notiser/ })).toHaveAttribute('href', '/alerts');
     expect(screen.queryByRole('link', { name: /Hantera prenumeration/ })).toBeNull();
   });
