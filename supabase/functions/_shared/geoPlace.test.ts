@@ -172,3 +172,25 @@ describe('lanGazetteerIndex', () => {
     expect(index.has('berga')).toBe(false);
   });
 });
+
+describe('where it happened, not where someone came from', () => {
+  it('puts an area after "från" after the place it happened', () => {
+    expect(names('En man från Rinkeby greps på Östermalm för narkotikabrott.', 'Stockholm')).toEqual(['area:Östermalm', 'area:Rinkeby']);
+    // With only "från" it is still a place in the text
+    expect(names('En bil från Tensta stoppades.', 'Stockholm')).toEqual(['area:Tensta']);
+  });
+});
+
+describe('the big cities\' own names (data/landmarks)', () => {
+  it('knows squares, stations and what people call a district', async () => {
+    const { LANDMARKS } = await import('./data/landmarks');
+    const index = gazetteerIndex(LANDMARKS.Stockholm);
+    expect(gazetteerLookup('Vasastan', index)?.[0]).toBe('Vasastan');
+    expect(gazetteerInText('Misshandel i tunnelbanan vid T-Centralen.', index, 'Stockholm').map((c) => c.name)).toEqual(['Centralen']);
+    expect(gazetteerLookup('Medborgarplatsen', index)?.[3]).toBe('q');
+    // Every place lies in its city
+    for (const [kommun, centre] of [['Stockholm', [59.33, 18.07]], ['Göteborg', [57.71, 11.97]], ['Malmö', [55.6, 13.0]], ['Uppsala', [59.86, 17.64]]] as const) {
+      for (const [, lat, lng] of LANDMARKS[kommun]) expect(distanceKm(lat, lng, centre[0], centre[1])).toBeLessThan(12);
+    }
+  });
+});

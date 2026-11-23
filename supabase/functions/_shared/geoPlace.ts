@@ -97,11 +97,12 @@ export function placeCandidates(text: string, kommun?: string | null): PlaceCand
   while ((m = road.exec(text))) add(m[1].replace(/\s+/g, ' ').replace(/^e\s?/i, 'E').replace(/^rv /i, 'riksväg '), 'road', 4, m.index);
 
   // Areas after a preposition: "i Rosengård", "till Hageby", "nära Vikingstad", "söder om Åkersjön"
-  const area = new RegExp(`(?:^|[\\s(])(?:i|på|vid|till|från|nära|utanför|i närheten av|i höjd med|strax (?:norr|söder|öster|väster) om|(?:norr|söder|öster|väster) om|mellan|i området|i stadsdelen|trafikplats|i korsningen vid)\\s+(${WORD}s\\s(?:kurva|industriområde|handelsområde|centrum|hamn|torg|park|strand)|(?:${WORD})(?:[-\\s](?:${WORD}))?)`, 'g');
+  const area = new RegExp(`(?:^|[\\s(])(i|på|vid|till|från|nära|utanför|i närheten av|i höjd med|strax (?:norr|söder|öster|väster) om|(?:norr|söder|öster|väster) om|mellan|i området|i stadsdelen|trafikplats|i korsningen vid)\\s+(${WORD}s\\s(?:kurva|industriområde|handelsområde|centrum|hamn|torg|park|strand)|(?:${WORD})(?:[-\\s](?:${WORD}))?)`, 'g');
   while ((m = area.exec(text))) {
-    const name = m[1];
+    const name = m[2];
     if (new RegExp(`${SUFFIX}$`).test(name)) continue; // a street, found above
-    add(name, 'area', 3, m.index);
+    // "en man från Rinkeby greps på Östermalm": where someone came from comes after where it happened
+    add(name, 'area', m[1] === 'från' ? 5 : 3, m.index);
   }
 
   // A place first in the text, as Polisen often writes: "Vallrun, fyrhjulingsstöld …"
