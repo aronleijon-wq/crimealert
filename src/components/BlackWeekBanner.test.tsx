@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const auth: { user: { id: string } | null; subscription: { trialEligible?: boolean } } = { user: null, subscription: {} };
+const auth: { user: { id: string } | null; subscription: { trialEligible?: boolean; firstTrial?: boolean } } = { user: null, subscription: {} };
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
 
 const { useBlackWeekBanner } = await import('@/hooks/useBlackWeekBanner');
@@ -29,7 +29,14 @@ describe('the Black Week strip', () => {
     expect(screen.getByRole('link', { name: /Prova gratis/ })).toHaveAttribute('href', '/prisplan');
   });
 
-  it('offers 7 days per friend to those who have had Pro', () => {
+  it('offers 30 days to free accounts that had Pro before too, as the web gives them during Black Week', () => {
+    auth.user = { id: 'u2' };
+    auth.subscription = { trialEligible: true, firstTrial: false };
+    show();
+    expect(screen.getByRole('link', { name: /Prova gratis/ })).toHaveAttribute('href', '/prisplan');
+  });
+
+  it('offers 7 days per friend to those who have Pro now', () => {
     auth.user = { id: 'u1' };
     auth.subscription = { trialEligible: false };
     show();

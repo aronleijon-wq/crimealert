@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
-import { appleProUntil, hadPro, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
+import { appleProUntil, hadPro, isBlackWeek, proUntilActive, proUntilFor, rememberProStatus } from "../_shared/premium.ts";
 import { syncNewsletterContact } from "../_shared/newsletter.ts";
 
 const corsHeaders = {
@@ -18,10 +18,10 @@ type SubscriptionWithLegacyPeriodEnd = Stripe.Subscription & { current_period_en
  * Pro with no Stripe subscription: bought in the iPhone app (apple_subscriptions), or earned by
  * inviting friends (invite_codes). "store" says which, so the app knows where it is managed.
  */
-const proResponse = async (db: Parameters<typeof appleProUntil>[0], userId: string, proUntil: string | null, trialEligible = false) => {
+const proResponse = async (db: Parameters<typeof appleProUntil>[0], userId: string, proUntil: string | null, trialEligible = false, firstTrial = trialEligible) => {
   const store = (await appleProUntil(db, userId)) ? "apple" : "invite";
   return new Response(
-    JSON.stringify({ subscribed: true, product_id: "prod_U0dsMg8IZZKY7c", subscription_end: proUntil, store, trial_eligible: store === "invite" && trialEligible }),
+    JSON.stringify({ subscribed: true, product_id: "prod_U0dsMg8IZZKY7c", subscription_end: proUntil, store, trial_eligible: store === "invite" && trialEligible, first_trial: store === "invite" && firstTrial }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
   );
 };
@@ -118,7 +118,7 @@ serve(async (req) => {
       logStep("No customer found");
       const stored = await rememberProStatus(supabaseClient, user.id, null);
       if (proUntilActive(stored, Date.now())) return proResponse(supabaseClient, user.id, stored, true);
-      return new Response(JSON.stringify({ subscribed: false, trial_eligible: true }), {
+      return new Response(JSON.stringify({ subscribed: false, trial_eligible: true, first_trial: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -212,7 +212,11 @@ serve(async (req) => {
 
     // What the archive's access rule and the push sender go by
     const stored = await rememberProStatus(supabaseClient, user.id, proUntilFor(validSub, Date.now()));
-    if (!hasActiveSub && proUntilActive(stored, Date.now())) return proResponse(supabaseClient, user.id, stored, !usedTrial);
+    // During Black Week everyone without a subscription now may start with the free trial, those
+    // who had Pro before too (create-checkout gives it the same way); first_trial says whether they
+    // never had Pro, which is what the App Store's own trial goes by
+    const trialEligible = isBlackWeek() ? !hasActiveSub : !usedTrial;
+    if (!hasActiveSub && proUntilActive(stored, Date.now())) return proResponse(supabaseClient, user.id, stored, trialEligible, !usedTrial);
 
     return new Response(
       JSON.stringify({
@@ -220,7 +224,8 @@ serve(async (req) => {
         product_id: productId,
         subscription_end: subscriptionEnd,
         trialing: validSub?.status === "trialing",
-        trial_eligible: !usedTrial,
+        trial_eligible: trialEligible,
+        first_trial: !usedTrial,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

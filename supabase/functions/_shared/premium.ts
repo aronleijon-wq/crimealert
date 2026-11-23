@@ -206,13 +206,24 @@ const HELD = ['active', 'trialing', 'past_due', 'canceled', 'unpaid', 'paused'];
 export const hadPro = (subs: SubscriptionLike[]) =>
   subs.some((s) => HELD.includes(s.status) && PRO_PRODUCT_IDS.includes(productOf(s) ?? ''));
 
-/** Whether an account may start Pro with the free trial: never had Pro, and not on the free list. */
-export async function trialEligible(stripe: StripeLike, email: string): Promise<boolean> {
+// Statuses of a subscription that gives Pro now
+const RUNNING = ['active', 'trialing', 'past_due'];
+
+/** Whether any of these subscriptions gives Pro now */
+export const hasRunningPro = (subs: SubscriptionLike[]) =>
+  subs.some((s) => RUNNING.includes(s.status) && PRO_PRODUCT_IDS.includes(productOf(s) ?? ''));
+
+/**
+ * Whether an account may start Pro with the free trial: never had Pro, and not on the free list.
+ * During Black Week everyone without Pro now may, those who had it before too.
+ */
+export async function trialEligible(stripe: StripeLike, email: string, now = Date.now()): Promise<boolean> {
   if (isFreePremiumEmail(email)) return false;
+  const blackWeek = isBlackWeek(now);
   const customers = await stripe.customers.list({ email, limit: 10 });
   for (const customer of customers.data) {
     const subs = await stripe.subscriptions.list({ customer: customer.id, status: 'all', limit: 20 });
-    if (hadPro(subs.data)) return false;
+    if (blackWeek ? hasRunningPro(subs.data) : hadPro(subs.data)) return false;
   }
   return true;
 }
