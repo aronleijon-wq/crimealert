@@ -51,11 +51,16 @@ describe('the Black Week strip', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('closes for good with one tap', () => {
+  it('closes for a day with one tap, then comes back', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(MON);
     show();
     fireEvent.click(screen.getByRole('button', { name: 'Stäng erbjudandet' }));
     expect(screen.queryByText('Black Week')).toBeNull();
-    const { result } = renderHook(() => useBlackWeekBanner(MON), { wrapper: MemoryRouter });
-    expect(result.current.visible).toBe(false);
+    expect(Number(localStorage.getItem('ca-black-week-2026-hidden-until'))).toBe(MON + 86_400_000);
+    const hour = 3_600_000;
+    expect(renderHook(() => useBlackWeekBanner(MON + 23 * hour), { wrapper: MemoryRouter }).result.current.visible).toBe(false);
+    expect(renderHook(() => useBlackWeekBanner(MON + 25 * hour), { wrapper: MemoryRouter }).result.current.visible).toBe(true);
+    vi.useRealTimers();
   });
 });

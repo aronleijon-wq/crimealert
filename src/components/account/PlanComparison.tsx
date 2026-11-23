@@ -1,7 +1,8 @@
 import { Bell, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import B2BOffer from './B2BOffer';
-import { BLACK_WEEK, FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
+import { BLACK_WEEK, FREE_PLAN_HAS_ADS, NORMAL_TRIAL_DAYS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
+import { INVITE_DAYS } from '@/lib/invite';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
@@ -81,6 +82,22 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
           Det viktigaste är gratis. Pro är för dig som vill se händelser direkt, läsa hela beskrivningen och {FREE_PLAN_HAS_ADS ? 'slippa reklam' : 'följa statistiken'}.
         </p>
       </div>
+
+      {/* Black Week, through 30 November, for everyone without Pro: the trial where checkout gives it,
+          else the invite offer */}
+      {BLACK_WEEK && !isPremium && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border border-white/20 bg-black px-4 py-3 text-white" role="region" aria-label="Black Week-erbjudande">
+          <span className="ca-bw-mark text-[13px] uppercase">Black Week</span>
+          <span className="text-[14px]">
+            {offerTrial ? (
+              <><b className="font-semibold">{TRIAL_DAYS} dagar Pro gratis</b> <s className="text-white/40">{NORMAL_TRIAL_DAYS} dagar</s></>
+            ) : (
+              <><b className="font-semibold">{INVITE_DAYS} dagar Pro per vän</b> du bjuder in</>
+            )}
+            <span className="text-white/50"> · bara t.o.m. 30 november</span>
+          </span>
+        </div>
+      )}
 
       <div className="inline-flex rounded-xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-panel-2))] p-1" role="radiogroup" aria-label="Betalningsperiod">
         {(['monthly', 'yearly'] as const).map((cycle) => (
