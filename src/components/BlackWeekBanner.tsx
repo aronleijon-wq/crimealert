@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import type { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
 import { INVITE_DAYS } from '@/lib/invite';
+import { BLACK_WEEK_OFFER_CODE, offerCodeUrl } from '@/lib/appStoreLink';
 
 /** Height of the strip, as the invite strip's, so the page below makes the same room */
 export const BLACK_WEEK_BANNER_HEIGHT = 44;
@@ -13,7 +14,8 @@ type Banner = ReturnType<typeof useBlackWeekBanner>;
  * link. It slides down when the page opens; one tap on its × closes it for good on this device.
  */
 const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?: boolean }) => {
-  const trial = banner.offer === 'trial';
+  const code = banner.offer === 'code';
+  const trial = banner.offer === 'trial' || code;
   const left = banner.daysLeft <= 1 ? 'Sista dagen' : `${banner.daysLeft} dagar kvar`;
   return (
     <div
@@ -37,12 +39,21 @@ const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?
           )}
           <span className="hidden text-white/45 sm:inline"> · {left}</span>
         </p>
-        <Link
-          to={trial ? '/prisplan' : banner.app ? '/bjud-in' : '/installningar#bjud-in'}
-          className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white"
-        >
-          {trial ? <><span className="sm:hidden">Prova</span><span className="hidden sm:inline">Prova gratis</span></> : 'Bjud in'}
-        </Link>
+        {code ? (
+          <a
+            href={offerCodeUrl(BLACK_WEEK_OFFER_CODE)}
+            className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-white underline decoration-white/40 underline-offset-4"
+          >
+            Lös in
+          </a>
+        ) : (
+          <Link
+            to={trial ? '/prisplan' : banner.app ? '/bjud-in' : '/installningar#bjud-in'}
+            className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white"
+          >
+            {trial ? <><span className="sm:hidden">Prova</span><span className="hidden sm:inline">Prova gratis</span></> : 'Bjud in'}
+          </Link>
+        )}
       </div>
       <button
         type="button"

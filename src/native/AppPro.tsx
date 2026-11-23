@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BadgeCheck, Check, Loader2 } from 'lucide-react';
 import { FREE_PLAN_HAS_ADS, isBlackWeek, planLabel, PRO_FEATURES } from '@/components/account/plans';
-import { INVITE_DAYS } from '@/lib/invite';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
 import { getErrorMessage } from '@/lib/errors';
 import { APPLE_PRO_PRODUCTS, buyPro, nativeStore, periodLabel, restorePro, type StoreProduct } from '@/lib/appStore';
+import { BLACK_WEEK_OFFER_CODE, offerCodeUrl } from '@/lib/appStoreLink';
 import { haptics } from './haptics';
 import ProCelebration from './ProCelebration';
 import ProHero from './ProHero';
@@ -145,9 +145,11 @@ const AppPro = () => {
                 <span className="block text-[13px] text-white/55">Bara t.o.m. 30 november. Välj månad eller år nedan, och avsluta när du vill.</span>
               </p>
             ) : (
+              // Apple gives no second trial to an Apple ID: the Black Week code does, through the App Store
               <p className="mt-1 text-[15px] text-white">
-                <b className="font-semibold">{INVITE_DAYS} dagar Pro per vän</b> du bjuder in, upp till 8 vänner.
-                <Link to="/bjud-in" className="mt-1 block text-[13px] font-semibold uppercase tracking-[0.1em] underline decoration-white/40 underline-offset-4">Bjud in</Link>
+                <b className="font-semibold">1 månad Pro gratis</b> med koden <b className="font-semibold tracking-[0.08em]">{BLACK_WEEK_OFFER_CODE}</b>
+                <span className="block text-[13px] text-white/55">Även om du provat Pro förut. Bara t.o.m. 30 november, och du avslutar när du vill.</span>
+                <a href={offerCodeUrl(BLACK_WEEK_OFFER_CODE)} className="mt-1 block text-[13px] font-semibold uppercase tracking-[0.1em] underline decoration-white/40 underline-offset-4">Lös in i App Store</a>
               </p>
             )}
           </div>

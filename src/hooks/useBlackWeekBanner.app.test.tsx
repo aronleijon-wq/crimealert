@@ -27,9 +27,16 @@ describe('Black Week in the app', () => {
     await waitFor(() => expect(result.current.trialLength).toBe('1 vecka'));
   });
 
-  it('offers the invite when Apple gives no trial, and nothing while it asks', async () => {
+  it('offers the Black Week code when Apple gives this Apple ID no second trial, and nothing while it asks', async () => {
     const { result } = renderHook(() => useBlackWeekBanner(MON));
     expect(result.current.visible).toBe(false);
+    await waitFor(() => expect(result.current.offer).toBe('code'));
+    expect(result.current.trialLength).toBe('1 månad');
+  });
+
+  it('offers the invite to those who have Pro now', async () => {
+    auth.subscription = { subscribed: true } as typeof auth.subscription;
+    const { result } = renderHook(() => useBlackWeekBanner(MON));
     await waitFor(() => expect(result.current.offer).toBe('invite'));
   });
 });
