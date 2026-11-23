@@ -1,822 +1,415 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Camera, Check, CheckCircle2, Loader2, LocateFixed, MapPin, Megaphone, Phone, Search, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { readEventPrefill } from '@/lib/communityReports';
-import { REPORT_CATEGORY_LABELS } from '../../supabase/functions/_shared/reportCategories';
-import {
-  MessageSquarePlus, MapPin, Send, Trash2, ChevronDown, ChevronUp,
-  Clock, CheckCircle2, AlertTriangle, Loader2, Navigation, X,
-  Search, ImagePlus, Camera
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 import ModerationMenu from '@/components/ModerationMenu';
-import { BLOCKED_WORDS_MESSAGE, blockReportAuthor, hasBlockedWords, reportContent, type ReportReason } from '@/lib/moderation';
+import { blockReportAuthor, reportContent, type ReportReason } from '@/lib/moderation';
+import {
+  draftProblem, MAX_IMAGE_BYTES, placeName, readEventPrefill, REPORT_CATEGORIES, reportCategory, searchPlaces, submitReport,
+  type PlaceResult, type PublicReport, type ReportCategory, type ReportDraft,
+} from '@/lib/communityReports';
+import { formatTimeAgo } from '@/lib/timeAgo';
 
+type Report = PublicReport & { isOwn?: boolean };
 
-type Report = {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  area: string | null;
-  status: string;
-  created_at: string;
-  image_url?: string | null;
-  isOwn?: boolean;
+const EMPTY: ReportDraft = { category: '', title: '', description: '', area: '', lat: null, lng: null };
+const NOW_CATEGORIES = REPORT_CATEGORIES.filter((c) => c.now);
+const AREA_CATEGORIES = REPORT_CATEGORIES.filter((c) => !c.now);
+
+/** "12 min sedan" for the last week, then the date: "15 mars" */
+const when = (iso: string, now = Date.now()) => {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+  if (now - t < 7 * 86_400_000) return formatTimeAgo(iso, now);
+  return new Date(t).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', ...(new Date(t).getFullYear() !== new Date(now).getFullYear() ? { year: 'numeric' } : {}) });
 };
 
-// The same categories as the app (lib/communityReports, _shared/reportCategories), those of the
-// moment first
-const CATEGORIES = [
-  { value: 'police_here', label: REPORT_CATEGORY_LABELS.police_here, color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', dot: 'bg-blue-500' },
-  { value: 'sirens', label: REPORT_CATEGORY_LABELS.sirens, color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', dot: 'bg-indigo-500' },
-  { value: 'smoke_fire', label: REPORT_CATEGORY_LABELS.smoke_fire, color: 'bg-orange-600/10 text-orange-500 border-orange-600/20', dot: 'bg-orange-600' },
-  { value: 'bangs', label: REPORT_CATEGORY_LABELS.bangs, color: 'bg-rose-500/10 text-rose-400 border-rose-500/20', dot: 'bg-rose-500' },
-  { value: 'cordon', label: REPORT_CATEGORY_LABELS.cordon, color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20', dot: 'bg-yellow-500' },
-  { value: 'broken_lighting', label: 'Trasig belysning', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', dot: 'bg-amber-500' },
-  { value: 'vandalism', label: 'Skadegörelse', color: 'bg-red-500/10 text-red-500 border-red-500/20', dot: 'bg-red-500' },
-  { value: 'unsafe_area', label: 'Otrygg plats', color: 'bg-orange-500/10 text-orange-500 border-orange-500/20', dot: 'bg-orange-500' },
-  { value: 'suspicious_activity', label: 'Misstänkt aktivitet', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20', dot: 'bg-purple-500' },
-  { value: 'other', label: 'Övrigt', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground' },
-] as const;
+const card = 'rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card';
+const input = 'h-12 w-full rounded-xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-base-3))] px-4 text-base text-foreground outline-none transition placeholder:text-[hsl(var(--ca-text-3))] focus:border-primary/60';
 
-const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map((c) => [c.value, c]));
+/** A numbered step of the form, with its heading */
+const Step = ({ n, title, hint, done, children }: { n: number; title: string; hint?: string; done?: boolean; children: React.ReactNode }) => (
+  <section className="pt-6 first:pt-0" aria-label={title}>
+    <h3 className="flex items-center gap-3 text-lg font-bold text-foreground">
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${done ? 'bg-[hsl(var(--cr-green))] text-black' : 'bg-primary/15 text-primary'}`} aria-hidden>
+        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : n}
+      </span>
+      {title}
+    </h3>
+    {hint && <p className="ml-11 mt-0.5 text-sm text-[hsl(var(--ca-text-2))]">{hint}</p>}
+    <div className="mt-3 sm:ml-11">{children}</div>
+  </section>
+);
 
-const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '').trim();
-
-const timeAgo = (iso: string) => {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just nu';
-  if (mins < 60) return `${mins} min sedan`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h sedan`;
-  return `${Math.floor(hours / 24)}d sedan`;
+/** One big tile per category: an icon in its colour, the name, and what belongs there */
+const Tile = ({ c, picked, onPick }: { c: ReportCategory; picked: boolean; onPick: () => void }) => {
+  const Icon = c.icon;
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={picked}
+      className={`flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition active:scale-[0.98] ${
+        picked ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-base-3))] hover:border-primary/40'
+      }`}
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: `${c.color}26`, color: c.color }} aria-hidden>
+        <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-base font-semibold leading-tight text-foreground">{c.label}</span>
+        <span className="mt-0.5 block text-[13px] leading-snug text-[hsl(var(--ca-text-2))]">{c.hint}</span>
+      </span>
+    </button>
+  );
 };
 
-type AddressSuggestion = { display_name: string; lat: string; lon: string };
-
+/**
+ * Medborgarrapporter on the website (/rapportera): what you see, where, and a few words if you
+ * like, in three clear steps with big buttons, then what others have reported. Free for everyone
+ * signed in (submit-community-report). Opened from a police event ("Är du på plats?") it comes
+ * with the event's place, and the report shows at the event.
+ */
 export default function CommunityReports() {
   const { user } = useAuth();
-  // Opened from a police event ("Är du på plats?"): the form opens with its place filled in
   const [fromEvent] = useState(() => (typeof window === 'undefined' ? null : readEventPrefill(window.location.search)));
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(() => fromEvent !== null);
-  const [expanded, setExpanded] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [draft, setDraft] = useState<ReportDraft>(() => (fromEvent
+    ? { ...EMPTY, area: fromEvent.area, lat: fromEvent.lat, lng: fromEvent.lng, eventId: fromEvent.eventId }
+    : EMPTY));
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState<{ imageFailed: boolean } | null>(null);
+  const [reports, setReports] = useState<Report[] | null>(null);
+  const [bigImage, setBigImage] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const formRef = useRef<HTMLDivElement>(null);
 
-  // Form state
-  const [category, setCategory] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [area, setArea] = useState(fromEvent?.area ?? '');
-  const [lat, setLat] = useState<number | null>(fromEvent?.lat ?? null);
-  const [lng, setLng] = useState<number | null>(fromEvent?.lng ?? null);
-  const [eventId, setEventId] = useState<string | null>(fromEvent?.eventId ?? null);
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [locMode, setLocMode] = useState<'gps' | 'address'>('gps');
+  const fetchReports = useCallback(async () => {
+    const { data } = await supabase.from('community_reports_public').select('*').order('created_at', { ascending: false }).limit(30);
+    let own: string[] = [];
+    if (user) {
+      const { data: mine } = await supabase.from('community_reports').select('id').eq('user_id', user.id);
+      own = (mine ?? []).map((r) => r.id);
+    }
+    setReports(((data ?? []) as PublicReport[]).map((r) => ({ ...r, isOwn: own.includes(r.id) })));
+  }, [user]);
 
-  // Address search state
-  const [addressQuery, setAddressQuery] = useState('');
-  const [addressResults, setAddressResults] = useState<AddressSuggestion[]>([]);
-  const [addressLoading, setAddressLoading] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(fromEvent?.area || null);
-  const addressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { void fetchReports(); }, [fetchReports]);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  // Image upload state
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const set = (patch: Partial<ReportDraft>) => { setDraft((d) => ({ ...d, ...patch })); setError(null); };
 
-  const getMyLocation = () => {
-    if (!navigator.geolocation) { setGeoError('Geolokalisering stöds inte'); return; }
-    setGeoLoading(true);
-    setGeoError(null);
+  const useMyPosition = () => {
+    if (!navigator.geolocation) { setError('Din webbläsare kan inte ge din position. Sök på en adress i stället.'); return; }
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setLat(pos.coords.latitude); setLng(pos.coords.longitude); setGeoLoading(false); setSelectedAddress(null); },
-      () => { setGeoError('Kunde inte hämta position'); setGeoLoading(false); },
-      { enableHighAccuracy: true, timeout: 10000 }
+      async ({ coords }) => {
+        set({ lat: coords.latitude, lng: coords.longitude, area: '' });
+        setQuery('');
+        setResults([]);
+        const name = await placeName(coords.latitude, coords.longitude);
+        setDraft((d) => ({ ...d, area: name ?? 'Din position' }));
+        setLocating(false);
+      },
+      () => { setLocating(false); setError('Kunde inte hämta din position. Tillåt platsen i webbläsaren, eller sök på en adress.'); },
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   };
 
-  // Address search with debounce
-  const searchAddress = (query: string) => {
-    setAddressQuery(query);
-    setSelectedAddress(null);
-    if (addressTimeout.current) clearTimeout(addressTimeout.current);
-    if (query.length < 3) { setAddressResults([]); return; }
-
-    addressTimeout.current = setTimeout(async () => {
-      setAddressLoading(true);
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&countrycodes=se&limit=5&q=${encodeURIComponent(query)}`,
-          { headers: { 'Accept-Language': 'sv' } }
-        );
-        const data: AddressSuggestion[] = await res.json();
-        setAddressResults(data);
-      } catch {
-        setAddressResults([]);
-      }
-      setAddressLoading(false);
+  const search = (text: string) => {
+    setQuery(text);
+    clearTimeout(searchTimer.current);
+    if (text.trim().length < 3) { setResults([]); return; }
+    searchTimer.current = setTimeout(async () => {
+      setSearching(true);
+      setResults(await searchPlaces(text));
+      setSearching(false);
     }, 400);
   };
 
-  const selectAddress = (addr: AddressSuggestion) => {
-    setLat(parseFloat(addr.lat));
-    setLng(parseFloat(addr.lon));
-    setSelectedAddress(addr.display_name);
-    setAddressQuery(addr.display_name);
-    setAddressResults([]);
-    // Auto-fill area from address
-    const parts = addr.display_name.split(',');
-    if (parts.length >= 2 && !area) {
-      setArea(parts.slice(0, 2).map(s => s.trim()).join(', '));
-    }
+  const pickPlace = (place: PlaceResult) => {
+    set({ lat: place.lat, lng: place.lng, area: place.name.split(',').slice(0, 2).map((s) => s.trim()).join(', ') });
+    setQuery('');
+    setResults([]);
   };
 
-  // Image handling
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setGeoError('Bilden får vara max 5 MB');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      setGeoError('Endast bildfiler tillåtna');
-      return;
-    }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    if (!file.type.startsWith('image/')) { setError('Bara bilder går att bifoga.'); return; }
+    if (file.size > MAX_IMAGE_BYTES) { setError('Bilden får vara högst 5 MB.'); return; }
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
   };
-
   const removeImage = () => {
-    setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setImage(null);
+    setPreview(null);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile || !user) return null;
-    const ext = imageFile.name.split('.').pop() ?? 'jpg';
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from('community-reports')
-      .upload(path, imageFile, { contentType: imageFile.type });
-    if (error) return null;
-    const { data: urlData } = supabase.storage
-      .from('community-reports')
-      .getPublicUrl(path);
-    return urlData.publicUrl;
-  };
-
-  const fetchReports = useCallback(async () => {
-    setLoading(true);
-    const { data: publicData } = await supabase
-      .from('community_reports_public')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(30);
-
-    let ownIds: string[] = [];
-    if (user) {
-      const { data: ownData } = await supabase
-        .from('community_reports')
-        .select('id')
-        .eq('user_id', user.id);
-      ownIds = (ownData ?? []).map((r) => r.id);
-    }
-
-    setReports((publicData as Report[])?.map((r) => ({ ...r, isOwn: ownIds.includes(r.id) })) ?? []);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { fetchReports(); }, [fetchReports]);
-
-  const resetForm = () => {
-    setCategory(''); setTitle(''); setDescription(''); setArea('');
-    setLat(null); setLng(null); setGeoError(null); setEventId(null);
-    setAddressQuery(''); setAddressResults([]); setSelectedAddress(null);
+  const send = async () => {
+    if (!user) return;
+    const problem = draftProblem(draft);
+    if (problem) { setError(problem); return; }
+    setSending(true);
+    const result = await submitReport(user.id, draft, image);
+    setSending(false);
+    if ('error' in result) { setError(result.error); return; }
+    setSent({ imageFailed: result.imageFailed });
+    setDraft(EMPTY);
     removeImage();
+    if (fromEvent) window.history.replaceState(window.history.state, '', '/rapportera');
+    void fetchReports();
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Rubrik and words are optional: the category and the place make a report
-    if (!user || !category || lat === null || lng === null) return;
-    if (hasBlockedWords(`${title} ${description}`)) {
-      setGeoError(BLOCKED_WORDS_MESSAGE);
-      toast.error(BLOCKED_WORDS_MESSAGE);
-      return;
-    }
-    setSubmitting(true);
-
-    let image_url: string | null = null;
-    let imageFailed = false;
-    if (imageFile) {
-      image_url = await uploadImage();
-      imageFailed = !image_url;
-    }
-
-    // The server checks the sign-in and how many the account has sent today
-    const { data, error } = await supabase.functions.invoke<{ id?: string; error?: string }>('submit-community-report', {
-      body: {
-        category,
-        title: stripHtml(title).slice(0, 200),
-        description: stripHtml(description).slice(0, 1000),
-        area: stripHtml(area).slice(0, 200) || null,
-        lat, lng,
-        image_url,
-        event_id: eventId,
-      },
-    });
-
-    const serverError = data?.error;
-
-    if (!error && !serverError) {
-      resetForm();
-      setShowForm(false);
-      fetchReports();
-      if (imageFailed) {
-        toast.warning('Rapporten skickades, men bilden kunde inte laddas upp.');
-      } else {
-        toast.success('Rapporten är skickad.');
-      }
-    } else {
-      let message = serverError ?? 'Kunde inte skicka rapporten. Försök igen.';
-      const ctx = error?.context;
-      if (!serverError && ctx?.json) {
-        try {
-          const body = await ctx.json();
-          if (body?.error) message = body.error;
-        } catch { /* keep fallback */ }
-      }
-      setGeoError(message);
-      toast.error(message);
-    }
-    setSubmitting(false);
-  };
-
-
-  const handleDelete = async (id: string) => {
+  const remove = async (id: string) => {
     await supabase.from('community_reports').delete().eq('id', id);
-    setReports((prev) => prev.filter((r) => r.id !== id));
-    setDeleteConfirm(null);
+    setReports((all) => all?.filter((r) => r.id !== id) ?? null);
+    setDeleting(null);
   };
-
   // A reported report, or one whose author is blocked, disappears for the user at once
-  const handleReport = async (id: string, reason: ReportReason) => {
+  const flag = async (id: string, reason: ReportReason) => {
     if (!user) return;
     await reportContent(user.id, 'community_report', id, reason);
-    setReports((prev) => prev.filter((r) => r.id !== id));
+    setReports((all) => all?.filter((r) => r.id !== id) ?? null);
     toast.success('Tack. Vi granskar rapporten inom 24 timmar.');
   };
-
-  const handleBlock = async (id: string) => {
+  const block = async (id: string) => {
     await blockReportAuthor(id);
-    fetchReports();
+    void fetchReports();
     toast.success('Skribenten är blockerad.');
   };
 
-  const filteredReports = activeFilter
-    ? reports.filter((r) => r.category === activeFilter)
-    : reports;
-
-  const openCount = reports.filter((r) => r.status === 'open').length;
+  const category = draft.category ? reportCategory(draft.category) : null;
+  const placed = draft.lat !== null && draft.lng !== null;
+  const ready = !draftProblem(draft);
 
   return (
     <>
-      <Card className="overflow-hidden border-border bg-card">
-        {/* Header */}
-        <CardHeader className="p-4 pb-3 cursor-pointer" onClick={() => setExpanded(!expanded)}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div>
-                <CardTitle className="text-sm font-bold tracking-tight">Medborgarrapporter</CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Lokal information från boende i området
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {openCount > 0 && (
-                <Badge variant="secondary" className="text-[9px] font-mono bg-destructive/10 text-destructive border-0">
-                  {openCount} öppna
-                </Badge>
-              )}
-              <Badge variant="secondary" className="text-[9px] font-mono border-0">
-                {reports.length} totalt
-              </Badge>
-              {expanded
-                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              }
+      <div ref={formRef} className={`${card} scroll-mt-24 p-5 sm:p-7`}>
+        {sent ? (
+          <div className="flex flex-col items-center py-6 text-center" role="status">
+            <CheckCircle2 className="h-16 w-16 text-[hsl(var(--cr-green))]" aria-hidden />
+            <p className="mt-4 text-2xl font-bold text-foreground">Tack för din rapport</p>
+            <p className="mt-2 max-w-sm text-base leading-relaxed text-[hsl(var(--ca-text-2))]">
+              {sent.imageFailed ? 'Rapporten är skickad, men bilden kom inte med.' : 'Nu syns den på kartan och i flödet för alla i närheten.'}
+            </p>
+            <div className="mt-6 flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+              <Link to="/karta" className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition hover:bg-primary/90">Till kartan</Link>
+              <button type="button" onClick={() => setSent(null)} className="h-12 flex-1 rounded-xl border border-[hsl(var(--ca-line-strong))] text-base font-semibold text-foreground transition hover:border-primary/50">Rapportera mer</button>
             </div>
           </div>
-        </CardHeader>
-
-        {expanded && (
-          <CardContent className="p-4 pt-0 space-y-4">
-            {/* Category filter chips */}
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setActiveFilter(null)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
-                  !activeFilter
-                    ? 'bg-primary/10 text-primary border-primary/20'
-                    : 'border-border text-muted-foreground hover:border-primary/20 hover:text-foreground'
-                }`}
-              >
-                Alla
-              </button>
-              {CATEGORIES.map((c) => {
-                const count = reports.filter((r) => r.category === c.value).length;
-                return (
-                  <button
-                    key={c.value}
-                    onClick={() => setActiveFilter(activeFilter === c.value ? null : c.value)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all ${
-                      activeFilter === c.value
-                        ? c.color
-                        : 'border-border text-muted-foreground hover:border-primary/20 hover:text-foreground'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-                    {c.label} {count > 0 && <span className="opacity-60">{count}</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* New report CTA / form */}
-            {user ? (
-              !showForm ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowForm(true)}
-                  className="w-full h-9 border-dashed border hover:border-primary/40 hover:bg-primary/5 group text-xs"
-                >
-                  <MessageSquarePlus className="w-3.5 h-3.5 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <span className="text-muted-foreground group-hover:text-primary transition-colors">
-                    Ny observation
-                  </span>
-                </Button>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 p-4 rounded-md border border-primary/20 bg-primary/[0.02]">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-foreground tracking-tight">{eventId ? 'Är du på plats? Berätta vad du ser' : 'Ny observation'}</h3>
-                    <button
-                      type="button"
-                      onClick={() => { setShowForm(false); resetForm(); }}
-                      className="p-1 rounded-md hover:bg-muted text-muted-foreground"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {eventId && fromEvent && (
-                    <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
-                      Om händelsen <span className="font-semibold text-foreground">{fromEvent.title || fromEvent.area}</span>. Din rapport syns vid händelsen för alla inloggade.
-                    </p>
-                  )}
-
-                  {/* Category selection */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Kategori
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      {CATEGORIES.map((c) => (
-                        <button
-                          key={c.value}
-                          type="button"
-                          onClick={() => setCategory(c.value)}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-[11px] font-medium border transition-all ${
-                            category === c.value
-                              ? `${c.color} ring-1 ring-current/20`
-                              : 'border-border text-muted-foreground hover:border-primary/30 hover:bg-muted/50'
-                          }`}
-                        >
-                          <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                          {c.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Rubrik <span className="text-muted-foreground/50 normal-case">(valfritt)</span>
-                    </label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      maxLength={200}
-                      placeholder="Valfritt, t.ex. Polisbilar utanför stationen"
-                      className="text-xs h-9"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Beskrivning <span className="text-muted-foreground/50 normal-case">(valfritt)</span>
-                    </label>
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      maxLength={1000}
-                      rows={3}
-                      placeholder="Valfritt: vad ser du, och hur länge har det pågått?"
-                      className="text-xs resize-none"
-                    />
-                    <p className="text-[9px] text-muted-foreground/60 text-right">{description.length}/1000</p>
-                  </div>
-
-                  {/* Location - GPS or Address */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Plats
-                    </label>
-
-                    {/* Mode toggle */}
-                    <div className="flex gap-1 bg-muted rounded-lg p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setLocMode('gps')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition ${
-                          locMode === 'gps'
-                            ? 'bg-card text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <Navigation className="w-3 h-3" /> GPS-position
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLocMode('address')}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition ${
-                          locMode === 'address'
-                            ? 'bg-card text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <Search className="w-3 h-3" /> Sök adress
-                      </button>
-                    </div>
-
-                    {locMode === 'gps' ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={getMyLocation}
-                          disabled={geoLoading}
-                          className={`text-[11px] h-8 ${lat !== null && !selectedAddress ? 'border-green-500/30 bg-green-500/5 text-green-600' : ''}`}
-                        >
-                          {geoLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                          ) : (
-                            <Navigation className="w-3.5 h-3.5 mr-1.5" />
-                          )}
-                          {lat !== null && !selectedAddress ? `${lat.toFixed(4)}, ${lng!.toFixed(4)}` : 'Använd min position'}
-                        </Button>
-                        {lat !== null && !selectedAddress && (
-                          <button
-                            type="button"
-                            onClick={() => { setLat(null); setLng(null); }}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <div className="relative">
-                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input
-                            value={addressQuery}
-                            onChange={(e) => searchAddress(e.target.value)}
-                            placeholder="Sök gata, plats eller adress..."
-                            className="text-xs h-9 pl-8"
-                          />
-                          {addressLoading && (
-                            <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                          )}
-                        </div>
-
-                        {/* Address results dropdown */}
-                        {addressResults.length > 0 && !selectedAddress && (
-                          <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-                            {addressResults.map((addr, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => selectAddress(addr)}
-                                className="w-full text-left px-3 py-2.5 text-[11px] text-foreground hover:bg-muted/50 transition border-b border-border last:border-0 flex items-start gap-2"
-                              >
-                                <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                <span className="line-clamp-2">{addr.display_name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Selected address confirmation */}
-                        {selectedAddress && (
-                          <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-green-500/5 border border-green-500/20">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
-                            <span className="text-[10px] text-green-700 dark:text-green-400 line-clamp-1 flex-1">{selectedAddress}</span>
-                            <button
-                              type="button"
-                              onClick={() => { setLat(null); setLng(null); setSelectedAddress(null); setAddressQuery(''); }}
-                              className="p-0.5 rounded hover:bg-muted text-muted-foreground"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {geoError && (
-                      <p className="text-[10px] text-destructive flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" /> {geoError}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Area */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Område <span className="text-muted-foreground/50 normal-case">(valfritt)</span>
-                    </label>
-                    <Input
-                      value={area}
-                      onChange={(e) => setArea(e.target.value)}
-                      maxLength={200}
-                      placeholder="T.ex. Södermalm, Stockholm"
-                      className="text-xs h-9"
-                    />
-                  </div>
-
-                  {/* Image upload */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Bild <span className="text-muted-foreground/50 normal-case">(valfritt, max 5 MB)</span>
-                    </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-
-                    {!imagePreview ? (
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-[11px] h-8"
-                        >
-                          <ImagePlus className="w-3.5 h-3.5 mr-1.5" />
-                          Välj bild
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (fileInputRef.current) {
-                              fileInputRef.current.removeAttribute('capture');
-                              fileInputRef.current.click();
-                              // Re-add capture for next time
-                              setTimeout(() => fileInputRef.current?.setAttribute('capture', 'environment'), 100);
-                            }
-                          }}
-                          className="text-[11px] h-8 sm:hidden"
-                        >
-                          <Camera className="w-3.5 h-3.5 mr-1.5" />
-                          Ta foto
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="relative inline-block">
-                        <img
-                          src={imagePreview}
-                          alt="Förhandsgranskning"
-                          className="h-24 w-auto rounded-lg border border-border object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Submit */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={submitting || !category || lat === null || lng === null}
-                      className="text-xs"
-                    >
-                      {submitting ? (
-                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5 mr-1.5" />
-                      )}
-                      {submitting ? 'Skickar...' : 'Skicka rapport'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => { setShowForm(false); resetForm(); }}
-                      className="text-xs"
-                    >
-                      Avbryt
-                    </Button>
-                  </div>
-                </form>
-              )
-            ) : (
-              <div className="text-center py-4 px-4 rounded-lg bg-muted/30 border border-border">
-                <p className="text-xs text-muted-foreground">
-                  <a href="/auth" className="text-primary hover:underline font-semibold">Logga in</a> för att skicka rapporter
-                </p>
-              </div>
+        ) : (
+          <>
+            {fromEvent && (
+              <p className="mb-5 rounded-xl bg-primary/10 px-4 py-3 text-[15px] leading-snug text-foreground">
+                Om händelsen <b className="font-semibold">{fromEvent.title || fromEvent.area}</b>. Din rapport syns vid händelsen och på kartan.
+              </p>
             )}
 
-            {/* Reports list */}
-            {loading ? (
-              <div className="flex items-center justify-center py-8 gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Laddar rapporter...</span>
-              </div>
-            ) : filteredReports.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-2">
-                  <MessageSquarePlus className="w-5 h-5 text-muted-foreground/50" />
+            <Step n={1} title="Välj vad det gäller" done={!!category}>
+              {category && user ? (
+                // Picked: the choice alone, so the next steps are close at hand
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1"><Tile c={category} picked onPick={() => set({ category: '' })} /></div>
+                  <button type="button" onClick={() => set({ category: '' })} className="shrink-0 px-2 text-[15px] font-semibold text-primary hover:underline">Ändra</button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {activeFilter ? 'Inga rapporter i vald kategori' : 'Inga rapporter ännu'}
-                </p>
+              ) : (
+                <>
+                  <p className="mb-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--ca-text-3))]">Händer just nu</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {NOW_CATEGORIES.map((c) => <Tile key={c.value} c={c} picked={draft.category === c.value} onPick={() => set({ category: c.value })} />)}
+                  </div>
+                  <p className="mb-2 mt-5 text-[13px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--ca-text-3))]">I mitt område</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {AREA_CATEGORIES.map((c) => <Tile key={c.value} c={c} picked={draft.category === c.value} onPick={() => set({ category: c.value })} />)}
+                  </div>
+                </>
+              )}
+            </Step>
+
+            {!user ? (
+              <div className="mt-6 rounded-xl bg-[hsl(var(--ca-base-3))] p-5 text-center">
+                <p className="text-lg font-bold text-foreground">Skapa ett gratis konto för att rapportera</p>
+                <p className="mx-auto mt-1 max-w-sm text-[15px] leading-snug text-[hsl(var(--ca-text-2))]">Det tar en minut. Sedan kan du rapportera och se vad andra i närheten har sett.</p>
+                <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+                  <Link to="/auth?mode=signup" className="flex h-12 items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-primary-foreground transition hover:bg-primary/90">Skapa konto gratis</Link>
+                  <Link to="/auth?mode=login" className="flex h-12 items-center justify-center rounded-xl border border-[hsl(var(--ca-line-strong))] px-6 text-base font-semibold text-foreground transition hover:border-primary/50">Logga in</Link>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredReports.map((r) => {
-                  const cat = CATEGORY_MAP[r.category];
-                  const isOpen = r.status === 'open';
-                  return (
-                    <div
-                      key={r.id}
-                      className="group relative flex items-start gap-3 p-3 rounded-md border border-border hover:border-primary/20 hover:bg-muted/10 transition-all"
-                    >
-                      {/* Category marker */}
-                      <div className={`w-1 h-10 rounded-full shrink-0 mt-0.5 ${cat?.dot ?? 'bg-muted-foreground'}`} />
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2 justify-between">
-                          <span className="text-xs font-semibold text-foreground leading-tight">
-                            {r.title}
-                          </span>
-                          <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                            isOpen
-                              ? 'bg-destructive/10 text-destructive'
-                              : 'bg-green-500/10 text-green-600'
-                          }`}>
-                            {isOpen
-                              ? <><Clock className="w-2.5 h-2.5" /> Öppen</>
-                              : <><CheckCircle2 className="w-2.5 h-2.5" /> Åtgärdad</>
-                            }
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                          {r.description}
-                        </p>
-
-                        {/* Report image thumbnail */}
-                        {r.image_url && (
-                          <button
-                            type="button"
-                            onClick={() => setPreviewImage(r.image_url!)}
-                            className="mt-2 block"
-                          >
-                            <img
-                              src={r.image_url}
-                              alt="Rapportbild"
-                              className="h-16 w-auto rounded-md border border-border object-cover hover:opacity-80 transition"
-                              loading="lazy"
-                            />
-                          </button>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
-                          {r.area && (
-                            <span className="flex items-center gap-0.5">
-                              <MapPin className="w-2.5 h-2.5" />{r.area}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-0.5">
-                            <Clock className="w-2.5 h-2.5" />{timeAgo(r.created_at)}
-                          </span>
-                          <span className="hidden sm:inline">·</span>
-                          <span className="hidden sm:inline text-[9px] uppercase tracking-wide">{cat?.label ?? r.category}</span>
-                          {user && !r.isOwn && (
-                            <ModerationMenu
-                              what="rapporten"
-                              author="skribenten"
-                              onReport={(reason) => handleReport(r.id, reason)}
-                              onBlock={() => handleBlock(r.id)}
-                            />
-                          )}
-                        </div>
+            ) : category && (
+              <>
+                <Step n={2} title="Var?" done={placed}>
+                  {placed ? (
+                    <div className="flex items-center gap-3 rounded-xl border border-green-500/40 bg-green-500/10 px-4 py-3">
+                      <MapPin className="h-5 w-5 shrink-0 text-[hsl(var(--cr-green))]" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate text-base font-medium text-foreground">{draft.area || 'Platsen är vald'}</span>
+                      <button type="button" onClick={() => set({ lat: null, lng: null, area: '' })} className="shrink-0 text-[15px] font-semibold text-primary hover:underline">Ändra</button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={useMyPosition}
+                        disabled={locating}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary/10 text-base font-semibold text-foreground transition hover:bg-primary/15 disabled:opacity-60"
+                      >
+                        {locating ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <LocateFixed className="h-5 w-5 text-primary" aria-hidden />}
+                        {locating ? 'Hämtar din position…' : 'Använd min position'}
+                      </button>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[hsl(var(--ca-text-3))]" aria-hidden />
+                        <input value={query} onChange={(e) => search(e.target.value.slice(0, 80))} placeholder="Eller skriv en adress eller plats" aria-label="Sök en adress" className={`${input} pl-12`} />
+                        {searching && <Loader2 className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[hsl(var(--ca-text-3))]" aria-hidden />}
                       </div>
+                      {results.length > 0 && (
+                        <ul className="overflow-hidden rounded-xl border border-[hsl(var(--ca-line-strong))]">
+                          {results.map((place) => (
+                            <li key={`${place.lat},${place.lng}`}>
+                              <button type="button" onClick={() => pickPlace(place)} className="flex w-full items-center gap-3 border-b border-[hsl(var(--ca-line))] px-4 py-3 text-left text-[15px] text-foreground last:border-0 hover:bg-[hsl(var(--ca-panel-2))]">
+                                <MapPin className="h-4 w-4 shrink-0 text-[hsl(var(--ca-text-3))]" aria-hidden />
+                                <span className="min-w-0 truncate">{place.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </Step>
 
-                      {/* Delete button for own reports */}
-                      {r.isOwn && (
-                        deleteConfirm === r.id ? (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="h-6 text-[10px] px-2"
-                              onClick={() => handleDelete(r.id)}
-                            >
-                              Ta bort
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 text-[10px] px-2"
-                              onClick={() => setDeleteConfirm(null)}
-                            >
-                              Avbryt
-                            </Button>
-                          </div>
+                <Step n={3} title="Berätta mer" hint="Valfritt. Det räcker med vad och var.">
+                  <div className="space-y-2">
+                    <input value={draft.title} onChange={(e) => set({ title: e.target.value.slice(0, 120) })} placeholder={`Rubrik, t.ex. ${category.now ? 'Polisbilar vid torget' : 'Mörk gångtunnel'}`} aria-label="Rubrik" className={input} />
+                    <textarea
+                      value={draft.description}
+                      onChange={(e) => set({ description: e.target.value.slice(0, 1000) })}
+                      placeholder="Vad ser du, och hur länge har det pågått?"
+                      aria-label="Beskrivning"
+                      rows={3}
+                      className={`${input} h-auto resize-none py-3 leading-relaxed`}
+                    />
+                    {preview ? (
+                      <div className="relative inline-block">
+                        <img src={preview} alt="Bilden till rapporten" className="h-32 w-auto rounded-xl border border-[hsl(var(--ca-line-strong))] object-cover" />
+                        <button type="button" onClick={removeImage} aria-label="Ta bort bilden" className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white shadow">
+                          <X className="h-4 w-4" aria-hidden />
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => fileRef.current?.click()} className="flex h-12 items-center gap-2 rounded-xl border border-dashed border-[hsl(var(--ca-line-strong))] px-4 text-[15px] font-medium text-[hsl(var(--ca-text-2))] transition hover:border-primary/50 hover:text-foreground">
+                        <Camera className="h-5 w-5" aria-hidden /> Lägg till en bild
+                      </button>
+                    )}
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickImage(e.target.files?.[0])} aria-hidden tabIndex={-1} />
+                  </div>
+                </Step>
+
+                <div className="mt-7 sm:ml-11">
+                  {error && <p role="alert" className="mb-3 rounded-xl bg-primary/10 px-4 py-3 text-[15px] text-[hsl(var(--ca-red))]">{error}</p>}
+                  <button
+                    type="button"
+                    onClick={send}
+                    disabled={sending}
+                    className={`flex h-14 w-full items-center justify-center gap-2 rounded-xl text-lg font-semibold text-primary-foreground transition active:scale-[0.99] ${ready ? 'bg-primary shadow-[0_0_28px_-8px_hsl(var(--ca-red))] hover:bg-primary/90' : 'bg-primary/40'}`}
+                  >
+                    {sending ? <><Loader2 className="h-5 w-5 animate-spin" aria-hidden /> Skickar…</> : 'Skicka rapport'}
+                  </button>
+                  <p className="mt-3 text-sm leading-snug text-[hsl(var(--ca-text-3))]">Skriv inga namn och lägg inte upp bilder där personer känns igen.</p>
+                </div>
+              </>
+            )}
+            {!user && error && <p role="alert" className="mt-3 text-[15px] text-[hsl(var(--ca-red))]">{error}</p>}
+          </>
+        )}
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[hsl(var(--ca-line-strong))] px-5 py-4">
+        <Phone className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+        <p className="text-[15px] leading-snug text-[hsl(var(--ca-text-2))]">
+          <b className="font-semibold text-foreground">Akut fara? Ring 112.</b> Tips till polisen: 114 14.
+        </p>
+      </div>
+
+      <section className="mt-10" aria-labelledby="senaste-rapporterna">
+        <h2 id="senaste-rapporterna" className="font-['Archivo',Inter,sans-serif] text-2xl font-extrabold text-foreground">Senaste rapporterna</h2>
+        <p className="mt-1 text-[15px] text-[hsl(var(--ca-text-2))]">Vad andra har sett. De syns också på kartan.</p>
+        {reports === null ? (
+          <div className="mt-4 space-y-2" aria-hidden>
+            {[0, 1].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-[hsl(var(--ca-panel-3))]" />)}
+          </div>
+        ) : !user ? (
+          <p className={`${card} mt-4 px-5 py-6 text-center text-[15px] text-[hsl(var(--ca-text-2))]`}>
+            <Link to="/auth?mode=login" className="font-semibold text-primary hover:underline">Logga in</Link> för att se vad andra har rapporterat.
+          </p>
+        ) : reports.length === 0 ? (
+          <div className={`${card} mt-4 flex flex-col items-center px-5 py-8 text-center`}>
+            <Megaphone className="h-8 w-8 text-primary" aria-hidden />
+            <p className="mt-3 text-lg font-bold text-foreground">Inga rapporter än</p>
+            <p className="mt-1 text-[15px] text-[hsl(var(--ca-text-2))]">Bli först med att berätta vad som händer där du är.</p>
+          </div>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {reports.map((r) => {
+              const c = reportCategory(r.category);
+              const Icon = c.icon;
+              return (
+                <li key={r.id} className={`${card} flex gap-4 p-4 sm:p-5`}>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: `${c.color}26`, color: c.color }} aria-hidden>
+                    <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    {/* A report sent with no words of its own is titled by its category: said once */}
+                    {r.title !== c.label && <p className="text-[13px] font-semibold" style={{ color: c.color }}>{c.label}</p>}
+                    <p className="mt-0.5 text-base font-semibold leading-snug text-foreground">{r.title}</p>
+                    {r.description && <p className="mt-1 text-[15px] leading-relaxed text-[hsl(var(--ca-text-2))]">{r.description}</p>}
+                    {r.image_url && (
+                      <button type="button" onClick={() => setBigImage(r.image_url)} className="mt-3 block" aria-label="Visa bilden större">
+                        <img src={r.image_url} alt="Bild från rapporten" loading="lazy" className="max-h-48 w-auto rounded-xl border border-[hsl(var(--ca-line-strong))] object-cover transition hover:opacity-90" />
+                      </button>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[hsl(var(--ca-text-3))]">
+                      {r.area && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden />{r.area}</span>}
+                      <span>{when(r.created_at)}</span>
+                      {r.isOwn ? (
+                        deleting === r.id ? (
+                          <span className="flex items-center gap-2">
+                            <button type="button" onClick={() => remove(r.id)} className="font-semibold text-[hsl(var(--ca-red))] hover:underline">Ta bort</button>
+                            <button type="button" onClick={() => setDeleting(null)} className="hover:underline">Avbryt</button>
+                          </span>
                         ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(r.id)}
-                            className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shrink-0"
-                            title="Ta bort"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => setDeleting(r.id)} className="flex items-center gap-1 hover:text-foreground">
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden /> Ta bort min rapport
                           </button>
                         )
+                      ) : (
+                        <ModerationMenu what="rapporten" author="skribenten" onReport={(reason) => flag(r.id, reason)} onBlock={() => block(r.id)} />
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </Card>
+      </section>
 
-      {/* Image lightbox */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <button
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"
-            onClick={() => setPreviewImage(null)}
-          >
-            <X className="w-5 h-5" />
+      {bigImage && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4" onClick={() => setBigImage(null)} role="dialog" aria-modal="true" aria-label="Bilden">
+          <button type="button" aria-label="Stäng" className="absolute right-4 top-4 rounded-full bg-black/60 p-2 text-white" onClick={() => setBigImage(null)}>
+            <X className="h-5 w-5" aria-hidden />
           </button>
-          <img
-            src={previewImage}
-            alt="Rapportbild"
-            className="max-w-full max-h-[85vh] rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <img src={bigImage} alt="Bild från rapporten" className="max-h-[85vh] max-w-full rounded-xl object-contain" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </>
