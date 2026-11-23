@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PlanComparison from './PlanComparison';
 import { BLACK_WEEK, FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT } from './plans';
@@ -23,6 +23,18 @@ describe('PlanComparison', () => {
     expect(onCheckout).toHaveBeenCalled();
     expect(screen.getByText(`${BLACK_WEEK ? 'BLACK WEEK · ' : ''}${TRIAL_DAYS} DAGAR GRATIS`)).toBeInTheDocument();
     expect(screen.getByText(`${BLACK_WEEK ? 'Black Week, bara t.o.m. 30 november: ' : ''}Gratis i ${TRIAL_DAYS} dagar, sedan 19 kr/mån. Avsluta under provperioden så dras inget.`)).toBeInTheDocument();
+  });
+
+  it('shows Black Week to everyone without Pro through 30 November', () => {
+    // A free account that may start the trial, and one that may not (the invite offer instead)
+    renderPlans({ signedIn: true, trialEligible: true });
+    const region = screen.queryByRole('region', { name: 'Black Week-erbjudande' });
+    expect(Boolean(region)).toBe(BLACK_WEEK);
+    if (region) expect(region.textContent).toContain(`${TRIAL_DAYS} dagar Pro gratis`);
+    cleanup();
+    renderPlans({ signedIn: true, trialEligible: false });
+    const invite = screen.queryByRole('region', { name: 'Black Week-erbjudande' });
+    if (invite) expect(invite.textContent).toContain('7 dagar Pro per vän');
   });
 
   it('offers no new trial to someone who already had Pro', () => {
