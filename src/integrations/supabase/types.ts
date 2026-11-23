@@ -157,6 +157,7 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          event_id: string | null
           id: string
           image_url: string | null
           lat: number | null
@@ -170,6 +171,7 @@ export type Database = {
           category: string
           created_at?: string
           description: string
+          event_id?: string | null
           id?: string
           image_url?: string | null
           lat?: number | null
@@ -183,6 +185,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          event_id?: string | null
           id?: string
           image_url?: string | null
           lat?: number | null
@@ -933,6 +936,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          event_id: string | null
           id: string | null
           image_url: string | null
           lat: number | null
@@ -988,6 +992,7 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          event_id: string
           id: string
           image_url: string
           lat: number
