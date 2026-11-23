@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BadgeCheck, Check, Loader2 } from 'lucide-react';
-import { BLACK_WEEK_TRIAL_DAYS, FREE_PLAN_HAS_ADS, isBlackWeek, planLabel, PRO_FEATURES } from '@/components/account/plans';
+import { FREE_PLAN_HAS_ADS, isBlackWeek, planLabel, PRO_FEATURES } from '@/components/account/plans';
 import { INVITE_DAYS } from '@/lib/invite';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -63,6 +63,8 @@ const AppPro = () => {
   const monthly = products?.find((p) => p.id === APPLE_PRO_PRODUCTS.monthly);
   const saving = yearly && monthly && monthly.amount > 0 ? Math.round((1 - yearly.amount / (monthly.amount * 12)) * 100) : 0;
   const selected = products?.find((p) => p.id === chosen) ?? products?.[0];
+  // The free trial Apple gives this Apple ID, if any
+  const appleTrialPeriod = products?.find((p) => p.trial)?.trial ?? null;
 
   const buy = async () => {
     if (!user || !selected) return;
@@ -132,14 +134,14 @@ const AppPro = () => {
           </p>
         </div>
 
-        {/* Black Week, through 30 November: 30 days free for those the App Store gives its trial
-            (never had Pro), and the invite offer for the rest */}
-        {!isPremium && isBlackWeek() && (
+        {/* Black Week, through 30 November: the free trial for each Apple ID Apple still gives one
+            (its own length, from App Store Connect), and the invite offer for the rest */}
+        {!isPremium && isBlackWeek() && products !== null && (
           <div className="ca-pro-rise mt-6 border border-white/20 bg-black px-4 py-3" style={rise(1)} role="region" aria-label="Black Week-erbjudande">
             <p className="ca-bw-mark text-[12px] uppercase text-white">Black Week</p>
-            {!user || subscription.firstTrial ? (
+            {appleTrialPeriod ? (
               <p className="mt-1 text-[15px] text-white">
-                <b className="font-semibold">{BLACK_WEEK_TRIAL_DAYS} dagar Pro gratis</b> <s className="text-white/40">7 dagar</s>
+                <b className="font-semibold">{periodLabel(appleTrialPeriod, true)} Pro gratis</b>{appleTrialPeriod !== '1 week' && <> <s className="text-white/40">1 vecka</s></>}
                 <span className="block text-[13px] text-white/55">Bara t.o.m. 30 november. Välj månad eller år nedan, och avsluta när du vill.</span>
               </p>
             ) : (

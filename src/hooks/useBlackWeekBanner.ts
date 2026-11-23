@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
-import { BLACK_WEEK_ENDS, isBlackWeek } from '@/components/account/plans';
+import { useCallback, useEffect, useState } from 'react';
+import { BLACK_WEEK_ENDS, BLACK_WEEK_TRIAL_DAYS, isBlackWeek } from '@/components/account/plans';
+import { appleTrial, periodLabel } from '@/lib/appStore';
 import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
 
@@ -11,8 +12,8 @@ export type BlackWeekOffer = 'trial' | 'invite';
 
 /**
  * The Black Week strip at the top (components/BlackWeekBanner), through 30 November 2026: 30 days
- * of Pro free for those who can start a trial (signed out, or never had Pro), and 7 days of Pro per
- * friend for everyone else signed in. Its × hides it for a day on this device.
+ * of Pro free for those who can start a trial (on the web: signed out or without Pro now; in the
+ * app: an Apple ID Apple still gives a trial), and 7 days of Pro per friend for everyone else signed in. Its × hides it for a day on this device.
  */
 export function useBlackWeekBanner(now = Date.now()) {
   const { user, subscription } = useAuth();
@@ -23,12 +24,23 @@ export function useBlackWeekBanner(now = Date.now()) {
     try { localStorage.setItem(HIDDEN_UNTIL_KEY, String(Date.now() + HIDE_MS)); } catch { /* private mode: closes on this page only */ }
     setDismissed(true);
   }, []);
-  // The App Store gives its free trial only to those who never had Pro; the web, during Black
-  // Week, to everyone without Pro now
-  const eligible = isNativeApp() ? subscription?.firstTrial : subscription?.trialEligible;
-  const trial = canSellPro() && (!user || eligible === true);
-  const offer: BlackWeekOffer | null = trial ? 'trial' : user ? 'invite' : null;
+  // In the app Apple gives the trial, to each Apple ID that hasn't had one (whatever the account
+  // did on the web), for as long as App Store Connect says: so the app asks Apple. Undefined while
+  // it asks. The web, during Black Week, gives it to every account without Pro now.
+  const app = isNativeApp();
+  const [apple, setApple] = useState<string | null | undefined>(undefined);
+  const askApple = app && canSellPro() && isBlackWeek(now);
+  useEffect(() => {
+    if (!askApple) return;
+    let live = true;
+    appleTrial().then((t) => { if (live) setApple(t); });
+    return () => { live = false; };
+  }, [askApple]);
+  const trial = canSellPro() && (app ? Boolean(apple) : !user || subscription?.trialEligible === true);
+  const offer: BlackWeekOffer | null = trial ? 'trial' : user && !(app && askApple && apple === undefined) ? 'invite' : null;
   const visible = isBlackWeek(now) && !dismissed && offer !== null;
   const daysLeft = Math.max(1, Math.ceil((BLACK_WEEK_ENDS - now) / 86_400_000));
-  return { visible, offer, dismiss, daysLeft, app: isNativeApp() };
+  // "30 dagar" on the web; Apple's own length in the app ("1 månad")
+  const trialLength = app && apple ? periodLabel(apple, true) : `${BLACK_WEEK_TRIAL_DAYS} dagar`;
+  return { visible, offer, dismiss, daysLeft, app, trialLength };
 }

@@ -100,3 +100,22 @@ export async function restorePro(): Promise<SyncResult & { found: boolean }> {
   if (!transactionIds.length) return { pro: false, otherAccount: false, found: false };
   return { ...(await syncApplePurchases(transactionIds)), found: true };
 }
+
+let trialLoading: Promise<string | null> | null = null;
+/**
+ * The free trial this Apple ID can still get on Pro ("1 month"), or null: Apple decides it, from
+ * the introductory offer in App Store Connect and whether this Apple ID has used one. Asked once.
+ */
+export function appleTrial(): Promise<string | null> {
+  trialLoading ??= nativeStore()
+    .then(async (store) => {
+      if (!store) return null;
+      const { products } = await store.products({ ids: [APPLE_PRO_PRODUCTS.yearly, APPLE_PRO_PRODUCTS.monthly] });
+      return products.find((p) => p.trial)?.trial ?? null;
+    })
+    .catch(() => { trialLoading = null; return null; });
+  return trialLoading;
+}
+
+/** For tests: asks Apple again next time */
+export const resetAppleTrial = () => { trialLoading = null; };
