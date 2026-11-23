@@ -356,3 +356,38 @@ export function gazetteerInText(text: string, index: Map<string, GazetteerPlace>
   }
   return out;
 }
+
+export interface NamedPlace { name: string; lat: number; lng: number; kind: string }
+
+/**
+ * The place an event's text says it happened, when the gazetteer knows it: the first area or
+ * square named ("på Östermalm", "vid Stureplan"; "från Rinkeby" comes last), else null.
+ */
+export function namedPlace(text: string, kommun: string | null, index: Map<string, GazetteerPlace>): NamedPlace | null {
+  if (!text || !index.size) return null;
+  const named = placeCandidates(text, kommun);
+  const seen = new Set(named.map((c) => norm(c.name)));
+  const known = gazetteerInText(text, index, kommun).filter((c) => !seen.has(norm(c.name)));
+  for (const c of [...named, ...known]) {
+    if (c.kind === 'road' || c.kind === 'crossing' || (c.kind === 'street' && /\d/.test(c.name))) continue;
+    const p = gazetteerLookup(c.name, index);
+    if (p) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
+  }
+  return null;
+}
+
+/**
+ * Where an event goes when its text names a place: a street found in that place stays; anything
+ * vaguer (the kommun's centre, Polisen's own point, another area) moves to the place named.
+ * Null when it stays where it is.
+ */
+export function placeByText<T extends { lat: number | null; lng: number | null; location_precision: string }>(
+  inc: T, place: NamedPlace | null,
+): { lat: number; lng: number; location_precision: Precision } | null {
+  if (!place) return null;
+  const precise = rank(inc.location_precision) >= rank('street');
+  const reachKm = place.kind === 'q' ? 0.6 : place.kind === 's' ? 1.5 : 3;
+  if (precise && inc.lat != null && inc.lng != null && distanceKm(inc.lat, inc.lng, place.lat, place.lng) <= reachKm) return null;
+  if (!precise && inc.lat === place.lat && inc.lng === place.lng) return null;
+  return { lat: place.lat, lng: place.lng, location_precision: place.kind === 'q' ? 'street' : 'district' };
+}

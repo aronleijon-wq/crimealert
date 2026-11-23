@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
+  areaAnchor, distanceKm, gazetteerIndex, gazetteerInText, lanGazetteerIndex, withinArea, type PlaceCandidate, gazetteerLookup, namedPlace, placeByText, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, sameKommun, spreadPoint,
   type GazetteerPlace,
   SPREAD_MAX_M, SPREAD_MIN_M,
 } from "../../supabase/functions/_shared/geoPlace";
@@ -192,5 +192,34 @@ describe('the big cities\' own names (data/landmarks)', () => {
     for (const [kommun, centre] of [['Stockholm', [59.33, 18.07]], ['Göteborg', [57.71, 11.97]], ['Malmö', [55.6, 13.0]], ['Uppsala', [59.86, 17.64]]] as const) {
       for (const [, lat, lng] of LANDMARKS[kommun]) expect(distanceKm(lat, lng, centre[0], centre[1])).toBeLessThan(12);
     }
+  });
+});
+
+describe('an area named in the text decides where the event is', () => {
+  const index = gazetteerIndex([
+    ['Östermalm', 59.34015, 18.08374, 's'], ['Gamla stan', 59.32495, 18.07064, 's'], ['Rinkeby', 59.38812, 17.92857, 's'], ['Stureplan', 59.33593, 18.07269, 'q'],
+  ]);
+  const centre = { lat: 59.32512, lng: 18.07109, location_precision: 'area' };
+
+  it('finds the place it happened, not where someone came from', () => {
+    expect(namedPlace('En man har misshandlats på Östermalm.', 'Stockholm', index)?.name).toBe('Östermalm');
+    expect(namedPlace('En man från Rinkeby greps på Östermalm.', 'Stockholm', index)?.name).toBe('Östermalm');
+    expect(namedPlace('Bråk vid Stureplan på Östermalm.', 'Stockholm', index)?.name).toBe('Stureplan');
+    expect(namedPlace('Inbrott i en villa.', 'Stockholm', index)).toBeNull();
+  });
+
+  it('moves an event at the kommun\'s centre (Gamla stan) to Östermalm', () => {
+    const place = namedPlace('En man har misshandlats på Östermalm.', 'Stockholm', index);
+    expect(placeByText(centre, place)).toEqual({ lat: 59.34015, lng: 18.08374, location_precision: 'district' });
+    // Once there it stays
+    expect(placeByText({ lat: 59.34015, lng: 18.08374, location_precision: 'district' }, place)).toBeNull();
+    // Another area, even close by, is not Östermalm
+    expect(placeByText({ lat: 59.32495, lng: 18.07064, location_precision: 'district' }, place)).not.toBeNull();
+  });
+
+  it('keeps a street found in the place, and moves one found elsewhere', () => {
+    const place = namedPlace('Rån på Karlavägen på Östermalm.', 'Stockholm', index);
+    expect(placeByText({ lat: 59.3385, lng: 18.0800, location_precision: 'street' }, place)).toBeNull();
+    expect(placeByText({ lat: 59.3100, lng: 18.0300, location_precision: 'street' }, place)?.lat).toBe(59.34015);
   });
 });
