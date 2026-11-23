@@ -373,7 +373,46 @@ export function namedPlace(text: string, kommun: string | null, index: Map<strin
     const p = gazetteerLookup(c.name, index);
     if (p) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
   }
+  // Polisen sometimes writes a place in lower case ("hem till henne på östermalm")
+  for (const name of placesInLowerCase(text)) {
+    const p = gazetteerLookup(name, index);
+    if (p && LOWER_CASE_KINDS.has(p[3])) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
+  }
   return null;
+}
+
+// A place written in lower case is only taken when it is a district, square, town or village:
+// hamlets and islands have names that are ordinary words too often
+const LOWER_CASE_KINDS = new Set(['s', 'q', 'c', 'v']);
+// Ordinary words after "i" and "på" that some place is also called ("i hemmet", "på berget")
+const LOWER_CASE_WORDS = new Set(
+  `hemmet bostaden lägenheten lägenhet huset villan platsen gatan vägen stan staden skolan bilen
+  bussen tåget tunnelbanan pendeltåget stationen området centrum krogen butiken affären parken
+  torget kontoret jobbet arbetet sjukhuset hallen källaren trapphuset entrén porten gården
+  innergården natten kvällen morgonen dagen helgen berget skogen ängen sjön stranden hamnen
+  marken backen dalen holmen udden viken bron kyrkan kyrkogården fältet slätten åkern lunden
+  hagen höjden sluttningen centralen city vinden taket balkongen garaget förrådet tvättstugan
+  parkeringen parkeringshuset restaurangen nattklubben baren puben caféet gymmet badet simhallen
+  bensinstationen macken tunneln perrongen hållplatsen spåret motorvägen rondellen korsningen`.split(/\s+/).filter(Boolean),
+);
+
+/**
+ * Names after "i", "på", "vid" and the like in any case, two words before one ("hammarby
+ * sjöstad", "östermalm"), those after "från" last: for places Polisen writes in lower case.
+ */
+export function placesInLowerCase(text: string): string[] {
+  const rx = /(?:^|[\s(,])(i|på|vid|till|från|nära|utanför|mot)\s+([a-zåäöéü][a-zåäöéü-]{3,})(?:\s+([a-zåäöéü][a-zåäöéü-]{2,}))?/gi;
+  const here: string[] = [];
+  const from: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = rx.exec(text))) {
+    const list = m[1].toLowerCase() === 'från' ? from : here;
+    const first = m[2].toLowerCase();
+    if (NOT_PLACES.has(first) || LOWER_CASE_WORDS.has(first)) continue;
+    if (m[3]) list.push(`${m[2]} ${m[3]}`);
+    list.push(m[2]);
+  }
+  return [...here, ...from];
 }
 
 /**

@@ -3,7 +3,7 @@
 // when the events arrive (usePoliceEvents), from src/data/districts.json (built by
 // scripts/build-districts.cjs: districts, squares, towns and villages per kommun, OpenStreetMap).
 import {
-  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, placeCandidates,
+  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, placeCandidates, placesInLowerCase,
   type GazetteerPlace, type NamedPlace,
 } from '../../supabase/functions/_shared/geoPlace';
 
@@ -49,6 +49,7 @@ export function namedPlaceOf(inc: Placed, data: Districts): NamedPlace | null {
   const names = [
     ...(kommun || isLan ? [] : [label]),
     ...placeCandidates(inc.description, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name),
+    ...placesInLowerCase(inc.description),
   ];
   if (!names.length) return null;
   l.national ??= nationalIndex(Object.values(data));
