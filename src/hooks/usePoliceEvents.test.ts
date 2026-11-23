@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { setVisibility } from '@/test/visibility';
 
+// A few named places instead of the whole list (lib/textPlace)
+vi.mock('@/data/districts.json', () => ({ default: { Stockholm: [['Östermalm', 59.3402, 18.0837, 's'], ['Gamla stan', 59.325, 18.0706, 's']] } }));
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { auth: { getSession: async () => ({ data: { session: null } }) } },
 }));
@@ -86,6 +89,19 @@ describe('usePoliceEvents', () => {
     const { result } = renderHook(() => usePoliceEvents());
     await flush();
     expect(result.current.incidents[0]).toMatchObject({ id: 'pol-9', lat: 59.3, lng: 18.0, spread: true });
+  });
+
+  it('shows an event "på Östermalm" on Östermalm, not where the server left it in Gamla stan', async () => {
+    fetchMock.mockImplementationOnce(async () => new Response(JSON.stringify({ success: true, data: [
+      { ...event('pol-7'), title: '23 november 15.02, Bedrägeri, Stockholm', description: 'En kvinna på Östermalm har blivit lurad.', lat: 59.3251, lng: 18.0711, spread: true },
+    ] })));
+    const usePoliceEvents = await loadHook();
+    const { result } = renderHook(() => usePoliceEvents());
+    await flush();
+    await flush();
+    expect(result.current.incidents[0]).toMatchObject({ id: 'pol-7', lat: 59.3402, lng: 18.0837 });
+    // Spread around Östermalm by the maps, not taken as the server's spread position
+    expect(result.current.incidents[0].spread).toBeUndefined();
   });
 
   it('always fetches on manual refresh', async () => {

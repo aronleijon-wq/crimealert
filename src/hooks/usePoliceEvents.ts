@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getErrorMessage } from '@/lib/errors';
 import { createSnapshotCache } from '@/lib/snapshotCache';
+import { loadDistricts, placeFromText } from '@/lib/textPlace';
 
 // Shape of one event as returned by the police-events edge function
 interface PoliceEventDto {
@@ -66,6 +67,8 @@ const ANON_KEY = 'anon';
 const policeEventsCache = createSnapshotCache<Incident[]>();
 
 async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
+  // The named places, loading while the events do (lib/textPlace)
+  const districts = loadDistricts().catch(() => null);
   // Session token lets the server do its own premium check
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/police-events`, {
     headers: { Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
@@ -97,6 +100,15 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
     // Kept, so the maps don't spread the marker a second time (into the water)
     spread: e.spread === true || undefined,
   }));
+  // An event whose text names a place it isn't in ("på Östermalm", left at Stockholm's centre in
+  // Gamla stan) is moved there, and spread around it by the maps
+  const places = await districts;
+  if (places) {
+    for (let i = 0; i < mapped.length; i++) {
+      const moved = mapped[i].source === 'Medborgarrapport' ? null : placeFromText(mapped[i], places);
+      if (moved) mapped[i] = { ...mapped[i], ...moved, spread: undefined, approximate: true };
+    }
+  }
   // Sort by timestamp descending (newest first)
   mapped.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   return mapped;
