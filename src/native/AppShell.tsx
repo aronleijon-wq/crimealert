@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import BlackWeekBanner from '@/components/BlackWeekBanner';
 import PoliceStaleNotice from '@/components/PoliceStaleNotice';
+import { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
 import { hasAppDesign13 } from '@/lib/native';
 import { recordMoment, recordUse } from './review';
 import { screenFor, welcomed } from './screens';
@@ -21,6 +23,8 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   const pageRef = useRef<HTMLDivElement>(null);
   // From 1.3 the map reaches up under the status bar, with its own search on top (MapChrome)
   const fullBleed = hasAppDesign13() && pathname === '/karta';
+  // Black Week, under the title bar (the map reaches up under the status bar, so not there)
+  const blackWeek = useBlackWeekBanner();
 
   // From 1.3 a kommun's discussion opens as a chat room, also from a reply notification
   // ("/kommun/nacka?chatt=1")
@@ -59,6 +63,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   return (
     <div className="ca-dark ca-app fixed inset-0 flex flex-col bg-[hsl(var(--ca-base))] text-foreground">
       {!fullBleed && <TopBar screen={screen} home={pathname === '/karta'} />}
+      {!fullBleed && blackWeek.visible && pathname !== '/prisplan' && <BlackWeekBanner banner={blackWeek} />}
       {!fullBleed && <PoliceStaleNotice />}
       <div ref={pageRef} className="ca-app-page relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {/* Pages opened from a tab slide in from the right */}

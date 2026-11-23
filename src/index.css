@@ -675,3 +675,38 @@ html:not(.dark) .ca-dotmark-sweep { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .ca-invite-strip::after { animation: none; display: none; }
 }
+
+/* ==========================================================
+   Black Week across the top (components/BlackWeekBanner): slides down when the page opens,
+   light glides across it now and then
+   ========================================================== */
+.ca-bw-strip {
+  background:
+    radial-gradient(55% 160% at 50% 0%, hsl(3 100% 50% / 0.30), transparent 70%),
+    linear-gradient(90deg, #000 0%, #120405 30%, #1d0708 50%, #120405 70%, #000 100%);
+  border-bottom: 1px solid hsl(3 100% 60% / 0.3);
+  animation: ca-bw-slide 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ca-bw-strip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.12) 45%, transparent 60%);
+  transform: translateX(-100%);
+  animation: ca-invite-shine 6s ease-in-out 1.2s infinite;
+}
+@keyframes ca-bw-slide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.ca-bw-tag {
+  color: #fff;
+  background: linear-gradient(135deg, hsl(3 100% 58%), hsl(350 85% 40%));
+  box-shadow: 0 0 0 1px hsl(3 100% 70% / 0.35), 0 0 14px hsl(3 100% 55% / 0.5);
+}
+.ca-bw-cta { box-shadow: 0 0 18px -4px rgba(255, 255, 255, 0.45); }
+@media (prefers-reduced-motion: reduce) {
+  .ca-bw-strip { animation: none; }
+  .ca-bw-strip::after { animation: none; display: none; }
+}

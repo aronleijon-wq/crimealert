@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
 import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
 import InviteBanner from '@/components/InviteBanner';
+import BlackWeekBanner from '@/components/BlackWeekBanner';
+import { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
 import { useInviteBanner } from '@/hooks/useInviteBanner';
 
 interface NavItem { to: string; label: string }
@@ -103,6 +105,8 @@ const Header = () => {
   const appBanner = useAppBanner();
   // Signed in with friends left to invite: the invite offer takes the iPhone banner's place
   const invite = useInviteBanner(Boolean(user) && !isNativeApp());
+  // Through 30 November the Black Week offer takes the top
+  const blackWeek = useBlackWeekBanner();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
   // The iPhone app has its own title bar and tabs (src/native/AppShell)
@@ -113,11 +117,11 @@ const Header = () => {
   return (
     <>
     {/* The banner sits above the bar, so it takes the phone's notch space instead of the bar */}
-    {invite.visible ? <InviteBanner banner={invite} safeTop /> : appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
+    {blackWeek.visible ? <BlackWeekBanner banner={blackWeek} safeTop /> : invite.visible ? <InviteBanner banner={invite} safeTop /> : appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
     <header
       // ca-dark carries the start page's colours and type (index.css), on pages that are not inside it too
       className="ca-dark relative z-50 shrink-0 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl"
-      style={appBanner.visible || invite.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      style={appBanner.visible || invite.visible || blackWeek.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 md:h-16 md:px-10">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
