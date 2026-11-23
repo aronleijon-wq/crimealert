@@ -6,8 +6,8 @@ import { placeFromText, type Districts } from './textPlace';
 import { distanceKm } from '../../supabase/functions/_shared/geoPlace';
 
 const data = districts as unknown as Districts;
-const ev = (kommun: string, description: string, lat: number, lng: number) =>
-  ({ id: 'pol-1', title: `23 november 12.00, Händelse, ${kommun}`, area: kommun, description, lat, lng });
+const ev = (kommun: string, description: string, lat: number, lng: number, locationPrecision = 'area') =>
+  ({ id: 'pol-1', title: `23 november 12.00, Händelse, ${kommun}`, area: kommun, description, lat, lng, locationPrecision });
 
 describe('the live map\'s events', () => {
   it('moves events to the place their text names', () => {
@@ -35,5 +35,18 @@ describe('the live map\'s events', () => {
       ['Helsingborg', 'En man vid gångtunneln vid Berga Allé blir påkörd.', 56.0658, 12.7112],
     ];
     for (const [kommun, text, lat, lng] of cases) expect(placeFromText(ev(kommun, text, lat, lng), data), text).toBeNull();
+  });
+
+  it('leaves an event placed on a street where it is, near the village its text names', () => {
+    const cases: [string, string, number, number][] = [
+      ['Eskilstuna', 'Larm från en industri på Bolindervägen, Hällbybrunn Eskilstuna.', 59.4051, 16.4334],
+      ['Tierp', 'Trafikolycka på länsväg 757 i höjd med Långviken, strax öster om Söderfors.', 60.3899, 17.2737],
+      ['Vimmerby', 'Singelolycka på Riksväg 23, Storebro.', 57.604, 15.8417],
+      ['Halmstad', 'En bil körde in i mitträcket på E6/E20 utanför Holm.', 56.7219, 12.8832],
+      ['Härnösand', 'Riksväg 90/Västbyvägen, trafikolycka i Ramvik.', 62.83, 17.8557],
+    ];
+    for (const [kommun, text, lat, lng] of cases) expect(placeFromText(ev(kommun, text, lat, lng, 'street'), data), text).toBeNull();
+    // A district is another matter: a street in Gamla stan is not on Östermalm
+    expect(placeFromText(ev('Stockholm', 'Bedrägeri mot en kvinna på östermalm.', 59.3255, 18.074, 'street'), data)).not.toBeNull();
   });
 });

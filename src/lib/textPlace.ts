@@ -16,7 +16,7 @@ export const loadDistricts = (): Promise<Districts> => {
   return loading;
 };
 
-interface Placed { id: string; title: string; area: string; description: string; lat: number; lng: number; originalType?: string }
+interface Placed { id: string; title: string; area: string; description: string; lat: number; lng: number; originalType?: string; locationPrecision?: string }
 
 // How near the named place an event may already be and stay where it is (a street in the
 // district, the server's own spread around it): by the kind of place
@@ -58,7 +58,11 @@ export function placeFromText(inc: Placed, data: Districts): { lat: number; lng:
   const place = namedPlaceOf(inc, data);
   if (!place) return null;
   if (Number.isFinite(inc.lat) && Number.isFinite(inc.lng)) {
-    if (distanceKm(inc.lat, inc.lng, place.lat, place.lng) <= (NEAR_KM[place.kind] ?? 1)) return null;
+    const km = distanceKm(inc.lat, inc.lng, place.lat, place.lng);
+    if (km <= (NEAR_KM[place.kind] ?? 1)) return null;
+    // Already on a street or road the text names ("på Bolindervägen, Hällbybrunn", "länsväg 757
+    // strax öster om Söderfors"): more exact than the middle of the village or town it is near
+    if (inc.locationPrecision === 'street' && (place.kind === 'v' || place.kind === 'c') && km <= 3) return null;
     // Already at another place of the same name (the server knows hamlets these places don't):
     // that one is as likely the right one, so it stays
     const l = lookups(data);
