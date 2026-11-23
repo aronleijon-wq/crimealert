@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const auth: { user: { id: string } | null; subscription: { trialEligible?: boolean; firstTrial?: boolean } } = { user: null, subscription: {} };
+const auth: { user: { id: string } | null; subscription: { trialEligible?: boolean; firstTrial?: boolean }; loading?: boolean; subscriptionChecked?: boolean } = { user: null, subscription: {} };
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
 
 const { useBlackWeekBanner } = await import('@/hooks/useBlackWeekBanner');
@@ -17,7 +17,7 @@ const Strip = ({ now }: { now: number }) => {
 };
 const show = (now = MON) => render(<MemoryRouter><Strip now={now} /></MemoryRouter>);
 
-beforeEach(() => { localStorage.clear(); auth.user = null; auth.subscription = {}; });
+beforeEach(() => { localStorage.clear(); auth.user = null; auth.subscription = {}; auth.loading = false; auth.subscriptionChecked = true; });
 afterEach(() => vi.restoreAllMocks());
 
 describe('the Black Week strip', () => {
@@ -34,6 +34,16 @@ describe('the Black Week strip', () => {
     auth.subscription = { trialEligible: true, firstTrial: false };
     show();
     expect(screen.getByRole('link', { name: /Prova gratis/ })).toHaveAttribute('href', '/prisplan');
+  });
+
+  it('shows nothing until the account is checked, so it never shows the invite and then changes', () => {
+    auth.user = { id: 'u2' };
+    auth.subscriptionChecked = false;
+    const { container } = show();
+    expect(container).toBeEmptyDOMElement();
+    auth.loading = true;
+    auth.user = null;
+    expect(show().container).toBeEmptyDOMElement();
   });
 
   it('offers 7 days per friend to those who have Pro now', () => {

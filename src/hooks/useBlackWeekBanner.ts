@@ -16,7 +16,7 @@ export type BlackWeekOffer = 'trial' | 'invite';
  * app: an Apple ID Apple still gives a trial), and 7 days of Pro per friend for everyone else signed in. Its × hides it for a day on this device.
  */
 export function useBlackWeekBanner(now = Date.now()) {
-  const { user, subscription } = useAuth();
+  const { user, subscription, loading, subscriptionChecked } = useAuth();
   const [dismissed, setDismissed] = useState(() => {
     try { return Number(localStorage.getItem(HIDDEN_UNTIL_KEY) ?? 0) > now; } catch { return false; }
   });
@@ -37,7 +37,10 @@ export function useBlackWeekBanner(now = Date.now()) {
     return () => { live = false; };
   }, [askApple]);
   const trial = canSellPro() && (app ? Boolean(apple) : !user || subscription?.trialEligible === true);
-  const offer: BlackWeekOffer | null = trial ? 'trial' : user && !(app && askApple && apple === undefined) ? 'invite' : null;
+  // Nothing until the answer is in (the sign-in, the account's check, Apple's), so the strip
+  // slides in once with the right offer instead of showing the invite and then changing
+  const known = !loading && (app ? !askApple || apple !== undefined : !user || subscriptionChecked !== false);
+  const offer: BlackWeekOffer | null = !known ? null : trial ? 'trial' : user ? 'invite' : null;
   const visible = isBlackWeek(now) && !dismissed && offer !== null;
   const daysLeft = Math.max(1, Math.ceil((BLACK_WEEK_ENDS - now) / 86_400_000));
   // "30 dagar" on the web; Apple's own length in the app ("1 månad")
