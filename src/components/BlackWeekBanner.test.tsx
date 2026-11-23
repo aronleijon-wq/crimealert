@@ -36,7 +36,7 @@ describe('the Black Week strip', () => {
     expect(screen.getByRole('link', { name: /Prova gratis/ })).toHaveAttribute('href', '/prisplan');
   });
 
-  it('shows nothing until the account is checked, so it never shows the invite and then changes', () => {
+  it('shows nothing until the account is checked, so it never shows one thing and then another', () => {
     auth.user = { id: 'u2' };
     auth.subscriptionChecked = false;
     const { container } = show();
@@ -46,12 +46,11 @@ describe('the Black Week strip', () => {
     expect(show().container).toBeEmptyDOMElement();
   });
 
-  it('offers 7 days per friend to those who have Pro now', () => {
+  it('shows nothing to those who have Pro now', () => {
     auth.user = { id: 'u1' };
     auth.subscription = { trialEligible: false };
-    show();
-    expect(screen.getByText((_, el) => el?.textContent === '7 dagar Pro per vän du bjuder in' && el.tagName === 'SPAN')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Bjud in/ })).toHaveAttribute('href', '/installningar#bjud-in');
+    const { container } = show();
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('says it is the last day on 30 November, and is gone from 1 December', () => {

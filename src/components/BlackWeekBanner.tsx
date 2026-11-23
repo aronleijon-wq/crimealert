@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import type { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
-import { INVITE_DAYS } from '@/lib/invite';
 import { BLACK_WEEK_OFFER_CODE, offerCodeUrl } from '@/lib/appStoreLink';
 
-/** Height of the strip, as the invite strip's, so the page below makes the same room */
+/** Height of the strip, as the invite strip's (components/InviteBanner), so the page below makes the same room */
 export const BLACK_WEEK_BANNER_HEIGHT = 44;
 
 type Banner = ReturnType<typeof useBlackWeekBanner>;
@@ -15,7 +14,6 @@ type Banner = ReturnType<typeof useBlackWeekBanner>;
  */
 const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?: boolean }) => {
   const code = banner.offer === 'code';
-  const trial = banner.offer === 'trial' || code;
   const left = banner.daysLeft <= 1 ? 'Sista dagen' : `${banner.daysLeft} dagar kvar`;
   return (
     <div
@@ -32,11 +30,7 @@ const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?
         <span className="ca-bw-mark shrink-0 text-[12px] uppercase sm:text-[13px]">Black Week</span>
         <span className="hidden h-3.5 w-px shrink-0 bg-white/25 sm:block" aria-hidden />
         <p className="min-w-0 flex-1 truncate text-[13px] text-white md:flex-none">
-          {trial ? (
-            <span>{banner.trialLength}<span className="hidden sm:inline"> Pro</span> gratis</span>
-          ) : (
-            <span>{INVITE_DAYS} dagar Pro per vän<span className="hidden sm:inline"> du bjuder in</span></span>
-          )}
+          <span>{banner.trialLength}<span className="hidden sm:inline"> Pro</span> gratis</span>
           <span className="hidden text-white/45 sm:inline"> · {left}</span>
         </p>
         {code ? (
@@ -48,10 +42,10 @@ const BlackWeekBanner = ({ banner, safeTop = false }: { banner: Banner; safeTop?
           </a>
         ) : (
           <Link
-            to={trial ? '/prisplan' : banner.app ? '/bjud-in' : '/installningar#bjud-in'}
+            to="/prisplan"
             className="shrink-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-white underline decoration-white/40 underline-offset-4 transition hover:decoration-white"
           >
-            {trial ? <><span className="sm:hidden">Prova</span><span className="hidden sm:inline">Prova gratis</span></> : 'Bjud in'}
+            <span className="sm:hidden">Prova</span><span className="hidden sm:inline">Prova gratis</span>
           </Link>
         )}
       </div>
