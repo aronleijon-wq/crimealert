@@ -9,6 +9,7 @@ import {
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
 import { KOMMUN_CENTRES, PLACES } from '../_shared/data/places.ts';
+import { LANDMARKS } from '../_shared/data/landmarks.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import { descriptionPreview } from '../_shared/descriptionPreview.ts';
 import { isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
@@ -695,12 +696,15 @@ const GAZETTEER_SIZE = {
   kommuner: Object.keys(PLACES).length,
   places: Object.values(PLACES as Record<string, GazetteerPlace[]>).reduce((n, list) => n + list.length, 0),
 };
+/** A kommun's named places: the big cities' squares and common names first (data/landmarks), then the gazetteer */
+const placesOf = (kommun: string): GazetteerPlace[] => [...(LANDMARKS[kommun] ?? []), ...((PLACES as Record<string, GazetteerPlace[]>)[kommun] ?? [])];
+
 // The gazetteer's names per kommun, indexed when first needed
 const GAZETTEERS = new Map<string, ReturnType<typeof gazetteerIndex>>();
 const gazetteerFor = (kommun: string) => {
   let index = GAZETTEERS.get(kommun);
   if (!index) {
-    index = gazetteerIndex((PLACES as Record<string, GazetteerPlace[]>)[kommun]);
+    index = gazetteerIndex(placesOf(kommun));
     GAZETTEERS.set(kommun, index);
   }
   return index;
@@ -711,7 +715,7 @@ const LAN_GAZETTEERS = new Map<string, ReturnType<typeof gazetteerIndex>>();
 const lanGazetteerFor = (lan: string) => {
   let index = LAN_GAZETTEERS.get(lan);
   if (!index) {
-    index = lanGazetteerIndex((LAN_KOMMUNER[lan] ?? []).map((k) => (PLACES as Record<string, GazetteerPlace[]>)[k]));
+    index = lanGazetteerIndex((LAN_KOMMUNER[lan] ?? []).map(placesOf));
     LAN_GAZETTEERS.set(lan, index);
   }
   return index;
@@ -736,7 +740,7 @@ const SUMMARY_PLACES: SummaryPlaces = {
     if (!lan) return null;
     let index = PLACE_KOMMUN.get(lan);
     if (!index) {
-      index = placeKommunIndex(LAN_KOMMUNER[lan].map((k) => [k, (PLACES as Record<string, GazetteerPlace[]>)[k]]));
+      index = placeKommunIndex(LAN_KOMMUNER[lan].map((k) => [k, placesOf(k)]));
       PLACE_KOMMUN.set(lan, index);
     }
     return index.get(summaryPlaceKey(name)) ?? null;
@@ -984,7 +988,9 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     const anchor = gazetteer ? areaAnchor(candidates, gazetteer) : null;
     // Placed on a street outside the area it names (an earlier lookup found a street of that name
     // elsewhere in the kommun): placed again, from scratch
-    const misplaced = rank(inc.location_precision) >= rank('street') && !!anchor && inc.lat != null && inc.lng != null && !withinArea(anchor, inc.lat, inc.lng);
+    // Placed in an area other than the one the text names (before "från Rinkeby" stopped counting
+    // as where it happened, or before the area was known): placed again too
+    const misplaced = rank(inc.location_precision) >= rank('district') && !!anchor && inc.lat != null && inc.lng != null && !withinArea(anchor, inc.lat, inc.lng);
     return { inc, kommun, lan, gazetteer, anchor, misplaced, named: named.length, known: known.length, candidates };
   });
   const plans = planned.filter((p) => p.misplaced || rank(p.inc.location_precision) < rank('street'));
@@ -1068,13 +1074,15 @@ async function refinePlaces(incidents: PoliceIncident[]) {
     const centre = anchor ?? lookupSwedishLocation(region) ?? { lat: inc.lat ?? 0, lng: inc.lng ?? 0 };
     for (const c of candidates as PlaceCandidate[]) {
       if (rank(precisionOf(c.kind)) <= placedAs) continue;
-      // An area the gazetteer knows: no lookup needed
-      const known = c.kind === 'area' ? gazetteerLookup(c.name, gazetteer) : null;
+      // An area the gazetteer knows, or a square it knows that reads like a street ("Stureplan",
+      // "Medborgarplatsen"): no lookup needed
+      const known = c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name)) ? gazetteerLookup(c.name, gazetteer) : null;
       if (known) {
         fromGazetteer++;
         inc.lat = known[1];
         inc.lng = known[2];
-        inc.location_precision = 'district';
+        // A square is as precise as a street; a district is an area
+        inc.location_precision = c.kind === 'street' ? 'street' : 'district';
         changed.push(inc);
         break;
       }
