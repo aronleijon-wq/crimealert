@@ -25,6 +25,7 @@ import { hasAppDesign13, isNativeApp } from '@/lib/native';
 import MapChrome from '@/native/MapChrome';
 import AppleMap, { type AppleMapType } from '@/native/AppleMap';
 import LocateButton from '@/components/LocateButton';
+import BlackWeekPill from '@/components/BlackWeekPill';
 import { useMyLocation } from '@/hooks/useMyLocation';
 import { toast } from '@/hooks/use-toast';
 import { filterIncidentsForMap, linkTrafficDuplicates, sortNewestFirst } from '@/lib/mapFilters';
@@ -299,6 +300,7 @@ const Index = () => {
           }}
           timelineOpen={historyOpen}
           timeline={timelinePanel}
+          promo={<BlackWeekPill />}
           locate={<LocateButton status={me.status} onClick={locate} className="h-11 w-11 rounded-full text-white bg-[rgba(44,44,46,0.8)] shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-xl backdrop-saturate-150 active:scale-95 transition" />}
         />
       </div>

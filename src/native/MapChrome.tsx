@@ -47,6 +47,8 @@ export interface MapChromeProps {
   mapType?: { value: AppleMapType; onChange: (type: AppleMapType) => void };
   /** The locate button, floating at the right just above the sheet */
   locate?: ReactNode;
+  /** Something to show under the search, like the Black Week offer */
+  promo?: ReactNode;
 }
 
 const MAP_TYPES: { value: AppleMapType; label: string }[] = [
@@ -201,7 +203,7 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
 
 const MapChrome = ({
   incidents, activeCount, loading, status, live, selectedId, onSelect, activeFilters, onToggleFilter, isPremium,
-  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline, mapType, locate,
+  showCommunityReports, onToggleCommunityReports, onSearch, onTimeline, timelineOpen, timeline, mapType, locate, promo,
 }: MapChromeProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -295,6 +297,7 @@ const MapChrome = ({
             <span className="truncate">Polisens händelser uppdateras inte just nu</span>
           </p>
         )}
+        {promo}
       </div>
 
       {timelineOpen && (
