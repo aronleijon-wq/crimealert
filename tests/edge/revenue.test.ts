@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fromApple, fromStripe, summarize, type StripeSubLike } from "../../supabase/functions/_shared/revenue";
+import { fromApple, fromStripe, lifeFromStripe, payingByMonth, summarize, type StripeSubLike, type SubLife } from "../../supabase/functions/_shared/revenue";
 
 const NOW = Date.UTC(2026, 10, 15);
 const DAY = 86_400_000;
@@ -63,5 +63,38 @@ describe('MRR', () => {
     // After moms, and Stripe's or Apple's fee
     expect(s.netMrr).toBeGreaterThan(s.mrr * 0.6);
     expect(s.netMrr).toBeLessThan(s.mrr * 0.8);
+  });
+});
+
+describe('paying customers month by month', () => {
+  const at = (iso: string) => Date.parse(iso);
+  const now = at('2026-11-23T12:00:00Z');
+
+  it('counts each subscription in the months it paid, a trial apart, the current month up to now', () => {
+    const lives: SubLife[] = [
+      // Monthly from August, still running
+      { source: 'stripe', plan: 'monthly', start: at('2026-08-10T00:00:00Z'), end: null, trialEnd: at('2026-08-17T00:00:00Z') },
+      // Yearly from October
+      { source: 'apple', plan: 'yearly', start: at('2026-10-02T00:00:00Z'), end: null, trialEnd: null },
+      // Monthly, cancelled in mid-October
+      { source: 'stripe', plan: 'monthly', start: at('2026-09-01T00:00:00Z'), end: at('2026-10-15T00:00:00Z'), trialEnd: null },
+      // In its 30-day Black Week trial now
+      { source: 'stripe', plan: 'monthly', start: at('2026-11-23T10:00:00Z'), end: null, trialEnd: at('2026-12-23T10:00:00Z') },
+    ];
+    const months = payingByMonth(lives, now, 5);
+    expect(months.map((m) => m.month)).toEqual(['2026-07', '2026-08', '2026-09', '2026-10', '2026-11']);
+    expect(months.map((m) => [m.monthly, m.yearly, m.trials])).toEqual([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [1, 1, 0],
+      [1, 1, 1],
+    ]);
+  });
+
+  it('reads a Stripe subscription\'s life, and leaves out one that never started', () => {
+    const sub = { status: 'canceled', start_date: 1_700_000_000, ended_at: 1_702_000_000, trial_end: 1_700_600_000, items: { data: [{ price: { unit_amount: 1900, recurring: { interval: 'month' } } }] } };
+    expect(lifeFromStripe(sub)).toEqual({ source: 'stripe', plan: 'monthly', start: 1_700_000_000_000, end: 1_702_000_000_000, trialEnd: 1_700_600_000_000 });
+    expect(lifeFromStripe({ ...sub, status: 'incomplete_expired' })).toBeNull();
   });
 });

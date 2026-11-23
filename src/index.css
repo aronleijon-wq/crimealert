@@ -675,3 +675,25 @@ html:not(.dark) .ca-dotmark-sweep { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .ca-invite-strip::after { animation: none; display: none; }
 }
+
+/* ==========================================================
+   Black Week across the top (components/BlackWeekBanner): black and white, slides down when
+   the page opens
+   ========================================================== */
+.ca-bw-strip {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  animation: ca-bw-slide 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ca-bw-mark {
+  font-family: 'Archivo', Inter, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+@media (min-width: 640px) { .ca-bw-mark { letter-spacing: 0.22em; } }
+@keyframes ca-bw-slide {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-bw-strip { animation: none; }
+}

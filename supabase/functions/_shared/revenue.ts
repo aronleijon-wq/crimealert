@@ -213,3 +213,64 @@ export function summarize(subs: RevenueSub[], now: number, currency = 'sek'): Re
     otherCurrencies: [...other].map(([c, o]) => ({ currency: c, ...o })),
   };
 }
+
+// ---- History ----
+
+/** One subscription's life, for counting the paying customers month by month */
+export interface SubLife {
+  source: Source;
+  plan: RevenueSub['plan'];
+  /** When it started (ms) */
+  start: number;
+  /** When it ended (ms), or null while it runs */
+  end: number | null;
+  /** When its free trial ended or ends (ms), or null without one */
+  trialEnd: number | null;
+}
+
+export interface MonthCount {
+  /** "2026-11" */
+  month: string;
+  monthly: number;
+  yearly: number;
+  trials: number;
+}
+
+/** A Stripe subscription's life, from any status; null when it never started (incomplete) */
+export function lifeFromStripe(sub: StripeSubLike & { ended_at?: number | null; trial_end?: number | null }): SubLife | null {
+  if (sub.status === 'incomplete' || sub.status === 'incomplete_expired') return null;
+  const start = sub.start_date ?? sub.created;
+  if (!start) return null;
+  const interval = sub.items.data[0]?.price.recurring?.interval;
+  return {
+    source: 'stripe',
+    plan: interval === 'month' ? 'monthly' : interval === 'year' ? 'yearly' : 'other',
+    start: start * 1000,
+    end: sub.ended_at ? sub.ended_at * 1000 : null,
+    trialEnd: sub.trial_end ? sub.trial_end * 1000 : null,
+  };
+}
+
+/**
+ * Paying customers (by plan) and trials at the end of each of the last `months` months, the
+ * current month counted up to now. A subscription in its free trial at that moment is a trial.
+ */
+export function payingByMonth(lives: SubLife[], now: number, months = 12): MonthCount[] {
+  const out: MonthCount[] = [];
+  const d = new Date(now);
+  for (let i = months - 1; i >= 0; i--) {
+    const y = d.getUTCFullYear(), m = d.getUTCMonth() - i;
+    const monthStart = Date.UTC(y, m, 1);
+    const at = Math.min(now, Date.UTC(y, m + 1, 1) - 1);
+    const key = new Date(monthStart).toISOString().slice(0, 7);
+    const row: MonthCount = { month: key, monthly: 0, yearly: 0, trials: 0 };
+    for (const l of lives) {
+      if (l.start > at || (l.end !== null && l.end <= at)) continue;
+      if (l.trialEnd !== null && l.trialEnd > at) row.trials += 1;
+      else if (l.plan === 'yearly') row.yearly += 1;
+      else row.monthly += 1;
+    }
+    out.push(row);
+  }
+  return out;
+}

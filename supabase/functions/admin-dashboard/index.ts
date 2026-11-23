@@ -5,7 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { fetchAppleBilling, type AppStoreKey } from "../_shared/appStore.ts";
-import { fromApple, fromStripe, summarize, type RevenueSub } from "../_shared/revenue.ts";
+import { fromApple, fromStripe, lifeFromStripe, payingByMonth, summarize, type RevenueSub, type SubLife } from "../_shared/revenue.ts";
 import { summarizeAi } from "../_shared/aiCost.ts";
 
 const corsHeaders = {
@@ -36,19 +36,22 @@ serve(async (req) => {
 
   // ---- Revenue: Stripe ----
   const subs: RevenueSub[] = [];
+  // Every subscription's life, for the paying customers month by month
+  const lives: SubLife[] = [];
   let cancelledLast30 = 0;
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (stripeKey) {
     try {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      for (const status of ["active", "trialing", "past_due"] as const) {
-        for await (const sub of stripe.subscriptions.list({ status, limit: 100, expand: ["data.discounts"] })) {
-          const r = fromStripe(sub as unknown as Parameters<typeof fromStripe>[0]);
-          if (r) subs.push(r);
-        }
+      // Every subscription, of every status: the current ones give revenue, all give the history
+      for await (const sub of stripe.subscriptions.list({ status: "all", limit: 100, expand: ["data.discounts"] })) {
+        const like = sub as unknown as Parameters<typeof lifeFromStripe>[0];
+        const r = fromStripe(like);
+        if (r) subs.push(r);
+        const life = lifeFromStripe(like);
+        if (life) lives.push(life);
+        if (sub.status === "canceled" && sub.ended_at && sub.ended_at * 1000 > now - 30 * DAY) cancelledLast30 += 1;
       }
-      const cancelled = await stripe.subscriptions.list({ status: "canceled", limit: 100 });
-      cancelledLast30 = cancelled.data.filter((s) => s.ended_at && s.ended_at * 1000 > now - 30 * DAY).length;
     } catch (e) {
       console.error("admin-dashboard stripe:", e instanceof Error ? e.message : e);
       notes.push("Kunde inte läsa Stripe just nu.");
@@ -71,6 +74,13 @@ serve(async (req) => {
       if (r.status === "rejected") { failed += 1; continue; }
       const sub = r.value && fromApple(r.value);
       if (sub) subs.push(sub);
+      // Apple keeps only today's subscriptions here: those that ended are not in the history
+      if (sub && r.value?.startedAt) {
+        lives.push({
+          source: "apple", plan: sub.plan, start: Date.parse(r.value.startedAt), end: null,
+          trialEnd: r.value.freeTrial && r.value.expiresAt ? Date.parse(r.value.expiresAt) : null,
+        });
+      }
     }
     if (failed) notes.push(`${failed} Apple-prenumerationer kunde inte läsas just nu.`);
   } else if (appleRows?.length) notes.push("Apples nycklar saknas, så köp i appen räknas inte.");
@@ -182,7 +192,7 @@ serve(async (req) => {
   return json({
     generated_at: new Date(now).toISOString(),
     notes,
-    revenue: { ...revenue, cancelledLast30, appleTest },
+    revenue: { ...revenue, cancelledLast30, appleTest, history: payingByMonth(lives, now, 12) },
     users: {
       total: created.length,
       new7: created.filter((t) => t > now - 7 * DAY).length,

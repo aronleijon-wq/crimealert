@@ -15,6 +15,8 @@ import StoryStatic from '@/components/landing/StoryStatic';
 import { useLandingLive } from '@/components/landing/useLandingLive';
 import AppBanner, { APP_BANNER_HEIGHT, useAppBanner } from '@/components/landing/AppBanner';
 import InviteBanner from '@/components/InviteBanner';
+import BlackWeekBanner, { BLACK_WEEK_BANNER_HEIGHT } from '@/components/BlackWeekBanner';
+import { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
 import { INVITE_BANNER_HEIGHT, useInviteBanner } from '@/hooks/useInviteBanner';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -46,7 +48,9 @@ const Landing = () => {
   const { user } = useAuth();
   // Signed in with friends left to invite: the invite offer takes the iPhone banner's place at the top
   const invite = useInviteBanner(Boolean(user));
-  const bannerHeight = invite.visible ? INVITE_BANNER_HEIGHT : appBanner.visible ? APP_BANNER_HEIGHT : 0;
+  // Through 30 November the Black Week offer takes the top
+  const blackWeek = useBlackWeekBanner();
+  const bannerHeight = blackWeek.visible ? BLACK_WEEK_BANNER_HEIGHT : invite.visible ? INVITE_BANNER_HEIGHT : appBanner.visible ? APP_BANNER_HEIGHT : 0;
   const incident = new URLSearchParams(location.search).get('incident');
 
   useEffect(() => {
@@ -73,7 +77,7 @@ const Landing = () => {
       style={{ '--ca-banner-h': `${bannerHeight}px` } as React.CSSProperties}
     >
       <LandingNav
-        banner={invite.visible ? <InviteBanner banner={invite} /> : appBanner.visible ? <AppBanner onClose={appBanner.dismiss} /> : null}
+        banner={blackWeek.visible ? <BlackWeekBanner banner={blackWeek} /> : invite.visible ? <InviteBanner banner={invite} /> : appBanner.visible ? <AppBanner onClose={appBanner.dismiss} /> : null}
       />
       <main>
         <Hero live={live} />

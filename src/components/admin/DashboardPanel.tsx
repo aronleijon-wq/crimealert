@@ -4,6 +4,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { PRICES } from '@/components/account/plans';
 
 interface SourceSummary {
   mrr: number; paying: number; monthly: number; yearly: number; trials: number; trialMrr: number; pastDue: number; endingMrr: number; ending: number;
@@ -13,6 +14,8 @@ interface Dashboard {
   notes: string[];
   revenue: {
     currency: string; mrr: number; arr: number; netMrr: number; newLast30: number; cancelledLast30: number; appleTest: number;
+    /** Paying customers and trials at each month's end; after admin-dashboard is deployed with it */
+    history?: { month: string; monthly: number; yearly: number; trials: number }[];
     stripe: SourceSummary; apple: SourceSummary; otherCurrencies: { currency: string; count: number; mrr: number }[];
   };
   users: { total: number; new7: number; new30: number; active30: number; byDay: { day: string; count: number; total: number }[] };
@@ -46,7 +49,13 @@ const shortDay = (iso: string) => {
 
 // Two series (mobile, desktop): the first two categorical slots, stepped for each theme and
 // checked for colour blindness and contrast. One-series charts use the first.
-const CHART_CSS = `.admin-dash{--s1:#2a78d6;--s2:#eb6834}.dark .admin-dash{--s1:#3987e5;--s2:#d95926}`;
+// The plans use the first four slots in their fixed order (validated: CVD and normal-vision
+// separation pass in both themes; the light theme's aqua and yellow are under 3:1 against the
+// surface, so every segment also has its number in the table beside it) and a neutral gray for
+// the free plan, which is the rest rather than a category of its own.
+const CHART_CSS = `.admin-dash{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s0:#c9c8c2}.dark .admin-dash{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s0:#55544f}`;
+const pct = (part: number, whole: number) => (whole > 0 ? `${(Math.round((part / whole) * 1000) / 10).toLocaleString('sv-SE')} %` : '–');
+const monthName = (month: string) => new Date(`${month}-01T12:00:00Z`).toLocaleDateString('sv-SE', { month: 'short', year: '2-digit' });
 
 const Stat = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
   <div className="rounded-lg border bg-card px-4 py-3.5">
@@ -96,6 +105,19 @@ const DashboardPanel = () => {
     { label: 'Avslutas', stripe: `${r.stripe.ending} (${kr(r.stripe.endingMrr)})`, apple: `${r.apple.ending} (${kr(r.apple.endingMrr)})`, total: `${r.stripe.ending + r.apple.ending} (${kr(r.stripe.endingMrr + r.apple.endingMrr)})` },
     { label: 'Misslyckad betalning', stripe: n(r.stripe.pastDue), apple: '–', total: n(r.stripe.pastDue) },
   ];
+  // Every account, by plan: paying (by month or year), in a trial, Pro free (from invites or
+  // given), and the free plan for the rest
+  const monthlyN = r.stripe.monthly + r.apple.monthly;
+  const yearlyN = r.stripe.yearly + r.apple.yearly;
+  const freeProN = (d.invites?.proActive ?? 0) + (d.engagement.freePro ?? 0);
+  const freeN = Math.max(0, d.users.total - paying - trials - freeProN);
+  const plans = [
+    { key: 'monthly', label: 'Betalar månadsvis', value: monthlyN, color: 'var(--s1)', note: `${PRICES.monthly.price}${PRICES.monthly.period}` },
+    { key: 'yearly', label: 'Betalar årsvis', value: yearlyN, color: 'var(--s2)', note: `${PRICES.yearly.price}${PRICES.yearly.period}` },
+    { key: 'trial', label: 'I provperiod', value: trials, color: 'var(--s3)', note: 'betalar när den tar slut' },
+    { key: 'freePro', label: 'Gratis Pro', value: freeProN, color: 'var(--s4)', note: 'från inbjudningar och gåvor' },
+    { key: 'free', label: 'Gratisplan', value: freeN, color: 'var(--s0)', note: '' },
+  ];
   const visits30 = d.visits.reduce((s, v) => s + v.mobile + v.desktop, 0);
   const lastWeekVisits = d.visits.slice(-7).reduce((s, v) => s + v.mobile + v.desktop, 0);
 
@@ -120,10 +142,84 @@ const DashboardPanel = () => {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="MRR" value={kr(r.mrr)} sub={`ARR ${kr(r.arr)}`} />
-        <Stat label="Betalande kunder" value={n(paying)} sub={`${r.newLast30} nya, ${r.cancelledLast30} uppsagda på 30 dagar`} />
+        <Stat label="Betalande kunder" value={n(paying)} sub={`${pct(paying, d.users.total)} av kontona · ${r.newLast30} nya, ${r.cancelledLast30} uppsagda på 30 dagar`} />
         <Stat label="Användare" value={n(d.users.total)} sub={`+${n(d.users.new30)} på 30 dagar, +${n(d.users.new7)} på 7`} />
         <Stat label="Besök, 30 dagar" value={n(visits30)} sub={`${n(lastWeekVisits)} senaste veckan`} />
       </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Konton per plan</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            <b className="font-semibold text-foreground">{n(paying)} betalar</b> av {n(d.users.total)} konton ({pct(paying, d.users.total)}),
+            {' '}{n(trials)} provar och {n(freeN)} har gratisplanen.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* The whole, as one bar: a 2px gap between the parts, rounded ends */}
+          <div className="flex h-4 w-full gap-[2px] overflow-hidden rounded" role="img" aria-label={plans.map((p) => `${p.label} ${p.value}`).join(', ')}>
+            {plans.filter((p) => p.value > 0).map((p) => (
+              <div key={p.key} title={`${p.label}: ${nf.format(p.value)} (${pct(p.value, d.users.total)})`} style={{ flexGrow: p.value, flexBasis: 0, minWidth: 3, background: p.color }} />
+            ))}
+          </div>
+          <table className="w-full text-sm tabular-nums">
+            <thead>
+              <tr className="border-b text-left text-xs text-muted-foreground">
+                <th className="py-2 pr-3 font-medium">Plan</th>
+                <th className="py-2 pr-3 text-right font-medium">Konton</th>
+                <th className="py-2 pr-3 text-right font-medium">Andel</th>
+                <th className="hidden py-2 text-right font-medium sm:table-cell">Webben / appen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {plans.map((p) => {
+                const split = p.key === 'monthly' ? `${r.stripe.monthly} / ${r.apple.monthly}`
+                  : p.key === 'yearly' ? `${r.stripe.yearly} / ${r.apple.yearly}`
+                  : p.key === 'trial' ? `${r.stripe.trials} / ${r.apple.trials}` : '';
+                return (
+                  <tr key={p.key} className="border-b last:border-0">
+                    <th scope="row" className="py-2 pr-3 text-left font-normal">
+                      <span className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: p.color }} aria-hidden />
+                        <span className="text-foreground">{p.label}</span>
+                        {p.note && <span className="hidden text-xs text-muted-foreground md:inline">{p.note}</span>}
+                      </span>
+                    </th>
+                    <td className="py-2 pr-3 text-right font-semibold">{nf.format(p.value)}</td>
+                    <td className="py-2 pr-3 text-right text-muted-foreground">{pct(p.value, d.users.total)}</td>
+                    <td className="hidden py-2 text-right text-muted-foreground sm:table-cell">{split}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <div>
+            <p className="mb-1 text-sm font-medium text-foreground">Betalande per månad</p>
+            {r.history && r.history.length > 0 ? (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={r.history} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tickFormatter={monthName} tick={axis} tickLine={false} axisLine={false} />
+                    <YAxis tick={axis} tickLine={false} axisLine={false} width={44} allowDecimals={false} />
+                    <Tooltip cursor={{ fill: 'hsl(var(--muted))' }} contentStyle={tooltipStyle} labelFormatter={(m: string) => monthName(m)}
+                      formatter={(v: number, name) => [nf.format(v), name === 'monthly' ? 'Månadsvis' : name === 'yearly' ? 'Årsvis' : 'Provperiod']} />
+                    <Legend verticalAlign="top" align="left" height={32} wrapperStyle={{ top: 0, paddingLeft: 40 }} iconType="square" iconSize={9}
+                      formatter={(v) => <span className="text-xs text-muted-foreground">{v === 'monthly' ? 'Månadsvis' : v === 'yearly' ? 'Årsvis' : 'Provperiod'}</span>} />
+                    <Bar dataKey="monthly" stackId="p" fill="var(--s1)" stroke="hsl(var(--card))" strokeWidth={1} />
+                    <Bar dataKey="yearly" stackId="p" fill="var(--s2)" stroke="hsl(var(--card))" strokeWidth={1} />
+                    <Bar dataKey="trials" stackId="p" fill="var(--s3)" stroke="hsl(var(--card))" strokeWidth={1} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Visas när funktionen admin-dashboard har deployats med den här versionen.</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">I slutet av varje månad, den här månaden till idag. Appens prenumerationer som avslutats finns inte i historiken.</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base">Intäkter</CardTitle></CardHeader>
