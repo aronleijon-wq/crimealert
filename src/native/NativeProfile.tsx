@@ -53,20 +53,37 @@ const NameSheet = ({ userId, current, onDone }: { userId: string; current: strin
   );
 };
 
+// The username, remembered on this device: the profile shows it at once on every visit instead
+// of the e-mail's name for the moment the profile takes to load
+const NAME_KEY = (userId: string) => `ca-profile-name:${userId}`;
+const rememberedName = (userId: string): string | null => {
+  try { return localStorage.getItem(NAME_KEY(userId)); } catch { return null; }
+};
+const rememberName = (userId: string, name: string) => {
+  try { localStorage.setItem(NAME_KEY(userId), name); } catch { /* private mode: loads each time */ }
+};
+
 /** Profil in the iPhone app: the account and settings, as in the Settings app. */
 const NativeProfile = () => {
   useSEO({ title: 'Profil | CrimeAlert', description: 'Ditt konto.', noindex: true });
   const navigate = useNavigate();
   const { user, subscription, signOut } = useAuth();
   const { isPremium } = useIsPremium();
-  const [name, setName] = useState('');
+  // Null until known: then the name line stays empty rather than showing another name first
+  const [name, setName] = useState<string | null>(() => (user ? rememberedName(user.id) : null));
   const [editing, setEditing] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [feedback, setFeedback] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle().then(({ data }) => setName(data?.display_name ?? ''));
+    setName(rememberedName(user.id));
+    supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle().then(({ data, error }) => {
+      if (error) { setName((n) => n ?? ''); return; }
+      const found = data?.display_name ?? '';
+      rememberName(user.id, found);
+      setName(found);
+    });
   }, [user]);
 
   const leave = async () => {
@@ -105,7 +122,7 @@ const NativeProfile = () => {
     );
   }
 
-  const shown = name || user.email?.split('@')[0] || 'Ditt konto';
+  const shown = name === null ? '' : name || user.email?.split('@')[0] || 'Ditt konto';
 
   return (
     <Screen title="Profil">
@@ -115,7 +132,7 @@ const NativeProfile = () => {
             {shown.charAt(0).toUpperCase()}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[20px] font-semibold">{shown}</span>
+            <span className="block truncate text-[20px] font-semibold">{shown || '\u00a0'}</span>
             <span className="block truncate text-[15px] text-[rgba(235,235,245,0.6)]">{user.email}</span>
           </span>
         </div>
@@ -139,7 +156,7 @@ const NativeProfile = () => {
       )}
 
       <Section header="Konto">
-        <Row icon={UserRound} label="Användarnamn" value={name || 'Inget'} onClick={() => setEditing(true)} />
+        <Row icon={UserRound} label="Användarnamn" value={name === null ? '' : name || 'Inget'} onClick={() => setEditing(true)} />
       </Section>
 
       <Section header="Integritet">
@@ -153,7 +170,7 @@ const NativeProfile = () => {
       </Section>
       <div className="mt-6"><DeleteAccount /></div>
 
-      {editing && <NameSheet userId={user.id} current={name} onDone={(n) => { if (n !== null) setName(n); setEditing(false); }} />}
+      {editing && <NameSheet userId={user.id} current={name ?? ''} onDone={(n) => { if (n !== null) { setName(n); rememberName(user.id, n); } setEditing(false); }} />}
     </Screen>
   );
 };
