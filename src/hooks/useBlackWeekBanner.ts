@@ -8,7 +8,8 @@ import { canSellPro, isNativeApp } from '@/lib/native';
 const HIDDEN_UNTIL_KEY = 'ca-black-week-2026-hidden-until';
 const HIDE_MS = 24 * 60 * 60 * 1000;
 
-export type BlackWeekOffer = 'trial' | 'invite';
+/** trial: start Pro with the free trial; code: (app) redeem the Black Week offer code; invite: 7 days per friend */
+export type BlackWeekOffer = 'trial' | 'code' | 'invite';
 
 /**
  * The Black Week strip at the top (components/BlackWeekBanner), through 30 November 2026: 30 days
@@ -36,14 +37,20 @@ export function useBlackWeekBanner(now = Date.now()) {
     appleTrial().then((t) => { if (live) setApple(t); });
     return () => { live = false; };
   }, [askApple]);
-  const trial = canSellPro() && (app ? Boolean(apple) : !user || subscription?.trialEligible === true);
   // Nothing until the answer is in (the sign-in, the account's check, Apple's), so the strip
   // slides in once with the right offer instead of showing the invite and then changing
-  const known = !loading && (app ? !askApple || apple !== undefined : !user || subscriptionChecked !== false);
-  const offer: BlackWeekOffer | null = !known ? null : trial ? 'trial' : user ? 'invite' : null;
+  const known = !loading && (!user || subscriptionChecked !== false) && (!askApple || apple !== undefined);
+  const hasPro = subscription?.subscribed === true;
+  let offer: BlackWeekOffer | null = null;
+  if (!known) offer = null;
+  else if (!app) offer = canSellPro() && (!user || subscription?.trialEligible === true) ? 'trial' : user ? 'invite' : null;
+  // The app: Apple's trial if this Apple ID still gets one, else the offer code Apple redeems
+  // for those who had their trial
+  else if (askApple && !hasPro) offer = apple ? 'trial' : 'code';
+  else offer = user ? 'invite' : null;
   const visible = isBlackWeek(now) && !dismissed && offer !== null;
   const daysLeft = Math.max(1, Math.ceil((BLACK_WEEK_ENDS - now) / 86_400_000));
   // "30 dagar" on the web; Apple's own length in the app ("1 månad")
-  const trialLength = app && apple ? periodLabel(apple, true) : `${BLACK_WEEK_TRIAL_DAYS} dagar`;
+  const trialLength = !app ? `${BLACK_WEEK_TRIAL_DAYS} dagar` : apple ? periodLabel(apple, true) : '1 månad';
   return { visible, offer, dismiss, daysLeft, app, trialLength };
 }
