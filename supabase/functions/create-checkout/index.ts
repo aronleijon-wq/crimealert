@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient, type AuthError, type User } from "npm:@supabase/supabase-js@2.97.0";
 import { PLANS, fitsPlan, pickPrice, planFromRequest } from "../_shared/stripePlans.ts";
-import { TRIAL_DAYS, trialEligible } from "../_shared/premium.ts";
+import { trialDays, trialEligible } from "../_shared/premium.ts";
 import { returnOrigin } from "../_shared/returnOrigin.ts";
 
 const corsHeaders = {
@@ -110,7 +110,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : email,
       line_items: [{ price: price.id, quantity: 1 }],
       mode: "subscription",
-      ...(trial ? { subscription_data: { trial_period_days: TRIAL_DAYS } } : {}),
+      ...(trial ? { subscription_data: { trial_period_days: trialDays() } } : {}),
       success_url: `${origin}/account?success=true`,
       cancel_url: `${origin}/account?canceled=true`,
     });

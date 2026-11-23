@@ -1,7 +1,7 @@
 import { Bell, Check, Map as MapIcon, Megaphone, MessageCircle, Minus, Newspaper, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import B2BOffer from './B2BOffer';
-import { FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
+import { BLACK_WEEK, FREE_PLAN_HAS_ADS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
@@ -130,7 +130,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-1.5 font-['Archivo',Inter,sans-serif] text-lg font-extrabold text-primary"><Zap className="h-4 w-4" /> Pro</h2>
             <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${isPremium ? 'bg-[hsl(var(--cr-green))] text-white' : 'bg-primary text-primary-foreground'}`}>
-              {isPremium ? 'DIN PLAN' : offerTrial ? `${TRIAL_DAYS} DAGAR GRATIS` : 'POPULÄR'}
+              {isPremium ? 'DIN PLAN' : offerTrial ? `${BLACK_WEEK ? 'BLACK WEEK · ' : ''}${TRIAL_DAYS} DAGAR GRATIS` : 'POPULÄR'}
             </span>
           </div>
           <p className="mt-1">
@@ -158,7 +158,7 @@ const PlanComparison = ({ signedIn, isPremium, trialEligible, billingCycle, onBi
           </button>
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
             {offerTrial
-              ? `Gratis i ${TRIAL_DAYS} dagar, sedan ${price.price}${price.period}. Avsluta under provperioden så dras inget.`
+              ? `${BLACK_WEEK ? 'Black Week, bara t.o.m. 30 november: ' : ''}Gratis i ${TRIAL_DAYS} dagar, sedan ${price.price}${price.period}. Avsluta under provperioden så dras inget.`
               : 'Avsluta när du vill. Pro gäller perioden ut.'}
           </p>
         </div>

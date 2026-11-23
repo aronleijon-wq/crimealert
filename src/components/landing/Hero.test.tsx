@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { TRIAL_DAYS } from '@/components/account/plans';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { SubscriptionState } from '@/hooks/useAuth';
@@ -17,7 +18,7 @@ const renderHero = async (user: { id: string } | null, trialEligible?: boolean) 
   const live = { events: [], focus: null, loading: false, failed: false, lastDay: null, kommuner: null, updatedAt: null };
   return render(<MemoryRouter><Hero live={live} /></MemoryRouter>);
 };
-const trialLink = () => screen.queryByRole('link', { name: /Prova gratis i 7 dagar/ });
+const trialLink = () => screen.queryByRole('link', { name: new RegExp(`Prova gratis i ${TRIAL_DAYS} dagar`) });
 
 describe('the Pro trial in the hero', () => {
   it('is offered to visitors who are not signed in', async () => {

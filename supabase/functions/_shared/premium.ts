@@ -188,8 +188,16 @@ export async function readProStatus(db: ServiceClient, userIds: string[]): Promi
 /** Whether a remembered answer is recent enough to use without asking Stripe. */
 export const isFresh = (row: ProStatusRow, nowMs: number) => nowMs - Date.parse(row.checked_at) < PRO_STATUS_TTL_MS;
 
-/** Days of Pro a first-time subscriber gets before the first payment. */
-export const TRIAL_DAYS = 7;
+/** Days of Pro a first-time subscriber gets before the first payment, usually */
+export const NORMAL_TRIAL_DAYS = 7;
+/** During Black Week, through 30 November 2026 (Swedish time), a month instead */
+export const BLACK_WEEK_TRIAL_DAYS = 30;
+export const BLACK_WEEK_ENDS = Date.parse('2026-12-01T00:00:00+01:00');
+
+export const isBlackWeek = (now = Date.now()) => now < BLACK_WEEK_ENDS;
+
+/** Days of Pro a first-time subscriber gets before the first payment, today */
+export const trialDays = (now = Date.now()) => (isBlackWeek(now) ? BLACK_WEEK_TRIAL_DAYS : NORMAL_TRIAL_DAYS);
 
 // Statuses of a subscription that actually gave Pro; incomplete ones were never paid or started
 const HELD = ['active', 'trialing', 'past_due', 'canceled', 'unpaid', 'paused'];
