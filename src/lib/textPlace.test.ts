@@ -33,3 +33,17 @@ describe('an event is shown in the area its text names', () => {
     expect(placeFromText(event('Inbrott i Hagalund under natten.'), data)).toEqual({ lat: 59.361, lng: 18.011 });
   });
 });
+
+describe('a place written in lower case', () => {
+  it('finds "på östermalm" in the text of a fraud on 23 November', () => {
+    const text = 'Bedragare har ringt till en kvinna i 90-årsåldern med syftet att komma hem till henne på östermalm och hämta värdesaker. Men när bedragaren står på tröskeln och vill bli insläppt inser kvinnan att det rör sig om ett bedrägeriförsök och släpper inte in honom.\nBedragaren vill inte gå och det är först när kvinnans make i 95-årsåldern ingriper och knuffar bort bedragaren som de blir av med honom.\nBedragaren försvinner sedan från platsen och är inte kvar när polis larmas.';
+    expect(placeFromText(event(text, { title: 'Bedrägeri, Stockholm' }), data)).toEqual({ lat: 59.3402, lng: 18.0837 });
+    expect(placeFromText(event('Bråk i vasastan i natt.'), data)).toEqual({ lat: 59.343, lng: 18.048 });
+  });
+
+  it('does not take ordinary words for places', () => {
+    const words: Districts = { Stockholm: [...data.Stockholm, ['Hemmet', 59.30, 18.0, 's'], ['Vinden', 59.31, 18.0, 's'], ['Berget', 59.32, 18.0, 'v']] };
+    for (const t of ['Han greps i hemmet.', 'Inbrott på vinden.', 'Han hittades på berget.', 'En man greps på plats.', 'Branden startade i lägenheten.'])
+      expect(placeFromText(event(t), words)).toBeNull();
+  });
+});

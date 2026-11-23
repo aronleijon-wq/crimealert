@@ -4,7 +4,7 @@ import { keepBackfilledSummaries, needsDetailScrape, planArchiveWrites } from '.
 import { isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 import { FREE_DELAY_MS, reachedFreeWithin } from '../_shared/notifications.ts';
 import {
-  areaAnchor, distanceKm, namedPlace, placeByText, nationalIndex, nearestNamed, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
+  areaAnchor, distanceKm, namedPlace, placeByText, nationalIndex, nearestNamed, orderedNames, gazetteerIndex, gazetteerInText, gazetteerLookup, lanGazetteerIndex, withinArea, geocodeQuery, keepBest, pickHit, placeCandidates, placeKey, precisionOf, rank,
   type GazetteerPlace, type GeocodeHit, type PlaceCandidate,
 } from '../_shared/geoPlace.ts';
 import { appleGeocode, pickAppleHit, type AppleKey } from '../_shared/appleMaps.ts';
@@ -836,7 +836,7 @@ function textPlace(inc: PoliceIncident) {
     // Polisen places some events at a district, not a kommun ("Bedrägeri, Östermalm"), and a
     // text may name a place in the next kommun: the nearest place of that name, near Polisen's point
     const label = (inc.title || '').split(',').pop()?.trim() || inc.area || '';
-    const names = [...(kommun || lan ? [] : [label]), ...placeCandidates(text, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name)];
+    const names = [...(kommun || lan ? [] : [label]), ...orderedNames(text, kommun).map((n) => n.name)];
     place = nearestNamed(names, inc.lat, inc.lng, nationalPlaces());
   }
   if (TEXT_PLACES.size > 5000) TEXT_PLACES.clear();

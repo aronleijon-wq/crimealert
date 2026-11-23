@@ -3,7 +3,7 @@
 // when the events arrive (usePoliceEvents), from src/data/districts.json (built by
 // scripts/build-districts.cjs: districts, squares, towns and villages per kommun, OpenStreetMap).
 import {
-  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, placeCandidates,
+  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, orderedNames,
   type GazetteerPlace, type NamedPlace,
 } from '../../supabase/functions/_shared/geoPlace';
 
@@ -16,7 +16,7 @@ export const loadDistricts = (): Promise<Districts> => {
   return loading;
 };
 
-interface Placed { id: string; title: string; area: string; description: string; lat: number; lng: number; originalType?: string }
+interface Placed { id: string; title: string; area: string; description: string; lat: number; lng: number; originalType?: string; locationPrecision?: string }
 
 // How near the named place an event may already be and stay where it is (a street in the
 // district, the server's own spread around it): by the kind of place
@@ -46,10 +46,7 @@ export function namedPlaceOf(inc: Placed, data: Districts): NamedPlace | null {
   // Polisen's place is a district ("…, Bedrägeri, Östermalm"), or the text names a place in the
   // next kommun: the nearest place of that name to where the event is now
   const isLan = /\slän$/i.test(label);
-  const names = [
-    ...(kommun || isLan ? [] : [label]),
-    ...placeCandidates(inc.description, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name),
-  ];
+  const names = [...(kommun || isLan ? [] : [label]), ...orderedNames(inc.description, kommun).map((n) => n.name)];
   if (!names.length) return null;
   l.national ??= nationalIndex(Object.values(data));
   return nearestNamed(names, inc.lat, inc.lng, l.national);
@@ -60,6 +57,18 @@ export function placeFromText(inc: Placed, data: Districts): { lat: number; lng:
   if (/sammanfattning/i.test(`${inc.originalType ?? ''} ${inc.title}`)) return null;
   const place = namedPlaceOf(inc, data);
   if (!place) return null;
-  if (Number.isFinite(inc.lat) && Number.isFinite(inc.lng) && distanceKm(inc.lat, inc.lng, place.lat, place.lng) <= (NEAR_KM[place.kind] ?? 1)) return null;
+  if (Number.isFinite(inc.lat) && Number.isFinite(inc.lng)) {
+    const km = distanceKm(inc.lat, inc.lng, place.lat, place.lng);
+    if (km <= (NEAR_KM[place.kind] ?? 1)) return null;
+    // Already on a street or road the text names ("på Bolindervägen, Hällbybrunn", "länsväg 757
+    // strax öster om Söderfors"): more exact than the middle of the village or town it is near
+    if (inc.locationPrecision === 'street' && (place.kind === 'v' || place.kind === 'c') && km <= 3) return null;
+    // Already at another place of the same name (the server knows hamlets these places don't):
+    // that one is as likely the right one, so it stays
+    const l = lookups(data);
+    l.national ??= nationalIndex(Object.values(data));
+    const same = l.national.get(place.name.toLowerCase()) ?? [];
+    if (same.some((p) => distanceKm(inc.lat, inc.lng, p[1], p[2]) <= (NEAR_KM[p[3]] ?? 1))) return null;
+  }
   return { lat: place.lat, lng: place.lng };
 }
