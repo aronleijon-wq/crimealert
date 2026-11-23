@@ -59,7 +59,7 @@ const Feed = () => {
   const { incidents: police, loading: policeLoading, error: policeError, updatedAt } = usePoliceEvents();
   const { incidents: traffic } = useTrafikverketEvents();
   const { events: external, loading: externalLoading } = useExternalEvents();
-  const { reports: community } = useCommunityReports(isPremium);
+  const { reports: community } = useCommunityReports(Boolean(user));
   const { kommuner } = useNotificationPreferences();
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);

@@ -13,6 +13,8 @@ interface Props {
   incidentId: string;
   /** Police events can be shared: they have a page of their own */
   share?: { title: string; area?: string };
+  /** A recent police event: where "Är du på plats?" reports from (lib/communityReports) */
+  onTheSpot?: string;
 }
 
 const AUTH_NUDGE_STYLE: React.CSSProperties = {
@@ -32,7 +34,7 @@ const formatTimeAgo = (dateStr: string): string => {
   return `${Math.floor(hours / 24)}d`;
 };
 
-const PopupEngagement = ({ incidentId, share }: Props) => {
+const PopupEngagement = ({ incidentId, share, onTheSpot }: Props) => {
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -187,6 +189,16 @@ const PopupEngagement = ({ incidentId, share }: Props) => {
 
       {notice && (
         <div style={{ fontSize: 10, color: '#555', marginTop: 6 }}>{notice}</div>
+      )}
+
+      {onTheSpot && (
+        <a
+          href={onTheSpot}
+          onClick={(e) => e.stopPropagation()}
+          style={{ display: 'block', marginTop: 6, fontSize: 11, fontWeight: 600, color: '#ea580c', textDecoration: 'none' }}
+        >
+          Är du på plats? Berätta vad du ser ›
+        </a>
       )}
 
       {/* Auth nudge */}

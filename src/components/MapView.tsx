@@ -7,6 +7,7 @@ import { parseIncidentTime } from '@/lib/incidentTime';
 import { sanitizeHTML, safeImageUrl } from '@/lib/sanitize';
 import PopupEngagement from './PopupEngagement';
 import { isPoliceEvent } from '@/lib/share';
+import { reportFromEventUrl } from '@/lib/communityReports';
 import { canSellPro } from '@/lib/native';
 import { HeatLayer, type HeatPoint } from '@/lib/heatLayer';
 import { AuthValueProvider, useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,13 @@ import { COMMUNITY_REPORT_COLOR, getJitteredPositions, hitRadii, isWithinDays, m
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { MyPosition } from '@/hooks/useMyLocation';
 import { addMyDotStyles, MY_BLUE, MY_DOT_HTML, MY_DOT_SIZE } from '@/lib/myLocationDot';
+
+// A police event from the last 12 hours: someone may be there to say what they see
+const onTheSpotUrl = (inc: Incident): string | undefined => {
+  if (!isPoliceEvent(inc) || /sammanfattning/i.test(`${inc.originalType ?? ''} ${inc.title}`)) return undefined;
+  const at = parseIncidentTime(inc.time)?.getTime();
+  return at !== undefined && Date.now() - at < 12 * 60 * 60 * 1000 ? reportFromEventUrl(inc) : undefined;
+};
 
 declare global {
   interface Window {
@@ -557,7 +565,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           root.render(
             <AuthValueProvider value={authRef.current}>
               <QueryClientProvider client={popupQueryClient}>
-                <PopupEngagement incidentId={inc.id} share={isPoliceEvent(inc) ? { title: inc.title, area: inc.area } : undefined} />
+                <PopupEngagement
+                  incidentId={inc.id}
+                  share={isPoliceEvent(inc) ? { title: inc.title, area: inc.area } : undefined}
+                  onTheSpot={onTheSpotUrl(inc)}
+                />
               </QueryClientProvider>
             </AuthValueProvider>
           );

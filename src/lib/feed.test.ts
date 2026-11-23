@@ -116,10 +116,10 @@ describe('buildFeed', () => {
     expect(items.find((i) => i.id === 'pol-2')!.alsoReported.map((t) => t.id)).toEqual(['tv-acc']);
   });
 
-  it('shows community reports to Pro only', () => {
+  it('shows community reports to everyone (the database gives them to signed-in accounts)', () => {
     const report = incident({ id: 'cr-1', type: 'other', source: 'Medborgarrapport', title: 'Trasig belysning' });
     expect(buildFeed({ ...base, community: [report] }).map((i) => i.kind)).toEqual(['community']);
-    expect(buildFeed({ ...base, isPremium: false, community: [report] })).toEqual([]);
+    expect(buildFeed({ ...base, isPremium: false, community: [report] }).map((i) => i.kind)).toEqual(['community']);
   });
 });
 

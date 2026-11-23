@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Incident } from '@/data/mockIncidents';
+import { isReportCategory, REPORT_CATEGORY_LABELS } from '../../supabase/functions/_shared/reportCategories';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  broken_lighting: 'Trasig gatubelysning',
-  vandalism: 'Skadegörelse',
-  unsafe_area: 'Otrygg plats',
-  suspicious_activity: 'Misstänkt aktivitet',
-  other: 'Medborgarrapport',
-};
+const categoryLabel = (category: string) =>
+  category === 'other' ? 'Medborgarrapport' : isReportCategory(category) ? REPORT_CATEGORY_LABELS[category] : category;
 
-// Community reports are a Pro feature, so callers only enable the query for Pro users
+// Medborgarrapporter for everyone signed in (the database gives none to those signed out), so
+// callers enable the query when there is a user
 export function useCommunityReports(enabled = true) {
   const [reports, setReports] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +35,9 @@ export function useCommunityReports(enabled = true) {
       risk: 'low' as const,
       source: 'Medborgarrapport',
       approximate: false,
-      originalType: CATEGORY_LABELS[r.category] || r.category,
+      originalType: categoryLabel(r.category ?? 'other'),
       image_url: r.image_url || null,
+      eventId: (r as { event_id?: string | null }).event_id ?? null,
     }));
 
     setReports(mapped);

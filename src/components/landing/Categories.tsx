@@ -7,7 +7,7 @@ const items = [
   { icon: Ambulance, title: 'Ambulans', text: 'Akuta larm där ambulans är på plats.' },
   { icon: Car, title: 'Trafikolycka', text: 'Olyckor, avstängningar och störningar i trafiken.' },
   { icon: CircleDot, title: 'Övrigt', text: 'Allt annat polisen rapporterar in.' },
-  { icon: Users, title: 'Medborgarrapporter', text: 'Observationer inskickade av användare i närheten.', pro: true },
+  { icon: Users, title: 'Medborgarrapporter', text: 'Vad folk på plats ser, gratis med konto.' },
   { icon: BarChart3, title: 'Analys', text: 'Statistik per kommun, kategori och tidsperiod.', pro: true },
   { icon: Bell, title: 'Notiser', text: 'Push till mobilen när något nytt inträffar.' },
 ];

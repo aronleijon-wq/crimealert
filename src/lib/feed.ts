@@ -201,7 +201,7 @@ export function buildFeed({ police, traffic, community, external, isPremium, now
   // Roadworks stay on the map; the feed only gets acute disruptions
   const acuteTraffic = separateTraffic.filter((t) => t.acute !== false);
   const visibleIncidents = filterIncidentsForMap(
-    [...police, ...acuteTraffic, ...(isPremium ? community : [])],
+    [...police, ...acuteTraffic, ...community],
     { isPremium, now },
   );
 

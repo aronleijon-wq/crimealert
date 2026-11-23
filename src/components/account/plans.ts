@@ -1,5 +1,5 @@
 import type { SubscriptionState } from '@/hooks/useAuth';
-import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Sparkles, Users, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 
 // Must match the active prices in Stripe (create-checkout charges whatever is active there)
 const MONTHLY_KR = 19;
@@ -37,7 +37,7 @@ export const TRIAL_DAYS = trialDays();
 /** Whether the page was opened during Black Week */
 export const BLACK_WEEK = isBlackWeek();
 
-/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, CommunityReports, ask-crimealert). */
+/** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, ask-crimealert). Medborgarrapporter are free with an account. */
 export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] = [
   { icon: Zap, text: 'Polisens händelser direkt, utan 15 minuters fördröjning', short: 'Händelser direkt, utan 15 min väntan' },
   { icon: BellRing, text: 'Notiser direkt när något händer i dina kommuner', short: 'Notiser direkt i dina kommuner' },
@@ -45,7 +45,6 @@ export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line,
   { icon: ListChecks, text: 'Risknivå, status, Polisens kategori och platsens precision', short: 'Risknivå, status och kategori' },
   { icon: BarChart3, text: 'Analys och statistik per kommun, upp till 60 dagar bakåt', short: 'Analys och statistik, 60 dagar bakåt' },
   { icon: FileDown, text: 'Export till PDF och CSV', short: 'Export till PDF och CSV' },
-  { icon: Users, text: 'Medborgarrapporter: se andras och skicka egna', short: 'Medborgarrapporter: läs och skicka' },
   { icon: Sparkles, text: 'Fråga AI utan gräns, med utförligare svar (3 frågor per dag utan Pro)', short: 'Fråga AI utan gräns' },
   ...(FREE_PLAN_HAS_ADS ? [{ icon: EyeOff, text: 'Ingen reklam', short: 'Ingen reklam' }] : []),
 ];

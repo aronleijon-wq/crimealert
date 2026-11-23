@@ -11,6 +11,7 @@ import { SWEDISH_MUNICIPALITIES, type Municipality } from '@/data/swedishMunicip
 import { usePoliceSourceStatus } from '@/hooks/usePoliceEvents';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { canSellPro } from '@/lib/native';
+import { useAuth } from '@/hooks/useAuth';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { haptics } from './haptics';
@@ -146,6 +147,7 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
   onClose: () => void;
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <div className="fixed inset-0 z-[3000] flex flex-col justify-end" role="dialog" aria-modal="true" aria-label="Visa på kartan">
       <button type="button" aria-label="Stäng" onClick={onClose} className="ca-app-fade absolute inset-0 bg-black/40" />
@@ -181,16 +183,15 @@ const FilterSheet = ({ activeFilters, onToggle, isPremium, showCommunityReports,
         <div className="ios-group mx-4 mt-6 overflow-hidden rounded-xl bg-[#2c2c2e]">
           <div className="ios-row flex items-center gap-3 pl-4">
             <span className="flex h-[29px] w-[29px] shrink-0 items-center justify-center rounded-[7px] bg-[#ff9f0a]">
-              {isPremium ? <AlertTriangle className="h-[17px] w-[17px] text-white" aria-hidden /> : <Lock className="h-[16px] w-[16px] text-white" aria-hidden />}
+              {user ? <AlertTriangle className="h-[17px] w-[17px] text-white" aria-hidden /> : <Lock className="h-[16px] w-[16px] text-white" aria-hidden />}
             </span>
             <span className="ios-row-body flex min-h-[44px] flex-1 items-center justify-between gap-2 py-1.5 pr-4">
               <span className="text-[17px]">Medborgarrapporter</span>
-              {isPremium ? (
+              {/* Free for everyone signed in */}
+              {user ? (
                 <Switch checked={showCommunityReports} label="Medborgarrapporter" onChange={() => { haptics.selection(); onToggleCommunityReports(); }} />
-              ) : canSellPro() ? (
-                <button type="button" onClick={() => { onClose(); navigate('/prisplan'); }} className="rounded-full bg-[rgba(255,69,58,0.16)] px-3 py-1 text-[13px] font-semibold text-[#ff453a]">Pro</button>
               ) : (
-                <span className="text-[15px] text-[rgba(235,235,245,0.6)]">Pro</span>
+                <button type="button" onClick={() => { onClose(); navigate('/auth'); }} className="rounded-full bg-[rgba(255,69,58,0.16)] px-3 py-1 text-[13px] font-semibold text-[#ff453a]">Logga in</button>
               )}
             </span>
           </div>

@@ -1,12 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { canSellPro } from '@/lib/native';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { IncidentType, incidentTypeConfig } from '@/data/mockIncidents';
-import { SlidersHorizontal, Search, X, MapPin, Lock, Crown, Eye } from 'lucide-react';
+import { SlidersHorizontal, Search, X, MapPin, Lock, Eye } from 'lucide-react';
 import { SWEDISH_MUNICIPALITIES, Municipality } from '@/data/swedishMunicipalities';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsPremium } from '@/hooks/useIsPremium';
 
 interface FilterBarProps {
   activeFilters: IncidentType[];
@@ -31,7 +29,6 @@ const TYPE_COLORS: Record<IncidentType, string> = {
 const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, showCommunityReports, onToggleCommunityReports, onSearchLocation }: FilterBarProps) => {
   const types: IncidentType[] = ['police', 'fire', 'ambulance', 'traffic', 'other', 'trafikverket', 'crisis'];
   const { user } = useAuth();
-  const { isPremium } = useIsPremium();
   const isLoggedIn = !!user;
   const navigate = useNavigate();
 
@@ -50,7 +47,7 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
 
-  const activeFilterCount = activeFilters.length + (showCommunityReports && isPremium ? 1 : 0);
+  const activeFilterCount = activeFilters.length + (showCommunityReports && user ? 1 : 0);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -227,21 +224,22 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
             {/* Medborgarrapporter */}
             <button
             onClick={() => {
-              if (!isPremium) {if (canSellPro()) navigate('/prisplan');return;}
+              // Free for everyone signed in; those signed out are asked to sign in
+              if (!user) {navigate('/auth?mode=login');return;}
               onToggleCommunityReports();
             }}
             className={`
                 ca-mono flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[9.5px] uppercase tracking-[0.16em] shrink-0
                 transition-all duration-300 whitespace-nowrap select-none border
-                ${!isPremium ?
+                ${!user ?
             'bg-secondary/5 text-secondary border-secondary/15 hover:bg-secondary/10' :
             showCommunityReports ?
             'bg-[hsl(var(--ca-panel-3))] text-[hsl(var(--ca-text))] border-[hsl(var(--ca-line-strong))]' :
             'text-[hsl(var(--ca-text-3))] border-transparent hover:bg-[hsl(var(--ca-panel-3))] hover:text-[hsl(var(--ca-text-2))] hover:border-[hsl(var(--ca-line))]'}
               `}
 
-            title={!isPremium ? 'Uppgradera till Pro för medborgarrapporter' : 'Medborgarrapporter'}>
-              {!isPremium ?
+            title={!user ? 'Logga in gratis för att se medborgarrapporter' : 'Medborgarrapporter'}>
+              {!user ?
             <Lock className="w-3 h-3 text-yellow-500 shrink-0 drop-shadow-[0_0_4px_rgba(234,179,8,0.5)]" /> :
 
             <span className={`relative shrink-0 flex items-center justify-center transition-opacity duration-150 ${showCommunityReports ? 'opacity-100' : 'opacity-30'}`} style={{ width: 14, height: 14 }}>
@@ -250,12 +248,6 @@ const FilterBar = ({ activeFilters, onToggleFilter, incidentCount, activeCount, 
                 </span>
             }
               <span className="leading-none">Medborgarrapporter</span>
-              {!isPremium &&
-            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary bg-secondary/10 rounded px-1 py-0.5 leading-none">
-                  <Crown className="w-2.5 h-2.5" />
-                  PRO
-                </span>
-            }
             </button>
           </>
         }

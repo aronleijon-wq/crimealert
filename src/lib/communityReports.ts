@@ -1,23 +1,34 @@
 // Citizen reports ("Rapportera" in the app, CommunityReports on the website): what neighbours
-// have seen, sent through submit-community-report, which checks the account has Pro.
-import { Lightbulb, MoreHorizontal, ShieldAlert, Eye, Hammer, type LucideIcon } from 'lucide-react';
+// have seen, sent through submit-community-report by anyone signed in, and read by everyone
+// signed in. A report sent from a police event ("Är du på plats?") carries its id.
+import { Construction, Eye, Flame, Hammer, Lightbulb, MoreHorizontal, ShieldAlert, Siren, Volume2, Zap, type LucideIcon } from 'lucide-react';
+import { REPORT_CATEGORY_LABELS, type ReportCategoryValue } from '../../supabase/functions/_shared/reportCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { BLOCKED_WORDS_MESSAGE, hasBlockedWords } from '@/lib/moderation';
 
 export interface ReportCategory {
-  value: string;
+  value: ReportCategoryValue;
   label: string;
   /** One line on what belongs here */
   hint: string;
   color: string;
   icon: LucideIcon;
+  /** Something happening now, which people on the spot report (and an event's "Är du på plats?" offers) */
+  now?: boolean;
 }
 
+const L = REPORT_CATEGORY_LABELS;
+
 export const REPORT_CATEGORIES: ReportCategory[] = [
+  { value: 'police_here', label: L.police_here, hint: 'Polisbilar, poliser på plats', color: '#0a84ff', icon: Siren, now: true },
+  { value: 'sirens', label: L.sirens, hint: 'Utryckning, helikopter, många sirener', color: '#5e5ce6', icon: Volume2, now: true },
+  { value: 'smoke_fire', label: L.smoke_fire, hint: 'Rök, eld eller brandkår', color: '#ff6b35', icon: Flame, now: true },
+  { value: 'bangs', label: L.bangs, hint: 'Smällar eller knallar', color: '#ff375f', icon: Zap, now: true },
+  { value: 'cordon', label: L.cordon, hint: 'Avspärrat område, blockerad väg', color: '#ffd60a', icon: Construction, now: true },
   { value: 'suspicious_activity', label: 'Misstänkt aktivitet', hint: 'Någon som beter sig konstigt, bilar som cirkulerar', color: '#bf5af2', icon: Eye },
   { value: 'unsafe_area', label: 'Otrygg plats', hint: 'En plats där det känns otryggt att gå', color: '#ff9f0a', icon: ShieldAlert },
   { value: 'vandalism', label: 'Skadegörelse', hint: 'Klotter, krossade rutor, förstörda saker', color: '#ff453a', icon: Hammer },
-  { value: 'broken_lighting', label: 'Trasig belysning', hint: 'Gatlampor som inte lyser', color: '#ffd60a', icon: Lightbulb },
+  { value: 'broken_lighting', label: 'Trasig belysning', hint: 'Gatlampor som inte lyser', color: '#ffcc00', icon: Lightbulb },
   { value: 'other', label: 'Annat', hint: 'Något annat grannarna bör veta', color: '#8e8e93', icon: MoreHorizontal },
 ];
 
@@ -33,14 +44,16 @@ export interface ReportDraft {
   area: string;
   lat: number | null;
   lng: number | null;
+  /** The police event it is about, when reported from one */
+  eventId?: string | null;
 }
 
 /** What's missing before the report can be sent, or null when it's ready */
 export function draftProblem(draft: ReportDraft): string | null {
   if (!REPORT_CATEGORIES.some((c) => c.value === draft.category)) return 'Välj vad det gäller.';
   if (draft.lat === null || draft.lng === null) return 'Välj var det är.';
-  if (!stripHtml(draft.title)) return 'Skriv en rubrik.';
-  if (!stripHtml(draft.description)) return 'Beskriv vad du såg.';
+  // Rubrik and words are optional: a report can be just what it is and where (the category
+  // names it), so someone on the spot can send it in a couple of taps
   if (hasBlockedWords(`${draft.title} ${draft.description}`)) return BLOCKED_WORDS_MESSAGE;
   return null;
 }
@@ -96,6 +109,7 @@ export async function submitReport(userId: string, draft: ReportDraft, image: Fi
       lat: draft.lat,
       lng: draft.lng,
       image_url,
+      event_id: draft.eventId ?? null,
     },
   });
   if (!error && !data?.error) return { ok: true, imageFailed: !!image && !image_url };
@@ -116,10 +130,43 @@ export interface PublicReport {
   created_at: string;
   status: string;
   image_url: string | null;
+  event_id?: string | null;
 }
 
 /** The latest reports, as everyone can read them (community_reports_public) */
 export async function latestReports(limit = 20): Promise<PublicReport[]> {
   const { data } = await supabase.from('community_reports_public').select('*').order('created_at', { ascending: false }).limit(limit);
   return (data ?? []) as PublicReport[];
+}
+
+/** A report about a police event ("Är du på plats?"): the event and where it is, for the form */
+export interface EventPrefill {
+  eventId: string;
+  title: string;
+  area: string;
+  lat: number;
+  lng: number;
+}
+
+/** /rapportera with the event filled in: its id, place and title ride in the address */
+export function reportFromEventUrl(event: { id: string; title: string; area: string; lat: number; lng: number }): string {
+  const q = new URLSearchParams({
+    handelse: event.id,
+    rubrik: event.title.slice(0, 120),
+    plats: event.area.slice(0, 120),
+    lat: event.lat.toFixed(5),
+    lng: event.lng.toFixed(5),
+  });
+  return `/rapportera?${q.toString()}`;
+}
+
+/** The event /rapportera was opened from, or null */
+export function readEventPrefill(search: string): EventPrefill | null {
+  const q = new URLSearchParams(search);
+  const eventId = q.get('handelse');
+  const lat = Number(q.get('lat'));
+  const lng = Number(q.get('lng'));
+  if (!eventId || !/^[A-Za-z0-9:._-]{1,100}$/.test(eventId)) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) return null;
+  return { eventId, title: (q.get('rubrik') ?? '').slice(0, 120), area: (q.get('plats') ?? '').slice(0, 120), lat, lng };
 }

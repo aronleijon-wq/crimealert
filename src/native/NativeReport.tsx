@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Camera, Check, CheckCircle2, Loader2, LocateFixed, MapPin, Megaphone, Search, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsPremium } from '@/hooks/useIsPremium';
 import { useSEO } from '@/hooks/useSEO';
 import {
-  draftProblem, latestReports, MAX_IMAGE_BYTES, placeName, REPORT_CATEGORIES, reportCategory, searchPlaces, submitReport,
+  draftProblem, latestReports, MAX_IMAGE_BYTES, placeName, readEventPrefill, REPORT_CATEGORIES, reportCategory, searchPlaces, submitReport,
   type PlaceResult, type PublicReport, type ReportDraft,
 } from '@/lib/communityReports';
-import { canSellPro } from '@/lib/native';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { haptics } from './haptics';
 import { Row, Screen, Section } from './ui';
@@ -20,7 +18,7 @@ const field = 'w-full bg-transparent text-[17px] text-white outline-none placeho
 const Latest = ({ reports }: { reports: PublicReport[] | null }) => {
   if (reports === null) return null;
   return (
-    <Section header="Senaste rapporterna" footer={reports.length ? 'Med Pro syns de också på kartan och i flödet.' : undefined}>
+    <Section header="Senaste rapporterna" footer={reports.length ? 'De syns också på kartan och i flödet.' : undefined}>
       {reports.length === 0 ? (
         <p className="px-4 py-3 text-[15px] text-[rgba(235,235,245,0.6)]">Inga rapporter än. Bli först i ditt område.</p>
       ) : (
@@ -42,14 +40,17 @@ const Latest = ({ reports }: { reports: PublicReport[] | null }) => {
 
 /**
  * Rapportera, a tab of its own in the app from 1.3: what you saw, where, and a picture if you
- * like, in a few taps. Sending needs Pro (submit-community-report); reading is for everyone.
+ * like, in a few taps, for everyone signed in (submit-community-report). Opened from a police
+ * event ("Är du på plats?") it comes with the event's place, and the report shows at the event.
  */
 const NativeReport = () => {
   useSEO({ title: 'Rapportera | CrimeAlert', description: 'Berätta för dina grannar vad du har sett.', noindex: true });
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isPremium } = useIsPremium();
-  const [draft, setDraft] = useState<ReportDraft>(EMPTY);
+  const [fromEvent] = useState(() => readEventPrefill(window.location.search));
+  const [draft, setDraft] = useState<ReportDraft>(() => (fromEvent
+    ? { ...EMPTY, area: fromEvent.area, lat: fromEvent.lat, lng: fromEvent.lng, eventId: fromEvent.eventId }
+    : EMPTY));
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
@@ -129,12 +130,14 @@ const NativeReport = () => {
     haptics.success();
     setSent({ imageFailed: result.imageFailed });
     setDraft(EMPTY);
+    // Next report is a new one, not about the event
+    if (fromEvent) window.history.replaceState(window.history.state, '', '/rapportera');
     removeImage();
   };
 
   const intro = (
     <p className="mx-5 -mt-1 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
-      Har du sett något i ditt område? Berätta för dina grannar.
+      {fromEvent ? <>Är du på plats vid <span className="text-white">{fromEvent.title || fromEvent.area}</span>? Berätta vad du ser.</> : 'Har du sett något i ditt område? Berätta för dina grannar.'}
     </p>
   );
   const safety = 'Skriv inga namn och lägg inte upp bilder där personer känns igen. Vid akut fara, ring 112. Tips till Polisen: 114 14.';
@@ -158,7 +161,7 @@ const NativeReport = () => {
     );
   }
 
-  if (!user || !isPremium) {
+  if (!user) {
     return (
       <Screen title="Rapportera">
         {intro}
@@ -166,15 +169,9 @@ const NativeReport = () => {
           <Megaphone className="h-7 w-7 text-[#ff453a]" strokeWidth={1.8} aria-hidden />
           <p className="mt-3 text-[20px] font-bold leading-tight">Var grannarnas ögon</p>
           <p className="mt-1.5 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
-            Trasig belysning, en otrygg plats eller något misstänkt: rapportera det med en bild, så syns det på kartan för alla med Pro i närheten.
+            Polis på plats, rök, smällar eller en avspärrning: berätta vad du ser, så syns det på kartan för alla i närheten. Gratis med ett konto.
           </p>
-          {!user ? (
-            <Link to="/auth" className="mt-5 flex h-[50px] items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white">Logga in eller skapa konto</Link>
-          ) : canSellPro() ? (
-            <Link to="/prisplan" className="mt-5 flex h-[50px] items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white">Rapportera med Pro</Link>
-          ) : (
-            <p className="mt-5 text-[15px] text-[rgba(235,235,245,0.6)]">Att rapportera ingår i Pro.</p>
-          )}
+          <Link to="/auth" className="mt-5 flex h-[50px] items-center justify-center rounded-[14px] bg-[#ff453a] text-[17px] font-semibold text-white">Logga in eller skapa konto</Link>
         </div>
         <Latest reports={reports} />
       </Screen>
@@ -223,15 +220,15 @@ const NativeReport = () => {
         ))}
       </Section>
 
-      <Section header="Berätta">
+      <Section header="Berätta" footer="Valfritt. Kategorin och platsen räcker.">
         <div className="ios-row pl-4">
           <div className="ios-row-body py-2.5 pr-4">
-            <input value={draft.title} onChange={(e) => set({ title: e.target.value.slice(0, 120) })} placeholder="Rubrik, t.ex. Mörk gångtunnel" aria-label="Rubrik" className={field} />
+            <input value={draft.title} onChange={(e) => set({ title: e.target.value.slice(0, 120) })} placeholder="Rubrik, t.ex. Polisbilar vid torget" aria-label="Rubrik" className={field} />
           </div>
         </div>
         <div className="ios-row pl-4">
           <div className="ios-row-body py-2.5 pr-4">
-            <textarea value={draft.description} onChange={(e) => set({ description: e.target.value.slice(0, 1000) })} placeholder="Vad såg du, och när?" aria-label="Beskrivning" rows={4} className={`${field} resize-none leading-[22px]`} />
+            <textarea value={draft.description} onChange={(e) => set({ description: e.target.value.slice(0, 1000) })} placeholder="Vad ser du, och hur länge har det pågått?" aria-label="Beskrivning" rows={4} className={`${field} resize-none leading-[22px]`} />
           </div>
         </div>
       </Section>
