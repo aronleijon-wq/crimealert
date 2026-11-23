@@ -32,6 +32,9 @@ export const LANDMARKS: Record<string, [string, number, number, string][]> = {
     ['Globen', 59.2936, 18.0833, 'q'],
     ['Telefonplan', 59.2984, 17.9970, 'q'],
     ['Thorildsplan', 59.3318, 18.0153, 'q'],
+    ['Spånga', 59.3800, 17.9000, 's'],
+    ['Hammarbyhamnen', 59.3035, 18.0900, 's'],
+    ['Norra Hammarbyhamnen', 59.3065, 18.0910, 's'],
   ],
   Göteborg: [
     ['Avenyn', 57.6995, 11.9750, 'q'],
@@ -46,6 +49,25 @@ export const LANDMARKS: Record<string, [string, number, number, string][]> = {
     ['Hjalmar Brantingsplatsen', 57.7206, 11.9510, 'q'],
     ['Vasaplatsen', 57.6990, 11.9690, 'q'],
     ['Linnéplatsen', 57.6926, 11.9520, 'q'],
+    ['Frölunda', 57.6530, 11.9110, 's'],
+    ['Långedrag', 57.6720, 11.8550, 's'],
+  ],
+  Botkyrka: [
+    ['Hallundaplan', 59.2440, 17.8250, 'q'],
+  ],
+  Sundsvall: [
+    ['Stenstan', 62.3910, 17.3060, 's'],
+    ['Njurunda', 62.2700, 17.3700, 's'],
+  ],
+  Luleå: [
+    ['Skutviken', 65.5950, 22.1370, 's'],
+  ],
+  Västerås: [
+    ['Lögarängen', 59.6040, 16.5420, 's'],
+  ],
+  Örebro: [
+    // Örebro's own Södermalm, not the hamlet of the name 37 km north
+    ['Södermalm', 59.2660, 15.2150, 's'],
   ],
   Malmö: [
     ['Triangeln', 55.5940, 13.0000, 'q'],

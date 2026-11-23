@@ -368,17 +368,42 @@ export function namedPlace(text: string, kommun: string | null, index: Map<strin
   const named = placeCandidates(text, kommun);
   const seen = new Set(named.map((c) => norm(c.name)));
   const known = gazetteerInText(text, index, kommun).filter((c) => !seen.has(norm(c.name)));
-  for (const c of [...named, ...known]) {
-    if (c.kind === 'road' || c.kind === 'crossing' || (c.kind === 'street' && /\d/.test(c.name))) continue;
-    const p = gazetteerLookup(c.name, index);
-    if (p) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
-  }
-  // Polisen sometimes writes a place in lower case ("hem till henne på östermalm")
-  for (const name of placesInLowerCase(text)) {
+  const capital = [...named, ...known]
+    .filter((c) => !(c.kind === 'road' || c.kind === 'crossing' || (c.kind === 'street' && /\d/.test(c.name))))
+    .map((c) => c.name);
+  for (const { name, lowerCase } of orderedNames(text, kommun, capital)) {
     const p = gazetteerLookup(name, index);
-    if (p && LOWER_CASE_KINDS.has(p[3])) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
+    if (p && (!lowerCase || LOWER_CASE_KINDS.has(p[3]))) return { name: p[0], lat: p[1], lng: p[2], kind: p[3] };
   }
   return null;
+}
+
+/**
+ * The places a text names, in the order to try them: those it happened at, then the lower-case
+ * ones; not those only passed on the way ("i riktning mot Fridhemsplan", "från Rinkeby"). The
+ * kommun itself ("i Luleå", "i Gullspångs kommun") and the first part of a street ("Berga Allé")
+ * are left out.
+ */
+export function orderedNames(text: string, kommun: string | null, capital: string[] = placeCandidates(text, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name)): { name: string; lowerCase: boolean }[] {
+  const own = kommun ? norm(kommun) : '';
+  const lower = text.toLowerCase();
+  const here: { name: string; lowerCase: boolean }[] = [];
+  const seen = new Set<string>();
+  const add = (name: string, lowerCase: boolean) => {
+    const key = norm(name);
+    if (seen.has(key) || key === own || key === `${own}s` || (own && key.startsWith(`${own} `))) return;
+    seen.add(key);
+    const at = lower.indexOf(key);
+    const after = at >= 0 ? lower.slice(at + key.length, at + key.length + 12) : '';
+    const before = at >= 0 ? lower.slice(Math.max(0, at - 16), at) : '';
+    // "Gullspångs kommun", "Berga Allé": a kommun or a street, not a place of its own
+    if (/^s?\s+kommun/.test(after) || /^\s+(allé|alle|gata|gatan|väg|vägen|gränd|backe|stig|led|leden)(?![a-zåäö])/.test(after)) return;
+    if (/(?:\bmot|\bfrån|riktning mot|på väg till)\s+$/.test(before)) return;
+    here.push({ name, lowerCase });
+  };
+  for (const name of capital) add(name, false);
+  for (const name of placesInLowerCase(text)) add(name, true);
+  return here;
 }
 
 // A place written in lower case is only taken when it is a district, square, town or village:
@@ -391,7 +416,9 @@ const LOWER_CASE_WORDS = new Set(
   torget kontoret jobbet arbetet sjukhuset hallen källaren trapphuset entrén porten gården
   innergården natten kvällen morgonen dagen helgen berget skogen ängen sjön stranden hamnen
   marken backen dalen holmen udden viken bron kyrkan kyrkogården fältet slätten åkern lunden
-  hagen höjden sluttningen centralen city vinden taket balkongen garaget förrådet tvättstugan
+  hagen höjden sluttningen centralen city vinden
+  höften huvudet armen armarna benet benen foten fötterna handen händerna ansiktet magen ryggen
+  bröstet halsen nacken axeln knät knäet ögat ögonen munnen näsan örat pannan låret taket balkongen garaget förrådet tvättstugan
   parkeringen parkeringshuset restaurangen nattklubben baren puben caféet gymmet badet simhallen
   bensinstationen macken tunneln perrongen hållplatsen spåret motorvägen rondellen korsningen`.split(/\s+/).filter(Boolean),
 );

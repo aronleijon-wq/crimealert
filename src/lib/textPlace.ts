@@ -3,7 +3,7 @@
 // when the events arrive (usePoliceEvents), from src/data/districts.json (built by
 // scripts/build-districts.cjs: districts, squares, towns and villages per kommun, OpenStreetMap).
 import {
-  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, placeCandidates, placesInLowerCase,
+  distanceKm, gazetteerIndex, nationalIndex, namedPlace, nearestNamed, orderedNames,
   type GazetteerPlace, type NamedPlace,
 } from '../../supabase/functions/_shared/geoPlace';
 
@@ -46,11 +46,7 @@ export function namedPlaceOf(inc: Placed, data: Districts): NamedPlace | null {
   // Polisen's place is a district ("…, Bedrägeri, Östermalm"), or the text names a place in the
   // next kommun: the nearest place of that name to where the event is now
   const isLan = /\slän$/i.test(label);
-  const names = [
-    ...(kommun || isLan ? [] : [label]),
-    ...placeCandidates(inc.description, kommun).filter((c) => c.kind === 'area' || (c.kind === 'street' && !/\d/.test(c.name))).map((c) => c.name),
-    ...placesInLowerCase(inc.description),
-  ];
+  const names = [...(kommun || isLan ? [] : [label]), ...orderedNames(inc.description, kommun).map((n) => n.name)];
   if (!names.length) return null;
   l.national ??= nationalIndex(Object.values(data));
   return nearestNamed(names, inc.lat, inc.lng, l.national);
@@ -61,6 +57,14 @@ export function placeFromText(inc: Placed, data: Districts): { lat: number; lng:
   if (/sammanfattning/i.test(`${inc.originalType ?? ''} ${inc.title}`)) return null;
   const place = namedPlaceOf(inc, data);
   if (!place) return null;
-  if (Number.isFinite(inc.lat) && Number.isFinite(inc.lng) && distanceKm(inc.lat, inc.lng, place.lat, place.lng) <= (NEAR_KM[place.kind] ?? 1)) return null;
+  if (Number.isFinite(inc.lat) && Number.isFinite(inc.lng)) {
+    if (distanceKm(inc.lat, inc.lng, place.lat, place.lng) <= (NEAR_KM[place.kind] ?? 1)) return null;
+    // Already at another place of the same name (the server knows hamlets these places don't):
+    // that one is as likely the right one, so it stays
+    const l = lookups(data);
+    l.national ??= nationalIndex(Object.values(data));
+    const same = l.national.get(place.name.toLowerCase()) ?? [];
+    if (same.some((p) => distanceKm(inc.lat, inc.lng, p[1], p[2]) <= (NEAR_KM[p[3]] ?? 1))) return null;
+  }
   return { lat: place.lat, lng: place.lng };
 }
