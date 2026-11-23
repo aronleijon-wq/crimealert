@@ -91,7 +91,7 @@ describe('keeping the best position', () => {
 });
 
 describe('spreading markers', () => {
-  it('moves every marker 100–600 m, the same way every time', () => {
+  it('moves every marker 60–300 m, the same way every time', () => {
     for (let i = 0; i < 500; i++) {
       const p = spreadPoint(`pol-${i}`, 62.39, 17.31);
       const m = distanceKm(62.39, 17.31, p.lat, p.lng) * 1000;

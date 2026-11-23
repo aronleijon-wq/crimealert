@@ -229,21 +229,22 @@ function hash(value: string): number {
   return h >>> 0;
 }
 
-export const SPREAD_MIN_M = 100;
-export const SPREAD_MAX_M = 600;
+export const SPREAD_MIN_M = 60;
+export const SPREAD_MAX_M = 300;
 
 /**
- * A marker's position: the event's place moved 100–600 m in a direction of its own, the same
+ * A marker's position: the event's place moved 60–300 m in a direction of its own, the same
  * every time. Events at one place spread over the area instead of hiding each other, and a
- * street address is not shown to the metre.
+ * street address is not shown to the metre. `turn` (radians) and `scale` give other positions
+ * of the same kind, for when the first lies in the sea (seaMask.markerPoint).
  */
-export function spreadPoint(id: string, lat: number, lng: number, minM = SPREAD_MIN_M, maxM = SPREAD_MAX_M): { lat: number; lng: number } {
+export function spreadPoint(id: string, lat: number, lng: number, minM = SPREAD_MIN_M, maxM = SPREAD_MAX_M, turn = 0, scale = 1): { lat: number; lng: number } {
   const h1 = hash(id);
   const h2 = hash(`${id}:r`);
-  const angle = (h1 / 2 ** 32) * 2 * Math.PI;
+  const angle = (h1 / 2 ** 32) * 2 * Math.PI + turn;
   // Even over the ring's area, not bunched at its inner edge
   const u = h2 / 2 ** 32;
-  const d = Math.sqrt(minM * minM + u * (maxM * maxM - minM * minM));
+  const d = Math.sqrt(minM * minM + u * (maxM * maxM - minM * minM)) * scale;
   const dLat = (d * Math.cos(angle)) / 111_320;
   const dLng = (d * Math.sin(angle)) / (111_320 * Math.cos((lat * Math.PI) / 180));
   return { lat: lat + dLat, lng: lng + dLng };
