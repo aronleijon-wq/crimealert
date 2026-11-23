@@ -71,6 +71,8 @@ describe('Landing page', () => {
 
   it('announces the iPhone app in a banner at the top, linking to the App Store', async () => {
     localStorage.clear();
+    // The Black Week strip (through 30 November 2026) has its own tests; here it is closed
+    localStorage.setItem('ca-black-week-2026-closed', '1');
     await renderLanding();
     const header = screen.getByRole('banner');
     expect(within(header).getByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toHaveAttribute(
@@ -81,6 +83,8 @@ describe('Landing page', () => {
 
   it('keeps the app banner closed once the visitor closes it', async () => {
     localStorage.clear();
+    // The Black Week strip (through 30 November 2026) has its own tests; here it is closed
+    localStorage.setItem('ca-black-week-2026-closed', '1');
     const { unmount } = await renderLanding();
     fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Stäng' }));
     expect(screen.queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();

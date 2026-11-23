@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin } from 'lucide-react';
-import { TRIAL_DAYS } from '@/components/account/plans';
+import { BLACK_WEEK, NORMAL_TRIAL_DAYS, TRIAL_DAYS } from '@/components/account/plans';
 import { useAuth } from '@/hooks/useAuth';
 import OpsMap from './OpsMap';
 import AppStoreBadge from './AppStoreBadge';
@@ -51,7 +51,34 @@ const Hero = ({ live }: { live: LandingLive }) => {
 
       <div className="relative mx-auto w-full max-w-[1400px] px-5 md:px-10">
         <div className="max-w-[640px]">
-          {offerTrial && (
+          {offerTrial && BLACK_WEEK && (
+            <Link
+              to="/prisplan"
+              aria-label={`Prova gratis i ${TRIAL_DAYS} dagar – Black Week, bara till och med 30 november`}
+              className="ca-rise group mb-7 flex max-w-[500px] items-stretch overflow-hidden border border-white/20 bg-black/80 backdrop-blur-md transition hover:border-white/50"
+              style={{ animationDelay: '0.1s' }}
+            >
+              <span className="flex shrink-0 flex-col justify-center border-r border-white/15 px-3 py-2.5 sm:px-4 sm:py-3">
+                <span className="ca-bw-mark text-[11px] uppercase leading-tight text-white">Black</span>
+                <span className="ca-bw-mark text-[11px] uppercase leading-tight text-white">Week</span>
+              </span>
+              <span className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
+                <span className="min-w-0">
+                  <span className="block whitespace-nowrap text-[15px] font-semibold leading-tight text-white sm:text-[17px]">
+                    {TRIAL_DAYS} dagar Pro gratis <s className="ml-0.5 hidden text-[13px] font-normal text-white/40 sm:inline">{NORMAL_TRIAL_DAYS} dagar</s>
+                  </span>
+                  <span className="mt-0.5 block whitespace-nowrap text-[11px] text-white/55 sm:text-[12px]">
+                    <span className="sm:hidden">Bara t.o.m. 30 november</span>
+                    <span className="hidden sm:inline">Bara t.o.m. 30 november · avsluta när du vill</span>
+                  </span>
+                </span>
+                <span className="inline-flex h-8 shrink-0 items-center gap-1.5 bg-white px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-black transition group-hover:bg-white/85 sm:h-9 sm:px-3.5 sm:text-[12px]">
+                  Prova <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </span>
+            </Link>
+          )}
+          {offerTrial && !BLACK_WEEK && (
             <Link
               to="/prisplan"
               className="ca-rise group mb-6 inline-flex items-center gap-2.5 rounded-full border border-[hsl(var(--ca-red)/0.45)] bg-[hsl(var(--ca-red)/0.08)] py-1 pl-1 pr-3.5 backdrop-blur-md transition hover:border-[hsl(var(--ca-red)/0.8)] hover:bg-[hsl(var(--ca-red)/0.14)]"

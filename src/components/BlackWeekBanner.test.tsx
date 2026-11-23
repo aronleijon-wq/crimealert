@@ -39,7 +39,7 @@ describe('the Black Week strip', () => {
 
   it('says it is the last day on 30 November, and is gone from 1 December', () => {
     show(Date.parse('2026-11-30T18:00:00+01:00'));
-    expect(screen.getByText(/sista dagen/)).toBeInTheDocument();
+    expect(screen.getByText(/Sista dagen/)).toBeInTheDocument();
     const { container } = show(DEC);
     expect(container).toBeEmptyDOMElement();
   });

@@ -18,6 +18,8 @@ const renderHeader = async (path = '/karta') => {
 
 beforeEach(() => {
   sessionStorage.clear();
+  // The Black Week strip (through 30 November 2026) has its own tests; here it is closed
+  localStorage.setItem('ca-black-week-2026-closed', '1');
   auth.user = null;
   auth.subscription = { subscribed: false, productId: null, subscriptionEnd: null };
 });
