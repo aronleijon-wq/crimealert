@@ -32,7 +32,7 @@ describe('ExportData', () => {
     state.premium = false;
     state.admin = true;
     render(<ExportData liveIncidents={[]} />);
-    expect(screen.getByText('Exportera händelsedata')).toBeInTheDocument();
+    expect(screen.getByText('Ladda ner händelserna')).toBeInTheDocument();
   });
 
   const incident = {

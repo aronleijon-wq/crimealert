@@ -3,9 +3,7 @@ import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
 
 import PremiumGate from '@/components/PremiumGate';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
-import { TrendingUp, AlertTriangle, Shield, Clock, MapPin, RefreshCw, Search, X, ChevronDown, Eye, Lightbulb, Info, House, TreePine, Sun, Moon, Car, type LucideIcon } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertTriangle, MapPin, RefreshCw, Search, X, ChevronDown, House, TreePine, Sun, Moon, Car, type LucideIcon } from 'lucide-react';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
 import type { Incident } from '@/data/mockIncidents';
@@ -16,6 +14,10 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Map as MapIcon } from 'lucide-react';
 import { isNativeApp } from '@/lib/native';
 import NativeHistory from '@/native/NativeHistory';
+import { Card, FAINT, MUTED } from '@/native/StatCard';
+import { Segmented } from '@/native/ui';
+import { cleanPoliceTitle } from '@/lib/feed';
+import { eventPath } from '@/lib/share';
 import StatsTrends from '@/native/StatsTrends';
 
 /**
@@ -63,56 +65,41 @@ const parseTime = (t: string): Date => {
   return new Date(t);
 };
 
-const STAT_TOOLTIPS: Record<string, string> = {
-  'Idag': 'Totalt antal polishändelser rapporterade sedan midnatt idag.',
-  'I perioden': 'Totalt antal polishändelser under vald tidsperiod.',
-  'Riskindex': 'Beräknas utifrån andelen hög- och medelriskhändelser. Skala 0–100 där högre värde = fler allvarliga händelser.',
-  'Hög risk': 'Antal händelser klassade som högrisk (t.ex. grov misshandel, skjutning, rån).',
-  'Mest aktiv tid': 'Den timme på dygnet med flest rapporterade händelser under vald period.',
-};
+/** One number on Djupanalys: big, with what it is and a line on what it means */
+const Figure = ({ value, label, note, tone }: { value: string | number; label: string; note: string; tone?: string }) => (
+  <div className="rounded-xl bg-[#2c2c2e] px-3.5 py-3">
+    <div className="text-[30px] font-bold leading-tight tabular-nums" style={tone ? { color: tone } : undefined}>{value}</div>
+    <div className="text-[15px] font-semibold leading-snug text-white">{label}</div>
+    <div className={`mt-0.5 text-[13px] leading-snug ${MUTED}`}>{note}</div>
+  </div>
+);
 
-const StatCard = ({ label, value, sub, icon: Icon, colorClass }: {label: string;value: string | number;sub: string;icon: LucideIcon;colorClass: string;}) =>
-<div className="bg-card border border-border rounded-lg p-4">
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{label}</span>
-      <div className="flex items-center gap-1.5">
-        {STAT_TOOLTIPS[label] && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[220px] text-xs">
-              {STAT_TOOLTIPS[label]}
-            </TooltipContent>
-          </Tooltip>
-        )}
-        <Icon className={`w-4 h-4 ${colorClass}`} />
+/** Riskindex in words, for those who don't read an index */
+const riskWord = (index: number) => (index >= 50 ? { word: 'Högt', color: '#ff453a' } : index >= 25 ? { word: 'Medel', color: '#ff9f0a' } : { word: 'Lågt', color: '#30d158' });
+
+/** Simple bars, the tallest at full height; the busiest one red, its label shown under it */
+const Bars = ({ values, labels, every, unit }: { values: number[]; labels: string[]; every: number; unit: string }) => {
+  const max = Math.max(...values, 1);
+  const peak = values.indexOf(Math.max(...values));
+  return (
+    <div>
+      <div className="flex h-[130px] items-end gap-[3px]" role="img" aria-label={`Flest ${unit} ${labels[peak]}: ${values[peak]}`}>
+        {values.map((v, i) => (
+          <div key={labels[i]} className="group relative flex h-full flex-1 items-end">
+            <div className="w-full rounded-t-[4px]" style={{ height: `${Math.max(v ? 3 : 0, (v / max) * 100)}%`, background: i === peak ? '#ff453a' : '#636366' }} />
+            <span className="pointer-events-none absolute -top-7 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-black px-2 py-1 text-[12px] text-white group-hover:block">
+              {labels[i]}: {v} {unit}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 flex gap-[3px]">
+        {labels.map((l, i) => (
+          <span key={l} className={`flex-1 text-center text-[11px] tabular-nums ${i === peak ? 'font-semibold text-white' : FAINT}`}>{i % every === 0 || i === peak ? l : ''}</span>
+        ))}
       </div>
     </div>
-    <div className={`text-2xl font-bold font-mono ${colorClass}`}>{value}</div>
-    <span className="text-[10px] text-muted-foreground">{sub}</span>
-  </div>;
-
-
-// Recharts injects these props when the element is passed as `content`
-interface ChartTooltipProps {
-  active?: boolean;
-  payload?: { name?: string; value?: number | string; color?: string }[];
-  label?: string;
-}
-
-const ChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-card border border-border rounded-md px-3 py-2 shadow-lg text-xs">
-      <p className="text-foreground font-medium mb-1">{label}</p>
-      {payload.map((p, i) =>
-      <p key={i} style={{ color: p.color }} className="font-mono">
-          {p.name}: {p.value}
-        </p>
-      )}
-    </div>);
-
+  );
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -160,48 +147,48 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-xs font-medium transition border border-border">
+        className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[15px] font-semibold text-black transition active:opacity-80">
 
-        <MapPin className="w-3 h-3 text-muted-foreground" />
-        <span className="max-w-[120px] truncate">{selected ?? 'Hela Sverige'}</span>
+        <MapPin className="h-4 w-4" aria-hidden />
+        <span className="max-w-[180px] truncate">{selected ?? 'Hela Sverige'}</span>
         {selected ?
-        <X className="w-3 h-3 text-muted-foreground hover:text-foreground" onClick={(e) => {e.stopPropagation();onSelect(null);setOpen(false);}} /> :
+        <X className="h-4 w-4" aria-label="Visa hela Sverige" onClick={(e) => {e.stopPropagation();onSelect(null);setOpen(false);}} /> :
 
-        <ChevronDown className="w-3 h-3 text-muted-foreground" />
+        <ChevronDown className="h-4 w-4" aria-hidden />
         }
       </button>
       {open &&
-      <div className="absolute top-full mt-1 left-0 sm:right-0 sm:left-auto z-[99999] w-[calc(100vw-2rem)] sm:w-64 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
+      <div className="absolute top-full mt-2 left-0 z-[99999] w-[calc(100vw-4rem)] sm:w-72 rounded-xl bg-[#2c2c2e] text-white shadow-xl overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
               <input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sök kommun eller län..."
-              className="w-full pl-7 pr-3 py-1.5 bg-background border border-border rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50" />
+              placeholder="Sök kommun eller län"
+              className="w-full rounded-lg bg-[#1c1c1e] py-2.5 pl-9 pr-3 text-[16px] text-white placeholder:text-white/40 focus:outline-none" />
 
             </div>
           </div>
-          <div className="max-h-48 overflow-y-auto">
+          <div className="max-h-72 overflow-y-auto">
             <button
             onClick={() => {onSelect(null);setOpen(false);setSearch('');}}
-            className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition ${!selected ? 'text-primary font-semibold' : 'text-foreground'}`}>
+            className={`w-full px-4 py-3 text-left text-[16px] transition hover:bg-white/10 ${!selected ? 'font-semibold text-[#ff453a]' : 'text-white'}`}>
 
-              🇸🇪 Hela Sverige
+              Hela Sverige
             </button>
             {filtered.map((a) =>
           <button
             key={a}
             onClick={() => {onSelect(a);setOpen(false);setSearch('');}}
-            className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition ${selected === a ? 'text-primary font-semibold' : 'text-foreground'}`}>
+            className={`w-full px-4 py-3 text-left text-[16px] transition hover:bg-white/10 ${selected === a ? 'font-semibold text-[#ff453a]' : 'text-white'}`}>
 
                 {a}
               </button>
           )}
             {filtered.length === 0 &&
-          <p className="px-3 py-2 text-xs text-muted-foreground">Inga resultat</p>
+          <p className="px-4 py-3 text-[15px] text-white/60">Ingen kommun med det namnet</p>
           }
           </div>
         </div>
@@ -209,6 +196,8 @@ const MunicipalitySelector = ({ areas, selected, onSelect }: {areas: string[];se
     </div>);
 
 };
+
+const SEVERITY_COLOR = { danger: '#ff453a', warning: '#ff9f0a', info: '#0a84ff' } as const;
 
 /** Events in the kommun's history shown before "Visa alla" */
 const HISTORY_SHOWN = 15;
@@ -336,29 +325,6 @@ const Analysis = () => {
       return { område, index: safetyIndex, total: high + medium + low, high };
     });
 
-    // Time profiles: hourly breakdown per type
-    const typeHourly: Record<string, number[]> = {};
-    filteredIncidents.forEach((i) => {
-      try {
-        const h = parseTime(i.time).getHours();
-        if (!isNaN(h)) {
-          if (!typeHourly[i.type]) typeHourly[i.type] = Array.from({ length: 24 }, () => 0);
-          typeHourly[i.type][h]++;
-        }
-      } catch {/* skip unparsable time */}
-    });
-    const timeProfileData = Array.from({ length: 24 }, (_, h) => {
-      const row: Record<string, string | number> = { timme: String(h).padStart(2, '0') + ':00' };
-      Object.keys(typeHourly).forEach((type) => {
-        row[TYPE_LABELS[type] || type] = typeHourly[type][h];
-      });
-      return row;
-    });
-    const timeProfileTypes = Object.keys(typeHourly).map((t) => ({
-      key: TYPE_LABELS[t] || t,
-      color: TYPE_COLORS[t] || TYPE_COLORS.other,
-    }));
-
     // Seasonal warnings
     const seasonalWarnings: { icon: LucideIcon; title: string; message: string; severity: 'info' | 'warning' | 'danger' }[] = [];
     const now2 = new Date();
@@ -411,8 +377,11 @@ const Analysis = () => {
       });
     }
 
-    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length, timeProfileData, timeProfileTypes, seasonalWarnings };
+    return { riskIndex, typeData, hourlyData, peakHour, trendData, areaComparison, highRisk, total: filteredIncidents.length, seasonalWarnings };
   }, [filteredIncidents, selectedArea]);
+
+  const place = selectedArea ?? 'Hela Sverige';
+  const periodWord = timeRange === '24h' ? 'idag' : `${RANGE_DAYS[timeRange]} dagar`;
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -426,290 +395,142 @@ const Analysis = () => {
         free={{ to: '/statistik', label: 'Se brottsutvecklingen i hela Sverige gratis' }} /> :
 
 
-      <div className={web ? 'p-4 md:p-6' : 'flex-1 overflow-y-auto p-4 md:p-6'}>
-          <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <h1 className={web ? 'text-lg font-bold text-foreground' : 'text-xl font-bold text-foreground'}>
-                  {web ? 'Djupanalys' : 'Analys & Statistik'} {selectedArea && <span className="text-primary">· {selectedArea}</span>}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {filteredIncidents.length} händelser{selectedArea ? ` i ${selectedArea}` : ''} · Uppdaterad {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <MunicipalitySelector areas={availableAreas} selected={selectedArea} onSelect={setSelectedArea} />
-                <div className="flex bg-muted rounded-lg p-0.5">
-                  {TIME_RANGE_OPTIONS.map((opt) =>
-                <button
-                  key={opt.value}
-                  onClick={() => setTimeRange(opt.value)}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                  timeRange === opt.value ?
-                  'bg-background text-foreground shadow-sm' :
-                  'text-muted-foreground hover:text-foreground'}`
-                  }>
-
-                      {opt.label}
-                    </button>
-                )}
-                </div>
-                <button onClick={() => {refetch();setLastUpdated(new Date());}} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-muted text-muted-foreground transition disabled:opacity-50 text-xs">
-                  <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline font-medium">Uppdatera</span>
-                </button>
-              </div>
+      <section className={web ? 'mx-auto max-w-7xl px-4 pb-10 pt-5 md:px-6' : 'flex-1 overflow-y-auto pb-10'} aria-labelledby="djupanalys">
+        <div className="ca-dark rounded-3xl bg-black pb-8 pt-5 text-white">
+          <div className="flex flex-wrap items-start justify-between gap-3 px-5">
+            <div>
+              <h2 id="djupanalys" className="text-[22px] font-bold tracking-tight">{web ? 'Djupanalys' : 'Analys'}</h2>
+              <p className={`mt-0.5 text-[13px] ${MUTED}`}>
+                {filteredIncidents.length} händelser · uppdaterad kl {lastUpdated.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
+            <button onClick={() => {refetch();setLastUpdated(new Date());}} disabled={loading} aria-label="Uppdatera" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1c1c1e] text-white transition active:opacity-60 disabled:opacity-50">
+              <RefreshCw className={`h-[18px] w-[18px] ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
 
-          {loading && !incidents.length ?
-          <div className="flex items-center justify-center py-20">
-                <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground mr-2" />
-                <span className="text-sm text-muted-foreground">Hämtar data från Polisen.se...</span>
-              </div> :
+          <div className="mt-4 px-4">
+            <MunicipalitySelector areas={availableAreas} selected={selectedArea} onSelect={setSelectedArea} />
+          </div>
+          <div className="mt-3 max-w-md">
+            <Segmented<TimeRange> options={TIME_RANGE_OPTIONS} value={timeRange} onChange={setTimeRange} />
+          </div>
 
-          <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <StatCard
-                    label={timeRange === '24h' ? 'Idag' : 'I perioden'}
-                    value={filteredIncidents.length}
-                    sub={timeRange === '24h'
-                      ? `Sedan kl 00:00 · ${new Date().toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}${selectedArea ? ` · ${selectedArea}` : ''}`
-                      : `${TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label ?? timeRange}${selectedArea ? ` · ${selectedArea}` : ''}`}
-                    icon={TrendingUp}
-                    colorClass="text-foreground"
-                  />
-                  <StatCard label="Riskindex" value={stats?.riskIndex ?? '–'} sub={stats ? `${stats.highRisk} högrisk` : 'Väntar på data'} icon={AlertTriangle} colorClass="text-cr-orange" />
-                  <StatCard label="Hög risk" value={stats?.highRisk ?? 0} sub={stats && stats.total > 0 ? `${Math.round(stats.highRisk / stats.total * 100)}% av perioden` : 'Inga händelser ännu'} icon={AlertTriangle} colorClass="text-cr-red" />
-                  <StatCard label="Mest aktiv tid" value={stats ? `${String(stats.peakHour).padStart(2, '0')}:00` : '–'} sub={stats ? `${stats.hourlyData[stats.peakHour].antal} händelser · ${timeRange === '24h' ? 'idag' : `snitt ${RANGE_DAYS[timeRange]} dagar`}` : 'Väntar på data'} icon={Clock} colorClass="text-cr-green" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-card border border-border rounded-lg p-4">
-                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per dag</h2>
-                    {stats?.trendData?.length ? (
-                    <ResponsiveContainer width="100%" height={220}>
-                      <AreaChart data={stats.trendData}>
-                        <defs>
-                          <linearGradient id="redGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(0, 100%, 62%)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(0, 100%, 62%)" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="dag" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <RechartsTooltip content={<ChartTooltip />} />
-                        <Area type="monotone" dataKey="incidenter" stroke="hsl(0, 100%, 62%)" fill="url(#redGrad)" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                    ) : (
-                    <div className="h-[220px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
-                    </div>
-                    )}
+          {loading && !incidents.length ? (
+            <div className="mx-4 mt-6 space-y-4" aria-label="Hämtar händelser">
+              {[150, 200, 200].map((h, i) => <div key={i} className="animate-pulse rounded-2xl bg-[#1c1c1e]" style={{ height: h }} />)}
+            </div>
+          ) : !stats ? (
+            <Card><p className={`text-[15px] ${MUTED}`}>Inga händelser {selectedArea ? `i ${selectedArea} ` : ''}{timeRange === '24h' ? 'idag än' : 'under perioden'}.</p></Card>
+          ) : (
+            <div className="lg:grid lg:grid-cols-2 lg:gap-x-2">
+              <div>
+                <Card title={`${place} · ${periodWord}`}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Figure value={stats.total} label="Händelser" note={timeRange === '24h' ? 'sedan midnatt' : `senaste ${RANGE_DAYS[timeRange]} dagarna`} />
+                    <Figure
+                      value={stats.highRisk}
+                      label="Allvarliga"
+                      note={stats.total ? `${Math.round(stats.highRisk / stats.total * 100)} % av alla` : '–'}
+                      tone={stats.highRisk > 0 ? '#ff453a' : undefined}
+                    />
+                    <Figure value={`kl ${String(stats.peakHour).padStart(2, '0')}`} label="Mest händer" note={`${stats.hourlyData[stats.peakHour].antal} händelser den timmen`} />
+                    <Figure value={riskWord(stats.riskIndex).word} label="Risknivå" note={`Index ${stats.riskIndex} av 100`} tone={riskWord(stats.riskIndex).color} />
                   </div>
+                </Card>
 
-                  <div className="bg-card border border-border rounded-lg p-4">
-                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Fördelning per typ</h2>
-                    {stats?.typeData?.length ? (
-                    <ResponsiveContainer width="100%" height={220}>
-                      <PieChart>
-                        <Pie data={stats.typeData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" stroke="none">
-                          {stats.typeData.map((entry) =>
-                      <Cell key={entry.name} fill={entry.color} />
-                          )}
-                        </Pie>
-                        <RechartsTooltip content={<ChartTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    ) : (
-                    <div className="h-[220px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
-                    </div>
-                    )}
-                    {stats?.typeData?.length ? (
-                    <div className="flex flex-wrap gap-3 mt-2 justify-center">
-                      {stats.typeData.map((t) =>
-                  <span key={t.name} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <span className="w-2 h-2 rounded-full" style={{ background: t.color }} />
-                          {t.name} ({t.value})
-                        </span>
-                      )}
-                    </div>
-                    ) : null}
-                  </div>
-                </div>
+                <Card title="Vad händer" footer="Polisens egen indelning av händelserna.">
+                  <ul className="space-y-3">
+                    {stats.typeData.map((t) => (
+                      <li key={t.name}>
+                        <div className="flex items-baseline justify-between gap-3 text-[15px]">
+                          <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: t.color }} aria-hidden />{t.name}</span>
+                          <span className="tabular-nums"><b className="font-semibold">{t.value}</b> <span className={MUTED}>· {Math.round(t.value / stats.total * 100)} %</span></span>
+                        </div>
+                        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#2c2c2e]">
+                          <div className="h-full rounded-full" style={{ width: `${(t.value / stats.typeData[0].value) * 100}%`, background: t.color }} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-card border border-border rounded-lg p-4">
-                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4">Händelser per timme</h2>
-                    {stats?.hourlyData?.some(h => h.antal > 0) ? (
-                    <ResponsiveContainer width="100%" height={220}>
-                      <BarChart data={stats.hourlyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
-                        <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                        <RechartsTooltip content={<ChartTooltip />} />
-                        <Bar dataKey="antal" fill="hsl(210, 100%, 56%)" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                    ) : (
-                    <div className="h-[220px] flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">Ingen data ännu – uppdateras automatiskt</p>
-                    </div>
-                    )}
-                  </div>
+                <Card title="När på dygnet" footer={`Flest händelser kl ${String(stats.peakHour).padStart(2, '0')}. Peka på en stapel för antalet.`}>
+                  <Bars values={stats.hourlyData.map((h) => h.antal)} labels={stats.hourlyData.map((h) => h.timme)} every={6} unit="händelser" />
+                </Card>
 
-                  <DangerRanking
-                    incidents={filteredIncidents}
-                    periodLabel={`Baserat på ${TIME_RANGE_OPTIONS.find(o => o.value === timeRange)?.label?.toLowerCase() ?? 'vald period'}s data${selectedArea ? ` i ${selectedArea}` : ''}`}
-                  />
-                </div>
+                {timeRange !== '24h' && stats.trendData.length > 1 && (
+                  <Card title="Dag för dag">
+                    <Bars values={stats.trendData.map((d) => d.incidenter)} labels={stats.trendData.map((d) => d.dag)} every={Math.max(1, Math.ceil(stats.trendData.length / 5))} unit="händelser" />
+                  </Card>
+                )}
+              </div>
 
+              <div>
+                <DangerRanking
+                  incidents={filteredIncidents}
+                  periodLabel={`${periodWord}${selectedArea ? ` i ${selectedArea}` : ''}`}
+                />
 
+                {stats.seasonalWarnings.length > 0 && (
+                  <Card title="Att tänka på">
+                    <ul className="space-y-4">
+                      {stats.seasonalWarnings.map((w) => (
+                        <li key={w.title} className="flex gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: `${SEVERITY_COLOR[w.severity]}26`, color: SEVERITY_COLOR[w.severity] }} aria-hidden>
+                            <w.icon className="h-[18px] w-[18px]" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[15px] font-semibold leading-snug">{w.title}</span>
+                            <span className={`mt-0.5 block text-[14px] leading-snug ${MUTED}`}>{w.message}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                )}
 
-                {/* Predictive Analysis Section */}
-                <div className="bg-card border border-border rounded-lg p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Eye className="w-4 h-4 text-primary" />
-                    <h2 className="text-sm font-bold text-foreground">Prediktiv Analys – Trendspaning</h2>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mb-5">Baserat på mönster i aktuell data{selectedArea ? ` för ${selectedArea}` : ''}</p>
-
-                  {/* Time Profiles Chart */}
-                  <div className="mb-6">
-                    <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3">
-                      Tidsprofil – Brottstyp per timme
-                    </h2>
-                    <p className="text-[10px] text-muted-foreground mb-3">Visar när på dygnet olika händelsetyper är vanligast</p>
-                    {stats?.timeProfileData && stats.timeProfileTypes.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={stats.timeProfileData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="timme" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={2} />
-                          <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                          <RechartsTooltip content={<ChartTooltip />} />
-                          <Legend wrapperStyle={{ fontSize: 10 }} />
-                          {stats.timeProfileTypes.map((t) => (
-                            <Bar key={t.key} dataKey={t.key} stackId="a" fill={t.color} radius={[0, 0, 0, 0]} />
-                          ))}
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-[200px] flex items-center justify-center">
-                        <p className="text-xs text-muted-foreground">Ingen data ännu</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Seasonal Warnings */}
-                  {stats?.seasonalWarnings && stats.seasonalWarnings.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Lightbulb className="w-3.5 h-3.5 text-cr-orange" />
-                        <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Säsongsvarningar &amp; insikter</h2>
-                      </div>
-                      <div className="space-y-3">
-                        {stats.seasonalWarnings.map((w, i) => (
-                          <div
-                            key={i}
-                            className={`rounded-lg border p-3 ${
-                              w.severity === 'danger'
-                                ? 'border-cr-red/30 bg-cr-red/5'
-                                : w.severity === 'warning'
-                                ? 'border-cr-orange/30 bg-cr-orange/5'
-                                : 'border-primary/20 bg-primary/5'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <w.icon className={`mt-0.5 h-4 w-4 shrink-0 ${
-                                w.severity === 'danger' ? 'text-cr-red' : w.severity === 'warning' ? 'text-cr-orange' : 'text-primary'
-                              }`} aria-hidden />
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold mb-0.5 ${
-                                  w.severity === 'danger' ? 'text-cr-red' : w.severity === 'warning' ? 'text-cr-orange' : 'text-primary'
-                                }`}>
-                                  {w.title}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground leading-relaxed">{w.message}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Incident History for selected municipality */}
                 {selectedArea && filteredIncidents.length > 0 && (
-                  <div className="bg-card border border-border rounded-lg p-4 md:p-6">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <h2 className="text-sm font-bold text-foreground">
-                        Händelsehistorik – {selectedArea}
-                      </h2>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mb-4">
-                      {filteredIncidents.length} händelser de senaste {timeRange === '24h' ? 'dygnet' : `${RANGE_DAYS[timeRange]} dagarna`}
-                    </p>
-                    {/* No scroll inside the page's scroll: on iPhone such a list can draw over what follows */}
-                    <div className="space-y-2">
+                  <Card title={`Senaste i ${selectedArea}`} footer={`${filteredIncidents.length} händelser ${timeRange === '24h' ? 'idag' : `de senaste ${RANGE_DAYS[timeRange]} dagarna`}.`}>
+                    <ul className="-my-1">
                       {(showAllHistory ? filteredIncidents : filteredIncidents.slice(0, HISTORY_SHOWN)).map((inc) => {
                         const t = parseTime(inc.time);
-                        const dateStr = t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
-                        const timeStr = t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
                         return (
-                          <div key={inc.id} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition">
-                            <div className="flex-shrink-0 mt-0.5">
-                              <span
-                                className="block w-2.5 h-2.5 rounded-full"
-                                style={{ background: TYPE_COLORS[inc.type] || TYPE_COLORS.other }}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-foreground truncate">{inc.title}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {TYPE_LABELS[inc.type] || inc.type} · {dateStr} kl {timeStr}
-                              </p>
-                              {inc.description && (
-                                <p className="text-[10px] text-muted-foreground/70 mt-1 line-clamp-2">{inc.description}</p>
-                              )}
-                            </div>
-                            {inc.risk === 'high' && (
-                              <span className="flex-shrink-0 text-[9px] font-mono font-bold text-cr-red bg-cr-red/10 px-1.5 py-0.5 rounded">HÖG</span>
-                            )}
-                            {inc.risk === 'medium' && (
-                              <span className="flex-shrink-0 text-[9px] font-mono font-bold text-cr-orange bg-cr-orange/10 px-1.5 py-0.5 rounded">MEDEL</span>
-                            )}
-                          </div>
+                          <li key={inc.id} className="border-b border-[rgba(84,84,88,0.65)] last:border-0">
+                            <Link to={eventPath(inc.id)} className="flex items-center gap-3 py-2.5 active:opacity-60">
+                              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: TYPE_COLORS[inc.type] || TYPE_COLORS.other }} aria-hidden />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[16px]">{cleanPoliceTitle(inc.title)}</span>
+                                <span className={`block text-[13px] ${MUTED}`}>
+                                  {t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} kl {t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                                  {inc.risk === 'high' && <span className="text-[#ff453a]"> · Allvarlig</span>}
+                                </span>
+                              </span>
+                            </Link>
+                          </li>
                         );
                       })}
-                    </div>
+                    </ul>
                     {filteredIncidents.length > HISTORY_SHOWN && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAllHistory((v) => !v)}
-                        className="mt-3 w-full rounded-lg border border-border py-2.5 text-xs font-semibold text-foreground transition hover:bg-muted/50"
-                      >
-                        {showAllHistory ? 'Visa färre' : `Visa alla ${filteredIncidents.length} händelser`}
+                      <button type="button" onClick={() => setShowAllHistory((v) => !v)} className="mt-2 h-11 w-full rounded-xl bg-[#2c2c2e] text-[16px] font-semibold text-[#0a84ff] active:opacity-60">
+                        {showAllHistory ? 'Visa färre' : `Visa alla ${filteredIncidents.length}`}
                       </button>
                     )}
-                  </div>
+                  </Card>
                 )}
 
-                {/* Export */}
-                <ExportData liveIncidents={liveIncidents} selectedArea={selectedArea} />
+                <div className="mx-4 mt-6">
+                  <ExportData liveIncidents={liveIncidents} selectedArea={selectedArea} />
+                </div>
+              </div>
+            </div>
+          )}
 
-
-
-                <p className="text-[10px] text-muted-foreground/50 font-mono text-center pb-4">
-                  CrimeAlert • Data från Polisen.se • Inga personuppgifter visas • GDPR-kompatibel
-                </p>
-              </>
-          }
-          </div>
+          <p className={`mx-6 mt-6 text-center text-[12px] leading-snug ${FAINT}`}>
+            Källa: Polisens händelser på polisen.se. Inga personuppgifter visas.
+          </p>
         </div>
+      </section>
       }
       </div>
     </div>);
