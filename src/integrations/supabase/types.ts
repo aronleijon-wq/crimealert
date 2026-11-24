@@ -510,10 +510,13 @@ export type Database = {
       }
       notification_settings: {
         Row: {
+          all_sweden: boolean
+          kommun_chat: boolean
           min_risk: string
           near_lat: number | null
           near_lng: number | null
           near_radius_km: number | null
+          nearby_reports: boolean
           quiet_end: number | null
           quiet_start: number | null
           themes: string[] | null
@@ -523,10 +526,13 @@ export type Database = {
           weekly_summary: boolean
         }
         Insert: {
+          all_sweden?: boolean
+          kommun_chat?: boolean
           min_risk?: string
           near_lat?: number | null
           near_lng?: number | null
           near_radius_km?: number | null
+          nearby_reports?: boolean
           quiet_end?: number | null
           quiet_start?: number | null
           themes?: string[] | null
@@ -536,10 +542,13 @@ export type Database = {
           weekly_summary?: boolean
         }
         Update: {
+          all_sweden?: boolean
+          kommun_chat?: boolean
           min_risk?: string
           near_lat?: number | null
           near_lng?: number | null
           near_radius_km?: number | null
+          nearby_reports?: boolean
           quiet_end?: number | null
           quiet_start?: number | null
           themes?: string[] | null
