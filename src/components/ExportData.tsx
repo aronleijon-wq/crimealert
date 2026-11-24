@@ -222,18 +222,17 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
   if (!allowed) return null;
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs font-bold text-foreground">Exportera händelsedata</span>
-      </div>
+    <div className="rounded-2xl bg-[#1c1c1e] p-4 text-white">
+      <h3 className="text-[17px] font-semibold">Ladda ner händelserna</h3>
+      <p className="mb-3 mt-0.5 text-[13px] text-white/60">Som tabell (CSV) eller utskrift (PDF).</p>
 
-      <div className="flex flex-wrap gap-1 mb-3">
+      <div className="mb-3 flex flex-wrap gap-2">
         {RANGES.filter((r) => !r.admin || isAdmin).map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setRange(value)}
-            className={`flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 rounded text-[11px] font-medium transition ${
-              range === value ? 'bg-primary/10 text-primary border border-primary/20' : 'text-muted-foreground hover:text-foreground bg-muted'
+            className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[14px] font-medium transition ${
+              range === value ? 'bg-white text-black' : 'bg-[#2c2c2e] text-white hover:bg-[#3a3a3c]'
             }`}
           >
             {/* Four ranges fit a phone's width on one line without the icons */}
@@ -243,7 +242,7 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
         ))}
       </div>
 
-      <p className="text-[10px] text-muted-foreground mb-3">
+      <p className="mb-3 text-[13px] text-white/60">
         {needsArchive && archiveLoading ? 'Hämtar data...' : `${sourceIncidents.length} händelser tillgängliga${selectedArea ? ` i ${selectedArea}` : ''}`}
       </p>
 
@@ -251,17 +250,17 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
         <button
           onClick={() => handleExport('csv')}
           disabled={exporting || archiveLoading}
-          className="flex items-center gap-1.5 px-3 py-2 bg-muted text-foreground rounded-md text-xs font-semibold hover:bg-muted/80 transition disabled:opacity-50"
+          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#2c2c2e] text-[16px] font-semibold text-white transition hover:bg-[#3a3a3c] disabled:opacity-50"
         >
-          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Table2 className="w-3.5 h-3.5" />}
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Table2 className="h-4 w-4" />}
           CSV
         </button>
         <button
           onClick={() => handleExport('pdf')}
           disabled={exporting || archiveLoading}
-          className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-md text-xs font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#ff453a] text-[16px] font-semibold text-white transition hover:bg-[#ff453a]/90 disabled:opacity-50"
         >
-          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
           PDF
         </button>
       </div>
