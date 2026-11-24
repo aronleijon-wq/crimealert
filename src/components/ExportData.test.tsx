@@ -94,3 +94,11 @@ describe('exported events and the night summaries', () => {
     expect(withoutSplitSummaries(rows).map((r) => r.id)).toEqual(['pol-1-s1', 'pol-2', 'pol-3']);
   });
 });
+
+describe('exported lists of events', () => {
+  it('leaves out a list that was split, whatever its kind', async () => {
+    const { withoutSplitSummaries } = await import('@/lib/summaries');
+    const rows = [{ id: 'pol-7' }, { id: 'pol-7-s1' }, { id: 'pol-7-s2' }, { id: 'pol-8' }];
+    expect(withoutSplitSummaries(rows).map((r) => r.id)).toEqual(['pol-7-s1', 'pol-7-s2', 'pol-8']);
+  });
+});
