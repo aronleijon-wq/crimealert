@@ -134,3 +134,47 @@ describe('placeKommunIndex', () => {
     expect(index.has('björknäs')).toBe(false);
   });
 });
+
+describe('summaryParts, from the audit of real summaries (November 2026)', () => {
+  const vg: SummaryPlaces = {
+    kommunerFor: () => ['Göteborg', 'Strömstad', 'Mölndal'],
+    // A place in Strömstad that is also a word for a kind of event
+    placeKommun: (_a, name) => ({ Brand: 'Strömstad', Långedrag: 'Göteborg' } as Record<string, string>)[name] ?? null,
+  };
+  const at = { title: '22 november 06.00, Sammanfattning natt, Västra Götalands län', area: 'Västra Götalands län' };
+
+  it('puts "02:38 Brand, Göteborg" in Göteborg, not in a place called Brand elsewhere', () => {
+    const parts = summaryParts(summary('02:38 Brand, Göteborg\nRäddningstjänsten larmas till en villabrand i Långedrag.', at), vg);
+    expect(parts.map((p) => [p.kommun, p.type])).toEqual([['Göteborg', 'Brand']]);
+  });
+
+  it('finds a kommun written in lower case in the heading, and decodes &amp;ndash;', () => {
+    const norr: SummaryPlaces = { kommunerFor: () => ['Örebro', 'Östersund', 'Lund'] };
+    const parts = summaryParts(summary([
+      '01:03, rattfylleri, örebro',
+      'När polis kontrollerar ett fordon på Väster i örebro misstänks föraren för rattfylleri.',
+      '04:41, narkotikabrott &amp;ndash; örebro – Väktare larmar polisen om en utslagen man.',
+      'Kl 00:51, östersund',
+      'Polis beordras till en restaurang i centrum med anledning av bråk.',
+    ].join('\n'), at), norr);
+    expect(parts.map((p) => [p.kommun, p.type])).toEqual([['Örebro', 'Rattfylleri'], ['Örebro', 'Narkotikabrott'], ['Östersund', 'Bråk']]);
+  });
+
+  it('leaves out overviews and tallies, and does not read "Jönköpings län" as Jönköping', () => {
+    const nb: SummaryPlaces = { kommunerFor: () => ['Kalix', 'Luleå', 'Piteå', 'Jönköping'] };
+    const parts = summaryParts(summary([
+      'Kl 00:00-07:00, åtta personer har omhändertagits för fylleri och polisen har hanterat anmälningar gällande misshandel.',
+      'Fyra viltolyckor har inträffat under natten (på E4 i Kalix, Luleå och Piteå).',
+      'Polisens regionledningscentral har mellan klockan 22.00-07.00 hanterat ett 50-tal ärenden som rör Jönköpings län. Exempelvis fylleri.',
+      'Kl 02:15, Luleå – Inbrott i en butik på Storgatan.',
+    ].join('\n'), at), nb);
+    expect(parts.map((p) => [p.kommun, p.type])).toEqual([['Luleå', 'Inbrott']]);
+  });
+
+  it('knows olaga tvång, våldsamt motstånd, traffic stops and ordningslagen', () => {
+    expect(kindOf('Mannen grips, misstänkt för olaga tvång')).toBe('Olaga tvång');
+    expect(kindOf('00:39, Våldsamt motstånd, Umeå')).toBe('Våldsamt motstånd');
+    expect(kindOf('En bilist stoppas för kontroll. Föraren har kört mot rött ljus')).toBe('Trafikkontroll');
+    expect(kindOf('En man ses urinera offentligt i Stenstan')).toBe('Ordningslagen');
+  });
+});
