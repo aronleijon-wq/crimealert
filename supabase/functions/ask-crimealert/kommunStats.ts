@@ -3,7 +3,7 @@
 // country and the year before, and its place among the 290 kommuner; for a kind, every kommun
 // ranked. The country's level is weighted by population, from the kommuner's own rates.
 import { STAT_RATES, STAT_TYPES, type StatType } from './data/kommunStats.ts';
-import { KOMMUN_POPULATION, POPULATION_YEAR } from './data/population.ts';
+import { KOMMUN_POPULATION, POPULATION_YEAR } from '../_shared/data/population.ts';
 
 export const STAT_TYPE_IDS = STAT_TYPES.map((t) => t.id);
 

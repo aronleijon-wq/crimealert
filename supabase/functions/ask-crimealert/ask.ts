@@ -3,10 +3,10 @@
 // what they return. Three questions a day without Pro, answered by Haiku; as many as you like
 // with Pro (a hundred, so a stuck script can't run up a bill), the first five a day by Sonnet. The ask-crimealert edge function runs it; the parts
 // here are plain functions so they can be tested.
-import { SWEDISH_MUNICIPALITIES } from './data/municipalities.ts';
-import { KOMMUN_POPULATION, POPULATION_YEAR } from './data/population.ts';
-import { kommunMatcher } from './notifications.ts';
-import { THEMES, themeOf } from './themes.ts';
+import { SWEDISH_MUNICIPALITIES } from '../_shared/data/municipalities.ts';
+import { KOMMUN_POPULATION, POPULATION_YEAR } from '../_shared/data/population.ts';
+import { kommunMatcher } from '../_shared/notifications.ts';
+import { THEMES, themeOf } from '../_shared/themes.ts';
 import { STAT_TYPE_IDS } from './kommunStats.ts';
 
 export const FREE_QUESTIONS_PER_DAY = 3;

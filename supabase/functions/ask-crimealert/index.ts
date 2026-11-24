@@ -1,5 +1,5 @@
 // Fråga CrimeAlert: answers a question about crime where you live, with Claude counting Polisen's
-// events through two tools (_shared/ask.ts). For signed-in accounts: three questions a Swedish
+// events through two tools (./ask.ts). For signed-in accounts: three questions a Swedish
 // day without Pro, answered by Haiku; as many as you like with Pro (up to a hundred), the first
 // five a day by Sonnet and the rest by Haiku. Body { messages } asks; { quota: true } only tells
 // how many are left.
@@ -12,8 +12,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.97.0';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import {
   ASK_TOOLS, askSystem, betterLeft, cleanHistory, kommunEvents, kommunNamed, modelTier, questionsLeft, stockholmMidnight, swedenRanking, type AskEvent,
-} from '../_shared/ask.ts';
-import { kommunStats, statsRanking } from '../_shared/kommunStats.ts';
+} from './ask.ts';
+import { kommunStats, statsRanking } from './kommunStats.ts';
 import { isFreePremiumEmail, isFresh, lookupProUntil, proUntilActive, readProStatus, rememberProStatus } from '../_shared/premium.ts';
 
 const corsHeaders = {
