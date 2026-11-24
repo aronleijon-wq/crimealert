@@ -27,7 +27,7 @@ const Hero = ({ live }: { live: LandingLive }) => {
       <div className="absolute inset-0 ca-gridlines opacity-[0.35]" />
       <div className="absolute inset-0 ca-vignette" />
       <div
-        className="ca-fog absolute -top-52 left-1/2 h-[700px] w-[1100px] -translate-x-1/2 rounded-full blur-[170px]"
+        className="ca-fog absolute -top-52 left-1/2 h-[700px] w-[1100px] -translate-x-1/2 rounded-full"
         style={{ background: 'radial-gradient(circle, hsla(0,68%,52%,0.5) 0%, transparent 65%)' }}
       />
       <div className="absolute inset-x-0 top-0 h-px bg-[hsl(var(--ca-line))]" />

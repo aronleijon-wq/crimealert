@@ -8,7 +8,7 @@ const FinalCTA = () => {
   return (
   <section className="relative py-28 md:py-40 px-5 md:px-10 border-t border-[hsl(var(--ca-line))] overflow-hidden">
     <div
-      className="absolute inset-x-0 bottom-[-40%] h-[560px] blur-[170px] opacity-[0.13] ca-fog"
+      className="absolute inset-x-0 bottom-[-40%] h-[560px] opacity-[0.13] ca-fog"
       style={{ background: 'radial-gradient(circle at 50% 50%, hsl(var(--ca-red)) 0%, transparent 65%)' }}
     />
     <Reveal className="relative max-w-[1400px] mx-auto text-center">
