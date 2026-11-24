@@ -1,3 +1,4 @@
+import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { Lock, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TRIAL_DAYS } from '@/components/account/plans';
@@ -14,7 +15,7 @@ interface PremiumGateProps {
 const PremiumGate = ({ title, description, free }: PremiumGateProps) => {
   const navigate = useNavigate();
   const { user, subscription } = useAuth();
-  const offerTrial = !user || subscription.trialEligible === true;
+  const offerTrial = useTrialOffer();
 
   return (
     <div className="flex-1 flex items-center justify-center p-6">

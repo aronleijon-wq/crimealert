@@ -50,6 +50,12 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: null,
         runtimeCaching: [
           {
+            // Built files have their content in their name, so a saved copy never goes stale
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/assets/"),
+            handler: "CacheFirst",
+            options: { cacheName: "assets", expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 } },
+          },
+          {
             urlPattern: ({ request, url }) => request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
             handler: "NetworkFirst",
             options: {
@@ -62,7 +68,15 @@ export default defineConfig(({ mode }) => ({
         ],
         globPatterns: ["**/*.{js,css,ico,png,svg,webp,woff2}"],
         // Not shown by the app: the 512 px install icon and two unused uploads (about 0.9 MB)
-        globIgnores: ["**/pwa-512x512.png", "**/lovable-uploads/442645a7-*.png", "**/lovable-uploads/f5451b06-*.png"],
+        // Kept small, so a new version installs and takes over in a moment: a page opened from an
+        // old saved copy (a link in an e-mail, say) then shows the new one at once instead of
+        // after several seconds. The big parts used on some pages only (the admin page, the
+        // district names, the map library, the landing page's story) are saved the first time
+        // they are used instead (runtimeCaching below).
+        globIgnores: [
+          "**/pwa-512x512.png", "**/lovable-uploads/442645a7-*.png", "**/lovable-uploads/f5451b06-*.png",
+          "**/assets/Admin-*.js", "**/assets/districts-*.js", "**/assets/leaflet-*.js", "**/assets/StickyStory-*.js",
+        ],
         importScripts: [`/sw-push.js?v=${BUILD_ID}`],
         skipWaiting: true,
         clientsClaim: true,

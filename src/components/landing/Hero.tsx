@@ -1,3 +1,4 @@
+import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { Link } from 'react-router-dom';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { BLACK_WEEK, NORMAL_TRIAL_DAYS, TRIAL_DAYS } from '@/components/account/plans';
@@ -19,7 +20,7 @@ const Stat = ({ label, children, delay }: { label: string; children: React.React
 const Hero = ({ live }: { live: LandingLive }) => {
   const { user, subscription } = useAuth();
   // Same rule as the checkout: signed out, or an account that never had Pro
-  const offerTrial = !user || subscription.trialEligible === true;
+  const offerTrial = useTrialOffer();
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-12 pt-[calc(6rem+var(--ca-banner-h,0px))] md:items-center md:pb-28 md:pt-[calc(7rem+var(--ca-banner-h,0px))]">
       {/* Atmosphere */}

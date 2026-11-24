@@ -1,3 +1,4 @@
+import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -177,6 +178,7 @@ const Installningar = () => {
     canonical: 'https://crimealert.se/installningar',
   });
   const { user, subscription, signOut } = useAuth();
+  const offerTrial = useTrialOffer();
   const { isPremium } = useIsPremium();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
@@ -280,7 +282,7 @@ const Installningar = () => {
                 ) : !isPremium ? (
                   <LinkRow
                     icon={Zap}
-                    label={user && subscription.trialEligible ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
+                    label={user && offerTrial ? `Prova Pro gratis i ${TRIAL_DAYS} dagar` : 'Uppgradera till Pro'}
                     hint={`Händelser och notiser direkt, hela beskrivningen och ${FREE_PLAN_HAS_ADS ? 'ingen reklam' : 'statistik'}.`}
                     to="/prisplan"
                   />

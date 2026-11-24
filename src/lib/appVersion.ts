@@ -90,7 +90,9 @@ export function watchForNewVersion() {
     last = Date.now();
     void checkForNewVersion();
   };
-  setTimeout(check, 2000);
+  // At once: a page opened from an old saved copy (an e-mail link on a phone, say) must not
+  // show old prices and offers for long
+  check();
   setInterval(() => {
     if (document.visibilityState === 'visible') check();
   }, CHECK_EVERY_MS);

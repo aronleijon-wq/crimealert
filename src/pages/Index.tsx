@@ -1,3 +1,4 @@
+import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
@@ -54,6 +55,7 @@ const Index = () => {
   });
   const { isPremium } = useIsPremium();
   const { user, subscription } = useAuth();
+  const offerTrial = useTrialOffer();
   const isMobile = useIsMobile();
   const isLoggedIn = !!user;
   // Phones start with the whole screen for the map; the list opens from the button at the bottom
@@ -237,7 +239,7 @@ const Index = () => {
   const timelinePanel = historyOpen && (
     <HistoryPanel
       isPremium={isPremium}
-      offerTrial={!isLoggedIn || subscription.trialEligible === true}
+      offerTrial={offerTrial}
       range={historyRange}
       end={historyEnd}
       start={firstEnd(historyRange, historyNow)}
@@ -511,7 +513,7 @@ const Index = () => {
             <div className={`absolute left-1/2 z-[1000] -translate-x-1/2 ${isMobile && !mobileListOpen ? 'bottom-16' : 'bottom-4'}`}>
               <HistoryPanel
                 isPremium={isPremium}
-                offerTrial={!isLoggedIn || subscription.trialEligible === true}
+                offerTrial={offerTrial}
                 range={historyRange}
                 end={historyEnd}
                 start={firstEnd(historyRange, historyNow)}

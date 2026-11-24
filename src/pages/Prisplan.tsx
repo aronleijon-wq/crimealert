@@ -1,3 +1,4 @@
+import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { reportConversion, SEND_TO_PURCHASE } from "@/lib/googleAds";
 import Header from '@/components/Header';
 import { useSEO } from '@/hooks/useSEO';
@@ -35,6 +36,7 @@ const Prisplan = () => {
     canonical: 'https://crimealert.se/prisplan',
   });
   const { user, subscription, checkSubscription } = useAuth();
+  const offerTrial = useTrialOffer();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -193,7 +195,7 @@ const Prisplan = () => {
           <PlanComparison
             signedIn={!!user}
             isPremium={isPremium}
-            trialEligible={!user || subscription.trialEligible === true}
+            trialEligible={offerTrial}
             billingCycle={billingCycle}
             onBillingCycle={setBillingCycle}
             onCheckout={handleCheckout}
