@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Bell, Check, LocateFixed, MapPin, Minus, Moon, Plus, Search, Send, X } from 'lucide-react';
+import { Bell, Check, Globe2, LocateFixed, MapPin, MessagesSquare, Minus, Moon, Plus, Radio, Search, Send, Sparkles, X } from 'lucide-react';
+import { ALL_EXTRAS, ALL_SWEDEN_HINT, DEFAULT_EXTRAS, EXTRA_CHOICES, EXTRAS_FOOTER, allOn } from '../../supabase/functions/_shared/notifyExtras';
 import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
@@ -30,6 +31,7 @@ const LEVELS: { value: RiskLevel; label: string }[] = [
 ];
 
 const DAY = 24 * 60 * 60 * 1000;
+const EXTRA_ICONS = { allSweden: Globe2, kommunChat: MessagesSquare, reports: Radio };
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const DEFAULT_QUIET = { start: 22, end: 7 };
 
@@ -101,7 +103,7 @@ const NativeAlerts = () => {
   const { isPremium } = useIsPremium();
   const push = useNativePush(true);
   const { kommuner, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
+  const { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly, extras, extrasAvailable, saveExtras } = useNotificationSettings();
   const watch = useWatchPlaces();
   const { incidents } = usePoliceEvents();
   const [adding, setAdding] = useState(false);
@@ -194,6 +196,26 @@ const NativeAlerts = () => {
       </Section>
 
       {moreAvailable && <PlacesSection isPremium={isPremium} watch={watch} />}
+
+      {extrasAvailable && (
+        <Section header="Allt som händer" footer={extras.allSweden ? `${ALL_SWEDEN_HINT} ${EXTRAS_FOOTER}` : EXTRAS_FOOTER}>
+          <Row
+            icon={Sparkles}
+            label="Allt"
+            detail="Alla händelser, chattar och rapporter"
+            accessory={<Switch label="Allt" checked={allOn(extras)} onChange={(on) => saveExtras(on ? ALL_EXTRAS : DEFAULT_EXTRAS)} />}
+          />
+          {EXTRA_CHOICES.map((c) => (
+            <Row
+              key={c.key}
+              icon={EXTRA_ICONS[c.key]}
+              label={c.label}
+              detail={c.detail}
+              accessory={<Switch label={c.label} checked={extras[c.key]} onChange={(on) => saveExtras({ ...extras, [c.key]: on })} />}
+            />
+          ))}
+        </Section>
+      )}
 
       {available && (
         <>

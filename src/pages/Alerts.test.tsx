@@ -22,6 +22,7 @@ const removeKommun = vi.fn(async () => null);
 const subscribe = vi.fn(async () => true);
 const save = vi.fn(async () => true);
 const saveWeekly = vi.fn(async () => true);
+const saveExtras = vi.fn(async () => true);
 
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/components/Header', () => ({ default: () => null }));
@@ -49,6 +50,9 @@ vi.mock('@/hooks/useNotificationSettings', () => ({
     weeklySummary: true,
     weeklyAvailable: state.settingsAvailable,
     saveWeekly,
+    extras: { allSweden: false, kommunChat: false, reports: true },
+    extrasAvailable: state.settingsAvailable,
+    saveExtras,
   }),
 }));
 vi.mock('@/hooks/usePushNotifications', () => ({
@@ -139,6 +143,15 @@ describe('Alerts page', () => {
     expect(toggle).toBeChecked();
     fireEvent.click(toggle);
     await vi.waitFor(() => expect(saveWeekly).toHaveBeenCalledWith(false));
+  });
+
+  it('turns on notifications for everything: all of Sweden, kommun chat and reports', async () => {
+    await renderAlerts();
+    expect(screen.getByRole('switch', { name: 'Rapporter från folk på plats' })).toBeChecked();
+    fireEvent.click(screen.getByRole('switch', { name: 'Nya inlägg i kommunchatten' }));
+    await vi.waitFor(() => expect(saveExtras).toHaveBeenCalledWith({ allSweden: false, kommunChat: true, reports: true }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Allt' }));
+    await vi.waitFor(() => expect(saveExtras).toHaveBeenLastCalledWith({ allSweden: true, kommunChat: true, reports: true }));
   });
 
   it('does not mention the free delay to Pro', async () => {

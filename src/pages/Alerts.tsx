@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { isNativeApp } from '@/lib/native';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BellRing, CalendarDays, Check, ChevronRight, MapPin, Settings2, Smartphone } from 'lucide-react';
+import { ArrowRight, BellRing, CalendarDays, Check, ChevronRight, MapPin, Settings2, Smartphone, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import Header from '@/components/Header';
 import AreaPicker from '@/components/alerts/AreaPicker';
@@ -26,6 +26,7 @@ import { getDevicePushInfo } from '@/lib/push';
 import { formatTimeAgo } from '@/lib/timeAgo';
 import { incidentTypeIcon } from '@/lib/typeIcons';
 import { watchedKommunFor, type NotifySettings } from '../../supabase/functions/_shared/notifications';
+import { ALL_EXTRAS, ALL_SWEDEN_HINT, DEFAULT_EXTRAS, EXTRA_CHOICES, EXTRAS_FOOTER, allOn, type NotifyExtras } from '../../supabase/functions/_shared/notifyExtras';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -119,7 +120,7 @@ const Alerts = () => {
   const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
   const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
-  const { settings, available: settingsAvailable, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly } = useNotificationSettings();
+  const { settings, available: settingsAvailable, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly, extras, extrasAvailable, saveExtras } = useNotificationSettings();
   // The iPhone app gets notifications through Apple; app versions without that keep web push off
   const native = isNativeApp();
   const webPush = usePushNotifications(!native);
@@ -224,6 +225,11 @@ const Alerts = () => {
 
   const handleWeekly = async (next: boolean) => {
     const ok = await saveWeekly(next);
+    if (!ok) toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
+  };
+
+  const handleExtras = async (next: NotifyExtras) => {
+    const ok = await saveExtras(next);
     if (!ok) toast({ title: 'Kunde inte spara', description: 'Försök igen om en stund.', variant: 'destructive' });
   };
 
@@ -365,6 +371,24 @@ const Alerts = () => {
                   <NotificationPreview incident={inMyAreas[0]} area={kommuner[0]} />
                 </div>
               </Section>
+
+              {extrasAvailable && (
+                <Section id="allt" icon={Sparkles} title="Allt som händer" description="Mer än polisens händelser i dina områden. Välj vad du vill ha.">
+                  <div className="space-y-3">
+                    <label className="flex cursor-pointer items-center justify-between gap-4 border-b border-[hsl(var(--ca-line))] pb-3">
+                      <span className="text-sm font-semibold text-foreground">Allt<span className="block text-xs font-normal text-muted-foreground">Alla händelser, chattar och rapporter</span></span>
+                      <Switch checked={allOn(extras)} disabled={saving} onCheckedChange={(on) => handleExtras(on ? ALL_EXTRAS : DEFAULT_EXTRAS)} aria-label="Allt" />
+                    </label>
+                    {EXTRA_CHOICES.map((c) => (
+                      <label key={c.key} className="flex cursor-pointer items-center justify-between gap-4">
+                        <span className="text-sm text-foreground">{c.label}<span className="block text-xs text-muted-foreground">{c.detail}</span></span>
+                        <Switch checked={extras[c.key]} disabled={saving} onCheckedChange={(on) => handleExtras({ ...extras, [c.key]: on })} aria-label={c.label} />
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">{extras.allSweden ? `${ALL_SWEDEN_HINT} ${EXTRAS_FOOTER}` : EXTRAS_FOOTER}</p>
+                </Section>
+              )}
 
               {settingsAvailable && (
                 <Section id="amnen" icon={Settings2} title="Vad vill du få notiser om?" description="Gäller alla dina områden och enheter.">

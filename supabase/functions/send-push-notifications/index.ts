@@ -22,8 +22,11 @@ import {
   type WatchPlaceRow,
 } from '../_shared/notifications.ts';
 import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
-import { mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
+import { KOMMUN_THREAD, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
 import { isSummaryPart } from '../_shared/summaryEvents.ts';
+import { chatLogKey, chatMessage, extrasFromRow, reportMessage, reportPath, type ExtrasRow, type NotifyExtras } from '../_shared/notifyExtras.ts';
+import { SWEDISH_MUNICIPALITIES } from '../_shared/data/municipalities.ts';
+import { kommunSlug } from '../_shared/kommunSlug.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -470,11 +473,159 @@ async function sendWeeklySummaries(supabase: ServiceClient, vapidPublicKey: stri
   return { sent, users: claimedUsers.size, week, expired_cleaned: expiredEndpoints.length };
 }
 
+// Who watches what: kommuner, settings, places and the wider choices (notifyExtras). Each part is
+// empty when it can't be read (before its migration has run), so the rest keeps working.
+interface Watching {
+  userKommuner: Record<string, string[]>;
+  userSettings: Record<string, NotifySettings>;
+  userPlaces: Record<string, WatchPlace[]>;
+  userExtras: Record<string, NotifyExtras>;
+}
+
+async function loadWatching(supabase: ServiceClient & AdminClient, now: number): Promise<Watching> {
+  const { data: prefs, error: prefsError } = await supabase.from('notification_preferences').select('user_id, kommun');
+  if (prefsError) throw prefsError;
+  const userKommuner: Record<string, string[]> = {};
+  for (const pref of prefs ?? []) (userKommuner[pref.user_id] ??= []).push(pref.kommun);
+
+  // No row means everything. Before the newer columns' migration has run, the older ones are read
+  const userSettings: Record<string, NotifySettings> = {};
+  let settingsRows: (SettingsRow & { user_id: string })[] | null = null;
+  const full = await supabase
+    .from('notification_settings')
+    .select('user_id, types, min_risk, themes, quiet_start, quiet_end, near_lat, near_lng, near_radius_km');
+  if (full.error) {
+    const basic = await supabase.from('notification_settings').select('user_id, types, min_risk');
+    if (basic.error) console.warn('Could not read notification settings, using defaults', basic.error.message);
+    settingsRows = basic.data;
+  } else {
+    settingsRows = full.data;
+  }
+  for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
+
+  const userExtras: Record<string, NotifyExtras> = {};
+  const extras = await supabase.from('notification_settings').select('user_id, all_sweden, kommun_chat, nearby_reports');
+  if (extras.error) console.warn('Could not read the wider notification choices', extras.error.message);
+  for (const row of (extras.data ?? []) as (ExtrasRow & { user_id: string })[]) userExtras[row.user_id] = extrasFromRow(row);
+
+  // Mina platser: free accounts are notified about their first place, Pro about up to five
+  const userPlaces: Record<string, WatchPlace[]> = {};
+  const placesRead = await supabase.from('watch_places').select('id, user_id, label, kind, lat, lng, radius_km, created_at');
+  if (placesRead.error) console.warn('Could not read watch places', placesRead.error.message);
+  for (const row of (placesRead.data ?? []) as (WatchPlaceRow & { user_id: string })[]) {
+    const place = placeFromRow(row);
+    if (place) (userPlaces[row.user_id] ??= []).push(place);
+  }
+  const placesPro = await findProUsers(supabase, Object.keys(userPlaces).filter((id) => userPlaces[id].length > FREE_PLACES), now);
+  for (const userId of Object.keys(userPlaces)) userPlaces[userId] = placesInUse(userPlaces[userId], placesPro.has(userId));
+
+  return { userKommuner, userSettings, userPlaces, userExtras };
+}
+
+const extrasOf = (w: Watching, userId: string) => w.userExtras[userId] ?? extrasFromRow(null);
+const settingsOf = (w: Watching, userId: string) => w.userSettings[userId] ?? settingsFromRow(null);
+
+/** Sends one payload to these users' devices; drops the ones that expired. Returns users reached. */
+async function pushToUsers(supabase: ServiceClient, userIds: string[], payload: string, vapidPublicKey: string, vapidPrivateKey: string): Promise<Set<string>> {
+  const reached = new Set<string>();
+  if (!userIds.length) return reached;
+  const { data: subscriptions } = await supabase.from('push_subscriptions').select('*').in('user_id', userIds);
+  const expired: string[] = [];
+  for (const sub of (subscriptions ?? []) as PushSubscriptionRow[]) {
+    const result = await sendPush(sub, payload, vapidPublicKey, vapidPrivateKey);
+    if (result.ok) reached.add(sub.user_id);
+    if (result.expired) expired.push(sub.endpoint);
+  }
+  if (expired.length) await supabase.from('push_subscriptions').delete().in('endpoint', expired);
+  return reached;
+}
+
+/**
+ * A new post in a kommun's discussion, to those who watch the kommun and asked for it, besides
+ * those already told as a reply. At most once per ten minutes per person and discussion.
+ */
+async function sendKommunChat(
+  supabase: ServiceClient & AdminClient,
+  comment: { id: string; incident_id: string; user_id: string; text: string },
+  author: string,
+  skip: Set<string>,
+  vapidPublicKey: string,
+  vapidPrivateKey: string,
+) {
+  const slug = comment.incident_id.slice(KOMMUN_THREAD.length);
+  const kommun = SWEDISH_MUNICIPALITIES.find((m) => kommunSlug(m.name) === slug)?.name;
+  if (!kommun) return 0;
+  const now = Date.now();
+  const w = await loadWatching(supabase, now);
+  const wanting = Object.entries(w.userKommuner)
+    .filter(([userId, ks]) => !skip.has(userId) && ks.some((k) => kommunSlug(k) === slug) && extrasOf(w, userId).kommunChat && !inQuietHours(settingsOf(w, userId), now))
+    .map(([userId]) => userId);
+  if (!wanting.length) return 0;
+  const key = chatLogKey(comment.incident_id, now);
+  const { data: told } = await supabase.from('sent_push_log').select('user_id').eq('event_id', key).in('user_id', wanting);
+  const toldSet = new Set((told ?? []).map((r: { user_id: string }) => r.user_id));
+  const recipients = wanting.filter((id) => !toldSet.has(id));
+  if (!recipients.length) return 0;
+  const { title, body } = chatMessage({ author, text: comment.text, kommun });
+  const reached = await pushToUsers(supabase, recipients, JSON.stringify({
+    title, body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png',
+    tag: `chat-${comment.incident_id}`,
+    data: { url: safeAppPath(threadPath(comment.incident_id)) },
+  }), vapidPublicKey, vapidPrivateKey);
+  if (reached.size) await supabase.from('sent_push_log').insert([...reached].map((user_id) => ({ event_id: key, user_id })));
+  return reached.size;
+}
+
+// A report's notifications are sent once, shortly after it was made, and only by its author
+const reportsSent = new Set<string>();
+
+/** A new report from someone on the spot, to those who watch the place and want reports */
+async function sendReportNotifications(supabase: ServiceClient & AdminClient, authorId: string, reportId: unknown, vapidPublicKey: string, vapidPrivateKey: string) {
+  if (typeof reportId !== 'string' || !/^[0-9a-f-]{36}$/i.test(reportId)) return { sent: 0, reason: 'bad_request' };
+  if (reportsSent.has(reportId)) return { sent: 0, reason: 'already_sent' };
+  const { data: report } = await supabase
+    .from('community_reports').select('id, user_id, category, area, lat, lng, event_id, created_at').eq('id', reportId).maybeSingle();
+  if (!report || report.user_id !== authorId) return { sent: 0, reason: 'not_found' };
+  if (Date.now() - Date.parse(report.created_at) > REPLY_WINDOW_MS) return { sent: 0, reason: 'too_old' };
+  reportsSent.add(reportId);
+
+  const now = Date.now();
+  const w = await loadWatching(supabase, now);
+  const { data: blocks } = await supabase.from('user_blocks').select('blocker_id').eq('blocked_id', authorId);
+  const blocked = new Set<string>((blocks ?? []).map((b: { blocker_id: string }) => b.blocker_id));
+  const users = new Set([...Object.keys(w.userKommuner), ...Object.keys(w.userSettings), ...Object.keys(w.userPlaces), ...Object.keys(w.userExtras)]);
+  const recipients: string[] = [];
+  for (const userId of users) {
+    if (userId === authorId || blocked.has(userId)) continue;
+    const extras = extrasOf(w, userId); const settings = settingsOf(w, userId);
+    if (!extras.reports || inQuietHours(settings, now)) continue;
+    const here = placeForEvent(w.userPlaces[userId] ?? [], report) !== null
+      || watchedKommunFor(report.area, w.userKommuner[userId] ?? []) !== null
+      || nearEvent(settings, report);
+    if (here) recipients.push(userId);
+  }
+  const key = `report:${report.id}`;
+  const { data: told } = recipients.length
+    ? await supabase.from('sent_push_log').select('user_id').eq('event_id', key).in('user_id', recipients)
+    : { data: [] };
+  const toldSet = new Set((told ?? []).map((r: { user_id: string }) => r.user_id));
+  const fresh = recipients.filter((id) => !toldSet.has(id));
+  if (!fresh.length) return { sent: 0, reason: 'no_recipients' };
+  const { title, body } = reportMessage({ category: report.category, area: report.area });
+  const reached = await pushToUsers(supabase, fresh, JSON.stringify({
+    title, body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png',
+    tag: `report-${report.id}`,
+    data: { url: safeAppPath(reportPath(report.event_id)) },
+  }), vapidPublicKey, vapidPrivateKey);
+  if (reached.size) await supabase.from('sent_push_log').insert([...reached].map((user_id) => ({ event_id: key, user_id })));
+  return { sent: reached.size, recipients: fresh.length };
+}
+
 // A comment's notifications are sent once, shortly after it was written, and only by its author
 const REPLY_WINDOW_MS = 5 * 60 * 1000;
 const repliesSent = new Set<string>();
 
-async function sendReplyNotifications(supabase: ServiceClient, authorId: string, commentId: unknown, vapidPublicKey: string, vapidPrivateKey: string) {
+async function sendReplyNotifications(supabase: ServiceClient & AdminClient, authorId: string, commentId: unknown, vapidPublicKey: string, vapidPrivateKey: string) {
   if (typeof commentId !== 'string' || !/^[0-9a-f-]{36}$/i.test(commentId)) return { sent: 0, reason: 'bad_request' };
   if (repliesSent.has(commentId)) return { sent: 0, reason: 'already_sent' };
   const { data: comment } = await supabase
@@ -495,7 +646,12 @@ async function sendReplyNotifications(supabase: ServiceClient, authorId: string,
   // Whoever the comment answers (@Name) hears of it every time; the others once per round
   const answered = mentionedUsers(comment.text, names).filter((id) => id !== authorId && !blocked.has(id));
   const recipients = [...new Set([...answered, ...replyRecipients((thread ?? []) as ThreadComment[], comment, blocked)])];
-  if (!recipients.length) return { sent: 0, reason: 'no_recipients' };
+  // Those who watch the kommun and asked for its discussion hear of new posts too
+  const chat = comment.incident_id.startsWith(KOMMUN_THREAD)
+    ? await sendKommunChat(supabase, comment, names[authorId] ?? '', new Set([authorId, ...blocked, ...recipients]), vapidPublicKey, vapidPrivateKey)
+      .catch((e) => { console.warn('Kommun chat notifications failed', e instanceof Error ? e.message : e); return 0; })
+    : 0;
+  if (!recipients.length) return { sent: 0, chat, reason: 'no_recipients' };
 
   const [{ data: event }, { data: subscriptions }] = await Promise.all([
     comment.incident_id.startsWith('kommun:')
@@ -525,7 +681,7 @@ async function sendReplyNotifications(supabase: ServiceClient, authorId: string,
     if (result.expired) expired.push(sub.endpoint);
   }
   if (expired.length) await supabase.from('push_subscriptions').delete().in('endpoint', expired);
-  return { sent, recipients: recipients.length };
+  return { sent, chat, recipients: recipients.length };
 }
 
 async function getRequestBody(req: Request) {
@@ -555,7 +711,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const body = await getRequestBody(req);
-    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : body.mode === 'reply' ? 'reply' : 'live';
+    const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : body.mode === 'reply' ? 'reply' : body.mode === 'report' ? 'report' : 'live';
     const token = getBearerToken(req);
     const isInternalCall = token === serviceRoleKey;
 
@@ -593,6 +749,15 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Inte inloggad.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       const result = await sendReplyNotifications(supabase, requestUserId, body.commentId, vapidPublicKey, vapidPrivateKey);
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // A report someone just made on the spot (submit-community-report), sent by its author
+    if (mode === 'report') {
+      if (!requestUserId) {
+        return new Response(JSON.stringify({ error: 'Inte inloggad.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const result = await sendReportNotifications(supabase, requestUserId, body.reportId, vapidPublicKey, vapidPrivateKey);
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -674,50 +839,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: prefs, error: prefsError } = await supabase
-      .from('notification_preferences')
-      .select('user_id, kommun');
-    if (prefsError) throw prefsError;
+    const watching = await loadWatching(supabase, now);
+    const { userKommuner, userSettings, userPlaces } = watching;
 
-    const userKommuner: Record<string, string[]> = {};
-    for (const pref of prefs ?? []) {
-      if (!userKommuner[pref.user_id]) userKommuner[pref.user_id] = [];
-      userKommuner[pref.user_id].push(pref.kommun);
-    }
-
-    // What each user wants to hear about. No row means everything. Before the newer columns'
-    // migration has run, the older ones are read; if none can be read, everyone gets everything.
-    const userSettings: Record<string, NotifySettings> = {};
-    let settingsRows: (SettingsRow & { user_id: string })[] | null = null;
-    const full = await supabase
-      .from('notification_settings')
-      .select('user_id, types, min_risk, themes, quiet_start, quiet_end, near_lat, near_lng, near_radius_km');
-    if (full.error) {
-      const basic = await supabase.from('notification_settings').select('user_id, types, min_risk');
-      if (basic.error) console.warn('Could not read notification settings, using defaults', basic.error.message);
-      settingsRows = basic.data;
-    } else {
-      settingsRows = full.data;
-    }
-    for (const row of settingsRows ?? []) userSettings[row.user_id] = settingsFromRow(row);
-
-    // Mina platser (watch_places): none before its migration has run. Free accounts are
-    // notified about their first place, Pro about up to five.
-    const userPlaces: Record<string, WatchPlace[]> = {};
-    const placesRead = await supabase.from('watch_places').select('id, user_id, label, kind, lat, lng, radius_km, created_at');
-    if (placesRead.error) console.warn('Could not read watch places', placesRead.error.message);
-    for (const row of (placesRead.data ?? []) as (WatchPlaceRow & { user_id: string })[]) {
-      const place = placeFromRow(row);
-      if (place) (userPlaces[row.user_id] ??= []).push(place);
-    }
-    const placesPro = await findProUsers(supabase, Object.keys(userPlaces).filter((id) => userPlaces[id].length > FREE_PLACES), now);
-    for (const userId of Object.keys(userPlaces)) userPlaces[userId] = placesInUse(userPlaces[userId], placesPro.has(userId));
-
-    // Those who watch kommuner, a circle around a place, or places of their own
+    // Those who watch kommuner, a circle around a place, places of their own, or all of Sweden
     const watchers = new Set([
       ...Object.keys(userKommuner),
       ...Object.entries(userSettings).filter(([, s]) => s.near).map(([id]) => id),
       ...Object.keys(userPlaces),
+      ...Object.entries(watching.userExtras).filter(([, e]) => e.allSweden).map(([id]) => id),
     ]);
     if (watchers.size === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: 'no_watchers' }), {
@@ -730,7 +860,8 @@ Deno.serve(async (req) => {
       for (const userId of watchers) {
         const settings = userSettings[userId] ?? settingsFromRow(null);
         const near = placeForEvent(userPlaces[userId] ?? [], event);
-        const inArea = near !== null || watchedKommunFor(event.area, userKommuner[userId] ?? []) !== null || nearEvent(settings, event);
+        const inArea = near !== null || watchedKommunFor(event.area, userKommuner[userId] ?? []) !== null || nearEvent(settings, event)
+          || extrasOf(watching, userId).allSweden;
         if (!inArea || !wantsEvent(settings, event)) continue;
         if (!userNotifications[userId]) userNotifications[userId] = [];
         // Each user's own copy, saying which of their places it is near
