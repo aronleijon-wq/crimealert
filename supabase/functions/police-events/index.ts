@@ -13,7 +13,7 @@ import { LANDMARKS } from '../_shared/data/landmarks.ts';
 import { markerPoint, placesNear } from '../_shared/seaMask.ts';
 import { LAN_KOMMUNER, lanNamed } from '../_shared/data/kommunLan.ts';
 import { descriptionPreview } from '../_shared/descriptionPreview.ts';
-import { isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
+import { isSplittable, isSummary, newParts, partTitle, placeKey as summaryPlaceKey, placeKommunIndex, summaryParts, type SummaryPart, type SummaryPlaces } from '../_shared/summaryEvents.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
@@ -763,10 +763,10 @@ function summaryEvents(incidents: PoliceIncident[]): PoliceIncident[] {
   const known = new Set(incidents.map((i) => i.id));
   const found: SummaryPart[] = [];
   for (const s of incidents) {
-    if (!isSummary(s.originalType ?? s.original_type, s.title) || !s.description) continue;
+    if (!isSplittable(s.originalType ?? s.original_type, s.title, s.description) || !s.description) continue;
     let cached = PARTS.get(s.id);
     if (!cached || cached.length !== s.description.length) {
-      cached = { length: s.description.length, parts: summaryParts({ ...s, url: s.url ?? null }, SUMMARY_PLACES) };
+      cached = { length: s.description.length, parts: summaryParts({ ...s, url: s.url ?? null, originalType: s.originalType ?? s.original_type ?? null }, SUMMARY_PLACES) };
       PARTS.set(s.id, cached);
     }
     found.push(...cached.parts.filter((p) => !known.has(p.id)));
@@ -852,7 +852,8 @@ function textPlace(inc: PoliceIncident) {
 function placeAllByText(incidents: PoliceIncident[]): PoliceIncident[] {
   const moved: PoliceIncident[] = [];
   const out = incidents.map((inc) => {
-    if (isSummary(inc.originalType ?? inc.original_type, inc.title)) return inc;
+    // A summary or list stays where it is: its parts are placed one by one
+    if (isSplittable(inc.originalType ?? inc.original_type, inc.title, inc.description)) return inc;
     const fix = placeByText(inc, textPlace(inc));
     if (!fix) return inc;
     // The caches too, so the next answer and the refinement start from here

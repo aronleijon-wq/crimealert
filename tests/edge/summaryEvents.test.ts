@@ -178,3 +178,42 @@ describe('summaryParts, from the audit of real summaries (November 2026)', () =>
     expect(kindOf('En man ses urinera offentligt i Stenstan')).toBe('Ordningslagen');
   });
 });
+
+describe('lists of events (not summaries) are split too', () => {
+  const vb: SummaryPlaces = { kommunerFor: () => ['Norsjö', 'Lycksele', 'Skellefteå', 'Robertsfors', 'Vindeln', 'Umeå'] };
+  const list = {
+    id: 'pol-660745',
+    title: '24 november 18.00, Trafikolycka, vilt, Västerbottens län',
+    area: 'Västerbottens län',
+    time: '2026-11-24 18:00:00 +01:00',
+    originalType: 'Trafikolycka, vilt',
+    description: [
+      'Flertalet viltolyckor har inträffat i länet under eftermiddagen. Inga personskador har rapporterats.',
+      '14:45 Länsväg 365/älvabergsvägen, Norsjö, renpåkörning.',
+      '15:09 E12 Umgransele, Lycksele, rådjursolycka.',
+      '15:46 Boviken, Skellefteå, rådjursolycka.',
+      '16:38 Länsväg 651/Fagerlidvägen, Robertsfors, älgolycka.',
+      '17:34 E12 Hälsingborg, Bjurforsbygden, Vindeln, rådjursolycka.',
+      '17:55 Burträsk, Skellefteå, rådjursolycka.',
+    ].join('\n'),
+  };
+
+  it('knows a list by its timed lines, and a summary or a plain event apart', async () => {
+    const { isListEvent, isSplittable } = await import('../../supabase/functions/_shared/summaryEvents');
+    expect(isListEvent(list.description)).toBe(true);
+    expect(isListEvent('Polisen larmas till en adress kl. 14.45. En man grips.')).toBe(false);
+    expect(isSplittable(list.originalType, list.title, list.description)).toBe(true);
+  });
+
+  it('gives each accident its own event, in its kommun, at its time', () => {
+    const parts = summaryParts(list, vb);
+    expect(parts.map((p) => [p.id, p.kommun, p.type, p.time.slice(11, 16)])).toEqual([
+      ['pol-660745-s1', 'Norsjö', 'Trafikolycka, vilt', '14:45'],
+      ['pol-660745-s2', 'Lycksele', 'Trafikolycka, vilt', '15:09'],
+      ['pol-660745-s3', 'Skellefteå', 'Trafikolycka, vilt', '15:46'],
+      ['pol-660745-s4', 'Robertsfors', 'Trafikolycka, vilt', '16:38'],
+      ['pol-660745-s5', 'Vindeln', 'Trafikolycka, vilt', '17:34'],
+      ['pol-660745-s6', 'Skellefteå', 'Trafikolycka, vilt', '17:55'],
+    ]);
+  });
+});

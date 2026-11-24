@@ -1,3 +1,4 @@
+import { splitParentIds } from '@/lib/summaries';
 import { useEffect, useMemo, useState } from 'react';
 import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
@@ -42,8 +43,9 @@ export function useLandingLive(): LandingLive {
 
   const { events, lastDay, kommuner } = useMemo(() => {
     const now = Date.now();
+    const parents = splitParentIds(incidents);
     const dated = incidents
-      .filter((i) => inSweden(i) && !isSummary(i))
+      .filter((i) => inSweden(i) && !isSummary(i) && !parents.has(i.id))
       .map((i) => ({ i, at: parseIncidentTime(i.time) }))
       .filter((x): x is { i: Incident; at: Date } => x.at !== null)
       .sort((a, b) => b.at.getTime() - a.at.getTime());

@@ -18,6 +18,7 @@ import { Card, FAINT, MUTED } from '@/native/StatCard';
 import { Segmented } from '@/native/ui';
 import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
+import { splitParentIds } from '@/lib/summaries';
 import StatsTrends from '@/native/StatsTrends';
 
 /**
@@ -249,6 +250,8 @@ const Analysis = () => {
     const isSummary = (i: Incident) =>
       (i.originalType || '').toLowerCase().includes('sammanfattning');
 
+    // Lists and summaries that were split count by their parts (lib/summaries)
+    const parents = splitParentIds(incidents);
     if (timeRange === '24h') {
       const now = new Date();
       const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -256,13 +259,13 @@ const Analysis = () => {
         try {
           const inTimeRange = parseTime(i.time) >= cutoff;
           const inArea = !selectedArea || i.area === selectedArea;
-          return inTimeRange && inArea && !isSummary(i);
+          return inTimeRange && inArea && !isSummary(i) && !parents.has(i.id);
         } catch {return false;}
       });
     }
     return incidents.filter((i) => {
       const inArea = !selectedArea || i.area === selectedArea;
-      return inArea && !isSummary(i);
+      return inArea && !isSummary(i) && !parents.has(i.id);
     });
   }, [incidents, timeRange, selectedArea]);
 

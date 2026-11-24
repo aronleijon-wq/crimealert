@@ -212,6 +212,31 @@ def build(per, centres, names):
     return centres, places, fallbacks
 
 
+def b36(n):
+    """An integer in base 36, as JavaScript's toString(36) writes it"""
+    digits = '0123456789abcdefghijklmnopqrstuvwxyz'
+    if n == 0:
+        return '0'
+    sign, n = ('-', -n) if n < 0 else ('', n)
+    out = ''
+    while n:
+        n, r = divmod(n, 36)
+        out = digits[r] + out
+    return sign + out
+
+
+def pack(rows):
+    """A kommun's places as "name|lat|lng|type" joined by ";", lat and lng in 1/10000 degree as
+    base-36 differences from the place before (data/places.ts reads it back when it loads)"""
+    out, a0, b0 = [], 0, 0
+    for r in rows:
+        a, b = round(r[1] * 1e4), round(r[2] * 1e4)
+        name = re.sub(r'[|;]', ' ', r[0])
+        out.append(f'{name}|{b36(a - a0)}|{b36(b - b0)}|{ABBR[r[3]]}')
+        a0, b0 = a, b
+    return ';'.join(out)
+
+
 def write(centres, places, names):
     lines = [
         '// GENERATED FILE - do not edit by hand.',
@@ -221,17 +246,36 @@ def write(centres, places, names):
         '// KOMMUN_CENTRES: kommun -> [centralort, lat, lng].',
         '// PLACES: kommun -> [name, lat, lng, type]; type: c city/town, v village, h hamlet,',
         '// s suburb/borough/quarter/neighbourhood/city_block, q square, i island/islet, a industrial/retail area.',
+        '// Stored packed (PACKED) so the file is half the size, as every edge function that imports it',
+        '// uploads it: per kommun, "name|lat|lng|type" joined by ";", lat and lng in 1/10000 degree',
+        '// (about 10 m) as base-36 differences from the place before. Read once when the module loads.',
         '',
         'export const KOMMUN_CENTRES: Record<string, [string, number, number]> = {',
     ]
     for k in names:
         n, lat, lon = centres[k]
         lines.append(f'{js(k)}:[{js(n)},{round(lat, 5)},{round(lon, 5)}],')
-    lines += ['};', '', 'export const PLACES: Record<string, [string, number, number, string][]> = {']
+    lines += ['};', '', 'const PACKED: Record<string, string> = {']
     for k in names:
-        items = ','.join(f'[{js(r[0])},{round(r[1], 5)},{round(r[2], 5)},"{ABBR[r[3]]}"]' for r in places[k])
-        lines.append(f'{js(k)}:[{items}],')
-    lines += ['};', '']
+        lines.append(f'{js(k)}:{js(pack(places[k]))},')
+    lines += [
+        '};',
+        '',
+        'function unpack(s: string): [string, number, number, string][] {',
+        '  if (!s) return [];',
+        '  let a = 0, b = 0;',
+        "  return s.split(';').map((row) => {",
+        "    const [name, da, db, t] = row.split('|');",
+        '    a += parseInt(da, 36); b += parseInt(db, 36);',
+        '    return [name, a / 1e4, b / 1e4, t];',
+        '  });',
+        '}',
+        '',
+        'export const PLACES: Record<string, [string, number, number, string][]> = Object.fromEntries(',
+        '  Object.entries(PACKED).map(([kommun, s]) => [kommun, unpack(s)]),',
+        ');',
+        '',
+    ]
     with open(OUT, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
 

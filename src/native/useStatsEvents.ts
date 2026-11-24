@@ -1,3 +1,4 @@
+import { splitParentIds } from '@/lib/summaries';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { parseIncidentTime } from '@/lib/incidentTime';
@@ -13,11 +14,11 @@ let cache: { days: number; at: number; events: StatEvent[] } | null = null;
 async function fetchStatEvents(days: number): Promise<StatEvent[]> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   // Only what the statistics need, so the phone fetches a fraction of the archive's rows
-  const query = () => supabase.from('police_events_archive').select('time, area, original_type').gte('time', since);
+  const query = () => supabase.from('police_events_archive').select('id, time, area, original_type').gte('time', since);
   const { count, error } = await supabase.from('police_events_archive').select('id', { count: 'exact', head: true }).gte('time', since);
   if (error) throw error;
   const pages = Math.ceil((count ?? 0) / PAGE);
-  const rows: { time: string; area: string | null; original_type: string | null }[] = [];
+  const rows: { id: string; time: string; area: string | null; original_type: string | null }[] = [];
   for (let first = 0; first < pages; first += PARALLEL) {
     const batch = await Promise.all(
       Array.from({ length: Math.min(PARALLEL, pages - first) }, (_, i) => {
@@ -30,7 +31,10 @@ async function fetchStatEvents(days: number): Promise<StatEvent[]> {
       rows.push(...(data ?? []));
     }
   }
+  // A summary or list that was split is counted by its parts, not once more as a whole
+  const split = splitParentIds(rows);
   return rows.flatMap((r) => {
+    if (split.has(r.id)) return [];
     const at = parseIncidentTime(r.time)?.getTime();
     return at === undefined ? [] : [{ at, area: r.area ?? '', category: r.original_type ?? '' }];
   });

@@ -1,12 +1,18 @@
 import type { Incident } from '@/data/mockIncidents';
-import { isSummary, isSummaryPart } from '../../supabase/functions/_shared/summaryEvents';
+import { isSummaryPart } from '../../supabase/functions/_shared/summaryEvents';
+
+/** The ids of the events that were split into the events they tell of (their parts are here) */
+export function splitParentIds(incidents: { id: string }[]): Set<string> {
+  return new Set(incidents.filter((i) => isSummaryPart(i.id)).map((i) => i.id.replace(/-s\d+$/, '')));
+}
 
 /**
- * The events without the night summaries that were split into their events (_shared/summaryEvents):
- * each of those is a row of its own, in its kommun, so the summary would count them twice. A
- * summary nothing was found in stays, as it is the only record of its night.
+ * The events without those that were split into their events (_shared/summaryEvents): a night
+ * summary, or a list such as "Trafikolycka, vilt, Västerbottens län" with six accidents. Each
+ * of those is a row of its own, in its kommun, so the whole would count them twice. One nothing
+ * was found in stays, as it is the only record of what it tells.
  */
-export function withoutSplitSummaries(incidents: Incident[]): Incident[] {
-  const split = new Set(incidents.filter((i) => isSummaryPart(i.id)).map((i) => i.id.replace(/-s\d+$/, '')));
-  return incidents.filter((i) => !(isSummary(i.originalType, i.title) && split.has(i.id)));
+export function withoutSplitSummaries<T extends { id: string }>(incidents: T[]): T[] {
+  const split = splitParentIds(incidents);
+  return incidents.filter((i) => !split.has(i.id));
 }

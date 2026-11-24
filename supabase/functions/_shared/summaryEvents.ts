@@ -13,6 +13,8 @@ export interface SummarySource {
   area: string;
   time: string;
   url?: string | null;
+  /** Polisen's kind for the whole event ("Trafikolycka, vilt"): for a list's lines that name none */
+  originalType?: string | null;
 }
 
 /** One event found in a summary */
@@ -70,6 +72,21 @@ export const isSummaryPart = (id: string | null | undefined) => /-s\d+$/.test(id
 export const isSummary = (originalType: string | null | undefined, title?: string | null) =>
   /sammanfattning/i.test(`${originalType ?? ''} ${title ?? ''}`);
 
+/**
+ * An event that lists several events, each on a line of its own with a time ("Trafikolycka,
+ * vilt, Västerbottens län": "14:45 Länsväg 365, Norsjö, renpåkörning." and five more): split
+ * like a summary, one event per line.
+ */
+export function isListEvent(description: string | null | undefined): boolean {
+  if (!description) return false;
+  const timed = description.split(/\n+/).filter((l) => /^\s*(?:kl\.?\s*)?\d{1,2}[.:]\d{2}\b/i.test(l));
+  return timed.length >= 2;
+}
+
+/** Whether an event is split into the events it tells of: a summary, or a list of events */
+export const isSplittable = (originalType: string | null | undefined, title: string | null | undefined, description: string | null | undefined) =>
+  isSummary(originalType, title) || isListEvent(description);
+
 // The kinds of event, the most specific first: a robbery is not a theft, violence against an
 // officer not an ordinary assault. Names as Polisen writes them, so the rest of CrimeAlert
 // (themes, colours, pictures) treats these events as it treats Polisen's own.
@@ -82,7 +99,8 @@ const KINDS: [RegExp, string][] = [
   [/våldtäkt|sexualbrott|sexuellt ofredande|sexuellt övergrepp/, 'Sexualbrott'],
   [/inbrott/, 'Inbrott'],
   [/rattfylleri|rattfull|drograttfylleri|påverkad förare|alkoholpåverkad förare/, 'Rattfylleri'],
-  [/trafikolycka|singelolycka|viltolycka|kollision|krock|frontalkrock|påkörd|körde av vägen|i diket/, 'Trafikolycka'],
+  [/viltolycka|rådjursolycka|älgolycka|renpåkörning|renolycka|vildsvinsolycka|hjortolycka|påkörd (?:älg|ren|rådjur|vildsvin)/, 'Trafikolycka, vilt'],
+  [/trafikolycka|singelolycka|kollision|krock|frontalkrock|påkörd|körde av vägen|i diket/, 'Trafikolycka'],
   [/\bbrand\b|branden\b|brann\b|brinner|brinnande|\bbränd|\bbrändes|eldsvåda|bilbrand|anlagd brand|rökutveckling|satt i brand|tänt eld/, 'Brand'],
   [/misshandel|misshandla/, 'Misshandel'],
   [/knivlagen/, 'Brott mot knivlagen'],
@@ -269,7 +287,8 @@ export function summaryParts(summary: SummarySource, places: SummaryPlaces): Sum
     // A paragraph without a heading often opens like one ("04:41, narkotikabrott – örebro – Väktare …")
     const lead = heading || body.slice(0, 80).split(/[.!?](?:\s|$)/)[0];
     const kommun = kommunIn(lead, kommuner, places, area, true) ?? kommunIn(body, kommuner, places, area) ?? own;
-    const type = (heading && kindOf(heading)) || kindOf(body);
+    // A list of one kind of event names the kind in its title, not on each line
+    const type = (heading && kindOf(heading)) || kindOf(body) || (!isSummary(summary.originalType, summary.title) ? summary.originalType ?? null : null);
     if (!kommun || !type) continue;
     const clock = timeIn(heading, true) ?? timeIn(body);
     // A tally without a time over several kommuner ("Fyra viltolyckor … i Kalix, Luleå och Piteå")
