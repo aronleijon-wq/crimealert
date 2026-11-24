@@ -92,6 +92,8 @@ const KINDS: [RegExp, string][] = [
   [/ofredande/, 'Ofredande/förargelse'],
   [/bedrägeri|bedragen|bedragits/, 'Bedrägeri'],
   [/skadegörelse|klotter|vandalis|krossade rutor|krossat rutor/, 'Skadegörelse'],
+  [/våldsamt motstånd/, 'Våldsamt motstånd'],
+  [/olaga tvång/, 'Olaga tvång'],
   [/\bbråk\b|slagsmål|tumult|\bbråkade/, 'Bråk'],
   [/försvunnen|saknad person|anmäldes saknad|efterlyst/, 'Försvunnen person'],
   [/arbetsplatsolycka/, 'Arbetsplatsolycka'],
@@ -99,7 +101,8 @@ const KINDS: [RegExp, string][] = [
   [/häleri/, 'Häleri'],
   [/stöld|\bstal\b|stulen|stulet|stulna|snatteri|tillgrepp|\bstjäl/, 'Stöld'],
   [/fylleri|\blob\b|kraftigt berusad|omhändertogs (?:för|enligt) lob/, 'Fylleri/LOB'],
-  [/olovlig körning|trafikkontroll|hastighetskontroll/, 'Trafikkontroll'],
+  [/olovlig körning|trafikkontroll|hastighetskontroll|stopp(?:as|ades) för (?:en )?kontroll|kört mot rött/, 'Trafikkontroll'],
+  [/ordningslagen|urinera(?:r|de)? offentligt/, 'Ordningslagen'],
 ];
 
 /** Polisen's name for the kind of event a text is about, or null */
@@ -139,12 +142,19 @@ const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Kommun names that are also ordinary words; found only with a capital letter not starting a sentence
 const WORDLIKE = new Set(['ale', 'mark', 'vara', 'kil', 'bjuv', 'åre', 'sala', 'tierp', 'nora', 'boden', 'sunne', 'falun', 'mora']);
+// Kommun names that are also words written in lower case ("lund", "klippan"): only with a capital
+const LOWER_WORDS = new Set([...WORDLIKE, 'lund', 'klippan', 'eda', 'salem', 'habo', 'orsa', 'hjo', 'bräcke', 'ånge', 'ydre', 'skara', 'laxå']);
 
-/** The kommun a block is in: the first kommun or known place it names */
-function kommunIn(text: string, kommuner: string[], places: SummaryPlaces, area: string): string | null {
+/**
+ * The kommun a block is in: the first kommun it names, or else the first known place (a district
+ * or village) that lies in one. `anyCase` for a heading, where Polisen sometimes writes the kommun
+ * in lower case ("01:03, rattfylleri, örebro"). "Jönköpings län" is the län, not the kommun.
+ */
+function kommunIn(text: string, kommuner: string[], places: SummaryPlaces, area: string, anyCase = false): string | null {
   let best: { at: number; kommun: string } | null = null;
   for (const k of kommuner) {
-    const rx = new RegExp(`${B}${escape(k)}(?:s)?${E}`, 'g');
+    const flags = anyCase && !LOWER_WORDS.has(norm(k)) ? 'gi' : 'g';
+    const rx = new RegExp(`${B}${escape(k)}(?:s)?${E}(?!s?\\s+län)`, flags);
     let m: RegExpExecArray | null;
     while ((m = rx.exec(text))) {
       // "Vara" or "Mark" opening a sentence is a word, not the kommun
@@ -153,15 +163,21 @@ function kommunIn(text: string, kommuner: string[], places: SummaryPlaces, area:
       break;
     }
   }
-  if (places.placeKommun) {
+  // A kommun named outright wins; a place only when none is ("Brand i lägenhet, Södermalm"). Not a
+  // word for a kind of event ("Brand, Göteborg"), which can also be a place somewhere in the län.
+  if (!best && places.placeKommun) {
     for (const m of text.matchAll(/[A-ZÅÄÖÉ][a-zåäöéü]+(?:[- ][A-ZÅÄÖÉ][a-zåäöéü]+)?/g)) {
-      if ((m.index ?? 0) >= (best?.at ?? Infinity)) break;
-      if (m[0].length < 4) continue;
+      if (m[0].length < 4 || kindOf(m[0].split(/[- ]/)[0]) !== null) continue;
       const kommun = places.placeKommun(area, m[0]) ?? (m[0].includes(' ') ? places.placeKommun(area, m[0].split(' ')[0]) : null);
       if (kommun) { best = { at: m.index ?? 0, kommun }; break; }
     }
   }
   return best?.kommun ?? null;
+}
+
+/** The kommuner a text names (a tally such as "på E4 i Kalix, Luleå och Piteå" names several) */
+function kommunerNamed(text: string, kommuner: string[]): number {
+  return kommuner.filter((k) => !WORDLIKE.has(norm(k)) && new RegExp(`${B}${escape(k)}${E}`).test(text)).length;
 }
 
 /** Whether a line opens with a kind of event, in its first few words ("Inbrott i villa.") */
@@ -173,15 +189,26 @@ const opensWithKind = (line: string) => {
 /** A line that heads an event: short and not a sentence ("Nacka 02.10 – Stöld") */
 const isHeading = (line: string) => line.length <= 80 && !/[.!?]["”)]?$/.test(line);
 // Lines about the summary itself, not an event
-const ABOUT = /^(ett urval|urval av|sammanfattning|nedan följer|här följer|polisen i |händelser under|nattens händelser|kvällens händelser|helgens händelser|kontakta|tips|uppdatering|\(?bilden)/i;
+const ABOUT = /^(ett urval|urval av|sammanfattning|nedan följer|här följer|polisen i |polisens regionledningscentral|regionledningscentralen|ärendena har|händelser under|nattens händelser|kvällens händelser|helgens händelser|kontakta|tips|uppdatering|\(?bilden)/i;
+// An overview of the whole night, not an event: a span of hours ("Kl 00:00-07:00, åtta personer
+// har omhändertagits …", "mellan klockan 22.00-07.00 hanterat ett 50-tal ärenden")
+const OVERVIEW = /\d{1,2}[.:]\d{2}\s*[-–]\s*\d{1,2}[.:]\d{2}|hanterat (?:ett|cirka|ca\.?|omkring)?\s*\d+-?tal ärenden|\d+-tal ärenden/i;
+
+/** Polisen's text sometimes carries HTML entities ("narkotikabrott &amp;ndash; örebro") */
+const decode = (s: string) => s
+  .replace(/&amp;/g, '&').replace(/&ndash;/g, '–').replace(/&mdash;/g, '—').replace(/&nbsp;/g, ' ')
+  .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 
 /** The summary's text, one block per event: a heading with its text, or a paragraph on its own */
 export function summaryBlocks(description: string): { heading: string; body: string }[] {
-  const lines = description.split(/\n+/).map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
-  const blocks: { heading: string; body: string }[] = [];
+  const lines = decode(description).split(/\n+/).map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const blocks: { heading: string; body: string; overview?: boolean }[] = [];
   for (const line of lines) {
     if (ABOUT.test(line)) continue;
-    const last = blocks[blocks.length - 1];
+    // An overview stands alone and is dropped; what follows it starts a block of its own
+    if (OVERVIEW.test(line.slice(0, 120))) { blocks.push({ heading: '', body: '', overview: true }); continue; }
+    const prev = blocks[blocks.length - 1];
+    const last = prev?.overview ? undefined : prev;
     if (isHeading(line)) blocks.push({ heading: line, body: '' });
     else if (last && !last.body) last.body = line;
     // A paragraph that goes on about the last event: no time, and it doesn't open with a place
@@ -189,7 +216,7 @@ export function summaryBlocks(description: string): { heading: string; body: str
     else if (last && !timeIn(line) && !/^[A-ZÅÄÖ][a-zåäö]+(?:[ -][A-ZÅÄÖ][a-zåäö]+)?\s*[,:–-]/.test(line) && !opensWithKind(line)) last.body += ` ${line}`;
     else blocks.push({ heading: '', body: line });
   }
-  return blocks.filter((b) => b.heading || b.body);
+  return blocks.filter((b) => !b.overview && (b.heading || b.body)).map(({ heading, body }) => ({ heading, body }));
 }
 
 const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
@@ -239,10 +266,14 @@ export function summaryParts(summary: SummarySource, places: SummaryPlaces): Sum
   const parts: SummaryPart[] = [];
   for (const { heading, body } of summaryBlocks(summary.description)) {
     const text = [heading, body].filter(Boolean).join(heading && !/[.:!?–-]$/.test(heading) ? ' – ' : ' ');
-    const kommun = kommunIn(heading, kommuner, places, area) ?? kommunIn(body, kommuner, places, area) ?? own;
+    // A paragraph without a heading often opens like one ("04:41, narkotikabrott – örebro – Väktare …")
+    const lead = heading || body.slice(0, 80).split(/[.!?](?:\s|$)/)[0];
+    const kommun = kommunIn(lead, kommuner, places, area, true) ?? kommunIn(body, kommuner, places, area) ?? own;
     const type = (heading && kindOf(heading)) || kindOf(body);
     if (!kommun || !type) continue;
     const clock = timeIn(heading, true) ?? timeIn(body);
+    // A tally without a time over several kommuner ("Fyra viltolyckor … i Kalix, Luleå och Piteå")
+    if (!clock && kommunerNamed(text, kommuner) >= 2) continue;
     let time = summary.time;
     if (clock) {
       // Later in the day than the summary was written: the evening before
