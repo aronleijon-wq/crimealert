@@ -1,12 +1,15 @@
 // Everything the admin dashboard shows, in one answer: revenue from Stripe and Apple (MRR), users,
 // app and web devices, engagement, visits, the AI chat's cost and who invites friends. Only for
-// admins. Personal details only in the invite list (e-mail of those who invited and were invited).
+// admins. Personal details only in the invite list (e-mail of those who invited and were invited)
+// and in Pro-medlemmar (everyone with Pro now: how, since when, days left; _shared/members.ts).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.97.0";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { fetchAppleBilling, type AppStoreKey } from "../_shared/appStore.ts";
 import { fromApple, fromStripe, lifeFromStripe, payingByMonth, summarize, type RevenueSub, type SubLife } from "../_shared/revenue.ts";
 import { summarizeAi } from "../_shared/aiCost.ts";
+import { freeMember, memberFromApple, memberFromInvite, memberFromStripe, mergeMembers, summarizeMembers, type AppleMemberInput, type ProMember, type StripeMemberLike } from "../_shared/members.ts";
+import { FREE_PREMIUM_EMAILS } from "../_shared/premium.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,17 +42,20 @@ serve(async (req) => {
   // Every subscription's life, for the paying customers month by month
   const lives: SubLife[] = [];
   let cancelledLast30 = 0;
+  // The subscriptions that give Pro now, for Pro-medlemmar once the accounts are read
+  const stripeNow: StripeMemberLike[] = [];
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (stripeKey) {
     try {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       // Every subscription, of every status: the current ones give revenue, all give the history
-      for await (const sub of stripe.subscriptions.list({ status: "all", limit: 100, expand: ["data.discounts"] })) {
+      for await (const sub of stripe.subscriptions.list({ status: "all", limit: 100, expand: ["data.discounts", "data.customer"] })) {
         const like = sub as unknown as Parameters<typeof lifeFromStripe>[0];
         const r = fromStripe(like);
         if (r) subs.push(r);
         const life = lifeFromStripe(like);
         if (life) lives.push(life);
+        if (["trialing", "active", "past_due"].includes(sub.status)) stripeNow.push(sub as unknown as StripeMemberLike);
         if (sub.status === "canceled" && sub.ended_at && sub.ended_at * 1000 > now - 30 * DAY) cancelledLast30 += 1;
       }
     } catch (e) {
@@ -60,8 +66,10 @@ serve(async (req) => {
 
   // ---- Revenue: Apple ----
   const { data: appleRows } = await admin
-    .from("apple_subscriptions").select("original_transaction_id, environment, product_id").gt("expires_at", new Date(now).toISOString());
+    .from("apple_subscriptions").select("original_transaction_id, environment, product_id, user_id, expires_at").gt("expires_at", new Date(now).toISOString());
   const appleTest = (appleRows ?? []).filter((r) => r.environment !== "production").length;
+  // Apple subscribers for Pro-medlemmar: what Apple says, once the accounts are read
+  const appleNow: (Omit<AppleMemberInput, "email" | "joined"> & { userId: string })[] = [];
   const issuerId = Deno.env.get("APPSTORE_ISSUER_ID");
   const keyId = Deno.env.get("APPSTORE_KEY_ID");
   const privateKey = Deno.env.get("APPSTORE_PRIVATE_KEY");
@@ -70,6 +78,14 @@ serve(async (req) => {
     const production = (appleRows ?? []).filter((r) => r.environment === "production");
     const results = await Promise.allSettled(production.map((r) => fetchAppleBilling(r.original_transaction_id, "production", key, now)));
     let failed = 0;
+    results.forEach((r, i) => {
+      if (r.status !== "fulfilled" || !r.value) return;
+      const row = production[i];
+      appleNow.push({
+        userId: row.user_id, productId: r.value.productId || row.product_id, expiresAt: r.value.expiresAt ?? row.expires_at,
+        startedAt: r.value.startedAt, freeTrial: r.value.freeTrial, autoRenew: r.value.autoRenew,
+      });
+    });
     for (const r of results) {
       if (r.status === "rejected") { failed += 1; continue; }
       const sub = r.value && fromApple(r.value);
@@ -90,6 +106,8 @@ serve(async (req) => {
   // ---- Users ----
   const created: number[] = [];
   const emails = new Map<string, string>();
+  const joinedById = new Map<string, string>();
+  const joinedByEmail = new Map<string, string>();
   let activeLast30 = 0;
   for (let page = 1; ; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
@@ -97,6 +115,8 @@ serve(async (req) => {
     for (const u of data.users) {
       created.push(Date.parse(u.created_at));
       emails.set(u.id, u.email ?? "(utan e-post)");
+      joinedById.set(u.id, u.created_at);
+      if (u.email) joinedByEmail.set(u.email.toLowerCase(), u.created_at);
       if (u.last_sign_in_at && Date.parse(u.last_sign_in_at) > now - 30 * DAY) activeLast30 += 1;
     }
     if (data.users.length < 1000) break;
@@ -189,6 +209,22 @@ serve(async (req) => {
     })),
   };
 
+  // ---- Pro-medlemmar: everyone with Pro now ----
+  const memberRows: ProMember[] = stripeNow.flatMap((sub) => memberFromStripe(sub, joinedByEmail, now) ?? []);
+  for (const a of appleNow) {
+    memberRows.push(memberFromApple({ ...a, email: emails.get(a.userId) ?? "(raderat konto)", joined: joinedById.get(a.userId) ?? null }, now));
+  }
+  for (const c of codes ?? []) {
+    if (c.pro_until && Date.parse(c.pro_until) > now) {
+      memberRows.push(memberFromInvite(emails.get(c.user_id) ?? "(raderat konto)", joinedById.get(c.user_id) ?? null, c.pro_until, null, now));
+    }
+  }
+  const { data: freeRows } = await admin.from("pro_status").select("user_id").eq("pro_until", "infinity");
+  for (const f of freeRows ?? []) memberRows.push(freeMember(emails.get(f.user_id) ?? "(raderat konto)", joinedById.get(f.user_id) ?? null));
+  for (const email of FREE_PREMIUM_EMAILS) memberRows.push(freeMember(email, joinedByEmail.get(email) ?? null));
+  // Free Pro only for accounts that exist
+  const members = mergeMembers(memberRows).filter((m) => m.source !== "free" || joinedByEmail.has(m.email.toLowerCase()));
+
   return json({
     generated_at: new Date(now).toISOString(),
     notes,
@@ -205,6 +241,7 @@ serve(async (req) => {
     data: { events24h, eventsTotal },
     ai,
     invites: inviteSummary,
+    members: { summary: summarizeMembers(members), list: members },
     visits: [...viewsByDay].sort(([a], [b]) => a.localeCompare(b)).map(([day, v]) => ({ day, ...v })),
   });
 });

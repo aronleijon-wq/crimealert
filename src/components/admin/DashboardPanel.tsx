@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { PRICES } from '@/components/account/plans';
+import ProMembers from './ProMembers';
+import type { MemberSummary, ProMember } from '../../../supabase/functions/_shared/members';
 
 interface SourceSummary {
   mrr: number; paying: number; monthly: number; yearly: number; trials: number; trialMrr: number; pastDue: number; endingMrr: number; ending: number;
@@ -27,6 +29,8 @@ interface Dashboard {
     answers7: number; answers30: number; cost7: number; cost30: number; costAll: number; costPerAnswer: number;
     byModel: { model: string; answers: number; cost: number }[]; byDay: { day: string; cost: number; answers: number }[];
   };
+  /** Everyone with Pro now (admin-dashboard after this change; older answers lack it) */
+  members?: { summary: MemberSummary; list: ProMember[] };
   invites?: {
     links: number; inviters: number; invited: number; rewarded: number; proActive: number;
     list: { email: string; code: string; invited: number; rewarded: number; pro_until: string | null; pro_active: boolean; last_invite: string | null }[];
@@ -220,6 +224,8 @@ const DashboardPanel = () => {
           </div>
         </CardContent>
       </Card>
+
+      {d.members && <ProMembers summary={d.members.summary} list={d.members.list} />}
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base">Intäkter</CardTitle></CardHeader>
