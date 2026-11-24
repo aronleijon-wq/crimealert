@@ -60,30 +60,10 @@ describe('Header', () => {
     expect(screen.getByRole('link', { name: 'Karta' })).not.toHaveAttribute('aria-current');
   });
 
-  it('shows the App Store banner on every page, not just the start page', async () => {
+  it('shows no App Store strip at the top', async () => {
+    localStorage.setItem('ca-black-week-2026-hidden-until', String(Date.now() + 86_400_000));
     await renderHeader('/flode');
-    expect(screen.getByRole('link', { name: /finns nu för iPhone/ })).toHaveAttribute(
-      'href',
-      expect.stringContaining('apps.apple.com'),
-    );
-  });
-
-  it('keeps the App Store banner closed once it was closed, also on later visits', async () => {
-    const { fireEvent } = await import('@testing-library/react');
-    const first = await renderHeader();
-    fireEvent.click(screen.getByRole('button', { name: 'Stäng' }));
     expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
-    first.unmount();
-    // Same visit: stays closed on the next page
-    const second = await renderHeader('/analysis');
-    expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
-    second.unmount();
-    // A new visit: still closed on this device
-    sessionStorage.clear();
-    const third = await renderHeader();
-    expect(screen.queryByRole('link', { name: /finns nu för iPhone/ })).toBeNull();
-    third.unmount();
-    localStorage.removeItem('ca-app-banner-closed');
   });
 
   it("has the start page's links in the bar, plus Fråga AI, and marks the current page", async () => {

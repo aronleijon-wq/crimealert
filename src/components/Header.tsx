@@ -6,7 +6,6 @@ import ProfileButton from '@/components/ProfileButton';
 import { BookOpen, Building2, ChevronDown, Megaphone, Menu, MessagesSquare, Search, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { canSellPro, isNativeApp } from '@/lib/native';
-import AppBanner, { useAppBanner } from '@/components/landing/AppBanner';
 import InviteBanner from '@/components/InviteBanner';
 import BlackWeekBanner from '@/components/BlackWeekBanner';
 import { useBlackWeekBanner } from '@/hooks/useBlackWeekBanner';
@@ -102,7 +101,6 @@ const MoreMenu = ({ pathname }: { pathname: string }) => {
 const Header = () => {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const appBanner = useAppBanner();
   // Signed in with friends left to invite: the invite offer takes the iPhone banner's place
   const invite = useInviteBanner(Boolean(user) && !isNativeApp());
   // Through 30 November the Black Week offer takes the top
@@ -117,11 +115,11 @@ const Header = () => {
   return (
     <>
     {/* The banner sits above the bar, so it takes the phone's notch space instead of the bar */}
-    {blackWeek.visible ? <BlackWeekBanner banner={blackWeek} safeTop /> : invite.visible ? <InviteBanner banner={invite} safeTop /> : appBanner.visible && <AppBanner safeTop onClose={appBanner.dismiss} />}
+    {blackWeek.visible ? <BlackWeekBanner banner={blackWeek} safeTop /> : invite.visible && <InviteBanner banner={invite} safeTop />}
     <header
       // ca-dark carries the start page's colours and type (index.css), on pages that are not inside it too
       className="ca-dark relative z-50 shrink-0 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/85 backdrop-blur-xl"
-      style={appBanner.visible || invite.visible || blackWeek.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      style={invite.visible || blackWeek.visible ? undefined : { paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 md:h-16 md:px-10">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">

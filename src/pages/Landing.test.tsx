@@ -69,27 +69,10 @@ describe('Landing page', () => {
     expect(screen.getByRole('link', { name: 'Vanliga frågor' })).toHaveAttribute('href', '/#vanliga-fragor');
   });
 
-  it('announces the iPhone app in a banner at the top, linking to the App Store', async () => {
+  it('shows no App Store strip at the top', async () => {
     localStorage.clear();
-    // The Black Week strip (through 30 November 2026) has its own tests; here it is closed
     localStorage.setItem('ca-black-week-2026-hidden-until', String(Date.now() + 86_400_000));
     await renderLanding();
-    const header = screen.getByRole('banner');
-    expect(within(header).getByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toHaveAttribute(
-      'href',
-      'https://apps.apple.com/se/app/crimealert-brottsplatskarta/id6826326029',
-    );
-  });
-
-  it('keeps the app banner closed once the visitor closes it', async () => {
-    localStorage.clear();
-    // The Black Week strip (through 30 November 2026) has its own tests; here it is closed
-    localStorage.setItem('ca-black-week-2026-hidden-until', String(Date.now() + 86_400_000));
-    const { unmount } = await renderLanding();
-    fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Stäng' }));
-    expect(screen.queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();
-    unmount();
-    await renderLanding();
-    expect(screen.queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();
+    expect(within(screen.getByRole('banner')).queryByRole('link', { name: /CrimeAlert finns nu för iPhone/ })).toBeNull();
   });
 });
