@@ -185,6 +185,10 @@
 </head>
   <body>
     <script>document.documentElement.classList.add(localStorage.getItem('crimeradar-theme') || 'dark');</script>
+    <script>
+      // Safari (not Chrome, Edge, Firefox or Opera, which also say "Safari"): lighter surfaces, see index.css
+      if (/Safari\//.test(navigator.userAgent) && /Version\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/.test(navigator.userAgent)) document.documentElement.classList.add('ca-safari');
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
