@@ -7,6 +7,7 @@ import {
   settingsToRow,
   type NotifySettings,
 } from '../../supabase/functions/_shared/notifications';
+import { DEFAULT_EXTRAS, extrasFromRow, extrasToRow, type NotifyExtras } from '../../supabase/functions/_shared/notifyExtras';
 
 /**
  * The user's choice of what to get push notifications about. `available` is false when the
@@ -22,6 +23,9 @@ export function useNotificationSettings() {
   const [weeklyAvailable, setWeeklyAvailable] = useState(false);
   // Kinds of crime, quiet hours and the circle have columns of their own; hidden until they exist
   const [moreAvailable, setMoreAvailable] = useState(false);
+  // All of Sweden, kommun chat and reports nearby: columns of their own, hidden until they exist
+  const [extras, setExtras] = useState<NotifyExtras>(DEFAULT_EXTRAS);
+  const [extrasAvailable, setExtrasAvailable] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -29,6 +33,8 @@ export function useNotificationSettings() {
       setAvailable(false);
       setWeeklyAvailable(false);
       setMoreAvailable(false);
+      setExtras(DEFAULT_EXTRAS);
+      setExtrasAvailable(false);
       return;
     }
     let cancelled = false;
@@ -63,6 +69,15 @@ export function useNotificationSettings() {
         setWeeklyAvailable(!error);
         setWeeklySummary(data?.weekly_summary !== false);
       });
+    table()
+      .select('all_sweden, kommun_chat, nearby_reports')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setExtrasAvailable(!error);
+        setExtras(extrasFromRow(data));
+      });
     return () => { cancelled = true; };
   }, [user]);
 
@@ -96,5 +111,19 @@ export function useNotificationSettings() {
     return !error;
   }, [user]);
 
-  return { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly };
+  /** Saves the wider choices (all of Sweden, kommun chat, reports); false (and restored) if that failed. */
+  const saveExtras = useCallback(async (next: NotifyExtras) => {
+    if (!user) return false;
+    const previous = extras;
+    setExtras(next);
+    setSaving(true);
+    const { error } = await supabase
+      .from('notification_settings')
+      .upsert({ user_id: user.id, ...extrasToRow(next), updated_at: new Date().toISOString() } as never);
+    setSaving(false);
+    if (error) setExtras(previous);
+    return !error;
+  }, [extras, user]);
+
+  return { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly, extras, extrasAvailable, saveExtras };
 }

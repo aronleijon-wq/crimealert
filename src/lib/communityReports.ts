@@ -112,7 +112,12 @@ export async function submitReport(userId: string, draft: ReportDraft, image: Fi
       event_id: draft.eventId ?? null,
     },
   });
-  if (!error && !data?.error) return { ok: true, imageFailed: !!image && !image_url };
+  if (!error && !data?.error) {
+    // Tells those nearby who asked for reports (send-push-notifications, mode "report"); a failure
+    // here doesn't touch the report itself
+    if (data?.id) supabase.functions.invoke('send-push-notifications', { body: { mode: 'report', reportId: data.id } }).catch(() => {});
+    return { ok: true, imageFailed: !!image && !image_url };
+  }
   let message = data?.error ?? 'Kunde inte skicka rapporten. Försök igen.';
   const context = (error as { context?: { json?: () => Promise<{ error?: string }> } } | null)?.context;
   if (!data?.error && context?.json) {
