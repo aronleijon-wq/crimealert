@@ -80,3 +80,17 @@ describe('ExportData', () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+describe('exported events and the night summaries', () => {
+  it('leaves out a summary that was split into its events, and keeps one that was not', async () => {
+    const { withoutSplitSummaries } = await import('@/lib/summaries');
+    const base = { type: 'other', description: '', lat: 59, lng: 18, area: 'Stockholms län', time: '2026-11-24 07:00:00 +01:00', status: 'resolved', risk: 'low', source: 'Polisen.se' } as const;
+    const rows = [
+      { ...base, id: 'pol-1', title: 'Sammanfattning natt, Stockholms län', originalType: 'Sammanfattning natt' },
+      { ...base, id: 'pol-1-s1', title: 'Stöld, Nacka', originalType: 'Stöld', area: 'Nacka' },
+      { ...base, id: 'pol-2', title: 'Sammanfattning natt, Uppsala län', originalType: 'Sammanfattning natt' },
+      { ...base, id: 'pol-3', title: 'Misshandel, Solna', originalType: 'Misshandel', area: 'Solna' },
+    ];
+    expect(withoutSplitSummaries(rows).map((r) => r.id)).toEqual(['pol-1-s1', 'pol-2', 'pol-3']);
+  });
+});

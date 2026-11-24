@@ -1,3 +1,4 @@
+import { withoutSplitSummaries } from '@/lib/summaries';
 import { useState, useMemo } from 'react';
 import { Download, FileText, Table2, Calendar, Loader2 } from 'lucide-react';
 import { Incident } from '@/data/mockIncidents';
@@ -183,8 +184,9 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
 
   const timeFiltered = needsArchive ? archiveIncidents : filtered24h;
   const sourceIncidents = useMemo(() => {
-    if (!selectedArea) return timeFiltered;
-    return timeFiltered.filter((i) => i.area === selectedArea);
+    const events = withoutSplitSummaries(timeFiltered);
+    if (!selectedArea) return events;
+    return events.filter((i) => i.area === selectedArea);
   }, [timeFiltered, selectedArea]);
   const rangeLabel = range === '24h' ? 'Senaste 24h' : archiveDays === null ? 'Sedan start' : `Senaste ${archiveDays} dagar`;
 
