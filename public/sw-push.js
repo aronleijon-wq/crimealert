@@ -57,7 +57,8 @@ async function reloadOldPages() {
   windows.forEach((client) => {
     try { client.postMessage({ type: 'CA_WHICH_BUILD' }); } catch (e) { /* closed */ }
   });
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  // Pages answer within a few milliseconds; an old page that never answers is not kept waiting long
+  await new Promise((resolve) => setTimeout(resolve, 700));
   self.removeEventListener('message', listen);
   await Promise.all(windows.map(async (client) => {
     if (current.has(client.id)) return;
