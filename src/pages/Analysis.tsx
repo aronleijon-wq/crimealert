@@ -20,6 +20,8 @@ import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
 import { splitParentIds } from '@/lib/summaries';
 import StatsTrends from '@/native/StatsTrends';
+import { SWEDISH_KOMMUNER } from '@/data/kommuner';
+import { kommunMatcher } from '../../supabase/functions/_shared/notifications';
 
 /**
  * On the website, above the full analysis: the app's statistics, trends where you live and
@@ -229,13 +231,20 @@ const Analysis = () => {
   const incidents = timeRange === '24h' ? liveIncidents : archiveIncidents;
   const loading = timeRange === '24h' ? liveLoading : archiveLoading;
 
-  // Extract unique areas from all incidents
+  // Every kommun, whether or not something has happened there in the chosen period (an empty
+  // list for "24 timmar" left out quiet places like Nacka), and the other areas the events name
+  // ("Stockholms län")
   const availableAreas = useMemo(() => {
-    const areas = new Set<string>();
-    // Combine both sources for area list
+    const areas = new Set<string>(SWEDISH_KOMMUNER);
     [...liveIncidents, ...archiveIncidents].forEach((i) => {if (i.area) areas.add(i.area);});
     return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
   }, [liveIncidents, archiveIncidents]);
+  // A kommun takes its events however Polisen spells the place ("Nacka", "Nacka kommun"); other areas by name
+  const inSelectedArea = useMemo(() => {
+    if (!selectedArea) return () => true;
+    const kommun = SWEDISH_KOMMUNER.includes(selectedArea) ? kommunMatcher(selectedArea) : null;
+    return (i: Incident) => (kommun ? kommun(i.area) : i.area === selectedArea);
+  }, [selectedArea]);
 
   // Track when data loads or changes. Live data may come from another page's recent
   // fetch, so show when it was actually fetched.
@@ -258,16 +267,16 @@ const Analysis = () => {
       return incidents.filter((i) => {
         try {
           const inTimeRange = parseTime(i.time) >= cutoff;
-          const inArea = !selectedArea || i.area === selectedArea;
+          const inArea = inSelectedArea(i);
           return inTimeRange && inArea && !isSummary(i) && !parents.has(i.id);
         } catch {return false;}
       });
     }
     return incidents.filter((i) => {
-      const inArea = !selectedArea || i.area === selectedArea;
+      const inArea = inSelectedArea(i);
       return inArea && !isSummary(i) && !parents.has(i.id);
     });
-  }, [incidents, timeRange, selectedArea]);
+  }, [incidents, timeRange, inSelectedArea]);
 
   const stats = useMemo(() => {
     if (!filteredIncidents.length) return null;
