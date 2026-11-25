@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      apns_provider_token: {
+        Row: {
+          issued_at: number
+          key_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          issued_at: number
+          key_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          issued_at?: number
+          key_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       apple_subscriptions: {
         Row: {
           environment: string

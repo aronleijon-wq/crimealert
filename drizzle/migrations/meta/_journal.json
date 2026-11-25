@@ -127,6 +127,13 @@
       "when": 1795562586423,
       "tag": "0017_notify_everything",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795591860660,
+      "tag": "0018_apns_provider_token",
+      "breakpoints": true
     }
   ]
 }
