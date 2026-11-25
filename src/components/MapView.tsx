@@ -594,6 +594,18 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
 
     recentIncidents.forEach(addMarker);
     updateHitAreas.current();
+
+    // Safari starts a pulse whose size is a CSS variable (--pulse-scale) only when the variable
+    // changes, which first happened on zooming in, so the dots stood still until then. Setting it
+    // again once the markers are drawn starts them, as the zoom did; nothing else changes.
+    const container = containerRef.current;
+    const frame = requestAnimationFrame(() => {
+      if (!container) return;
+      const scale = container.style.getPropertyValue('--pulse-scale');
+      container.style.setProperty('--pulse-scale', String(Number(scale || 3.5) + 0.001));
+      requestAnimationFrame(() => container.style.setProperty('--pulse-scale', scale));
+    });
+    return () => cancelAnimationFrame(frame);
   }, [incidents, isPremium, isTouch, popupQueryClient]);
 
   const prevSelectedRef = useRef<string | null>(null);
