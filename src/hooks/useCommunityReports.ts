@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Incident } from '@/data/mockIncidents';
-import { isReportCategory, REPORT_CATEGORY_LABELS } from '../../supabase/functions/_shared/reportCategories';
-
-const categoryLabel = (category: string) =>
-  category === 'other' ? 'Medborgarrapport' : isReportCategory(category) ? REPORT_CATEGORY_LABELS[category] : category;
+import { reportToIncident, type ReportRow } from '@/lib/reportEvents';
 
 // Medborgarrapporter for everyone signed in (the database gives none to those signed out), so
 // callers enable the query when there is a user
@@ -22,23 +19,7 @@ export function useCommunityReports(enabled = true) {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    const mapped: Incident[] = (data ?? []).map((r) => ({
-      id: `cr-${r.id}`,
-      type: 'other' as const,
-      title: r.title,
-      description: r.description,
-      lat: r.lat,
-      lng: r.lng,
-      area: r.area || 'Okänt område',
-      time: r.created_at,
-      status: r.status === 'open' ? 'active' as const : 'resolved' as const,
-      risk: 'low' as const,
-      source: 'Medborgarrapport',
-      approximate: false,
-      originalType: categoryLabel(r.category ?? 'other'),
-      image_url: r.image_url || null,
-      eventId: (r as { event_id?: string | null }).event_id ?? null,
-    }));
+    const mapped: Incident[] = (data ?? []).map((r) => reportToIncident(r as ReportRow));
 
     setReports(mapped);
     setLoading(false);

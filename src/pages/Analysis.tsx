@@ -21,7 +21,8 @@ import { eventPath } from '@/lib/share';
 import { splitParentIds } from '@/lib/summaries';
 import StatsTrends from '@/native/StatsTrends';
 import { SWEDISH_KOMMUNER } from '@/data/kommuner';
-import { kommunMatcher } from '../../supabase/functions/_shared/notifications';
+import { areaFilter } from '@/lib/areaFilter';
+import { bySource, isReport, SOURCE_OPTIONS, useReportEvents, type SourceFilter } from '@/lib/reportEvents';
 
 /**
  * On the website, above the full analysis: the app's statistics, trends where you live and
@@ -227,8 +228,13 @@ const Analysis = () => {
   const archiveDays = timeRange === '24h' ? 0 : RANGE_DAYS[timeRange];
   const { incidents: archiveIncidents, loading: archiveLoading } = useArchiveEvents(archiveDays, timeRange !== '24h');
 
+  // Medborgarrapporter count as events too; "Källa" shows Polisen's, the reports or both
+  const [source, setSource] = useState<SourceFilter>('alla');
+  const { reports } = useReportEvents(timeRange === '24h' ? 1 : RANGE_DAYS[timeRange]);
+
   // Use live data for 24h, archive data for the longer ranges
-  const incidents = timeRange === '24h' ? liveIncidents : archiveIncidents;
+  const policeIncidents = timeRange === '24h' ? liveIncidents : archiveIncidents;
+  const incidents = useMemo(() => bySource([...policeIncidents, ...reports], source), [policeIncidents, reports, source]);
   const loading = timeRange === '24h' ? liveLoading : archiveLoading;
 
   // Every kommun, whether or not something has happened there in the chosen period (an empty
@@ -239,12 +245,7 @@ const Analysis = () => {
     [...liveIncidents, ...archiveIncidents].forEach((i) => {if (i.area) areas.add(i.area);});
     return Array.from(areas).sort((a, b) => a.localeCompare(b, 'sv'));
   }, [liveIncidents, archiveIncidents]);
-  // A kommun takes its events however Polisen spells the place ("Nacka", "Nacka kommun"); other areas by name
-  const inSelectedArea = useMemo(() => {
-    if (!selectedArea) return () => true;
-    const kommun = SWEDISH_KOMMUNER.includes(selectedArea) ? kommunMatcher(selectedArea) : null;
-    return (i: Incident) => (kommun ? kommun(i.area) : i.area === selectedArea);
-  }, [selectedArea]);
+  const inSelectedArea = useMemo(() => areaFilter(selectedArea), [selectedArea]);
 
   // Track when data loads or changes. Live data may come from another page's recent
   // fetch, so show when it was actually fetched.
@@ -426,6 +427,7 @@ const Analysis = () => {
           </div>
           <div className="mt-3 max-w-md">
             <Segmented<TimeRange> options={TIME_RANGE_OPTIONS} value={timeRange} onChange={setTimeRange} />
+            <div className="mt-2"><Segmented<SourceFilter> options={SOURCE_OPTIONS} value={source} onChange={setSource} /></div>
           </div>
 
           {loading && !incidents.length ? (
@@ -509,10 +511,10 @@ const Analysis = () => {
                         const t = parseTime(inc.time);
                         return (
                           <li key={inc.id} className="border-b border-[rgba(84,84,88,0.65)] last:border-0">
-                            <Link to={eventPath(inc.id)} className="flex items-center gap-3 py-2.5 active:opacity-60">
+                            <Link to={isReport(inc) ? (inc.eventId ? eventPath(inc.eventId) : '/flode') : eventPath(inc.id)} className="flex items-center gap-3 py-2.5 active:opacity-60">
                               <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: TYPE_COLORS[inc.type] || TYPE_COLORS.other }} aria-hidden />
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate text-[16px]">{cleanPoliceTitle(inc.title)}</span>
+                                <span className="block truncate text-[16px]">{isReport(inc) ? `${inc.originalType} · rapport från plats` : cleanPoliceTitle(inc.title)}</span>
                                 <span className={`block text-[13px] ${MUTED}`}>
                                   {t.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} kl {t.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
                                   {inc.risk === 'high' && <span className="text-[#ff453a]"> · Allvarlig</span>}
