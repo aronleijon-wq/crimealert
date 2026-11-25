@@ -50,6 +50,37 @@ export function apnsJwt(key: ApnsKey, now: number): Promise<string> {
   return signAppleJwt({ kid: key.keyId }, { iss: key.teamId, iat: issuedAt }, key.privateKey);
 }
 
+// Signing again gives a new token even with the same issue time (ES256 signatures differ every
+// time), and Apple answers TooManyProviderTokenUpdates to a token that changes more often than
+// every 20 minutes. So one signed token is kept and sent for 40 minutes (Apple takes it for an
+// hour): in memory while the function is warm, and in a store (the database) between runs.
+export interface StoredApnsToken { issuedAt: number; token: string }
+export interface ApnsTokenStore {
+  load(keyId: string): Promise<StoredApnsToken | null>;
+  save(keyId: string, token: StoredApnsToken): Promise<void>;
+}
+export const APNS_TOKEN_REUSE_SECONDS = 40 * 60;
+const kept = new Map<string, StoredApnsToken>();
+
+const usable = (t: StoredApnsToken | null | undefined, nowSeconds: number): t is StoredApnsToken =>
+  !!t && typeof t.token === 'string' && t.issuedAt <= nowSeconds + 60 && nowSeconds - t.issuedAt < APNS_TOKEN_REUSE_SECONDS;
+
+/** The token to send with: the kept one while it is young enough, else a newly signed one, kept */
+export async function reusableApnsJwt(key: ApnsKey, now: number, store?: ApnsTokenStore): Promise<string> {
+  const nowSeconds = Math.floor(now / 1000);
+  const warm = kept.get(key.keyId);
+  if (usable(warm, nowSeconds)) return warm.token;
+  const stored = store ? await store.load(key.keyId).catch(() => null) : null;
+  if (usable(stored, nowSeconds)) { kept.set(key.keyId, stored); return stored.token; }
+  const fresh = { issuedAt: nowSeconds, token: await signAppleJwt({ kid: key.keyId }, { iss: key.teamId, iat: nowSeconds }, key.privateKey) };
+  kept.set(key.keyId, fresh);
+  if (store) await store.save(key.keyId, fresh).catch((e) => console.warn('Could not keep the APNs token', e instanceof Error ? e.message : e));
+  return fresh.token;
+}
+
+/** For tests: forget the token kept in memory */
+export const forgetApnsToken = () => kept.clear();
+
 // A token Apple no longer delivers to (app removed, or not this app's): it is deleted
 const GONE = new Set(['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic']);
 
