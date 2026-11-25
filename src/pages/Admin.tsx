@@ -27,6 +27,7 @@ export default function Admin() {
   const [syncNote, setSyncNote] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { setIsAdmin(false); return; }
     supabase
       .from("user_roles")
@@ -35,7 +36,7 @@ export default function Admin() {
       .eq("role", "admin")
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
+  }, [user, authLoading]);
 
   if (authLoading || isAdmin === null) {
     return (
