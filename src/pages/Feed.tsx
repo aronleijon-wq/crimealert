@@ -1,3 +1,4 @@
+import { LiveNowCards } from '@/components/community/LiveNow';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Clock, Construction, Layers, MapPin, Megaphone, Newspaper, Radio, Shield, type LucideIcon } from 'lucide-react';
@@ -161,6 +162,8 @@ const Feed = () => {
               </p>
             )}
           </section>
+
+          <LiveNowCards className="mb-4" />
 
           <div className="ca-bar sticky top-0 z-20 -mx-4 mb-4 border-b border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base)/0.8)] px-4 py-3 backdrop-blur-xl">
             <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:justify-between sm:px-0" role="tablist" aria-label="Filtrera flödet">

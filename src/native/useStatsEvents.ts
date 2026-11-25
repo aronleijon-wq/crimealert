@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { parseIncidentTime } from '@/lib/incidentTime';
 import type { StatEvent } from './stats';
+import { fetchReportEvents } from '@/lib/reportEvents';
 
 const PAGE = 1000;
 const PARALLEL = 4;
@@ -33,11 +34,17 @@ async function fetchStatEvents(days: number): Promise<StatEvent[]> {
   }
   // A summary or list that was split is counted by its parts, not once more as a whole
   const split = splitParentIds(rows);
-  return rows.flatMap((r) => {
+  const police = rows.flatMap((r) => {
     if (split.has(r.id)) return [];
     const at = parseIncidentTime(r.time)?.getTime();
     return at === undefined ? [] : [{ at, area: r.area ?? '', category: r.original_type ?? '' }];
   });
+  // Medborgarrapporter count too, by their kind ("Rök eller brand"); a failure leaves Polisen's alone
+  const reports = (await fetchReportEvents(days).catch(() => [])).flatMap((r) => {
+    const at = Date.parse(r.time);
+    return Number.isNaN(at) ? [] : [{ at, area: r.area, category: r.originalType ?? '' }];
+  });
+  return [...police, ...reports];
 }
 
 /** Polisen's events of the last `days` days, for the statistics; only for Pro, who may read them */

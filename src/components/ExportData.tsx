@@ -5,6 +5,8 @@ import { Incident } from '@/data/mockIncidents';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useArchiveEvents } from '@/hooks/useArchiveEvents';
+import { areaFilter } from '@/lib/areaFilter';
+import { useReportEvents } from '@/lib/reportEvents';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExportDataProps {
@@ -182,12 +184,15 @@ const ExportData = ({ liveIncidents, selectedArea }: ExportDataProps) => {
     });
   }, [liveIncidents]);
 
+  // Medborgarrapporter are exported with Polisen's events; the "Källa" column tells them apart
+  const { reports } = useReportEvents(range === '24h' ? 1 : archiveDays, allowed && (range !== 'alla' || isAdmin));
   const timeFiltered = needsArchive ? archiveIncidents : filtered24h;
   const sourceIncidents = useMemo(() => {
-    const events = withoutSplitSummaries(timeFiltered);
-    if (!selectedArea) return events;
-    return events.filter((i) => i.area === selectedArea);
-  }, [timeFiltered, selectedArea]);
+    const inArea = areaFilter(selectedArea);
+    return [...withoutSplitSummaries(timeFiltered), ...reports]
+      .filter(inArea)
+      .sort((a, b) => parseIncidentTimestamp(b.time) - parseIncidentTimestamp(a.time));
+  }, [timeFiltered, reports, selectedArea]);
   const rangeLabel = range === '24h' ? 'Senaste 24h' : archiveDays === null ? 'Sedan start' : `Senaste ${archiveDays} dagar`;
 
   const handleExport = (format: 'csv' | 'pdf') => {

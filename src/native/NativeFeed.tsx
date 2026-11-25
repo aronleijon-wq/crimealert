@@ -1,3 +1,4 @@
+import { LiveNowCards } from '@/components/community/LiveNow';
 import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Construction, Eye, Lock, Megaphone, MessageCircle, MessagesSquare, Newspaper, Send, Shield, SmilePlus, type LucideIcon } from 'lucide-react';
@@ -277,6 +278,7 @@ const NativeFeed = () => {
         ))}
       </div>
       <div className="border-t border-[rgba(84,84,88,0.45)]" />
+      {story.id === 'all' && <LiveNowCards className="mx-4 mt-3" />}
 
       {story.id.startsWith('k:') && (
         <Link to={chatPath(story.label)} className="mx-4 mt-3 flex items-center gap-3 rounded-[14px] bg-[#1c1c1e] px-4 py-3 active:opacity-70">

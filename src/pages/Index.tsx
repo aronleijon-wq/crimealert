@@ -1,3 +1,4 @@
+import { LiveNowPill } from '@/components/community/LiveNow';
 import { useTrialOffer } from '@/hooks/useTrialOffer';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
@@ -302,7 +303,7 @@ const Index = () => {
           }}
           timelineOpen={historyOpen}
           timeline={timelinePanel}
-          promo={<BlackWeekPill />}
+          promo={<><BlackWeekPill /><LiveNowPill /></>}
           locate={<LocateButton status={me.status} onClick={locate} className="h-11 w-11 rounded-full text-white bg-[rgba(44,44,46,0.8)] shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-xl backdrop-saturate-150 active:scale-95 transition" />}
         />
       </div>
