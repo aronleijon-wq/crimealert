@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		CA1D6E700000000000000005 /* CrimeAlertWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1D6E700000000000000001 /* CrimeAlertWidget.swift */; };
 		CA1D6E700000000000000006 /* Kommuner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1D6E700000000000000002 /* Kommuner.swift */; };
+		CA1D6E7000000000000000A2 /* MoreWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1D6E7000000000000000A1 /* MoreWidgets.swift */; };
 		CA1D6E700000000000000007 /* CrimeAlertWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CA1D6E700000000000000004 /* CrimeAlertWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
@@ -48,6 +49,7 @@
 /* Begin PBXFileReference section */
 		CA1D6E700000000000000001 /* CrimeAlertWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrimeAlertWidget.swift; sourceTree = "<group>"; };
 		CA1D6E700000000000000002 /* Kommuner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kommuner.swift; sourceTree = "<group>"; };
+		CA1D6E7000000000000000A1 /* MoreWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreWidgets.swift; sourceTree = "<group>"; };
 		CA1D6E700000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CA1D6E700000000000000004 /* CrimeAlertWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CrimeAlertWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 			children = (
 				CA1D6E700000000000000001 /* CrimeAlertWidget.swift */,
 				CA1D6E700000000000000002 /* Kommuner.swift */,
+				CA1D6E7000000000000000A1 /* MoreWidgets.swift */,
 				CA1D6E700000000000000003 /* Info.plist */,
 			);
 			path = CrimeAlertWidget;
@@ -241,6 +244,7 @@
 			files = (
 				CA1D6E700000000000000005 /* CrimeAlertWidget.swift in Sources */,
 				CA1D6E700000000000000006 /* Kommuner.swift in Sources */,
+				CA1D6E7000000000000000A2 /* MoreWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
