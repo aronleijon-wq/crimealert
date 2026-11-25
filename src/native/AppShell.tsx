@@ -67,7 +67,9 @@ const AppShell = ({ children }: { children: ReactNode }) => {
       {!fullBleed && <PoliceStaleNotice />}
       <div ref={pageRef} className="ca-app-page relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         {/* Pages opened from a tab slide in from the right */}
-        <div key={pathname} className={`h-full ${screen.tab ? '' : 'ca-app-push'}`}>{children}</div>
+        {/* The intro is shown alone on the first start: the map loading behind it (MapKit, the
+            events) kept the phone busy, and "Fortsätt" answered only after a few seconds */}
+        <div key={pathname} className={`h-full ${screen.tab ? '' : 'ca-app-push'}`}>{showWelcome ? null : children}</div>
       </div>
       {screen.tabBar && <TabBar />}
       {showWelcome && <Welcome onDone={() => setShowWelcome(false)} />}
