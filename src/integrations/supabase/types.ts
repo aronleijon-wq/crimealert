@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_alert_log: {
+        Row: {
+          key: string
+          told_at: string
+        }
+        Insert: {
+          key: string
+          told_at?: string
+        }
+        Update: {
+          key?: string
+          told_at?: string
+        }
+        Relationships: []
+      }
       ai_usage: {
         Row: {
           cache_read_tokens: number
