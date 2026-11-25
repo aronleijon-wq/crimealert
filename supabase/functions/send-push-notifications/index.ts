@@ -21,7 +21,7 @@ import {
   type WatchPlace,
   type WatchPlaceRow,
 } from '../_shared/notifications.ts';
-import { apnsJwt, parseApnsEndpoint, sendApns, type ApnsKey, type PushResult } from '../_shared/apns.ts';
+import { parseApnsEndpoint, reusableApnsJwt, sendApns, type ApnsKey, type ApnsTokenStore, type PushResult } from '../_shared/apns.ts';
 import { KOMMUN_THREAD, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
 import { isSummaryPart } from '../_shared/summaryEvents.ts';
 import { chatLogKey, chatMessage, extrasFromRow, reportMessage, reportPath, type ExtrasRow, type NotifyExtras } from '../_shared/notifyExtras.ts';
@@ -50,6 +50,22 @@ const apnsKey: ApnsKey | null = (() => {
   return keyId && teamId && privateKey ? { keyId, teamId, privateKey } : null;
 })();
 
+// The Apple token kept between runs (migration 20261125100000_apns_provider_token); set per request
+let apnsStore: ApnsTokenStore | undefined;
+function tokenStore(supabase: ServiceClient): ApnsTokenStore {
+  return {
+    async load(keyId) {
+      const { data, error } = await supabase.from('apns_provider_token').select('issued_at, token').eq('key_id', keyId).maybeSingle();
+      if (error || !data) return null;
+      return { issuedAt: Number(data.issued_at), token: String(data.token) };
+    },
+    async save(keyId, t) {
+      const { error } = await supabase.from('apns_provider_token').upsert({ key_id: keyId, issued_at: t.issuedAt, token: t.token, updated_at: new Date().toISOString() });
+      if (error) throw new Error(error.message);
+    },
+  };
+}
+
 /** One notification to one device: the iPhone app's through Apple, the rest as web push. */
 async function sendPush(subscription: PushSubscriptionRow, payload: string, vapidPublicKey: string, vapidPrivateKey: string): Promise<PushResult> {
   const apns = parseApnsEndpoint(subscription.endpoint);
@@ -58,7 +74,7 @@ async function sendPush(subscription: PushSubscriptionRow, payload: string, vapi
   if (!apnsKey) return { ok: false, status: null, expired: false, error: 'APNS_KEY_ID, APNS_TEAM_ID eller APNS_PRIVATE_KEY saknas.' };
   try {
     const now = Date.now();
-    const result = await sendApns(apns, payload, await apnsJwt(apnsKey, now), Deno.env.get('APNS_BUNDLE_ID') ?? 'se.crimealert.app', now);
+    const result = await sendApns(apns, payload, await reusableApnsJwt(apnsKey, now, apnsStore), Deno.env.get('APNS_BUNDLE_ID') ?? 'se.crimealert.app', now);
     if (!result.ok) console.warn('APNs returned non-OK status', { status: result.status, reason: result.error, expired: result.expired });
     return result;
   } catch (error) {
@@ -710,6 +726,7 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+    apnsStore = tokenStore(supabase);
     const body = await getRequestBody(req);
     const mode = body.mode === 'test' ? 'test' : body.mode === 'weekly' ? 'weekly' : body.mode === 'health' ? 'health' : body.mode === 'reply' ? 'reply' : body.mode === 'report' ? 'report' : 'live';
     const token = getBearerToken(req);

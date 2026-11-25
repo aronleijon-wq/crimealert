@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { apnsJwt, apnsMessage, parseApnsEndpoint, sendApns } from "../../supabase/functions/_shared/apns";
+import { apnsJwt, apnsMessage, forgetApnsToken, parseApnsEndpoint, reusableApnsJwt, sendApns, type StoredApnsToken } from "../../supabase/functions/_shared/apns";
 
 const TOKEN = 'ab'.repeat(32);
 
@@ -54,6 +54,35 @@ describe('APNs', () => {
     expect(valid).toBe(true);
     const later = await apnsJwt({ keyId: 'KEY123', teamId: 'TEAM45', privateKey: pem }, at + 15 * 60 * 1000);
     expect(decode(later.split('.')[1]).iat).toBe(decode(claims).iat);
+  });
+
+  it('sends the very same token for 40 minutes, so Apple never sees it change too often', async () => {
+    forgetApnsToken();
+    const { pem } = await p8Key();
+    const key = { keyId: 'KEY123', teamId: 'TEAM45', privateKey: pem };
+    const saved = new Map<string, StoredApnsToken>();
+    const store = { load: async (id: string) => saved.get(id) ?? null, save: async (id: string, t: StoredApnsToken) => { saved.set(id, t); } };
+    const at = Date.UTC(2026, 10, 25, 8, 0);
+    const first = await reusableApnsJwt(key, at, store);
+    expect(await reusableApnsJwt(key, at + 60_000, store)).toBe(first);
+    // A new run (memory gone) takes the one in the store, not a new signature
+    forgetApnsToken();
+    expect(await reusableApnsJwt(key, at + 30 * 60_000, store)).toBe(first);
+    // After 40 minutes, a new one, kept in turn
+    const renewed = await reusableApnsJwt(key, at + 41 * 60_000, store);
+    expect(renewed).not.toBe(first);
+    expect(decode(renewed.split('.')[1]).iat).toBe((at + 41 * 60_000) / 1000);
+    expect(saved.get('KEY123')?.token).toBe(renewed);
+  });
+
+  it('still sends when the store can not be read or written', async () => {
+    forgetApnsToken();
+    const { pem } = await p8Key();
+    const broken = { load: async () => { throw new Error('down'); }, save: async () => { throw new Error('down'); } };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const t = await reusableApnsJwt({ keyId: 'K2', teamId: 'T', privateKey: pem }, Date.now(), broken);
+    expect(t).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/);
+    warn.mockRestore();
   });
 
   it('sends to the right server, and drops tokens Apple no longer knows', async () => {
