@@ -476,10 +476,9 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
     // Update pulse size CSS variable based on zoom
     const updatePulseSize = () => {
       const zoom = map.getZoom();
-      // Scale from 340% over all of Sweden to 550% close in: at 220% the pulse barely showed
-      // around the small dots of the whole country, so it seemed to start only after zooming in
-      const pulsePct = Math.round(340 + (zoom - 5) * (210 / 11));
-      const clamped = Math.max(340, Math.min(550, pulsePct));
+      // Scale from 220% at zoom 5 to 500% at zoom 16
+      const pulsePct = Math.round(220 + (zoom - 5) * (280 / 11));
+      const clamped = Math.max(200, Math.min(550, pulsePct));
       containerRef.current?.style.setProperty('--pulse-scale', String(clamped / 100));
     };
 
@@ -743,11 +742,11 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
           will-change: transform, opacity;
         }
         @-webkit-keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.55; -webkit-transform: scale(1); transform: scale(1); }
+          0%, 100% { opacity: 0.4; -webkit-transform: scale(1); transform: scale(1); }
           50% { opacity: 0; -webkit-transform: scale(var(--pulse-scale, 3.5)); transform: scale(var(--pulse-scale, 3.5)); }
         }
         @keyframes marker-pulse-anim {
-          0%, 100% { opacity: 0.55; transform: scale(1); }
+          0%, 100% { opacity: 0.4; transform: scale(1); }
           50% { opacity: 0; transform: scale(var(--pulse-scale, 3.5)); }
         }
         .marker-pulse-community {
