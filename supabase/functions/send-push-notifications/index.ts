@@ -24,6 +24,7 @@ import {
 import { parseApnsEndpoint, reusableApnsJwt, sendApns, type ApnsKey, type ApnsTokenStore, type PushResult } from '../_shared/apns.ts';
 import { KOMMUN_THREAD, mentionedUsers, replyMessage, replyRecipients, threadPath, threadPlace, type ThreadComment } from '../_shared/replies.ts';
 import { isSummaryPart } from '../_shared/summaryEvents.ts';
+import { findLiveHappenings, happeningOf, LIVE_WINDOW_MS, liveLogKey, liveMessage, type LiveHappening } from '../_shared/liveNow.ts';
 import { chatLogKey, chatMessage, extrasFromRow, reportMessage, reportPath, type ExtrasRow, type NotifyExtras } from '../_shared/notifyExtras.ts';
 import { SWEDISH_MUNICIPALITIES } from '../_shared/data/municipalities.ts';
 import { kommunSlug } from '../_shared/kommunSlug.ts';
@@ -606,13 +607,21 @@ async function sendReportNotifications(supabase: ServiceClient & AdminClient, au
   reportsSent.add(reportId);
 
   const now = Date.now();
+  // Is it now one of several reports from the same place ("Pågår nu", _shared/liveNow)?
+  const { data: recent } = await supabase.from('community_reports')
+    .select('id, user_id, category, area, lat, lng, event_id, created_at')
+    .gte('created_at', new Date(now - LIVE_WINDOW_MS).toISOString()).not('lat', 'is', null).limit(500);
+  const live: LiveHappening | null = happeningOf(findLiveHappenings((recent ?? []).map((r: { id: string; user_id: string; category: string | null; area: string | null; lat: number; lng: number; event_id: string | null; created_at: string }) => ({
+    id: r.id, category: r.category, area: r.area, lat: r.lat, lng: r.lng, at: Date.parse(r.created_at), reporter: r.user_id, eventId: r.event_id,
+  })), now), report.id);
+  const reporters = new Set((live?.reports ?? []).map((r) => String(r.reporter)));
   const w = await loadWatching(supabase, now);
   const { data: blocks } = await supabase.from('user_blocks').select('blocker_id').eq('blocked_id', authorId);
   const blocked = new Set<string>((blocks ?? []).map((b: { blocker_id: string }) => b.blocker_id));
   const users = new Set([...Object.keys(w.userKommuner), ...Object.keys(w.userSettings), ...Object.keys(w.userPlaces), ...Object.keys(w.userExtras)]);
   const recipients: string[] = [];
   for (const userId of users) {
-    if (userId === authorId || blocked.has(userId)) continue;
+    if (userId === authorId || blocked.has(userId) || reporters.has(userId)) continue;
     const extras = extrasOf(w, userId); const settings = settingsOf(w, userId);
     if (!extras.reports || inQuietHours(settings, now)) continue;
     const here = placeForEvent(w.userPlaces[userId] ?? [], report) !== null
@@ -620,21 +629,39 @@ async function sendReportNotifications(supabase: ServiceClient & AdminClient, au
       || nearEvent(settings, report);
     if (here) recipients.push(userId);
   }
-  const key = `report:${report.id}`;
+  // Those who reported it earlier hear that more are there now: it is their news too
+  let toReporters = 0;
+  if (live) {
+    const others = [...reporters].filter((id) => id !== authorId && !blocked.has(id));
+    const growKey = `${liveLogKey(live.id)}:${live.people}`;
+    const { data: heard } = others.length ? await supabase.from('sent_push_log').select('user_id').eq('event_id', growKey).in('user_id', others) : { data: [] };
+    const heardSet = new Set((heard ?? []).map((r: { user_id: string }) => r.user_id));
+    const told = await pushToUsers(supabase, others.filter((id) => !heardSet.has(id)), JSON.stringify({
+      title: `🔴 Nu ${live.people} personer på plats`,
+      body: `Fler ser samma sak${live.place ? ` i ${live.place}` : ''}. Det du rapporterade är nu Pågår nu.`,
+      icon: '/pwa-192x192.png', badge: '/pwa-192x192.png', tag: `live-${live.id}`,
+      data: { url: safeAppPath(`/flode?pagar=${live.id}`) },
+    }), vapidPublicKey, vapidPrivateKey);
+    if (told.size) await supabase.from('sent_push_log').insert([...told].map((user_id) => ({ event_id: growKey, user_id })));
+    toReporters = told.size;
+  }
+
+  // Once it is "Pågår nu", those nearby hear of the happening (once each), not of each report
+  const key = live ? liveLogKey(live.id) : `report:${report.id}`;
   const { data: told } = recipients.length
     ? await supabase.from('sent_push_log').select('user_id').eq('event_id', key).in('user_id', recipients)
     : { data: [] };
   const toldSet = new Set((told ?? []).map((r: { user_id: string }) => r.user_id));
   const fresh = recipients.filter((id) => !toldSet.has(id));
-  if (!fresh.length) return { sent: 0, reason: 'no_recipients' };
-  const { title, body } = reportMessage({ category: report.category, area: report.area });
+  if (!fresh.length) return { sent: 0, toReporters, live: !!live, reason: 'no_recipients' };
+  const { title, body } = live ? liveMessage(live) : reportMessage({ category: report.category, area: report.area });
   const reached = await pushToUsers(supabase, fresh, JSON.stringify({
     title, body, icon: '/pwa-192x192.png', badge: '/pwa-192x192.png',
-    tag: `report-${report.id}`,
-    data: { url: safeAppPath(reportPath(report.event_id)) },
+    tag: live ? `live-${live.id}` : `report-${report.id}`,
+    data: { url: safeAppPath(live ? `/flode?pagar=${live.id}` : reportPath(report.event_id)) },
   }), vapidPublicKey, vapidPrivateKey);
   if (reached.size) await supabase.from('sent_push_log').insert([...reached].map((user_id) => ({ event_id: key, user_id })));
-  return { sent: reached.size, recipients: fresh.length };
+  return { sent: reached.size, recipients: fresh.length, toReporters, live: !!live };
 }
 
 // A comment's notifications are sent once, shortly after it was written, and only by its author

@@ -146,7 +146,8 @@ export async function latestReports(limit = 20): Promise<PublicReport[]> {
 
 /** A report about a police event ("Är du på plats?"): the event and where it is, for the form */
 export interface EventPrefill {
-  eventId: string;
+  /** The police event; null when opened from a "Pågår nu" without one */
+  eventId: string | null;
   title: string;
   area: string;
   lat: number;
@@ -169,9 +170,17 @@ export function reportFromEventUrl(event: { id: string; title: string; area: str
 export function readEventPrefill(search: string): EventPrefill | null {
   const q = new URLSearchParams(search);
   const eventId = q.get('handelse');
+  const live = q.has('pagar');
   const lat = Number(q.get('lat'));
   const lng = Number(q.get('lng'));
-  if (!eventId || !/^[A-Za-z0-9:._-]{1,100}$/.test(eventId)) return null;
+  if (eventId ? !/^[A-Za-z0-9:._-]{1,100}$/.test(eventId) : !live) return null;
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) return null;
-  return { eventId, title: (q.get('rubrik') ?? '').slice(0, 120), area: (q.get('plats') ?? '').slice(0, 120), lat, lng };
+  return { eventId: eventId || null, title: (q.get('rubrik') ?? '').slice(0, 120), area: (q.get('plats') ?? '').slice(0, 120), lat, lng };
+}
+
+/** /rapportera for someone joining a "Pågår nu": the same place, so the report joins it */
+export function reportFromLiveUrl(live: { id: string; place: string; label: string; lat: number; lng: number; eventId: string | null }): string {
+  const q = new URLSearchParams({ pagar: live.id, rubrik: `${live.label}${live.place ? `, ${live.place}` : ''}`.slice(0, 120), plats: (live.place || 'Här').slice(0, 120), lat: live.lat.toFixed(5), lng: live.lng.toFixed(5) });
+  if (live.eventId) q.set('handelse', live.eventId);
+  return `/rapportera?${q.toString()}`;
 }

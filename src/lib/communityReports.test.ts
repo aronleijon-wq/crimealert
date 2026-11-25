@@ -37,3 +37,14 @@ describe('reporting from a police event', () => {
     expect(readEventPrefill('')).toBeNull();
   });
 });
+
+describe('joining a "Pågår nu"', () => {
+  it('opens the report form at the same place, with or without a police event', async () => {
+    const { reportFromLiveUrl, readEventPrefill } = await import('./communityReports');
+    const url = reportFromLiveUrl({ id: 'abc', place: 'Fisksätra', label: 'Rök eller brand', lat: 59.295, lng: 18.255, eventId: null });
+    expect(readEventPrefill(url.split('?')[1])).toEqual({ eventId: null, title: 'Rök eller brand, Fisksätra', area: 'Fisksätra', lat: 59.295, lng: 18.255 });
+    const withEvent = reportFromLiveUrl({ id: 'abc', place: 'Fisksätra', label: 'Brand', lat: 59.295, lng: 18.255, eventId: 'pol-1' });
+    expect(readEventPrefill(withEvent.split('?')[1])?.eventId).toBe('pol-1');
+    expect(readEventPrefill('lat=59&lng=18')).toBeNull();
+  });
+});
