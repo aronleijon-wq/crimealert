@@ -1098,6 +1098,19 @@ export type Database = {
           type: string
         }[]
       }
+      live_reports: {
+        Args: never
+        Returns: {
+          area: string
+          category: string
+          created_at: string
+          event_id: string
+          id: string
+          lat: number
+          lng: number
+          reporter: number
+        }[]
+      }
       log_client_event: {
         Args: {
           _detail: string
