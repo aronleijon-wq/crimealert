@@ -116,6 +116,10 @@ const NativeProfile = () => {
         <Section footer="Med ett gratis konto väljer du kommuner att bevaka och får notiser.">
           <Row icon={LogIn} label="Logga in eller skapa konto" to="/auth" />
         </Section>
+        {/* Notiser is here whether signed in or not; without an account it says what one gives */}
+        <Section header="Notiser">
+          <Row icon={Bell} label="Notiser" detail="Få veta när något händer där du bor" to="/alerts" />
+        </Section>
         <ProCard isPremium={false} canBuy={canSellPro()} />
         {about}
       </Screen>
@@ -149,8 +153,8 @@ const NativeProfile = () => {
 
       {/* From 1.3 Notiser is no longer a tab of its own (screens.ts) */}
       {hasAppDesign13() && (
-        <Section>
-          <Row icon={Bell} label="Kommuner och notiser" detail="Vilka kommuner du bevakar" to="/alerts" />
+        <Section header="Notiser">
+          <Row icon={Bell} label="Notiser" detail="Kommuner, platser och vad du vill veta" to="/alerts" />
           <Row icon={MessagesSquare} label="Chattar" detail="Prata med grannarna i din kommun" to="/chattar" />
         </Section>
       )}

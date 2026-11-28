@@ -289,6 +289,8 @@ export interface PushEvent {
   time: string;
   original_type: string | null;
   location_precision?: string | null;
+  /** Polisen's text, of which the notification shows the start */
+  description?: string | null;
   /** The user's place the event is near, when it is near one */
   near?: PlaceMatch | null;
 }
@@ -317,6 +319,19 @@ const categoryOf = (event: PushEvent) => {
 const iconOf = (event: PushEvent) => TYPE_ICONS[isNotifyType(event.type) ? event.type : 'other'];
 
 /** The notification for one user's new events, newest first: one event opens it on the map. */
+/** The start of Polisen's text for the lock screen: plain words, cut at a word, at most `max` characters */
+export function pushExcerpt(description: string | null | undefined, max = 120): string {
+  const text = (description ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,.;:–-]+$/, '')}…`;
+}
+
 export function buildPushMessage(events: PushEvent[]): PushMessage {
   const sorted = [...events].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   const first = sorted[0];
@@ -327,7 +342,8 @@ export function buildPushMessage(events: PushEvent[]): PushMessage {
     return {
       // Near one of the user's places: the title says which, as that is why it matters
       title: `${iconOf(first)} ${categoryOf(first)} · ${first.near ? placeDistance(first.near) : area}`,
-      body: `${time ? `Kl. ${time} · ` : ''}Polisen rapporterar en ny händelse i ${area}. Tryck för att se den på kartan.`,
+      // What happened, in Polisen's own words, so the lock screen says it without opening the app
+      body: `${time ? `Kl. ${time} · ` : ''}${pushExcerpt(first.description) || `Polisen rapporterar en ny händelse i ${area}. Tryck för att se den på kartan.`}`,
       url: `/karta?incident=${encodeURIComponent(first.id)}`,
       tag: `crimealert-incident-${first.id}`,
       incidentId: first.id,

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   areaMatchesKommun,
   buildPushMessage,
+  pushExcerpt,
   DEFAULT_NOTIFY_SETTINGS,
   freeMayNotify,
   reachedFreeWithin,
@@ -107,6 +108,14 @@ describe('kinds of crime, quiet hours and near me', () => {
 });
 
 describe('buildPushMessage', () => {
+  it('shows the start of what happened on the lock screen', () => {
+    const message = buildPushMessage([{ id: 'e1', title: 'Brand', area: 'Uppsala', type: 'fire', risk: 'high', time: '2026-10-02T12:05:00+00:00', original_type: 'Brand',
+      description: 'Brand i flerfamiljshus i Svartbäcken. Räddningstjänsten är på plats och flera lägenheter har utrymts. Ingen person ska enligt uppgift vara skadad.' }]);
+    expect(message.body.startsWith('Kl. 14:05 · Brand i flerfamiljshus i Svartbäcken. Räddningstjänsten är på plats')).toBe(true);
+    expect(message.body.endsWith('…')).toBe(true);
+    expect(pushExcerpt('<p>Kort&nbsp;text.</p>')).toBe('Kort text.');
+  });
+
   const event = (id: string, time: string, extra: Partial<PushEvent> = {}): PushEvent => ({
     id, title: `02 oktober, Brand, Uppsala`, area: 'Uppsala', type: 'fire', risk: 'high', time, original_type: 'Brand', ...extra,
   });

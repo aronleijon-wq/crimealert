@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -14,6 +14,8 @@ const range = vi.fn((from: number) => Promise.resolve({ data: from === 0 ? rows 
 const query = { order: () => query, range };
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc: (...a: unknown[]) => { rpc(...a); return query; } } }));
 vi.mock('@/hooks/useNotificationPreferences', () => ({ useNotificationPreferences: () => ({ kommuner: ['Nacka'] }) }));
+const premium = { isPremium: true };
+vi.mock('@/hooks/useIsPremium', () => ({ useIsPremium: () => premium }));
 vi.mock('@/lib/shareCard', () => ({ drawHistoryCard: vi.fn(), shareCard: vi.fn() }));
 
 import CrimeAtlas from './CrimeAtlas';
@@ -21,6 +23,18 @@ import CrimeAtlas from './CrimeAtlas';
 const show = () => render(<MemoryRouter><CrimeAtlas /></MemoryRouter>);
 
 describe('Brottsatlas', () => {
+  beforeEach(() => { premium.isPremium = true; });
+
+  it('keeps "Sedan start" for Pro, and shows 30 days without it', async () => {
+    premium.isPremium = false;
+    show();
+    await screen.findByText('Vanligast i Nacka');
+    expect(rpc).toHaveBeenLastCalledWith('crime_atlas_places', { _days: 30 });
+    fireEvent.click(screen.getByRole('tab', { name: 'Sedan start' }));
+    expect(screen.getByText('Hela historiken sedan start ingår i Pro.')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '30 dagar' })).toHaveAttribute('aria-selected', 'true');
+  });
+
   it('starts with your kommun, what is most common there and how it compares with Sweden', async () => {
     show();
     expect(await screen.findByText(/^Stölder är [\d,]+× vanligare i Nacka än i Sverige$/)).toBeInTheDocument();
