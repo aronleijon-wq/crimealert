@@ -162,6 +162,13 @@
       "when": 1795879884455,
       "tag": "0022_lifecycle_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795885780450,
+      "tag": "0023_kommun_limit",
+      "breakpoints": true
     }
   ]
 }
