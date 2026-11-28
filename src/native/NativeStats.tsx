@@ -4,6 +4,8 @@ import { useSEO } from '@/hooks/useSEO';
 import { Screen, Segmented } from './ui';
 import NativeHistory from './NativeHistory';
 import StatsTrends from './StatsTrends';
+import AccountGate from '@/components/AccountGate';
+import { ANALYSIS_GATE, ATLAS_GATE, TRENDS_GATE } from '@/lib/gateTexts';
 
 const CrimeAtlas = lazy(() => import('./CrimeAtlas'));
 
@@ -24,19 +26,23 @@ const NativeStats = () => {
     <Screen title="Statistik">
       <div className="mb-2 mt-1"><Segmented options={VIEW_OPTIONS} value={view} onChange={setView} /></div>
       {view === 'atlas' ? (
-        <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
-          <CrimeAtlas />
-        </Suspense>
+        <AccountGate {...ATLAS_GATE}>
+          <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
+            <CrimeAtlas />
+          </Suspense>
+        </AccountGate>
       ) : view === 'over-tid' ? (
         <NativeHistory />
       ) : view === 'analys' ? (
-        <div className="ca-app-analysis">
-          <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
-            <Analysis />
-          </Suspense>
-        </div>
+        <AccountGate {...ANALYSIS_GATE}>
+          <div className="ca-app-analysis">
+            <Suspense fallback={<div className="mx-4 mt-6 h-40 animate-pulse rounded-2xl bg-[#1c1c1e]" />}>
+              <Analysis />
+            </Suspense>
+          </div>
+        </AccountGate>
       ) : (
-        <StatsTrends />
+        <AccountGate {...TRENDS_GATE}><StatsTrends /></AccountGate>
       )}
     </Screen>
   );

@@ -4,6 +4,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO } from '@/hooks/useSEO';
 import CrimeAtlas from '@/native/CrimeAtlas';
+import AccountGate from '@/components/AccountGate';
+import { ATLAS_GATE } from '@/lib/gateTexts';
 
 const Brottsatlas = () => {
   useSEO({
@@ -20,7 +22,7 @@ const Brottsatlas = () => {
           <p className="mt-1 px-5 text-[15px] leading-snug text-[rgba(235,235,245,0.6)]">
             Vad som är vanligast i din kommun jämfört med Sverige, och var ett brott är vanligast per invånare.
           </p>
-          <CrimeAtlas />
+          <AccountGate {...ATLAS_GATE}><CrimeAtlas /></AccountGate>
         </div>
       </main>
       <Footer />

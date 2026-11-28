@@ -20,6 +20,8 @@ import { cleanPoliceTitle } from '@/lib/feed';
 import { eventPath } from '@/lib/share';
 import { splitParentIds } from '@/lib/summaries';
 import StatsTrends from '@/native/StatsTrends';
+import AccountGate from '@/components/AccountGate';
+import { TRENDS_GATE } from '@/lib/gateTexts';
 import { SWEDISH_KOMMUNER } from '@/data/kommuner';
 import { areaFilter } from '@/lib/areaFilter';
 import { bySource, isReport, SOURCE_OPTIONS, useReportEvents, type SourceFilter } from '@/lib/reportEvents';
@@ -46,7 +48,7 @@ const Overview = () => (
     <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
       <div className="ca-dark overflow-hidden rounded-3xl bg-black pb-6 text-white">
         <h2 className="px-5 pb-1 pt-5 text-[22px] font-bold tracking-tight">Trender</h2>
-        <StatsTrends />
+        <AccountGate {...TRENDS_GATE} peek={110}><StatsTrends /></AccountGate>
       </div>
       <div className="ca-dark overflow-hidden rounded-3xl bg-black pb-6 text-white">
         <h2 className="px-5 pb-1 pt-5 text-[22px] font-bold tracking-tight">Sverige över tid</h2>
