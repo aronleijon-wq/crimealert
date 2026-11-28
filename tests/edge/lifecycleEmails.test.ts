@@ -85,3 +85,16 @@ describe('the e-mails', () => {
     expect(mail.html).not.toContain('<b>x</b>');
   });
 });
+
+describe('the e-mails follow the plans', () => {
+  it('take prices and what Pro gives from planFacts', async () => {
+    const facts = await import('../../supabase/functions/_shared/planFacts');
+    const mail = lifecycleEmail('day7', { now: NOW, unsubscribeUrl: 'https://x.test/u', week: null });
+    expect(mail.text).toContain(`${facts.MONTHLY_KR} kr i månaden`);
+    expect(mail.text).toContain(`${facts.YEARLY_KR} kr om året`);
+    expect(mail.subject).toBe(`Prova Pro gratis i ${facts.trialDays(NOW)} dagar`);
+    for (const key of ['live', 'push', 'description', 'analysis'] as const) {
+      expect(mail.text).toContain(facts.PRO_FEATURE_TEXTS.find((f) => f.key === key)!.text);
+    }
+  });
+});

@@ -2,8 +2,11 @@
 // happened in your kommun on day 3, Pro on day 7, and a "this is what you missed" after two quiet
 // weeks. Each is sent once (lifecycle_email_log), never two within a day, never to someone who
 // said no (email_optouts), and Pro is never offered to someone who has it. Every e-mail has a link
-// that stops them all.
+// that stops them all. Prices, the trial and what Pro gives come from planFacts, so the e-mails
+// change with the plans.
+import { MONTHLY_KR, PRO_FEATURE_TEXTS, trialDays, YEARLY_KR } from './planFacts.ts';
 
+export { trialDays };
 export type LifecycleKind = 'welcome' | 'day3' | 'day7' | 'comeback';
 
 const HOUR = 60 * 60 * 1000;
@@ -11,9 +14,6 @@ const DAY = 24 * HOUR;
 
 export const SITE = 'https://crimealert.se';
 export const APP_STORE_URL = 'https://apps.apple.com/se/app/crimealert-brottsplatskarta/id6826326029';
-const BLACK_WEEK_ENDS = Date.parse('2026-12-01T00:00:00+01:00');
-/** The trial a new Pro gets: 30 days during Black Week, else 7 (components/account/plans) */
-export const trialDays = (now: number) => (now < BLACK_WEEK_ENDS ? 30 : 7);
 
 export interface Candidate {
   createdAt: number;
@@ -212,6 +212,12 @@ Du får det här mejlet för att du har ett konto på <a href="${SITE}" style="c
   return { html, text };
 }
 
+/** Pro in the day 7 e-mail: what the plans say Pro gives, the five that matter most */
+const EMAIL_PRO_FEATURES = (['live', 'push', 'description', 'analysis', 'ask'] as const)
+  .map((key) => PRO_FEATURE_TEXTS.find((f) => f.key === key))
+  .filter((f): f is (typeof PRO_FEATURE_TEXTS)[number] => !!f)
+  .map((f) => f.text.replace(/ \(.*\)$/, ''));
+
 function content(kind: LifecycleKind, ctx: EmailContext): Content {
   const w = ctx.week;
   if (kind === 'welcome') {
@@ -273,14 +279,8 @@ function content(kind: LifecycleKind, ctx: EmailContext): Content {
       title: 'Se allt, direkt när det händer',
       blocks: [
         { p: `Du har haft CrimeAlert i en vecka. Med Pro får du hela bilden, och de första ${days} dagarna kostar ingenting:` },
-        { checks: [
-          'Polisens händelser direkt, utan 15 minuters fördröjning',
-          'Notiser direkt när något händer i dina kommuner',
-          'Hela beskrivningen av varje händelse',
-          'Analys och statistik per kommun, 60 dagar bakåt',
-          'Fråga AI utan gräns, med utförligare svar',
-        ] },
-        { p: 'Efter provperioden kostar Pro <strong>19 kr i månaden</strong> eller <strong>199 kr om året</strong>. Du avslutar när du vill.' },
+        { checks: EMAIL_PRO_FEATURES },
+        { p: `Efter provperioden kostar Pro <strong>${MONTHLY_KR} kr i månaden</strong> eller <strong>${YEARLY_KR} kr om året</strong>. Du avslutar när du vill.` },
       ],
       cta: { label: 'Prova Pro gratis', href: url('/prisplan', kind) },
       after: [{ small: 'Provperioden gäller om du inte har haft Pro tidigare.' }],
