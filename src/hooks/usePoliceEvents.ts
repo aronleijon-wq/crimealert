@@ -25,6 +25,7 @@ interface PoliceEventDto {
   location_precision?: string | null;
   /** Without Pro: the description is only its start */
   descriptionTruncated?: boolean;
+  descriptionLocked?: boolean;
   /** lat and lng are already the marker's position, spread onto land */
   spread?: boolean;
 }
@@ -97,6 +98,7 @@ async function requestPoliceEvents(accessToken?: string): Promise<Incident[]> {
     originalType: e.originalType || undefined,
     locationPrecision: e.location_precision || undefined,
     descriptionTruncated: e.descriptionTruncated === true || undefined,
+    descriptionLocked: e.descriptionLocked === true || undefined,
     // Kept, so the maps don't spread the marker a second time (into the water)
     spread: e.spread === true || undefined,
   }));

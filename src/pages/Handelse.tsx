@@ -134,6 +134,16 @@ const Handelse = () => {
                       </Link>
                     )}
                   </div>
+                ) : incident.descriptionLocked ? (
+                  // Signed out: Polisen's text is there for anyone with an account, a free one too
+                  <div className="flex items-start gap-3 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5">
+                    <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <p className="text-sm leading-relaxed text-[hsl(var(--ca-text-2))]">Polisens beskrivning av vad som hänt läser du med ett gratis konto.</p>
+                      <Link to="/auth?mode=signup" className={`${primaryButton} mt-3`}>Skapa gratis konto</Link>
+                      <Link to="/auth" className="ml-3 text-sm font-medium text-primary hover:underline">Logga in</Link>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex items-start gap-3 rounded-2xl border border-[hsl(var(--ca-line-strong))] bg-card p-5">
                     <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

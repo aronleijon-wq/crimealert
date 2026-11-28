@@ -46,6 +46,8 @@ interface PoliceIncident {
   location_precision: string;
   /** For a visitor without Pro: the description is only its start, the rest is with Pro */
   descriptionTruncated?: boolean;
+  /** No text without an account: a free one is enough to read it */
+  descriptionLocked?: boolean;
   /** lat and lng are the marker's position, already spread and on land (seaMask) */
   spread?: boolean;
 }
@@ -100,6 +102,23 @@ const PREMIUM_CACHE_TTL = 60 * 1000; // 1 minute
  * is no recent answer, with the same rules as check-subscription (so trials and cancelled
  * subscriptions keep Pro until their period ends, as the app shows).
  */
+// Signed-in users who are not Pro, by token for a while: a free account reads the descriptions
+const signedInCache = new Map<string, number>();
+
+/** Whether the request comes from a signed-in user (any account, free or Pro) */
+async function isSignedIn(req: Request): Promise<boolean> {
+  const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
+  if (!token || token === (Deno.env.get('SUPABASE_ANON_KEY') || '')) return false;
+  const now = Date.now();
+  const seen = signedInCache.get(token);
+  if (seen && now - seen < PREMIUM_CACHE_TTL) return true;
+  const { data, error } = await supabase.auth.getUser(token).catch(() => ({ data: null, error: true }));
+  if (error || !data?.user) return false;
+  if (signedInCache.size > 500) signedInCache.clear();
+  signedInCache.set(token, now);
+  return true;
+}
+
 async function checkPremiumStatus(req: Request): Promise<boolean> {
   try {
     const authHeader = req.headers.get('Authorization');
@@ -1722,6 +1741,8 @@ serve(async (req) => {
   try {
     // Server-side premium check (cached per token)
     const isPremium = await checkPremiumStatus(req);
+    // Without an account no description at all (Pro is signed in by definition)
+    const signedIn = isPremium || await isSignedIn(req);
     console.log(`User premium status: ${isPremium}`);
 
     const url = new URL(req.url);
@@ -1863,6 +1884,8 @@ serve(async (req) => {
         })
         // The night summaries whole; of other events about the first half, the rest with Pro
         .map((i) => {
+          // Signed out: the title, place and time, the text with a free account
+          if (!signedIn) return i.description ? { ...i, description: '', descriptionLocked: true } : i;
           if (isSummaryIncident(i)) return { ...i, description: i.description || '' };
           const preview = descriptionPreview(i.description);
           return { ...i, description: preview.text, descriptionTruncated: preview.truncated };
