@@ -11,7 +11,7 @@ export const YEARLY_KR = 199;
 export const FREE_DELAY_MINUTES = 15;
 
 /** Kommuner a free account may watch (notification_preferences, guarded in the database too); Pro has no limit */
-export const FREE_KOMMUN_LIMIT = 3;
+export const FREE_KOMMUN_LIMIT = 2;
 
 /** Fråga AI: questions a day without Pro; with Pro "obegränsat", but not without end */
 export const FREE_QUESTIONS_PER_DAY = 3;

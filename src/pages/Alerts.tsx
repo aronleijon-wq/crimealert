@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useToast } from '@/hooks/use-toast';
 import { isKommunLimit, useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { FREE_KOMMUN_LIMIT } from '../../supabase/functions/_shared/planFacts';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -171,7 +172,7 @@ const Alerts = () => {
   const handleAdd = async (kommun: string) => {
     const error = await addKommun(kommun);
     toast(isKommunLimit(error)
-      ? { title: 'Bevaka fler kommuner med Pro', description: `Med gratis bevakar du upp till ${limit ?? 3} kommuner. Ta bort en för att byta.` }
+      ? { title: 'Bevaka fler kommuner med Pro', description: `Med gratis bevakar du upp till ${limit ?? FREE_KOMMUN_LIMIT} kommuner. Ta bort en för att byta.` }
       : error
       ? { title: 'Kunde inte lägga till', description: `${kommun} kunde inte sparas. Försök igen.`, variant: 'destructive' }
       : { title: `Du bevakar nu ${kommun}`, description: deviceState === 'on' ? 'Du får notiser för händelser där.' : 'Slå på notiser nedan för att få dem i den här enheten.' });
