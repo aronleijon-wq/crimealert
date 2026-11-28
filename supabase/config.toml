@@ -21,3 +21,5 @@ project_id = "pqoiwiiydtikouzjrllx"
     verify_jwt = false
   [functions.apple-notifications]
     verify_jwt = false
+  [functions.lifecycle-emails]
+    verify_jwt = false
