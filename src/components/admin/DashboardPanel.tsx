@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { PRICES } from '@/components/account/plans';
 import ProMembers from './ProMembers';
+import CommandCenter from './CommandCenter';
+import type { Pulse } from '@/lib/commandCenter';
 import type { MemberSummary, ProMember } from '../../../supabase/functions/_shared/members';
 
 interface SourceSummary {
@@ -31,6 +33,8 @@ interface Dashboard {
   };
   /** Everyone with Pro now (admin-dashboard after this change; older answers lack it) */
   members?: { summary: MemberSummary; list: ProMember[] };
+  /** The command centre's numbers (admin-dashboard after this change) */
+  pulse?: Pulse;
   invites?: {
     links: number; inviters: number; invited: number; rewarded: number; proActive: number;
     list: { email: string; code: string; invited: number; rewarded: number; pro_until: string | null; pro_active: boolean; last_invite: string | null }[];
@@ -137,6 +141,8 @@ const DashboardPanel = () => {
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />} Uppdatera
         </Button>
       </div>
+
+      {d.pulse && <CommandCenter pulse={d.pulse} generatedAt={d.generated_at} />}
 
       {d.notes.length > 0 && (
         <ul className="rounded-lg border border-dashed px-4 py-2.5 text-xs text-muted-foreground">

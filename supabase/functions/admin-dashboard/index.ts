@@ -209,6 +209,23 @@ serve(async (req) => {
     })),
   };
 
+  // ---- The command centre: the last day, who uses it, the way from a visit to paying ----
+  const [visits24, signups24, reports24, push24, ask24, reports7] = await Promise.all([
+    admin.from("page_stats").select("views").eq("day", dayKey(now)).then(({ data }) => (data ?? []).reduce((a, r) => a + (r.views ?? 0), 0)),
+    Promise.resolve(created.filter((t) => t > now - DAY).length),
+    count(rows("community_reports").gte("created_at", since(1))),
+    count(rows("sent_push_log").gte("sent_at", since(1))),
+    count(rows("ask_log").gte("created_at", since(1))),
+    count(rows("community_reports").gte("created_at", since(7))),
+  ]);
+  const { data: activity, error: activityError } = await admin.rpc("admin_activity");
+  if (activityError) notes.push("Aktiva användare kunde inte räknas (är migrationen admin_activity körd?).");
+  const { data: sourceRows } = await admin.from("traffic_sources").select("source, visits").gte("day", dayKey(now - 30 * DAY)).limit(20000);
+  const bySource = new Map<string, number>();
+  for (const r of sourceRows ?? []) bySource.set(r.source, (bySource.get(r.source) ?? 0) + (r.visits ?? 0));
+  const visits30 = [...viewsByDay.values()].reduce((a, v) => a + v.mobile + v.desktop, 0);
+  const weekBefore = created.filter((t) => t > now - 14 * DAY && t <= now - 7 * DAY).length;
+
   // ---- Pro-medlemmar: everyone with Pro now ----
   const memberRows: ProMember[] = stripeNow.flatMap((sub) => memberFromStripe(sub, joinedByEmail, now) ?? []);
   for (const a of appleNow) {
@@ -243,5 +260,18 @@ serve(async (req) => {
     invites: inviteSummary,
     members: { summary: summarizeMembers(members), list: members },
     visits: [...viewsByDay].sort(([a], [b]) => a.localeCompare(b)).map(([day, v]) => ({ day, ...v })),
+    pulse: {
+      last24: { visits: visits24, signups: signups24, reports: reports24, push: push24, ask: ask24, events: events24h },
+      reports7,
+      activity: activityError ? null : activity,
+      growth: { thisWeek: created.filter((t) => t > now - 7 * DAY).length, weekBefore },
+      funnel30: {
+        visits: visits30,
+        signups: created.filter((t) => t > now - 30 * DAY).length,
+        proStarts: members.filter((m) => (m.kind === "trial" || m.kind === "paying") && m.proSince && Date.parse(m.proSince) > now - 30 * DAY).length,
+        paying: members.filter((m) => m.kind === "paying").length,
+      },
+      sources: [...bySource].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([source, visits]) => ({ source, visits })),
+    },
   });
 });
