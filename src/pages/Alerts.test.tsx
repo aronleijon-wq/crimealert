@@ -39,7 +39,8 @@ vi.mock('@/hooks/usePoliceEvents', () => ({
   }),
 }));
 vi.mock('@/hooks/useNotificationPreferences', () => ({
-  useNotificationPreferences: () => ({ kommuner: state.kommuner, loading: false, addKommun, removeKommun }),
+  useNotificationPreferences: () => ({ kommuner: state.kommuner, loading: false, addKommun, removeKommun, atLimit: false, limit: 2 }),
+  isKommunLimit: (e: { message?: string } | null | undefined) => !!e?.message?.includes('kommun_limit'),
 }));
 vi.mock('@/hooks/useNotificationSettings', () => ({
   useNotificationSettings: () => ({

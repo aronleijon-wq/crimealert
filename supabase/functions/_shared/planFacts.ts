@@ -10,6 +10,9 @@ export const YEARLY_KR = 199;
 /** Free accounts see Polisen's events, on the map and as notifications, this many minutes late */
 export const FREE_DELAY_MINUTES = 15;
 
+/** Kommuner a free account may watch (notification_preferences, guarded in the database too); Pro has no limit */
+export const FREE_KOMMUN_LIMIT = 2;
+
 /** Fråga AI: questions a day without Pro; with Pro "obegränsat", but not without end */
 export const FREE_QUESTIONS_PER_DAY = 3;
 export const PRO_QUESTIONS_PER_DAY = 100;
@@ -25,12 +28,13 @@ export const isBlackWeek = (now = Date.now()) => now < BLACK_WEEK_ENDS;
 /** Days of Pro a first-time subscriber gets before the first payment, at `now` */
 export const trialDays = (now = Date.now()) => (isBlackWeek(now) ? BLACK_WEEK_TRIAL_DAYS : NORMAL_TRIAL_DAYS);
 
-export type ProFeatureKey = 'live' | 'push' | 'description' | 'details' | 'analysis' | 'export' | 'ask' | 'noAds';
+export type ProFeatureKey = 'live' | 'push' | 'kommuner' | 'description' | 'details' | 'analysis' | 'export' | 'ask' | 'noAds';
 
 /** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, ask-crimealert) */
 export const PRO_FEATURE_TEXTS: { key: ProFeatureKey; text: string; short: string }[] = [
   { key: 'live', text: `Polisens händelser direkt, utan ${FREE_DELAY_MINUTES} minuters fördröjning`, short: `Händelser direkt, utan ${FREE_DELAY_MINUTES} min väntan` },
   { key: 'push', text: 'Notiser direkt när något händer i dina kommuner', short: 'Notiser direkt i dina kommuner' },
+  { key: 'kommuner', text: `Bevaka fler än ${FREE_KOMMUN_LIMIT} kommuner`, short: `Fler än ${FREE_KOMMUN_LIMIT} kommuner` },
   { key: 'description', text: 'Hela beskrivningen av varje händelse', short: 'Hela beskrivningen av varje händelse' },
   { key: 'details', text: 'Risknivå, status, Polisens kategori och platsens precision', short: 'Risknivå, status och kategori' },
   { key: 'analysis', text: 'Analys och statistik per kommun, upp till 60 dagar bakåt', short: 'Analys och statistik, 60 dagar bakåt' },

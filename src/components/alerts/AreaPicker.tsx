@@ -1,5 +1,6 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Check, LocateFixed, Loader2, MapPin, Plus, Search, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Check, LocateFixed, Loader2, MapPin, MapPinned, Plus, Search, X } from 'lucide-react';
 import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 
 const POPULAR = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Västerås', 'Örebro'];
@@ -11,7 +12,22 @@ interface AreaPickerProps {
   recentCounts: Record<string, number>;
   onAdd: (kommun: string) => void;
   onRemove: (kommun: string) => void;
+  /** A free account watches as many as it may (useNotificationPreferences): more with Pro */
+  atLimit?: boolean;
+  limit?: number | null;
 }
+
+/** In place of the search when a free account watches as many kommuner as it may */
+export const KommunLimitCard = ({ limit }: { limit: number }) => (
+  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/[0.06] px-4 py-3.5">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"><MapPinned className="h-4 w-4" aria-hidden /></span>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-foreground">Bevaka fler kommuner med Pro</p>
+      <p className="text-xs text-muted-foreground">Med gratis bevakar du upp till {limit} kommuner. Ta bort en för att byta, eller skaffa Pro för fler.</p>
+    </div>
+    <Link to="/prisplan" className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:opacity-90">Se Pro</Link>
+  </div>
+);
 
 const SuggestionChip = ({ name, onAdd }: { name: string; onAdd: (k: string) => void }) => (
   <button
@@ -23,7 +39,7 @@ const SuggestionChip = ({ name, onAdd }: { name: string; onAdd: (k: string) => v
   </button>
 );
 
-const AreaPicker = ({ kommuner, loading, recentCounts, onAdd, onRemove }: AreaPickerProps) => {
+const AreaPicker = ({ kommuner, loading, recentCounts, onAdd, onRemove, atLimit = false, limit = null }: AreaPickerProps) => {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
@@ -85,6 +101,7 @@ const AreaPicker = ({ kommuner, loading, recentCounts, onAdd, onRemove }: AreaPi
 
   return (
     <div>
+      {atLimit && limit !== null ? <KommunLimitCard limit={limit} /> : (<>
       <div className="relative">
         <div className="flex items-center gap-2 rounded-xl border border-[hsl(var(--ca-line-strong))] bg-[hsl(var(--ca-panel-2))] px-3 transition focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -160,6 +177,7 @@ const AreaPicker = ({ kommuner, loading, recentCounts, onAdd, onRemove }: AreaPi
         {!near && kommuner.length === 0 && popularToAdd.map((k) => <SuggestionChip key={k} name={k} onAdd={add} />)}
       </div>
       {locateError && <p className="mt-2 text-xs text-[hsl(var(--cr-red))]">{locateError}</p>}
+      </>)}
 
       <div className="mt-4">
         {loading ? (

@@ -7,7 +7,8 @@
 import { MONTHLY_KR, PRO_FEATURE_TEXTS, trialDays, YEARLY_KR } from './planFacts.ts';
 
 export { trialDays };
-export type LifecycleKind = 'welcome' | 'day3' | 'day7' | 'comeback';
+/** 'pro_welcome' goes to everyone who starts Pro, once, whenever their account was made */
+export type LifecycleKind = 'welcome' | 'day3' | 'day7' | 'comeback' | 'pro_welcome';
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -212,13 +213,31 @@ Du får det här mejlet för att du har ett konto på <a href="${SITE}" style="c
   return { html, text };
 }
 
-/** Pro in the day 7 e-mail: what the plans say Pro gives, the five that matter most */
-const EMAIL_PRO_FEATURES = (['live', 'push', 'description', 'analysis', 'ask'] as const)
+/** Pro in the day 7 e-mail: what the plans say Pro gives, the six that matter most */
+const EMAIL_PRO_FEATURES = (['live', 'push', 'kommuner', 'description', 'analysis', 'ask'] as const)
   .map((key) => PRO_FEATURE_TEXTS.find((f) => f.key === key))
   .filter((f): f is (typeof PRO_FEATURE_TEXTS)[number] => !!f)
   .map((f) => f.text.replace(/ \(.*\)$/, ''));
 
+/** Everything Pro gives, as the plans say it, for the welcome to Pro ("(3 frågor per dag utan Pro)" left out) */
+export const PRO_WELCOME_FEATURES = PRO_FEATURE_TEXTS.map((f) => f.text.replace(/ \(.*\)$/, ''));
+
 function content(kind: LifecycleKind, ctx: EmailContext): Content {
+  if (kind === 'pro_welcome') {
+    return {
+      subject: 'Välkommen till CrimeAlert Pro',
+      preheader: 'Det här har du tillgång till nu.',
+      kicker: 'CrimeAlert Pro',
+      title: 'Välkommen till Pro!',
+      blocks: [
+        { p: 'Tack för att du valde Pro. Det här har du tillgång till nu:' },
+        { checks: PRO_WELCOME_FEATURES },
+        { p: 'Tips: slå på notiser för dina kommuner, så får du veta direkt när något händer.' },
+      ],
+      cta: { label: 'Öppna CrimeAlert', href: url('/karta', kind) },
+      after: [{ small: 'Du hanterar ditt abonnemang under Profil i appen eller på crimealert.se.' }],
+    };
+  }
   const w = ctx.week;
   if (kind === 'welcome') {
     return {

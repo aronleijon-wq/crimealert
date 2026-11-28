@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import B2BOffer from './B2BOffer';
 import { BLACK_WEEK, FREE_PLAN_HAS_ADS, NORMAL_TRIAL_DAYS, PRICES, PRO_FEATURES, TRIAL_DAYS, YEARLY_DISCOUNT_PERCENT, type BillingCycle } from './plans';
 import { INVITE_DAYS } from '@/lib/invite';
-import { FREE_QUESTIONS_PER_DAY } from '../../../supabase/functions/_shared/planFacts';
+import { FREE_KOMMUN_LIMIT, FREE_QUESTIONS_PER_DAY } from '../../../supabase/functions/_shared/planFacts';
 
 const FREE_FEATURES: { icon: LucideIcon; text: string }[] = [
   { icon: MapIcon, text: 'Livekarta med Polisens händelser (15 min fördröjning)' },
   { icon: Megaphone, text: 'VMA, krisinformation och trafikstörningar direkt' },
   { icon: Newspaper, text: 'Flöde med händelser och nyheter från SVT med flera' },
-  { icon: Bell, text: 'Pushnotiser för dina kommuner (med gratis konto, 15 min fördröjning)' },
+  { icon: Bell, text: `Pushnotiser för upp till ${FREE_KOMMUN_LIMIT} kommuner (med gratis konto, 15 min fördröjning)` },
   { icon: MessageCircle, text: 'Gilla och kommentera (med gratis konto)' },
   { icon: Sparkles, text: `Fråga AI om brotten där du bor: ${FREE_QUESTIONS_PER_DAY} frågor per dag (med gratis konto)` },
 ];
@@ -35,6 +35,7 @@ const ROWS: { group: string; rows: Row[] }[] = [
     group: 'Konto',
     rows: [
       { feature: 'Pushnotiser för dina kommuner', free: 'Med konto, efter 15 min', pro: 'Direkt' },
+      { feature: 'Kommuner att bevaka', free: `Upp till ${FREE_KOMMUN_LIMIT}`, pro: 'Obegränsat' },
       { feature: 'Välj vilka händelser du får notiser om', free: 'Med konto', pro: true },
       { feature: 'Gilla och kommentera', free: 'Med konto', pro: true },
       { feature: 'Medborgarrapporter: se och skicka', free: 'Med konto', pro: true },

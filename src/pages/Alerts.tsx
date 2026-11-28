@@ -14,7 +14,8 @@ import { incidentTypeConfig, type Incident } from '@/data/mockIncidents';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useToast } from '@/hooks/use-toast';
-import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { isKommunLimit, useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { FREE_KOMMUN_LIMIT } from '../../supabase/functions/_shared/planFacts';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { usePoliceEvents } from '@/hooks/usePoliceEvents';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -119,7 +120,7 @@ const Alerts = () => {
   const { user, loading: authLoading } = useAuth();
   const { isPremium } = useIsPremium();
   const { incidents } = usePoliceEvents();
-  const { kommuner, loading: areasLoading, addKommun, removeKommun } = useNotificationPreferences();
+  const { kommuner, loading: areasLoading, addKommun, removeKommun, atLimit, limit } = useNotificationPreferences();
   const { settings, available: settingsAvailable, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly, extras, extrasAvailable, saveExtras } = useNotificationSettings();
   // The iPhone app gets notifications through Apple; app versions without that keep web push off
   const native = isNativeApp();
@@ -170,7 +171,9 @@ const Alerts = () => {
 
   const handleAdd = async (kommun: string) => {
     const error = await addKommun(kommun);
-    toast(error
+    toast(isKommunLimit(error)
+      ? { title: 'Bevaka fler kommuner med Pro', description: `Med gratis bevakar du upp till ${limit ?? FREE_KOMMUN_LIMIT} kommuner. Ta bort en för att byta.` }
+      : error
       ? { title: 'Kunde inte lägga till', description: `${kommun} kunde inte sparas. Försök igen.`, variant: 'destructive' }
       : { title: `Du bevakar nu ${kommun}`, description: deviceState === 'on' ? 'Du får notiser för händelser där.' : 'Slå på notiser nedan för att få dem i den här enheten.' });
     return error;
@@ -352,7 +355,7 @@ const Alerts = () => {
               )}
 
               <Section id="omraden" icon={MapPin} title="Dina områden" description="Du får notiser för händelser i de här kommunerna.">
-                <AreaPicker kommuner={kommuner} loading={areasLoading} recentCounts={recentCounts} onAdd={handleAdd} onRemove={handleRemove} />
+                <AreaPicker kommuner={kommuner} loading={areasLoading} recentCounts={recentCounts} onAdd={handleAdd} onRemove={handleRemove} atLimit={atLimit} limit={limit} />
               </Section>
 
               <Section id="enhet" icon={Smartphone} title="Den här enheten" description="Mobilen eller datorn du använder nu." aside={<DeviceBadge state={deviceState} />}>

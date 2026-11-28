@@ -1,5 +1,5 @@
 import type { SubscriptionState } from '@/hooks/useAuth';
-import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, Sparkles, Zap, type LucideIcon } from 'lucide-react';
+import { BarChart3, BellRing, EyeOff, FileDown, FileText, ListChecks, MapPinned, Sparkles, Zap, type LucideIcon } from 'lucide-react';
 
 // Prices, the trial and what Pro gives come from one place, shared with the server and the
 // e-mails (supabase/functions/_shared/planFacts)
@@ -37,7 +37,7 @@ export const BLACK_WEEK = isBlackWeek();
 
 /** What Pro adds, as the code gates it (police-events, send-push-notifications, IncidentDetail, Analysis, ExportData, ask-crimealert). Medborgarrapporter are free with an account. */
 const FEATURE_ICONS: Record<ProFeatureKey, LucideIcon> = {
-  live: Zap, push: BellRing, description: FileText, details: ListChecks, analysis: BarChart3, export: FileDown, ask: Sparkles, noAds: EyeOff,
+  live: Zap, push: BellRing, kommuner: MapPinned, description: FileText, details: ListChecks, analysis: BarChart3, export: FileDown, ask: Sparkles, noAds: EyeOff,
 };
 export const PRO_FEATURES: { icon: LucideIcon; text: string; /** One short line, for the app's Pro page */ short: string }[] =
   [...PRO_FEATURE_TEXTS, ...(FREE_PLAN_HAS_ADS ? [NO_ADS_FEATURE] : [])].map((f) => ({ icon: FEATURE_ICONS[f.key], text: f.text, short: f.short }));

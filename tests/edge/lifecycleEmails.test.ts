@@ -99,3 +99,24 @@ describe('the e-mails follow the plans', () => {
     }
   });
 });
+
+describe('the welcome to Pro', () => {
+  it('lists everything Pro gives, as the plans say it', async () => {
+    const facts = await import('../../supabase/functions/_shared/planFacts');
+    const mail = lifecycleEmail('pro_welcome', { now: NOW, unsubscribeUrl: 'https://x.test/u', week: null });
+    expect(mail.subject).toBe('Välkommen till CrimeAlert Pro');
+    for (const f of facts.PRO_FEATURE_TEXTS) expect(mail.text).toContain(f.text.replace(/ \(.*\)$/, ''));
+    expect(mail.text).not.toContain('frågor per dag utan Pro');
+    expect(mail.text).toContain('Avregistrera dig: https://x.test/u');
+  });
+});
+
+describe('watching more kommuner is a Pro feature', () => {
+  it('is in the plans and in both Pro e-mails', async () => {
+    const facts = await import('../../supabase/functions/_shared/planFacts');
+    const text = `Bevaka fler än ${facts.FREE_KOMMUN_LIMIT} kommuner`;
+    expect(facts.PRO_FEATURE_TEXTS.map((f) => f.text)).toContain(text);
+    expect(lifecycleEmail('pro_welcome', { now: NOW, unsubscribeUrl: 'u', week: null }).text).toContain(text);
+    expect(lifecycleEmail('day7', { now: NOW, unsubscribeUrl: 'u', week: null }).text).toContain(text);
+  });
+});

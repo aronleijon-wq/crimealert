@@ -84,7 +84,7 @@ const TestEmailsButton = () => {
     const { data, error } = await supabase.functions.invoke<{ sent: number; to: string; kommun: string; error?: string }>('lifecycle-emails', { body: { preview: true } });
     setState(error || !data || data.error
       ? 'Kunde inte skicka. Är lifecycle-emails deployad?'
-      : `${data.sent} av 4 testmejl skickade till ${data.to} (${data.kommun})`);
+      : `${data.sent} av 5 testmejl skickade till ${data.to} (${data.kommun})`);
   };
   return (
     <div className="flex flex-col items-end gap-1">

@@ -52,14 +52,14 @@ const Screen = ({ children, actions, center = false }: { children: ReactNode; ac
 );
 
 /** Which kommuner to watch, the iPhone's way: a search field, then rows to tick */
-const KommunPicker = ({ kommuner, onAdd, onRemove }: { kommuner: string[]; onAdd: (k: string) => void; onRemove: (k: string) => void }) => {
+const KommunPicker = ({ kommuner, onAdd, onRemove, atLimit = false, limit = null }: { kommuner: string[]; onAdd: (k: string) => void; onRemove: (k: string) => void; atLimit?: boolean; limit?: number | null }) => {
   const [query, setQuery] = useState('');
   const [near, setNear] = useState<string[] | null>(null);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
   const results = useMemo(() => searchKommuner(query), [query]);
 
-  const toggle = (k: string) => (kommuner.includes(k) ? onRemove(k) : onAdd(k));
+  const toggle = (k: string) => (kommuner.includes(k) ? onRemove(k) : atLimit ? undefined : onAdd(k));
   const locate = () => {
     if (!('geolocation' in navigator)) { setLocateError('Telefonen kan inte dela din position.'); return; }
     setLocating(true);
@@ -92,6 +92,9 @@ const KommunPicker = ({ kommuner, onAdd, onRemove }: { kommuner: string[]; onAdd
 
   return (
     <div className="-mx-4 mt-6">
+      {atLimit && limit !== null && (
+        <p className={`mx-4 mb-3 text-[13px] leading-snug ${MUTED}`}>Med gratis bevakar du upp till {limit} kommuner. Fler kan du lägga till med Pro.</p>
+      )}
       <div className="mx-4 flex h-10 items-center gap-1.5 rounded-[10px] bg-[rgba(118,118,128,0.24)] px-2.5">
         <Search className={`h-[18px] w-[18px] shrink-0 ${MUTED}`} aria-hidden />
         <input
@@ -143,7 +146,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const push = useNativePush(true);
-  const { kommuner, loading, addKommun, removeKommun } = useNotificationPreferences();
+  const { kommuner, loading, addKommun, removeKommun, atLimit, limit } = useNotificationPreferences();
   const [step, setStep] = useState<Step>('intro');
   const [appSignIn, setAppSignIn] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -258,7 +261,7 @@ const Welcome = ({ onDone }: { onDone: () => void }) => {
         <Heading title="Vilka kommuner vill du bevaka?" text={`Där du bor, jobbar eller där familjen finns. Du kan ändra det under ${hasAppDesign13() ? 'Profil' : 'Notiser'}.`} />
         {loading
           ? <div className="mt-8 flex justify-center"><Loader2 className={`h-6 w-6 animate-spin ${MUTED}`} aria-label="Hämtar dina kommuner" /></div>
-          : <KommunPicker kommuner={kommuner} onAdd={addKommun} onRemove={removeKommun} />}
+          : <KommunPicker kommuner={kommuner} onAdd={addKommun} onRemove={removeKommun} atLimit={atLimit} limit={limit} />}
       </Screen>
     );
   } else {
