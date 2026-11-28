@@ -1,7 +1,7 @@
 // The e-mails a new account gets (lifecycle-emails, run every hour): a welcome straight away, what
 // happened in your kommun on day 3, Pro on day 7, and a "this is what you missed" after two quiet
 // weeks. Each is sent once (lifecycle_email_log), never two within a day, never to someone who
-// said no (email_optouts), and Pro is never offered to someone who has it. Every e-mail has a link
+// said no (email_optouts). Pro members get neither the Pro offer nor the "you missed" nudge. Every e-mail has a link
 // that stops them all. Prices, the trial and what Pro gives come from planFacts, so the e-mails
 // change with the plans.
 import { MONTHLY_KR, PRO_FEATURE_TEXTS, trialDays, YEARLY_KR } from './planFacts.ts';
@@ -54,7 +54,7 @@ export function dueEmail(c: Candidate, now: number): LifecycleKind | null {
   if (inWindow('day7') && !had('day7') && !c.pro) return 'day7';
   const quiet = now - (c.lastUsedAt ?? c.createdAt);
   const lastComeback = Math.max(0, ...c.sent.filter((s) => s.kind.startsWith('comeback')).map((s) => s.at));
-  if (age >= COMEBACK_AFTER && quiet >= COMEBACK_AFTER && quiet < COMEBACK_UNTIL && now - lastComeback >= COMEBACK_EVERY) return 'comeback';
+  if (!c.pro && age >= COMEBACK_AFTER && quiet >= COMEBACK_AFTER && quiet < COMEBACK_UNTIL && now - lastComeback >= COMEBACK_EVERY) return 'comeback';
   return null;
 }
 

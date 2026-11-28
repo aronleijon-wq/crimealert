@@ -35,6 +35,7 @@ describe('which e-mail is due', () => {
     expect(dueEmail({ ...quiet, sent: [{ kind: logKind('comeback', NOW - 40 * D), at: NOW - 40 * D }] }, NOW)).toBeNull();
     expect(dueEmail(account({ createdAt: NOW - 60 * D, lastUsedAt: NOW - 40 * D }), NOW)).toBeNull();
     expect(dueEmail(account({ createdAt: NOW - 60 * D, lastUsedAt: NOW - 2 * D }), NOW)).toBeNull();
+    expect(dueEmail({ ...quiet, pro: true }, NOW)).toBeNull();
   });
 });
 
