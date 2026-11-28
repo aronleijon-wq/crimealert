@@ -35,6 +35,13 @@ const renderLanding = async () => {
   return render(<MemoryRouter><Landing /></MemoryRouter>);
 };
 
+// Black Week or not, whatever today's date (the offer in the hero differs)
+const week = vi.hoisted(() => ({ black: false }));
+vi.mock('@/components/account/plans', async (original) => ({
+  ...(await original<typeof import('@/components/account/plans')>()),
+  get BLACK_WEEK() { return week.black; },
+}));
+
 describe('Landing page', () => {
   it('shows the headline and the live log of real events', async () => {
     await renderLanding();
