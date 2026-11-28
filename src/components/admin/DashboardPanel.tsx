@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, Mail, RefreshCw } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -76,6 +76,26 @@ const Stat = ({ label, value, sub }: { label: string; value: string; sub?: strin
 const tooltipStyle = { fontSize: 12, borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))' };
 const axis = { fontSize: 11, fill: 'hsl(var(--muted-foreground))' };
 
+/** Sends the four welcome e-mails (lifecycle-emails) to the admin's own address, to see them as a new account would */
+const TestEmailsButton = () => {
+  const [state, setState] = useState<'idle' | 'sending' | string>('idle');
+  const send = async () => {
+    setState('sending');
+    const { data, error } = await supabase.functions.invoke<{ sent: number; to: string; kommun: string; error?: string }>('lifecycle-emails', { body: { preview: true } });
+    setState(error || !data || data.error
+      ? 'Kunde inte skicka. Är lifecycle-emails deployad?'
+      : `${data.sent} av 4 testmejl skickade till ${data.to} (${data.kommun})`);
+  };
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button size="sm" variant="outline" onClick={send} disabled={state === 'sending'}>
+        {state === 'sending' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />} Testa välkomstmejlen
+      </Button>
+      {state !== 'idle' && state !== 'sending' && <p className="text-xs text-muted-foreground">{state}</p>}
+    </div>
+  );
+};
+
 /** Revenue (Stripe and Apple), users, devices, engagement and visits, on one page */
 const DashboardPanel = () => {
   const [d, setD] = useState<Dashboard | null>(null);
@@ -137,9 +157,12 @@ const DashboardPanel = () => {
           <h1 id="oversikt-rubrik" className="text-2xl font-semibold tracking-tight text-foreground">Översikt</h1>
           <p className="text-xs text-muted-foreground">Uppdaterad {new Date(d.generated_at).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' })}</p>
         </div>
-        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />} Uppdatera
-        </Button>
+        <div className="flex flex-wrap items-start gap-2">
+          <TestEmailsButton />
+          <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />} Uppdatera
+          </Button>
+        </div>
       </div>
 
       {d.pulse && <CommandCenter pulse={d.pulse} generatedAt={d.generated_at} />}

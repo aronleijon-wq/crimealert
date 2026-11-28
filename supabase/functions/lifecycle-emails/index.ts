@@ -2,6 +2,8 @@
 // migration lifecycle_emails. Each due e-mail is claimed in lifecycle_email_log before it is sent,
 // so two runs never send the same one; a failed send gives the claim back for the next run.
 // ?optout=<token> (the link in every e-mail, and the one-click List-Unsubscribe) stops them all.
+// { preview: true } from a signed-in admin (the admin page's button) sends all four, marked
+// [Test], to the admin's own address, with a real week from their kommun, and logs nothing.
 //
 // Needs RESEND_API_KEY (as admin-alerts); LIFECYCLE_FROM picks the sender, else
 // CrimeAlert <hej@crimealert.se>. Without the key it does nothing.
@@ -22,7 +24,11 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Resend takes a couple of requests a second; a run sends at most this many */
 const MAX_PER_RUN = 150;
 
-const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 const page = (title: string, text: string, status = 200) => new Response(
   `<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
 <body style="margin:0;background:#0B0B0C;color:#fff;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
@@ -49,6 +55,50 @@ async function optOut(token: string | null): Promise<boolean> {
   const { error } = await db.from('email_optouts').upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
   if (error) throw new Error(error.message);
   return true;
+}
+
+const fromAddress = () => Deno.env.get('LIFECYCLE_FROM') || 'CrimeAlert <hej@crimealert.se>';
+
+/** One e-mail through Resend; true when it was taken */
+async function sendMail(resendKey: string, to: string, kind: LifecycleKind, mail: { subject: string; html: string; text: string }, unsubscribeUrl: string): Promise<boolean> {
+  const res = await fetch(`${RESEND_API}/emails`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: fromAddress(), to: [to], reply_to: 'kontakt@crimealert.se', subject: mail.subject, html: mail.html, text: mail.text,
+      headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+      tags: [{ name: 'lifecycle', value: kind }],
+    }),
+  });
+  if (!res.ok) console.error('[lifecycle-emails] Resend', res.status, (await res.text()).slice(0, 300));
+  return res.ok;
+}
+
+const lastTwoWeeks = (now: number) => readAll<SummaryEvent>((f, t) => db.from('police_events_archive').select('area, original_type, time')
+  .gte('time', new Date(now - 14 * DAY).toISOString()).order('time', { ascending: false }).range(f, t));
+
+/** All four e-mails to the admin who asked, as a new account in their kommun would get them */
+async function preview(req: Request, now: number): Promise<Response> {
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) return json({ error: 'RESEND_API_KEY saknas' }, 503);
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  const { data: auth } = await db.auth.getUser(token);
+  const user = auth?.user;
+  if (!user?.email) return json({ error: 'Inte inloggad' }, 401);
+  const { data: role } = await db.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+  if (!role) return json({ error: 'Bara för admin' }, 403);
+
+  const { data: pref } = await db.from('notification_preferences').select('kommun').eq('user_id', user.id).order('created_at').limit(1).maybeSingle();
+  const kommun = (pref as { kommun?: string } | null)?.kommun || 'Stockholm';
+  const week = { ...summarizeKommun(await lastTwoWeeks(now), kommun, now), slug: kommunSlug(kommun) };
+  const unsubscribeUrl = `${FN_URL}?optout=${encodeURIComponent(await optOutToken(user.id, SECRET))}`;
+  const sent: string[] = [];
+  for (const kind of ['welcome', 'day3', 'day7', 'comeback'] as const) {
+    const mail = lifecycleEmail(kind, { now, week, unsubscribeUrl });
+    if (await sendMail(resendKey, user.email, kind, { ...mail, subject: `[Test] ${mail.subject}` }, unsubscribeUrl)) sent.push(kind);
+    await new Promise((r) => setTimeout(r, 550));
+  }
+  return json({ sent: sent.length, to: user.email, kommun });
 }
 
 async function run(now: number) {
@@ -92,9 +142,7 @@ async function run(now: number) {
 
   // Polisen's last two weeks, for the e-mails that tell what happened in a kommun
   const needsWeek = due.some((d) => (d.kind === 'day3' || d.kind === 'comeback') && kommunOf.has(d.id));
-  const events = needsWeek
-    ? await readAll<SummaryEvent>((f, t) => db.from('police_events_archive').select('area, original_type, time').gte('time', new Date(now - 14 * DAY).toISOString()).order('time', { ascending: false }).range(f, t))
-    : [];
+  const events = needsWeek ? await lastTwoWeeks(now) : [];
   const weeks = new Map<string, KommunWeekLite>();
   const weekOf = (kommun: string | undefined): KommunWeekLite | null => {
     if (!kommun) return null;
@@ -102,7 +150,6 @@ async function run(now: number) {
     return weeks.get(kommun)!;
   };
 
-  const from = Deno.env.get('LIFECYCLE_FROM') || 'CrimeAlert <hej@crimealert.se>';
   let sent = 0;
   const failed: string[] = [];
   for (const d of due.slice(0, MAX_PER_RUN)) {
@@ -114,19 +161,9 @@ async function run(now: number) {
 
     const unsubscribeUrl = `${FN_URL}?optout=${encodeURIComponent(await optOutToken(d.id, SECRET))}`;
     const mail = lifecycleEmail(d.kind, { now, week: weekOf(kommunOf.get(d.id)), unsubscribeUrl });
-    const res = await fetch(`${RESEND_API}/emails`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from, to: [d.email], reply_to: 'kontakt@crimealert.se', subject: mail.subject, html: mail.html, text: mail.text,
-        headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
-        tags: [{ name: 'lifecycle', value: d.kind }],
-      }),
-    });
-    if (res.ok) {
+    if (await sendMail(resendKey, d.email, d.kind, mail, unsubscribeUrl)) {
       sent++;
     } else {
-      console.error('[lifecycle-emails] Resend', res.status, (await res.text()).slice(0, 300));
       failed.push(d.kind);
       await db.from('lifecycle_email_log').delete().eq('user_id', d.id).eq('kind', key);
     }
@@ -137,6 +174,7 @@ async function run(now: number) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
     const url = new URL(req.url);
     const token = url.searchParams.get('optout');
@@ -149,6 +187,8 @@ Deno.serve(async (req) => {
         : page('Länken fungerar inte', 'Den här länken är ogiltig. Skriv till kontakt@crimealert.se så hjälper vi dig.', 400);
     }
     if (req.method !== 'POST') return json({ error: 'POST' }, 405);
+    const body = await req.clone().json().catch(() => ({}));
+    if (body?.preview === true) return await preview(req, Date.now());
     return json(await run(Date.now()));
   } catch (e) {
     console.error('[lifecycle-emails]', e);
