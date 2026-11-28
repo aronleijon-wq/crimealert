@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bell, Check, Globe2, LocateFixed, MapPin, MessagesSquare, Minus, Moon, Plus, Radio, Search, Send, Sparkles, X } from 'lucide-react';
+import { Bell, Check, Globe2, LocateFixed, MapPin, MapPinned, MessagesSquare, Minus, Moon, Plus, Radio, Search, Send, Sparkles, X } from 'lucide-react';
 import { ALL_EXTRAS, ALL_SWEDEN_HINT, DEFAULT_EXTRAS, EXTRA_CHOICES, EXTRAS_FOOTER, allOn } from '../../supabase/functions/_shared/notifyExtras';
 import { nearestKommuner, searchKommuner } from '@/data/kommuner';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,7 +47,7 @@ const HourPicker = ({ label, value, onChange }: { label: string; value: number; 
 );
 
 /** Picking a kommun, as a sheet over the screen */
-const AddKommun = ({ watched, onAdd, onClose }: { watched: string[]; onAdd: (k: string) => void; onClose: () => void }) => {
+const AddKommun = ({ watched, onAdd, onClose, atLimit = false, limit = null }: { watched: string[]; onAdd: (k: string) => void; onClose: () => void; atLimit?: boolean; limit?: number | null }) => {
   const [query, setQuery] = useState('');
   const [near, setNear] = useState<string[] | null>(null);
   const [locating, setLocating] = useState(false);
@@ -77,6 +77,11 @@ const AddKommun = ({ watched, onAdd, onClose }: { watched: string[]; onAdd: (k: 
           {query && <button type="button" onClick={() => setQuery('')} aria-label="Rensa"><X className="h-4 w-4 text-[rgba(235,235,245,0.6)]" /></button>}
         </label>
         <div className="min-h-0 flex-1 overflow-y-auto">
+          {atLimit && limit !== null && (
+            <Section footer={`Med gratis bevakar du upp till ${limit} kommuner. Ta bort en för att byta, eller skaffa Pro för fler.`}>
+              <Row icon={MapPinned} iconBg="#ff453a" label="Bevaka fler kommuner med Pro" to="/prisplan" />
+            </Section>
+          )}
           {!query && (
             <Section>
               <Row icon={LocateFixed} label={locating ? 'Letar…' : 'Nära mig'} onClick={locate} />
@@ -86,7 +91,7 @@ const AddKommun = ({ watched, onAdd, onClose }: { watched: string[]; onAdd: (k: 
             {results.length ? results.map((k) => {
               const on = watched.includes(k);
               return (
-                <Row key={k} label={k} onClick={() => !on && onAdd(k)} accessory={on ? <Check className="h-5 w-5 text-[#ff453a]" aria-label="Bevakas" /> : <Plus className="h-5 w-5 text-[#ff453a]" aria-hidden />} />
+                <Row key={k} label={k} onClick={on || atLimit ? undefined : () => onAdd(k)} accessory={on ? <Check className="h-5 w-5 text-[#ff453a]" aria-label="Bevakas" /> : <Plus className={`h-5 w-5 ${atLimit ? 'text-[rgba(235,235,245,0.25)]' : 'text-[#ff453a]'}`} aria-hidden />} />
               );
             }) : <Row label="Ingen kommun heter så" />}
           </Section>
@@ -102,7 +107,7 @@ const NativeAlerts = () => {
   const { user } = useAuth();
   const { isPremium } = useIsPremium();
   const push = useNativePush(true);
-  const { kommuner, addKommun, removeKommun } = useNotificationPreferences();
+  const { kommuner, addKommun, removeKommun, atLimit, limit } = useNotificationPreferences();
   const { settings, available, moreAvailable, saving, save, weeklySummary, weeklyAvailable, saveWeekly, extras, extrasAvailable, saveExtras } = useNotificationSettings();
   const watch = useWatchPlaces();
   const { incidents } = usePoliceEvents();
@@ -199,7 +204,9 @@ const NativeAlerts = () => {
             )}
           />
         ))}
-        <Row icon={Plus} label="Lägg till kommun" tint onClick={() => setAdding(true)} />
+        {atLimit && limit !== null
+          ? <Row icon={MapPinned} label="Bevaka fler kommuner med Pro" detail={`Gratis: upp till ${limit} kommuner`} tint to="/prisplan" />
+          : <Row icon={Plus} label="Lägg till kommun" tint onClick={() => setAdding(true)} />}
       </Section>
 
       {moreAvailable && <PlacesSection isPremium={isPremium} watch={watch} />}
@@ -276,7 +283,7 @@ const NativeAlerts = () => {
         </Section>
       )}
 
-      {adding && <AddKommun watched={kommuner} onAdd={(k) => addKommun(k)} onClose={() => setAdding(false)} />}
+      {adding && <AddKommun watched={kommuner} onAdd={(k) => addKommun(k)} onClose={() => setAdding(false)} atLimit={atLimit} limit={limit} />}
     </Screen>
   );
 };

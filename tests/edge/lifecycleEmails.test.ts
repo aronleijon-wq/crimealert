@@ -110,3 +110,13 @@ describe('the welcome to Pro', () => {
     expect(mail.text).toContain('Avregistrera dig: https://x.test/u');
   });
 });
+
+describe('watching more kommuner is a Pro feature', () => {
+  it('is in the plans and in both Pro e-mails', async () => {
+    const facts = await import('../../supabase/functions/_shared/planFacts');
+    const text = `Bevaka fler än ${facts.FREE_KOMMUN_LIMIT} kommuner`;
+    expect(facts.PRO_FEATURE_TEXTS.map((f) => f.text)).toContain(text);
+    expect(lifecycleEmail('pro_welcome', { now: NOW, unsubscribeUrl: 'u', week: null }).text).toContain(text);
+    expect(lifecycleEmail('day7', { now: NOW, unsubscribeUrl: 'u', week: null }).text).toContain(text);
+  });
+});

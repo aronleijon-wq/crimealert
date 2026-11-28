@@ -213,8 +213,8 @@ Du får det här mejlet för att du har ett konto på <a href="${SITE}" style="c
   return { html, text };
 }
 
-/** Pro in the day 7 e-mail: what the plans say Pro gives, the five that matter most */
-const EMAIL_PRO_FEATURES = (['live', 'push', 'description', 'analysis', 'ask'] as const)
+/** Pro in the day 7 e-mail: what the plans say Pro gives, the six that matter most */
+const EMAIL_PRO_FEATURES = (['live', 'push', 'kommuner', 'description', 'analysis', 'ask'] as const)
   .map((key) => PRO_FEATURE_TEXTS.find((f) => f.key === key))
   .filter((f): f is (typeof PRO_FEATURE_TEXTS)[number] => !!f)
   .map((f) => f.text.replace(/ \(.*\)$/, ''));
