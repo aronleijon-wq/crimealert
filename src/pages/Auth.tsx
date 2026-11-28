@@ -5,6 +5,7 @@ import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { accountCountLabel, loadAccountCount, rememberedAccountCount } from '@/lib/accountCount';
 import { isNativeApp } from '@/lib/native';
+import { rememberNext, takeNext } from '@/lib/afterSignIn';
 import { nativeAuth, signInInApp } from '@/lib/nativeApp';
 import { getErrorMessage, isTransientBackendError } from '@/lib/errors';
 import { lovable } from '@/integrations/lovable/index';
@@ -38,12 +39,15 @@ const withRetry = async (action: () => Promise<{ error: AuthError | null }>, att
 
 
 /** Where a successful sign-in leads: the start page, the map in the app */
-const homeAfterSignIn = () => (isNativeApp() ? '/karta' : '/');
+// Back to the page that sent you here (lib/afterSignIn), else the map in the app and the start page on the web
+const homeAfterSignIn = () => takeNext() ?? (isNativeApp() ? '/karta' : '/');
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
+  const next = searchParams.get('next');
+  useEffect(() => { rememberNext(next); }, [next]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
