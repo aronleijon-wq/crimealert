@@ -191,7 +191,7 @@ ${(c.after ?? []).map(blockHtml).join('\n')}
 </td></tr>
 <tr><td style="padding:20px 28px 0;text-align:center;font:12px/1.6 ${FONT};color:${MUTED}">
 Du får det här mejlet för att du har ett konto på <a href="${SITE}" style="color:${MUTED}">crimealert.se</a>.<br>
-<a href="${esc(unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline">Avregistrera dig</a> &nbsp;·&nbsp; <span style="white-space:nowrap">KGV Analysis AB, org.nr 559243-8054</span>
+<a href="${esc(unsubscribeUrl)}" style="color:${MUTED};text-decoration:underline">Avregistrera dig</a>
 </td></tr>
 </table>
 </td></tr></table>
@@ -208,7 +208,6 @@ Du får det här mejlet för att du har ett konto på <a href="${SITE}" style="c
     '',
     '—',
     `Du får det här mejlet för att du har ett konto på crimealert.se. Avregistrera dig: ${unsubscribeUrl}`,
-    'KGV Analysis AB, org.nr 559243-8054',
   ].join('\n');
   return { html, text };
 }

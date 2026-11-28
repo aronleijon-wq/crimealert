@@ -72,12 +72,11 @@ describe('the e-mails', () => {
     expect(mail.text).toContain('19 kr i månaden');
   });
 
-  it('always has the way out and who sends it', () => {
+  it('always has the way out', () => {
     for (const kind of ['welcome', 'day3', 'day7', 'comeback'] as const) {
       const mail = lifecycleEmail(kind, base);
       expect(mail.html).toContain('https://x.test/optout?t=1');
       expect(mail.text).toContain('Avregistrera dig: https://x.test/optout?t=1');
-      expect(mail.html).toContain('org.nr 559243-8054');
     }
   });
 
