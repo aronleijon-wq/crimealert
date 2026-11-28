@@ -148,6 +148,13 @@
       "when": 1795626930981,
       "tag": "0020_live_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795860345179,
+      "tag": "0021_admin_activity",
+      "breakpoints": true
     }
   ]
 }
