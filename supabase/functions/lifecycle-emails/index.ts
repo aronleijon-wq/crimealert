@@ -2,7 +2,9 @@
 // migration lifecycle_emails. Each due e-mail is claimed in lifecycle_email_log before it is sent,
 // so two runs never send the same one; a failed send gives the claim back for the next run.
 // ?optout=<token> (the link in every e-mail, and the one-click List-Unsubscribe) stops them all.
-// { preview: true } from a signed-in admin (the admin page's button) sends all four, marked
+// Everyone who starts Pro gets a welcome to Pro, once (pro_status says who has Pro; the first run
+// only notes those who already have it, so existing members get nothing).
+// { preview: true } from a signed-in admin (the admin page's button) sends all five, marked
 // [Test], to the admin's own address, with a real week from their kommun, and logs nothing.
 //
 // Needs RESEND_API_KEY (as admin-alerts); LIFECYCLE_FROM picks the sender, else
@@ -77,7 +79,49 @@ async function sendMail(resendKey: string, to: string, kind: LifecycleKind, mail
 const lastTwoWeeks = (now: number) => readAll<SummaryEvent>((f, t) => db.from('police_events_archive').select('area, original_type, time')
   .gte('time', new Date(now - 14 * DAY).toISOString()).order('time', { ascending: false }).range(f, t));
 
-/** All four e-mails to the admin who asked, as a new account in their kommun would get them */
+/** The welcome to Pro for those who got Pro since the last run; returns how many were sent */
+async function proWelcomes(resendKey: string, now: number): Promise<number> {
+  const STATE = 'lifecycle-pro-welcome';
+  const { data: state } = await db.from('ingest_state').select('last_run_at').eq('key', STATE).maybeSingle();
+  // 'infinity' (Pro for good) is later than any date too
+  const pros = await readAll<{ user_id: string }>((f, t) => db.from('pro_status').select('user_id').gt('pro_until', new Date(now).toISOString()).range(f, t));
+  const ids = [...new Set(pros.map((p) => p.user_id))];
+  const welcomed = new Set((await Promise.all(chunks(ids).map((part) =>
+    readAll<{ user_id: string }>((f, t) => db.from('lifecycle_email_log').select('user_id').eq('kind', 'pro_welcome').in('user_id', part).range(f, t))))).flat().map((r) => r.user_id));
+  const fresh = ids.filter((id) => !welcomed.has(id));
+
+  if (!state) {
+    // First run: those who have Pro already are noted, not welcomed
+    for (const part of chunks(fresh)) {
+      const { error } = await db.from('lifecycle_email_log').upsert(part.map((user_id) => ({ user_id, kind: 'pro_welcome' })), { onConflict: 'user_id,kind', ignoreDuplicates: true });
+      if (error) throw new Error(error.message);
+    }
+    await db.from('ingest_state').upsert({ key: STATE, last_run_at: new Date(now).toISOString() }, { onConflict: 'key' });
+    return 0;
+  }
+
+  const opted = new Set((await Promise.all(chunks(fresh).map((part) =>
+    readAll<{ user_id: string }>((f, t) => db.from('email_optouts').select('user_id').in('user_id', part).range(f, t))))).flat().map((r) => r.user_id));
+  let sent = 0;
+  for (const id of fresh.slice(0, 50)) {
+    if (opted.has(id)) continue;
+    const { data: claimed, error } = await db.from('lifecycle_email_log')
+      .upsert({ user_id: id, kind: 'pro_welcome' }, { onConflict: 'user_id,kind', ignoreDuplicates: true }).select('user_id');
+    if (error) throw new Error(error.message);
+    if (!claimed?.length) continue;
+    const email = (await db.auth.admin.getUserById(id)).data.user?.email;
+    if (!email || /@privaterelay\.appleid\.com$/i.test(email)) continue;
+    const unsubscribeUrl = `${FN_URL}?optout=${encodeURIComponent(await optOutToken(id, SECRET))}`;
+    const mail = lifecycleEmail('pro_welcome', { now, week: null, unsubscribeUrl });
+    if (await sendMail(resendKey, email, 'pro_welcome', mail, unsubscribeUrl)) sent++;
+    else await db.from('lifecycle_email_log').delete().eq('user_id', id).eq('kind', 'pro_welcome');
+    await new Promise((r) => setTimeout(r, 550));
+  }
+  await db.from('ingest_state').upsert({ key: STATE, last_run_at: new Date(now).toISOString() }, { onConflict: 'key' });
+  return sent;
+}
+
+/** All five e-mails to the admin who asked, as a new account in their kommun would get them */
 async function preview(req: Request, now: number): Promise<Response> {
   const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) return json({ error: 'RESEND_API_KEY saknas' }, 503);
@@ -93,7 +137,7 @@ async function preview(req: Request, now: number): Promise<Response> {
   const week = { ...summarizeKommun(await lastTwoWeeks(now), kommun, now), slug: kommunSlug(kommun) };
   const unsubscribeUrl = `${FN_URL}?optout=${encodeURIComponent(await optOutToken(user.id, SECRET))}`;
   const sent: string[] = [];
-  for (const kind of ['welcome', 'day3', 'day7', 'comeback'] as const) {
+  for (const kind of ['welcome', 'day3', 'day7', 'comeback', 'pro_welcome'] as const) {
     const mail = lifecycleEmail(kind, { now, week, unsubscribeUrl });
     if (await sendMail(resendKey, user.email, kind, { ...mail, subject: `[Test] ${mail.subject}` }, unsubscribeUrl)) sent.push(kind);
     await new Promise((r) => setTimeout(r, 550));
@@ -105,12 +149,15 @@ async function run(now: number) {
   const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) return { sent: 0, reason: 'RESEND_API_KEY saknas' };
 
+  // The welcome to Pro first: it is about something that just happened
+  const proWelcomed = await proWelcomes(resendKey, now).catch((e) => { console.error('[lifecycle-emails] pro welcome', e); return 0; });
+
   const { data: rows, error } = await db.rpc('lifecycle_candidates');
-  if (error) return { sent: 0, reason: `lifecycle_candidates: ${error.message}` };
+  if (error) return { sent: 0, proWelcomed, reason: `lifecycle_candidates: ${error.message}` };
   // Apple's private relay addresses only take mail from senders registered with Apple
   const accounts = ((rows ?? []) as { id: string; email: string; created_at: string; last_used: string | null }[])
     .filter((r) => r.email && !/@privaterelay\.appleid\.com$/i.test(r.email));
-  if (!accounts.length) return { sent: 0, reason: 'nothing_due' };
+  if (!accounts.length) return { sent: 0, proWelcomed, reason: 'nothing_due' };
   const ids = accounts.map((a) => a.id);
 
   const [logs, optouts, pros, prefs] = await Promise.all([
@@ -138,7 +185,7 @@ async function run(now: number) {
     const kind = dueEmail(c, now);
     if (kind) due.push({ id: a.id, email: a.email, kind });
   }
-  if (!due.length) return { sent: 0, reason: 'nothing_due' };
+  if (!due.length) return { sent: 0, proWelcomed, reason: 'nothing_due' };
 
   // Polisen's last two weeks, for the e-mails that tell what happened in a kommun
   const needsWeek = due.some((d) => (d.kind === 'day3' || d.kind === 'comeback') && kommunOf.has(d.id));
@@ -170,7 +217,7 @@ async function run(now: number) {
     await new Promise((r) => setTimeout(r, 550));
   }
   const byKind = due.reduce<Record<string, number>>((acc, d) => ({ ...acc, [d.kind]: (acc[d.kind] ?? 0) + 1 }), {});
-  return { sent, due: byKind, failed: failed.length };
+  return { sent, proWelcomed, due: byKind, failed: failed.length };
 }
 
 Deno.serve(async (req) => {
