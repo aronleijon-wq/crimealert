@@ -10,8 +10,15 @@ const auth: { user: { id: string } | null; subscription: SubscriptionState } = {
 };
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('./OpsMap', () => ({ default: () => null }));
+// Black Week or not, whatever today's date (the offer in the hero differs)
+const week = vi.hoisted(() => ({ black: false }));
+vi.mock('@/components/account/plans', async (original) => ({
+  ...(await original<typeof import('@/components/account/plans')>()),
+  get BLACK_WEEK() { return week.black; },
+}));
 
-const renderHero = async (user: { id: string } | null, trialEligible?: boolean) => {
+const renderHero = async (user: { id: string } | null, trialEligible?: boolean, blackWeek = false) => {
+  week.black = blackWeek;
   auth.user = user;
   auth.subscription = { subscribed: false, productId: null, subscriptionEnd: null, trialEligible };
   const { default: Hero } = await import('./Hero');
@@ -24,6 +31,11 @@ describe('the Pro trial in the hero', () => {
   it('is offered to visitors who are not signed in', async () => {
     await renderHero(null);
     expect(trialLink()).toHaveAttribute('href', '/prisplan');
+  });
+
+  it('is left to the strip at the top of the page during Black Week', async () => {
+    await renderHero(null, undefined, true);
+    expect(trialLink()).toBeNull();
   });
 
   it('is offered to accounts that never had Pro', async () => {
