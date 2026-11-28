@@ -18,6 +18,8 @@ export interface FeedItem {
   bodyLocked: boolean;
   /** body is the start of the text, the rest is with Pro ("Läs mer med Pro") */
   bodyIsPreview: boolean;
+  /** Signed out: the text is there for anyone with an account, a free one too */
+  bodyNeedsAccount?: boolean;
   area: string;
   time: string;
   timestamp: number;
@@ -131,7 +133,8 @@ function incidentToItem(incident: Incident, isPremium: boolean, alsoReported: In
     title: kind === 'police' ? cleanPoliceTitle(incident.title) : incident.title,
     body: showBody ? incident.description : '',
     // The rest of a police description is Pro, as are Trafikverket's texts on the map
-    bodyLocked: !isPremium && (
+    bodyNeedsAccount: incident.descriptionLocked === true || undefined,
+    bodyLocked: !isPremium && !incident.descriptionLocked && (
       (kind === 'police' && !isSummary && (!incident.description || incident.descriptionTruncated === true))
       || (kind === 'traffic' && !!incident.description)),
     bodyIsPreview: !isPremium && kind === 'police' && incident.descriptionTruncated === true,

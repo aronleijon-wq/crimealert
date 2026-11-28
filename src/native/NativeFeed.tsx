@@ -163,6 +163,11 @@ const Post = memo(({ item, engagement, signedIn, onReact, onCommentCount }: Post
           </span>
           <span className="mt-1 block text-[17px] font-semibold leading-[22px] text-white">{headline(item)}</span>
           {item.body && <span className={`mt-0.5 line-clamp-2 block text-[15px] leading-[20px] ${MUTED}`}>{item.body}</span>}
+          {item.bodyNeedsAccount && (
+            <span className={`mt-1 flex items-center gap-1.5 text-[13px] ${MUTED}`}>
+              <Lock className="h-3 w-3 shrink-0" aria-hidden />Gratis konto för att läsa
+            </span>
+          )}
           {item.bodyLocked && (
             <span className={`mt-1 flex items-center gap-1.5 text-[13px] ${MUTED}`}>
               <Lock className="h-3 w-3 shrink-0" aria-hidden />{item.bodyIsPreview ? 'Läs mer med Pro' : 'Hela beskrivningen med Pro'}

@@ -135,6 +135,12 @@ const FeedCard = ({ item, engagement, onToggleReaction, onCommentCount }: FeedCa
             {expanded ? 'Visa mindre' : 'Läs mer'}
           </button>
         )}
+        {item.bodyNeedsAccount && (
+          <Link to="/auth?mode=signup" className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+            <Lock className="h-3 w-3" aria-hidden />
+            Skapa ett gratis konto för att läsa vad som hänt
+          </Link>
+        )}
         {item.bodyLocked && (item.bodyIsPreview ? (
           <Link to="/prisplan" className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
             <Lock className="h-3 w-3" aria-hidden />

@@ -74,6 +74,11 @@ describe('buildFeed', () => {
     expect(items[0]).toMatchObject({ body: '', bodyLocked: true, url: null });
   });
 
+  it('asks those signed out for a free account to read what happened, not for Pro', () => {
+    const items = buildFeed({ ...base, isPremium: false, police: [incident({ description: '', descriptionLocked: true })] });
+    expect(items[0]).toMatchObject({ body: '', bodyLocked: false, bodyNeedsAccount: true });
+  });
+
   it('shows free users the start of a police description, with the rest locked behind Pro', () => {
     const items = buildFeed({
       ...base,

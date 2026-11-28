@@ -284,6 +284,8 @@ const createPopupContent = (inc: Incident, isPremium: boolean, compact = false) 
         ? `<p style="font-size:${sz(11.5,9.5)}px;color:${P.dim};margin:0 0 ${sz(11,6)}px;line-height:1.6;border-left:2px solid ${config.color};padding-left:${sz(9,6)}px;">${safeDescription}${!isPremium && inc.descriptionTruncated
             ? ` <a href="/prisplan" onclick="event.preventDefault();window.dispatchEvent(new CustomEvent('crimealert-pro'))" style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:${P.red};font-weight:600;text-decoration:none;">${svgIcon('lock', sz(10, 8))} Läs mer med Pro</a>`
             : ''}</p>`
+        : inc.descriptionLocked
+          ? `<a href="/auth?mode=signup" onclick="event.preventDefault();window.dispatchEvent(new CustomEvent('crimealert-signup'))" style="font-size:${sz(11,9.5)}px;color:${P.red};font-weight:600;text-decoration:none;margin:0 0 ${sz(11,6)}px;display:flex;align-items:center;gap:5px;">${svgIcon('lock', sz(11, 9))} Skapa ett gratis konto för att läsa vad som hänt</a>`
         : !isPremium && !descriptionIsFree
           ? `<p style="font-family:${mono};font-size:${sz(9.5,8)}px;color:${P.faint};margin:0 0 ${sz(11,6)}px;display:flex;align-items:center;gap:5px;">${svgIcon('lock', sz(11, 9))} Detaljerad beskrivning kräver Pro</p>`
           : ''}
@@ -406,8 +408,14 @@ const MapView = ({ incidents, selectedId, onSelectIncident, isPremium = false, f
       window.history.pushState({}, '', '/prisplan');
       window.dispatchEvent(new PopStateEvent('popstate'));
     };
+    // "Skapa ett gratis konto" in a popup, for those signed out
+    const toSignup = () => {
+      window.history.pushState({}, '', '/auth?mode=signup');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    };
     window.addEventListener('crimealert-pro', toPlans);
-    return () => window.removeEventListener('crimealert-pro', toPlans);
+    window.addEventListener('crimealert-signup', toSignup);
+    return () => { window.removeEventListener('crimealert-pro', toPlans); window.removeEventListener('crimealert-signup', toSignup); };
   }, []);
 
   // Listen for lightbox events from popup image clicks
