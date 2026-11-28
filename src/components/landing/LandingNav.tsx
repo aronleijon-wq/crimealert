@@ -8,6 +8,7 @@ import ProfileButton from '@/components/ProfileButton';
 const links = [
   { to: '/karta', label: 'Karta' },
   { to: '/flode', label: 'Flöde' },
+  { to: '/fraga', label: 'Fråga AI' },
   { to: '/analysis', label: 'Analys' },
   { to: '/alerts', label: 'Notiser' },
   { to: '/kommun', label: 'Kommuner' },
@@ -49,12 +50,12 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
           <DotWordmark />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
           {links.map((l) => (
             <Link
               key={l.to}
               to={l.to}
-              className="px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+              className="whitespace-nowrap px-2.5 xl:px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
             >
               {l.label}
             </Link>
@@ -77,7 +78,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
           </Link>
           <Link
             to="/prisplan"
-            className="hidden md:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+            className="hidden xl:inline-flex whitespace-nowrap px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
           >
             Prisplan
           </Link>
@@ -87,13 +88,13 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
             <>
               <Link
                 to="/auth"
-                className="hidden md:inline-flex px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
+                className="hidden lg:inline-flex whitespace-nowrap px-3.5 py-2 text-[13px] text-[hsl(var(--ca-text-2))] hover:text-[hsl(var(--ca-text))] transition-colors"
               >
                 Logga in
               </Link>
               <Link
                 to="/auth?mode=signup"
-                className="hidden md:inline-flex items-center px-4 py-2 text-[13px] font-medium rounded-md bg-[hsl(var(--ca-red))] text-white hover:brightness-110 transition"
+                className="hidden sm:inline-flex whitespace-nowrap items-center px-4 py-2 text-[13px] font-medium rounded-md bg-[hsl(var(--ca-red))] text-white hover:brightness-110 transition"
               >
                 Skapa konto
               </Link>
@@ -101,7 +102,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
           )}
           <button
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden grid place-items-center w-9 h-9 rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))]"
+            className="lg:hidden grid place-items-center w-9 h-9 rounded-md border border-[hsl(var(--ca-line))] text-[hsl(var(--ca-text-2))]"
             aria-label="Meny"
           >
             {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -110,7 +111,7 @@ const LandingNav = ({ banner }: { banner?: React.ReactNode }) => {
       </div>
 
       {open && (
-        <div className="md:hidden border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
+        <div className="lg:hidden border-t border-[hsl(var(--ca-line))] bg-[hsl(var(--ca-base))]/95 backdrop-blur-xl px-5 py-4 flex flex-col gap-1">
           {[...links, { to: '/prisplan', label: 'Prisplan' }, { to: '/for-kommuner', label: 'För kommuner och organisationer' }].map((l) => (
             <Link
               key={l.to}
