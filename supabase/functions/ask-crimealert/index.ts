@@ -106,7 +106,12 @@ async function answer(history: { role: 'user' | 'assistant'; content: string }[]
     const response = await anthropic.beta.messages.create({
       model,
       max_tokens: 8000,
-      system: askSystem(now),
+      // Prompt caching: the tools and instructions are the same for every question all day (the
+      // marker on the system block), and each round of tools repeats the rounds before it (the
+      // top-level marker, which moves to the end each round). Read back from the cache, they cost
+      // a tenth; the answer is the same.
+      cache_control: { type: 'ephemeral' },
+      system: [{ type: 'text', text: askSystem(now), cache_control: { type: 'ephemeral' } }],
       tools: ASK_TOOLS,
       // After the last round of tools it must answer with what it has
       tool_choice: round === MAX_ROUNDS ? { type: 'none' } : { type: 'auto' },
