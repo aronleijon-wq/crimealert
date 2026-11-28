@@ -1018,6 +1018,7 @@ export type Database = {
     }
     Functions: {
       account_count: { Args: never; Returns: number }
+      admin_activity: { Args: never; Returns: Json }
       archive_daily_counts: {
         Args: { _days?: number }
         Returns: {
