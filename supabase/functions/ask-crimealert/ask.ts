@@ -39,9 +39,10 @@ export function stockholmMidnight(now: number): number {
 }
 
 /** Pro's first questions each day get the larger model (Sonnet); the rest, and all free ones, Haiku */
-export const PRO_BETTER_PER_DAY = 5;
+// Premium (39 kr a month, coming) is to get 5 a day; Pro, which becomes Plus, gets 3
+export const PRO_BETTER_PER_DAY = 3;
 
-/** Which model answers the next question: 'better' for Pro's first five a day */
+/** Which model answers the next question: 'better' for Pro's first three a day */
 export const modelTier = (used: number, isPro: boolean): 'better' | 'fast' => (isPro && used < PRO_BETTER_PER_DAY ? 'better' : 'fast');
 
 /** Of Pro's better answers, how many are left today (null without Pro) */

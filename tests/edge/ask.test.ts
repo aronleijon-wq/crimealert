@@ -24,9 +24,9 @@ describe('counting questions', () => {
   });
 
   it('answers Pro\'s first five a day with the better model, the rest and all free ones with the fast one', () => {
-    expect([0, 1, 4, 5, 9].map((n) => modelTier(n, true))).toEqual(['better', 'better', 'better', 'fast', 'fast']);
+    expect([0, 1, 2, 3, 9].map((n) => modelTier(n, true))).toEqual(['better', 'better', 'better', 'fast', 'fast']);
     expect(modelTier(0, false)).toBe('fast');
-    expect(betterLeft(2, true)).toBe(3);
+    expect(betterLeft(1, true)).toBe(2);
     expect(betterLeft(7, true)).toBe(0);
     expect(betterLeft(0, false)).toBeNull();
   });

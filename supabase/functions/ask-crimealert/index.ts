@@ -1,7 +1,7 @@
 // Fråga CrimeAlert: answers a question about crime where you live, with Claude counting Polisen's
 // events through two tools (./ask.ts). For signed-in accounts: three questions a Swedish
 // day without Pro, answered by Haiku; as many as you like with Pro (up to a hundred), the first
-// five a day by Sonnet and the rest by Haiku. Body { messages } asks; { quota: true } only tells
+// three a day by Sonnet and the rest by Haiku. Body { messages } asks; { quota: true } only tells
 // how many are left.
 //
 // ANTHROPIC_API_KEY is needed. ASK_MODEL and ASK_PRO_MODEL pick the models
