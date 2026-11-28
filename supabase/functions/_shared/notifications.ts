@@ -1,6 +1,7 @@
 // Who gets a push notification for which police event, and what it says. Shared by the
 // send-push-notifications edge function and the Notiser page, so both agree.
 import { THEMES, themeOf } from './themes.ts';
+import { FREE_DELAY_MINUTES } from './planFacts.ts';
 
 export const NOTIFY_TYPES = ['police', 'fire', 'ambulance', 'traffic', 'other'] as const;
 export type NotifyType = typeof NOTIFY_TYPES[number];
@@ -369,8 +370,8 @@ export function safeAppPath(value: unknown, fallback = '/alerts'): string {
   return typeof value === 'string' && /^\/(?!\/)[\w\-/?=&%.]*$/.test(value) ? value : fallback;
 }
 
-/** Free accounts get Polisen's events, on the map and as notifications, 15 minutes after they happened. */
-export const FREE_DELAY_MS = 15 * 60 * 1000;
+/** Free accounts get Polisen's events, on the map and as notifications, 15 minutes after they happened (planFacts). */
+export const FREE_DELAY_MS = FREE_DELAY_MINUTES * 60 * 1000;
 
 // "2026-10-02 14:05:00 +02:00" from Polisen or "2026-10-02T12:05:00+00:00" from the database
 const eventTimeMs = (time: string) => Date.parse(time.replace(' ', 'T').replace(/\s+([+-]\d{2}:\d{2})$/, '$1'));

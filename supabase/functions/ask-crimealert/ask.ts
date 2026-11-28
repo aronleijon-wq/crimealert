@@ -9,9 +9,9 @@ import { kommunMatcher } from '../_shared/notifications.ts';
 import { THEMES, themeOf } from '../_shared/themes.ts';
 import { STAT_TYPE_IDS } from './kommunStats.ts';
 
-export const FREE_QUESTIONS_PER_DAY = 3;
-/** "Obegränsat" for Pro, but not without end */
-export const PRO_QUESTIONS_PER_DAY = 100;
+// How many questions, and how many from the larger model (planFacts)
+import { FREE_QUESTIONS_PER_DAY, PRO_BETTER_PER_DAY, PRO_QUESTIONS_PER_DAY } from '../_shared/planFacts.ts';
+export { FREE_QUESTIONS_PER_DAY, PRO_BETTER_PER_DAY, PRO_QUESTIONS_PER_DAY };
 
 const DAY = 24 * 60 * 60 * 1000;
 const MAX_LISTED = 25;
@@ -39,8 +39,6 @@ export function stockholmMidnight(now: number): number {
 }
 
 /** Pro's first questions each day get the larger model (Sonnet); the rest, and all free ones, Haiku */
-// Premium (39 kr a month, coming) is to get 5 a day; Pro, which becomes Plus, gets 3
-export const PRO_BETTER_PER_DAY = 3;
 
 /** Which model answers the next question: 'better' for Pro's first three a day */
 export const modelTier = (used: number, isPro: boolean): 'better' | 'fast' => (isPro && used < PRO_BETTER_PER_DAY ? 'better' : 'fast');
