@@ -155,6 +155,13 @@
       "when": 1795860345179,
       "tag": "0021_admin_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795879884455,
+      "tag": "0022_lifecycle_emails",
+      "breakpoints": true
     }
   ]
 }

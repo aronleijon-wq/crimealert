@@ -289,6 +289,21 @@ export type Database = {
         }
         Relationships: []
       }
+      email_optouts: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       external_events: {
         Row: {
           area: string | null
@@ -502,6 +517,24 @@ export type Database = {
           invitee_id?: string
           inviter_id?: string
           rewarded?: boolean
+        }
+        Relationships: []
+      }
+      lifecycle_email_log: {
+        Row: {
+          kind: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          kind: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          kind?: string
+          sent_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1097,6 +1130,15 @@ export type Database = {
           events: number
           original_type: string
           type: string
+        }[]
+      }
+      lifecycle_candidates: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          last_used: string
         }[]
       }
       live_reports: {
