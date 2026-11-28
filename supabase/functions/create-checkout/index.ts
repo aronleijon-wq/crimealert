@@ -74,7 +74,7 @@ serve(async (req) => {
     }
 
     const email = user.email;
-    logStep("User authenticated", { email });
+    logStep("User authenticated", { userId: user.id });
 
     // The app names the plan; the price comes from Stripe, so only our own plans can be bought
     const plan = planFromRequest(await req.json().catch(() => null));

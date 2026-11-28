@@ -86,7 +86,7 @@ serve(async (req) => {
         status: 200,
       });
     }
-    logStep("User authenticated", { email: user.email });
+    logStep("User authenticated", { userId: user.id });
 
     // The newsletter list in Resend, once per account, after the answer is on its way
     const newsletter = syncNewsletterContact(supabaseClient, user);
@@ -110,7 +110,7 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    logStep("Searching for Stripe customer", { email: user.email });
+    logStep("Searching for Stripe customer");
     const customers = await stripe.customers.list({ email: user.email, limit: 10 });
     logStep("Stripe customers found", { count: customers.data.length });
 
