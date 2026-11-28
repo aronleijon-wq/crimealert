@@ -123,8 +123,15 @@ const NativeAlerts = () => {
   if (!user) {
     return (
       <Screen title="Notiser">
-        <Section footer="Med ett gratis konto väljer du kommuner och får en notis när Polisen rapporterar något där.">
-          <Row icon={Bell} label="Logga in eller skapa konto" to="/auth" />
+        {/* What notifications give, before the account they need (a free one is enough) */}
+        <Section header="Med ett gratis konto">
+          <Row icon={Bell} label="Notis när något händer" detail="I kommunerna du väljer, med vad som hänt" />
+          <Row icon={MapPin} label="Bevaka dina platser" detail="Hem, jobbet, skolan, inom den radie du väljer" />
+          <Row icon={Moon} label="Tysta timmar" detail="Inga notiser när du sover" />
+        </Section>
+        <Section footer="Gratis. Inget kort behövs.">
+          <Row icon={Bell} label="Skapa konto och slå på notiser" tint to="/auth?mode=signup" />
+          <Row label="Jag har redan ett konto" to="/auth" />
         </Section>
       </Screen>
     );

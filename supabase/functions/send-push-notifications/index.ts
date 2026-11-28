@@ -870,7 +870,7 @@ Deno.serve(async (req) => {
     const hourAgo = new Date(now - 60 * 60 * 1000).toISOString();
     const { data: archivedEvents, error: eventsError } = await supabase
       .from('police_events_archive')
-      .select('id, title, area, lat, lng, type, risk, time, original_type, location_precision')
+      .select('id, title, area, lat, lng, type, risk, time, original_type, location_precision, description')
       .gte('created_at', hourAgo)
       .not('original_type', 'ilike', '%sammanfattning%');
 

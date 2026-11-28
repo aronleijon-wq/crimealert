@@ -11,6 +11,8 @@ import { KOMMUN_COORDINATES, searchKommuner } from '@/data/kommuner';
 import { POPULATION_YEAR } from '@/data/kommunPopulation';
 import { useCrimeAtlas } from '@/hooks/useCrimeAtlas';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { canSellPro } from '@/lib/native';
 import {
   formatRate, formatRatio, kommunProfile, periodOf, mostCommon, ratioSentence, risingMost, themeRanking, THEMES,
   type Atlas, type KommunRate, type Period,
@@ -315,8 +317,17 @@ const PERIODS = [{ value: '7', label: '7 dagar' }, { value: '30', label: '30 dag
 const CrimeAtlas = () => {
   const { kommuner } = useNotificationPreferences();
   const [view, setView] = useState<'kommun' | 'brott'>('kommun');
-  // All the archive by default: the more events, the steadier each kommun's numbers
-  const [days, setDays] = useState('start');
+  // "Sedan start", all the archive, is Pro's (the steadiest numbers); without Pro 30 days. Until
+  // one is chosen it follows whether the user has Pro, which is known a moment after opening
+  const { isPremium } = useIsPremium();
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
+  const days = chosen ?? (isPremium ? 'start' : '30');
+  const setDays = (next: string) => {
+    if (next === 'start' && !isPremium) { setLocked(true); return; }
+    setLocked(false);
+    setChosen(next);
+  };
   const [picked, setPicked] = useState<string | null>(null);
   const [themeId, setThemeId] = useState('inbrott');
   const kommun = picked ?? kommuner[0] ?? 'Stockholm';
@@ -330,6 +341,13 @@ const CrimeAtlas = () => {
       <div className="mt-1"><Segmented<'kommun' | 'brott'> options={VIEWS.map((v) => ({ ...v }))} value={view} onChange={(v) => { haptics.selection(); setView(v); }} /></div>
       {view === 'kommun' && <KommunSearch value={kommun} onPick={pick} />}
       <div className="mt-3"><Segmented options={PERIODS} value={days} onChange={setDays} /></div>
+      {locked && (
+        <Card>
+          <p className="text-[15px] text-white">Hela historiken sedan start ingår i Pro.</p>
+          <p className={`mt-1 text-[14px] ${MUTED}`}>Ju längre tid, desto säkrare siffror för din kommun.</p>
+          {canSellPro() && <Link to="/prisplan" className="mt-2 inline-flex items-center gap-1 text-[15px] font-semibold text-[#ff453a]">Se Pro <ChevronRight className="h-4 w-4" aria-hidden /></Link>}
+        </Card>
+      )}
 
       {error ? (
         <Card><p className={`text-[15px] ${MUTED}`}>Atlasen gick inte att hämta just nu. Försök igen om en stund.</p></Card>
